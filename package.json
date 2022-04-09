@@ -1,0 +1,36 @@
+{
+  "name": "scambier.obsidian-search",
+  "version": "0.0.1",
+  "description": "Search over organization",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "version": "node version-bump.mjs && git add manifest.json versions.json"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^16.11.6",
+    "@typescript-eslint/eslint-plugin": "^5.18.0",
+    "@typescript-eslint/parser": "^5.18.0",
+    "builtin-modules": "^3.2.0",
+    "esbuild": "0.13.12",
+    "esbuild-plugin-copy": "^1.2.1",
+    "eslint": "7.12.1",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "2.22.1",
+    "eslint-plugin-node": "11.1.0",
+    "eslint-plugin-promise": "5.0.0",
+    "obsidian": "latest",
+    "prettier": "^2.6.2",
+    "prettier-eslint": "^13.0.0",
+    "tslib": "2.3.1",
+    "typescript": "4.4.4"
+  },
+  "dependencies": {
+    "minisearch": "^4.0.3",
+    "remove-markdown": "^0.3.0"
+  }
+}
