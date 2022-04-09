@@ -60,5 +60,7 @@ esbuild
     logLevel: 'info',
     sourcemap: prod ? false : 'inline',
     treeShaking: true,
+    minify: prod,
+    legalComments: 'none',
   })
   .catch(() => process.exit(1))

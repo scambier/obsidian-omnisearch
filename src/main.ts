@@ -1,43 +1,48 @@
-import { App, Plugin, SuggestModal, TFile } from 'obsidian'
+import { Plugin, SuggestModal } from 'obsidian'
 import MiniSearch from 'minisearch'
 import removeMarkdown from 'remove-markdown'
 
-type OmnisearchMatch = {
-  path: string
-  body: string
-  title: string
-}
-
 type Note = {
   path: string
-  content: string
+  name: string
+  title: string
+  body: string
 }
+
+const regexWikilink = /\[\[(?<name>.+?)(\|(?<alias>.+?))?\]\]/g
+const regexEmbed = /!\[\[.+?\]\]/g
 
 export default class OmnisearchPlugin extends Plugin {
   minisearch: MiniSearch<Note>
-  files: TFile[]
-  contents: Record<string, string>
+  lastSearch?: string
 
-  setupIndex(): void {
+  async instantiateMinisearch(): Promise<void> {
     this.minisearch = new MiniSearch<Note>({
       idField: 'path',
-      fields: ['content', 'title', 'path'],
-      // storeFields: ['path'],
+      fields: ['body', 'title', 'name'],
+      storeFields: ['body', 'title', 'name'],
     })
+
+    const files = this.app.vault.getMarkdownFiles()
+    for (const file of files) {
+      // Fetch content from the cache,
+      // trim the markdown, remove embeds and clear wikilinks
+      const content = clearContent(await this.app.vault.cachedRead(file))
+        .replace(regexEmbed, '')
+        .replace(regexWikilink, (sub, name, sep, alias) => alias ?? name)
+
+      // Split the "title" (the first line/sentence) from the rest of the content
+      const title = getFirstLine(content)
+      const body = removeFirstLine(content)
+
+      // Index those fields inside Minisearch
+      this.minisearch.add({ title, body, path: file.path, name: file.name })
+    }
   }
 
   async onload(): Promise<void> {
-    this.contents = {}
-
-    this.setupIndex()
-
     this.app.workspace.onLayoutReady(async () => {
-      this.files = this.app.vault.getMarkdownFiles()
-      for (const file of this.files) {
-        const content = await this.app.vault.cachedRead(file)
-        this.contents[file.path] = clearContent(content) // truncateText(clearContent(content))
-        this.minisearch.add({ content, path: file.path })
-      }
+      await this.instantiateMinisearch()
     })
 
     this.addCommand({
@@ -51,13 +56,15 @@ export default class OmnisearchPlugin extends Plugin {
   }
 }
 
-class OmnisearchModal extends SuggestModal<OmnisearchMatch> {
+class OmnisearchModal extends SuggestModal<Note> {
   plugin: OmnisearchPlugin
 
   constructor(plugin: OmnisearchPlugin) {
     super(plugin.app)
     this.plugin = plugin
+
     this.setPlaceholder('Type to search through your notes')
+
     this.setInstructions([
       { command: '↑↓', purpose: 'to navigate' },
       { command: '↵', purpose: 'to open' },
@@ -67,69 +74,93 @@ class OmnisearchModal extends SuggestModal<OmnisearchMatch> {
     ])
   }
 
-  getSuggestions(query: string): OmnisearchMatch[] {
+  onOpen(): void {
+    this.inputEl.focus()
+    if (this.plugin.lastSearch) {
+      const event = new Event('input', {
+        bubbles: true,
+        cancelable: true,
+      })
+      this.inputEl.value = this.plugin.lastSearch
+      this.inputEl.dispatchEvent(event)
+      this.inputEl.select()
+    }
+  }
+
+  getSuggestions(query: string): Note[] {
+    console.log('query: ' + query)
+    this.plugin.lastSearch = query
+
     const results = this.plugin.minisearch
       .search(query, {
         prefix: true,
         fuzzy: term => (term.length > 4 ? 0.2 : false),
         combineWith: 'AND',
-        // processTerm: term => term.length <= minLength ? false : term,
-        boost: { title: 2 },
+        boost: { name: 2, title: 1.5 },
       })
       .sort((a, b) => b.score - a.score)
+      .slice(0, 50)
+    console.log(results)
 
     return results.map(result => {
-      const file = this.plugin.files.find(f => f.path === result.id)
-      let title = getFirstLine(this.plugin.contents[file.path])
-      let body = removeFirstLine(this.plugin.contents[file.path])
+      // result.id == the file's path
+      let name = result.name
+      let title = result.title
+      let body = result.body
 
-      // Highlight the words
-      const highlight = (str: string): string =>
-        '<span class="search-result-file-matched-text">' + str + '</span>'
-
+      // If the body contains a searched term, find its position
+      // and trim the text around it
       const pos = body.toLowerCase().indexOf(result.terms[0])
+      const surroundLen = 200
       if (pos > -1) {
-        const from = Math.max(0, pos - 150)
-        const to = Math.min(body.length - 1, pos + 150)
+        const from = Math.max(0, pos - surroundLen)
+        const to = Math.min(body.length - 1, pos + surroundLen)
         body =
           (from > 0 ? '…' : '') +
           body.slice(from, to).trim() +
           (to < body.length - 1 ? '…' : '')
       }
 
-      result.terms
-        .sort((a, b) => a.length - b.length)
-        .forEach(term => {
-          term = term.toLowerCase()
-
-          term = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
-          const reg = new RegExp(term, 'gi')
-          body = body.replace(reg, highlight)
-          title = title.replace(reg, highlight)
-        })
+      // Sort the terms from smaller to larger
+      // and highlight them in the title and body
+      const terms = result.terms.sort((a, b) => a.length - b.length)
+      const reg = new RegExp(terms.join('|'), 'gi')
+      body = body.replace(reg, highlighter)
+      title = title.replace(reg, highlighter)
+      name = name.replace(reg, highlighter)
 
       return {
-        path: file.path,
+        path: result.id,
+        name,
         title,
         body,
       }
     })
   }
 
-  renderSuggestion(value: OmnisearchMatch, el: HTMLElement): void {
+  renderSuggestion(value: Note, el: HTMLElement): void {
+    // title
     const title = el.createEl('div', { cls: 'osresult__title' })
     title.innerHTML = value.title
+
+    // filename
+    const name = el.createEl('span', { cls: 'osresult__name' })
+    name.innerHTML = value.name
+    title.appendChild(name)
+
+    // body
     const body = el.createEl('div', { cls: 'osresult__body' })
     body.innerHTML = value.body
   }
 
-  onChooseSuggestion(
-    item: OmnisearchMatch,
-    evt: MouseEvent | KeyboardEvent,
-  ): void {
+  onChooseSuggestion(item: Note, evt: MouseEvent | KeyboardEvent): void {
     // this.app.workspace
     this.app.workspace.openLinkText(item.path, '')
   }
+}
+
+function highlighter(str: string): string {
+  return '<span class="search-result-file-matched-text">' + str + '</span>'
 }
 
 /**
@@ -161,12 +192,8 @@ function removeFirstLine(text: string): string {
   return lines.join('\n')
 }
 
-function truncateText(text: string, len = 500): string {
-  return text.substring(0, len) + (text.length > 0 ? '...' : '')
-}
-
 function splitLines(text: string): string[] {
-  return text.split(/\r?\n|\r|\./)
+  return text.split(/\r?\n|\r|(\. )/)
 }
 
 function removeFrontMatter(text: string): string {

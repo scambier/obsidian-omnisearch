@@ -12,7 +12,7 @@ specifiers:
   eslint-plugin-import: 2.22.1
   eslint-plugin-node: 11.1.0
   eslint-plugin-promise: 5.0.0
-  minisearch: ^4.0.3
+  minisearch: ^5.0.0-beta1
   obsidian: latest
   prettier: ^2.6.2
   prettier-eslint: ^13.0.0
@@ -21,7 +21,7 @@ specifiers:
   typescript: 4.4.4
 
 dependencies:
-  minisearch: 4.0.3
+  minisearch: 5.0.0-beta1
   remove-markdown: 0.3.0
 
 devDependencies:
@@ -1540,8 +1540,8 @@ packages:
     resolution: {integrity: sha512-Jsjnk4bw3YJqYzbdyBiNsPWHPfO++UGG749Cxs6peCu5Xg4nrena6OVxOYxrQTqww0Jmwt+Ref8rggumkTLz9Q==}
     dev: true
 
-  /minisearch/4.0.3:
-    resolution: {integrity: sha512-yEbNeb41Qk0g9IMJAgmp/kEaW2Ub2cs9MAKphTel24O8mymLheFU7esyfiumeUsvs2f4O0boO0zrp4bc9Po2cA==}
+  /minisearch/5.0.0-beta1:
+    resolution: {integrity: sha512-/huf6dMqE0182OzJPTIU+SyjY4HBds2CL82ADJboPsROiuFpnOz9wyCxWJwHX+fwehYS1hUAr87W5AGVcfn4jQ==}
     dev: false
 
   /mkdirp/0.5.6:

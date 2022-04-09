@@ -30,7 +30,7 @@
     "typescript": "4.4.4"
   },
   "dependencies": {
-    "minisearch": "^4.0.3",
+    "minisearch": "^5.0.0-beta1",
     "remove-markdown": "^0.3.0"
   }
 }
