@@ -21,12 +21,8 @@ export default class OmnisearchPlugin extends Plugin {
   setupIndex(): void {
     this.minisearch = new MiniSearch<Note>({
       idField: 'path',
-      fields: ['content', 'title'],
-      storeFields: ['path'],
-      extractField: (document, fieldName) => {
-        if (fieldName === 'title') return getFirstLine(document.content)
-        return (document as any)[fieldName] as string
-      },
+      fields: ['content', 'title', 'path'],
+      // storeFields: ['path'],
     })
   }
 
@@ -42,8 +38,6 @@ export default class OmnisearchPlugin extends Plugin {
         this.contents[file.path] = clearContent(content) // truncateText(clearContent(content))
         this.minisearch.add({ content, path: file.path })
       }
-      console.log('minisearch loaded')
-      console.log(this.files.length + ' notes')
     })
 
     this.addCommand({
@@ -64,6 +58,13 @@ class OmnisearchModal extends SuggestModal<OmnisearchMatch> {
     super(plugin.app)
     this.plugin = plugin
     this.setPlaceholder('Type to search through your notes')
+    this.setInstructions([
+      { command: '↑↓', purpose: 'to navigate' },
+      { command: '↵', purpose: 'to open' },
+      { command: 'ctrl ↵', purpose: 'to open in a new pane' },
+      { command: 'shift ↵', purpose: 'to create' },
+      { command: 'esc', purpose: 'to dismiss' },
+    ])
   }
 
   getSuggestions(query: string): OmnisearchMatch[] {
@@ -79,37 +80,45 @@ class OmnisearchModal extends SuggestModal<OmnisearchMatch> {
 
     return results.map(result => {
       const file = this.plugin.files.find(f => f.path === result.id)
-      const content = this.plugin.contents[file.path]
+      let title = getFirstLine(this.plugin.contents[file.path])
+      let body = removeFirstLine(this.plugin.contents[file.path])
 
-      // Find position of result.terms[0]
-      const pos = content.toLowerCase().indexOf(result.terms[0].toLowerCase())
+      // Highlight the words
+      const highlight = (str: string): string =>
+        '<span class="search-result-file-matched-text">' + str + '</span>'
 
-      // Splice to get 150 chars before and after
-      let sliced = removeFirstLine(
-        content.slice(
-          Math.max(0, pos - 150),
-          Math.min(content.length - 1, pos + 150),
-        ),
-      )
+      const pos = body.toLowerCase().indexOf(result.terms[0])
+      if (pos > -1) {
+        const from = Math.max(0, pos - 150)
+        const to = Math.min(body.length - 1, pos + 150)
+        body =
+          (from > 0 ? '…' : '') +
+          body.slice(from, to).trim() +
+          (to < body.length - 1 ? '…' : '')
+      }
 
-      // Highlight the word
-      const reg = new RegExp(result.terms[0], 'gi')
-      sliced = sliced.replace(
-        reg,
-        str =>
-          '<span class="search-result-file-matched-text">' + str + '</span>',
-      )
+      result.terms
+        .sort((a, b) => a.length - b.length)
+        .forEach(term => {
+          term = term.toLowerCase()
+
+          term = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+          const reg = new RegExp(term, 'gi')
+          body = body.replace(reg, highlight)
+          title = title.replace(reg, highlight)
+        })
 
       return {
         path: file.path,
-        title: getFirstLine(content),
-        body: sliced,
+        title,
+        body,
       }
     })
   }
 
   renderSuggestion(value: OmnisearchMatch, el: HTMLElement): void {
-    el.createEl('div', { cls: 'osresult__title', text: value.title })
+    const title = el.createEl('div', { cls: 'osresult__title' })
+    title.innerHTML = value.title
     const body = el.createEl('div', { cls: 'osresult__body' })
     body.innerHTML = value.body
   }
@@ -118,7 +127,8 @@ class OmnisearchModal extends SuggestModal<OmnisearchMatch> {
     item: OmnisearchMatch,
     evt: MouseEvent | KeyboardEvent,
   ): void {
-    throw new Error('Method not implemented.')
+    // this.app.workspace
+    this.app.workspace.openLinkText(item.path, '')
   }
 }
 
@@ -156,7 +166,7 @@ function truncateText(text: string, len = 500): string {
 }
 
 function splitLines(text: string): string[] {
-  return text.split(/\r?\n|\r/)
+  return text.split(/\r?\n|\r|\./)
 }
 
 function removeFrontMatter(text: string): string {
