@@ -1,4 +1,16 @@
-/* Sets all the text color to red! */
-body {
-    color: red;
+.osresult__title {
+  /* font-size: var(--font-adaptive-normal); */
+}
+
+.osresult__body {
+  white-space: normal;
+  font-size: small;
+  word-wrap: normal;
+
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+
+  color: var(--text-muted);
 }
