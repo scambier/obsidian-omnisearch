@@ -1,7 +1,7 @@
 {
 	"id": "scambier.obsidian-omnisearch",
 	"name": "Omnisearch",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"minAppVersion": "0.14.2",
 	"description": "Search over organization",
 	"author": "Simon Cambier",
