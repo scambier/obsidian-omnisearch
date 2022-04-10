@@ -1,6 +1,6 @@
 import { Notice, Plugin, SuggestModal, TAbstractFile, TFile } from 'obsidian'
 import MiniSearch from 'minisearch'
-import removeMarkdown from 'remove-markdown'
+import { markdownToTxt } from 'markdown-to-txt'
 
 type OmniNote = {
   path: string
@@ -61,13 +61,20 @@ export default class OmnisearchPlugin extends Plugin {
     // Index files that are already present
     const start = new Date().getTime()
     const files = this.app.vault.getMarkdownFiles()
+
+    // This is basically the same behavior as MiniSearch's `addAllAsync()`.
+    // We index files by batches of 10
+    console.log('Omnisearch - indexing ' + files.length + ' files')
     for (let i = 0; i < files.length; ++i) {
-      if (i % 100 === 0) await wait(100)
-      await this.addToIndex(files[i])
+      if (i % 10 === 0) await wait(0)
+      const file = files[i]
+      // console.log(file.path)
+      await this.addToIndex(file)
     }
+
     if (files.length > 0) {
       new Notice(
-        `Omnisearch - Loaded ${files.length} notes in ${
+        `Omnisearch - Indexed ${files.length} notes in ${
           new Date().getTime() - start
         }ms`,
       )
@@ -232,7 +239,7 @@ class OmnisearchModal extends SuggestModal<OmniNote> {
       // Sort the terms from smaller to larger
       // and highlight them in the title and body
       const terms = result.terms.sort((a, b) => a.length - b.length)
-      const reg = new RegExp(terms.join('|'), 'gi')
+      const reg = new RegExp(escapeRegex(terms.join('|')), 'gi')
       body = body.replace(reg, highlighter)
       title = title.replace(reg, highlighter)
       name = name.replace(reg, highlighter)
@@ -281,7 +288,7 @@ function highlighter(str: string): string {
  * @param text
  */
 function clearContent(text: string): string {
-  return removeMarkdown(removeFrontMatter(text))
+  return markdownToTxt(removeFrontMatter(text))
 }
 
 /**
@@ -329,4 +336,9 @@ function wait(ms: number): Promise<void> {
   return new Promise((resolve, reject) => {
     setTimeout(resolve, ms)
   })
+}
+
+// https://stackoverflow.com/a/3561711
+function escapeRegex(str: string): string {
+  return str.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
 }
