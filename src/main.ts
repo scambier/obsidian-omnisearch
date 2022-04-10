@@ -9,8 +9,9 @@ type OmniNote = {
   body: string
 }
 
-const regexWikilink = /\[\[(?<name>.+?)(\|(?<alias>.+?))?\]\]/g
-const regexEmbed = /!\[\[.+?\]\]/g
+// Matches a wikiling that begins a string
+const regexWikilink = /^!?\[\[(?<name>.+?)(\|(?<alias>.+?))?\]\]/
+const regexLineSplit = /\r?\n|\r|((\.|\?|!)( |\r?\n|\r))/g
 const regexYaml = /^---\s*\n(.*?)\n?^---\s?/ms
 
 export default class OmnisearchPlugin extends Plugin {
@@ -73,12 +74,10 @@ export default class OmnisearchPlugin extends Plugin {
       // Fetch content from the cache,
       // trim the markdown, remove embeds and clear wikilinks
       const content = clearContent(await this.app.vault.cachedRead(file))
-        .replace(regexEmbed, '')
-        .replace(regexWikilink, (sub, name, sep, alias) => alias ?? name)
 
       // Split the "title" (the first line/sentence) from the rest of the content
-      const title = getFirstLine(content)
-      const body = removeFirstLine(content)
+      const title = getTitleLine(content)
+      const body = removeTitleLine(content)
 
       // Make the document and index it
       const note = { name: file.name, title, body, path: file.path }
@@ -211,7 +210,7 @@ class OmnisearchModal extends SuggestModal<OmniNote> {
       // If the body contains a searched term, find its position
       // and trim the text around it
       const pos = body.toLowerCase().indexOf(result.terms[0])
-      const surroundLen = 200
+      const surroundLen = 180
       if (pos > -1) {
         const from = Math.max(0, pos - surroundLen)
         const to = Math.min(body.length - 1, pos + surroundLen)
@@ -277,28 +276,39 @@ function clearContent(text: string): string {
 }
 
 /**
- * Returns the first line of the text
+ * The "title" line is the first line that isn't a wikilink
  * @param text
  * @returns
  */
-function getFirstLine(text: string): string {
-  return splitLines(text.trim())[0]
+function getTitleLineIndex(lines: string[]): number {
+  const index = lines.findIndex(l => !regexWikilink.test(l))
+  return index > -1 ? index : 0
 }
 
 /**
- * Removes the first line of the text
+ * Returns the "title" line from a text
  * @param text
  * @returns
  */
-function removeFirstLine(text: string): string {
-  // https://stackoverflow.com/questions/2528076/delete-a-line-of-text-in-javascript
+function getTitleLine(text: string): string {
   const lines = splitLines(text.trim())
-  lines.splice(0, 1)
-  return lines.join('.')
+  return lines[getTitleLineIndex(lines)]
+}
+
+/**
+ * Removes the "title" line from a text
+ * @param text
+ * @returns
+ */
+function removeTitleLine(text: string): string {
+  const lines = splitLines(text.trim())
+  const index = getTitleLineIndex(lines)
+  lines.splice(index, 1)
+  return lines.join('. ')
 }
 
 function splitLines(text: string): string[] {
-  return text.split(/\r?\n|\r|(\. )/)
+  return text.split(regexLineSplit).filter(l => !!l && l.length > 2)
 }
 
 function removeFrontMatter(text: string): string {
