@@ -25,7 +25,7 @@ export default class OmnisearchPlugin extends Plugin {
     this.addCommand({
       id: 'show-modal',
       name: 'Open Omnisearch',
-      hotkeys: [{ modifiers: ['Mod'], key: 'o' }],
+      // hotkeys: [{ modifiers: ['Mod'], key: 'o' }],
       callback: () => {
         new OmnisearchModal(this).open()
       },
