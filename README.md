@@ -10,9 +10,11 @@ _If you experience what you consider to be bug or performance problem, please [o
 
 ![](images/omnisearch.gif)
 
-## Installation
+## Installation & Usage
 
 Omnisearch is not yet available on the official community plugins repository. You can manually download the `scambier.obsidian-omnisearch-x.y.z.zip` file from the [releases page](https://github.com/scambier/obsidian-omnisearch/releases) and unzip it in your `.obsidian/plugins` folder.
+
+Once activated, you can access Omnisearch through the Command Palette by looking for "Omnisearch". You can also assign it a keybind for faster access. The Omnisearch modal works like the Quick Switch plugin: just type your query, navigate with the arrows, and open the note with Enter.
 
 ## Features
 
