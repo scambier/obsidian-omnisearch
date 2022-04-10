@@ -12,7 +12,7 @@ _If you experience what you consider to be bug or performance problem, please [o
 
 ## Installation
 
-Omnisearch is not yet available on the official community plugins repository.
+Omnisearch is not yet available on the official community plugins repository. You can manually download the `scambier.obsidian-omnisearch-x.y.z.zip` file from the [releases page](https://github.com/scambier/obsidian-omnisearch/releases) and unzip it in your `.obsidian/plugins` folder.
 
 ## Features
 
