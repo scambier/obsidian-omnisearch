@@ -1,4 +1,4 @@
-import { Notice, Plugin, SuggestModal, TAbstractFile, TFile } from 'obsidian'
+import { Plugin, SuggestModal, TAbstractFile, TFile } from 'obsidian'
 import MiniSearch from 'minisearch'
 import removeMarkdown from 'remove-markdown'
 
@@ -19,7 +19,7 @@ export default class OmnisearchPlugin extends Plugin {
   notes: Record<string, OmniNote>
 
   async onload(): Promise<void> {
-    this.instantiateMinisearch()
+    await this.instantiateMinisearch()
 
     // Commands to display Omnisearch modal
     this.addCommand({
@@ -50,18 +50,26 @@ export default class OmnisearchPlugin extends Plugin {
     )
   }
 
-  instantiateMinisearch(): void {
+  async instantiateMinisearch(): Promise<void> {
     this.notes = {}
     this.minisearch = new MiniSearch<OmniNote>({
       idField: 'path',
       fields: ['body', 'title', 'name'],
     })
+
+    // Index files that are already present
+    const files = this.app.vault.getMarkdownFiles()
+    for (const file of files) {
+      await this.addToIndex(file)
+    }
   }
 
   async addToIndex(file: TAbstractFile): Promise<void> {
     if (!(file instanceof TFile) || file.extension !== 'md') return
     try {
-      console.log('Omnisearch - Indexing ' + file.path)
+      if (this.notes[file.path]) {
+        throw new Error(`${file.name} is already indexed`)
+      }
       // Fetch content from the cache,
       // trim the markdown, remove embeds and clear wikilinks
       const content = clearContent(await this.app.vault.cachedRead(file))
@@ -78,13 +86,12 @@ export default class OmnisearchPlugin extends Plugin {
       this.notes[file.path] = note
     }
     catch (e) {
-      console.error('Error while indexing ' + file.name)
+      console.trace('Error while indexing ' + file.name)
       console.error(e)
     }
   }
 
   removeFromIndex(path: string): void {
-    console.log('Omnisearch - Deindexing ' + path)
     const note = this.notes[path]
     this.minisearch.remove(note)
     delete this.notes[path]
@@ -191,8 +198,8 @@ class OmnisearchModal extends SuggestModal<OmniNote> {
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, 50)
-    console.log('Omnisearch - Results:')
-    console.log(results)
+    // console.log('Omnisearch - Results:')
+    // console.log(results)
 
     return results.map(result => {
       const note = this.plugin.notes[result.id]
