@@ -55,7 +55,6 @@ export default class OmnisearchPlugin extends Plugin {
     this.minisearch = new MiniSearch<OmniNote>({
       idField: 'path',
       fields: ['body', 'title', 'name'],
-      storeFields: ['body', 'title', 'name'],
     })
   }
 
@@ -196,10 +195,11 @@ class OmnisearchModal extends SuggestModal<OmniNote> {
     console.log(results)
 
     return results.map(result => {
+      const note = this.plugin.notes[result.id]
       // result.id == the file's path
-      let name = result.name
-      let title = result.title
-      let body = result.body
+      let name = note.name
+      let title = note.title
+      let body = note.body
 
       // If the body contains a searched term, find its position
       // and trim the text around it
