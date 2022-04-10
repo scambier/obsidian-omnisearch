@@ -1,4 +1,4 @@
-import { Notice, Plugin, SuggestModal } from 'obsidian'
+import { Notice, Plugin, SuggestModal, TAbstractFile, TFile } from 'obsidian'
 import MiniSearch from 'minisearch'
 import removeMarkdown from 'remove-markdown'
 
@@ -16,16 +16,53 @@ const regexYaml = /^---\s*\n(.*?)\n?^---\s?/ms
 export default class OmnisearchPlugin extends Plugin {
   minisearch: MiniSearch<OmniNote>
   lastSearch?: string
+  notes: Record<string, OmniNote>
 
-  async instantiateMinisearch(): Promise<void> {
+  async onload(): Promise<void> {
+    this.instantiateMinisearch()
+
+    // Commands to display Omnisearch modal
+    this.addCommand({
+      id: 'show-modal',
+      name: 'Open Omnisearch',
+      hotkeys: [{ modifiers: ['Mod'], key: 'o' }],
+      callback: () => {
+        new OmnisearchModal(this).open()
+      },
+    })
+
+    // Listeners to keep the search index up-to-date
+    this.registerEvent(this.app.vault.on('create', this.addToIndex.bind(this)))
+    this.registerEvent(
+      this.app.vault.on('delete', this.removeFromIndex.bind(this)),
+    )
+    this.registerEvent(
+      this.app.vault.on('modify', async file => {
+        this.removeFromIndex(file.path)
+        await this.addToIndex(file)
+      }),
+    )
+    this.registerEvent(
+      this.app.vault.on('rename', async (file, oldPath) => {
+        this.removeFromIndex(oldPath)
+        await this.addToIndex(file)
+      }),
+    )
+  }
+
+  instantiateMinisearch(): void {
+    this.notes = {}
     this.minisearch = new MiniSearch<OmniNote>({
       idField: 'path',
       fields: ['body', 'title', 'name'],
       storeFields: ['body', 'title', 'name'],
     })
+  }
 
-    const files = this.app.vault.getMarkdownFiles()
-    for (const file of files) {
+  async addToIndex(file: TAbstractFile): Promise<void> {
+    if (!(file instanceof TFile) || file.extension !== 'md') return
+    try {
+      console.log('Omnisearch - Indexing ' + file.path)
       // Fetch content from the cache,
       // trim the markdown, remove embeds and clear wikilinks
       const content = clearContent(await this.app.vault.cachedRead(file))
@@ -36,31 +73,22 @@ export default class OmnisearchPlugin extends Plugin {
       const title = getFirstLine(content)
       const body = removeFirstLine(content)
 
-      // Index those fields inside Minisearch
-      this.minisearch.add({ title, body, path: file.path, name: file.name })
+      // Make the document and index it
+      const note = { name: file.name, title, body, path: file.path }
+      this.minisearch.add(note)
+      this.notes[file.path] = note
+    }
+    catch (e) {
+      console.error('Error while indexing ' + file.name)
+      console.error(e)
     }
   }
 
-  async onload(): Promise<void> {
-    this.app.workspace.onLayoutReady(async () => {
-      const start = new Date()
-      await this.instantiateMinisearch()
-      new Notice(
-        `Omnisearch - files indexed in ${
-          new Date().getTime() - start.getTime()
-        } ms`,
-        3000,
-      )
-    })
-
-    this.addCommand({
-      id: 'show-modal',
-      name: 'Open Omnisearch',
-      hotkeys: [{ modifiers: ['Mod'], key: 'o' }],
-      callback: () => {
-        new OmnisearchModal(this).open()
-      },
-    })
+  removeFromIndex(path: string): void {
+    console.log('Omnisearch - Deindexing ' + path)
+    const note = this.notes[path]
+    this.minisearch.remove(note)
+    delete this.notes[path]
   }
 }
 
@@ -84,16 +112,28 @@ class OmnisearchModal extends SuggestModal<OmniNote> {
     ])
   }
 
-  onKeydown(ev: KeyboardEvent): void {
+  async onKeydown(ev: KeyboardEvent): Promise<void> {
     const noteId = this.selectedNoteId
     if (ev.key !== 'Enter' || !noteId) return
 
     if (ev.ctrlKey) {
       // Open in a new pane
-      this.app.workspace.openLinkText(noteId, '', true)
+      await this.app.workspace.openLinkText(noteId, '', true)
     }
     else if (ev.shiftKey) {
       // Create a note
+      try {
+        const file = await this.app.vault.create(
+          this.inputEl.value + '.md',
+          '# ' + this.inputEl.value,
+        )
+        await this.app.workspace.openLinkText(file.path, '')
+      }
+      catch (e) {
+        if (e.message === 'File already exists.') {
+          await this.app.workspace.openLinkText(this.inputEl.value, '')
+        }
+      }
     }
     this.close()
   }
@@ -110,7 +150,6 @@ class OmnisearchModal extends SuggestModal<OmniNote> {
       const id = (record?.target as HTMLElement).getAttribute('data-note-id')
       if (id) {
         this.selectedNoteId = id
-        console.log('saved note ' + id)
       }
     })
     this.mutationObserver.observe(modalEl, {
@@ -142,7 +181,6 @@ class OmnisearchModal extends SuggestModal<OmniNote> {
   }
 
   getSuggestions(query: string): OmniNote[] {
-    console.log('query: ' + query)
     this.plugin.lastSearch = query
 
     const results = this.plugin.minisearch
@@ -154,6 +192,7 @@ class OmnisearchModal extends SuggestModal<OmniNote> {
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, 50)
+    console.log('Omnisearch - Results:')
     console.log(results)
 
     return results.map(result => {
