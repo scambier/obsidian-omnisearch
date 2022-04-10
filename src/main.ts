@@ -1,4 +1,4 @@
-import { Plugin, SuggestModal, TAbstractFile, TFile } from 'obsidian'
+import { Notice, Plugin, SuggestModal, TAbstractFile, TFile } from 'obsidian'
 import MiniSearch from 'minisearch'
 import removeMarkdown from 'remove-markdown'
 
@@ -59,9 +59,18 @@ export default class OmnisearchPlugin extends Plugin {
     })
 
     // Index files that are already present
+    const start = new Date().getTime()
     const files = this.app.vault.getMarkdownFiles()
-    for (const file of files) {
-      await this.addToIndex(file)
+    for (let i = 0; i < files.length; ++i) {
+      if (i % 100 === 0) await wait(100)
+      await this.addToIndex(files[i])
+    }
+    if (files.length > 0) {
+      new Notice(
+        `Omnisearch - Loaded ${files.length} notes in ${
+          new Date().getTime() - start
+        }ms`,
+      )
     }
   }
 
@@ -314,4 +323,10 @@ function splitLines(text: string): string[] {
 function removeFrontMatter(text: string): string {
   // Regex to recognize YAML Front Matter (at beginning of file, 3 hyphens, than any charecter, including newlines, then 3 hyphens).
   return text.replace(regexYaml, '')
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    setTimeout(resolve, ms)
+  })
 }
