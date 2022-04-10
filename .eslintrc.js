@@ -42,5 +42,6 @@ module.exports = {
         asyncArrow: 'always',
       },
     ],
+    'no-new': ['off'],
   },
 }

@@ -3,9 +3,10 @@
 }
 
 .osresult__name {
-  padding-left: 1em;
+  padding-right: .5em;
   font-size: small;
   font-weight: normal;
+  color: var(--text-normal);
   /* color: var(--text-muted);
   text-decoration: underline; */
 }

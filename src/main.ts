@@ -1,8 +1,8 @@
-import { Plugin, SuggestModal } from 'obsidian'
+import { Notice, Plugin, SuggestModal } from 'obsidian'
 import MiniSearch from 'minisearch'
 import removeMarkdown from 'remove-markdown'
 
-type Note = {
+type OmniNote = {
   path: string
   name: string
   title: string
@@ -11,13 +11,14 @@ type Note = {
 
 const regexWikilink = /\[\[(?<name>.+?)(\|(?<alias>.+?))?\]\]/g
 const regexEmbed = /!\[\[.+?\]\]/g
+const regexYaml = /^---\s*\n(.*?)\n?^---\s?/ms
 
 export default class OmnisearchPlugin extends Plugin {
-  minisearch: MiniSearch<Note>
+  minisearch: MiniSearch<OmniNote>
   lastSearch?: string
 
   async instantiateMinisearch(): Promise<void> {
-    this.minisearch = new MiniSearch<Note>({
+    this.minisearch = new MiniSearch<OmniNote>({
       idField: 'path',
       fields: ['body', 'title', 'name'],
       storeFields: ['body', 'title', 'name'],
@@ -42,7 +43,14 @@ export default class OmnisearchPlugin extends Plugin {
 
   async onload(): Promise<void> {
     this.app.workspace.onLayoutReady(async () => {
+      const start = new Date()
       await this.instantiateMinisearch()
+      new Notice(
+        `Omnisearch - files indexed in ${
+          new Date().getTime() - start.getTime()
+        } ms`,
+        3000,
+      )
     })
 
     this.addCommand({
@@ -56,8 +64,10 @@ export default class OmnisearchPlugin extends Plugin {
   }
 }
 
-class OmnisearchModal extends SuggestModal<Note> {
-  plugin: OmnisearchPlugin
+class OmnisearchModal extends SuggestModal<OmniNote> {
+  private plugin: OmnisearchPlugin
+  private selectedNoteId?: string
+  private mutationObserver?: MutationObserver
 
   constructor(plugin: OmnisearchPlugin) {
     super(plugin.app)
@@ -74,8 +84,46 @@ class OmnisearchModal extends SuggestModal<Note> {
     ])
   }
 
+  onKeydown(ev: KeyboardEvent): void {
+    const noteId = this.selectedNoteId
+    if (ev.key !== 'Enter' || !noteId) return
+
+    if (ev.ctrlKey) {
+      // Open in a new pane
+      this.app.workspace.openLinkText(noteId, '', true)
+    }
+    else if (ev.shiftKey) {
+      // Create a note
+    }
+    this.close()
+  }
+
+  /**
+   * Observes the modal element to keep track of which search result is currently selected
+   * @param modalEl
+   */
+  setupObserver(modalEl: HTMLElement): void {
+    this.mutationObserver = new MutationObserver(events => {
+      const record = events.find(event =>
+        (event.target as HTMLDivElement).classList.contains('is-selected'),
+      )
+      const id = (record?.target as HTMLElement).getAttribute('data-note-id')
+      if (id) {
+        this.selectedNoteId = id
+        console.log('saved note ' + id)
+      }
+    })
+    this.mutationObserver.observe(modalEl, {
+      attributes: true,
+      subtree: true,
+    })
+  }
+
   onOpen(): void {
     this.inputEl.focus()
+    this.setupObserver(this.modalEl)
+
+    // Reload last search, if any
     if (this.plugin.lastSearch) {
       const event = new Event('input', {
         bubbles: true,
@@ -85,9 +133,15 @@ class OmnisearchModal extends SuggestModal<Note> {
       this.inputEl.dispatchEvent(event)
       this.inputEl.select()
     }
+
+    this.inputEl.onkeydown = this.onKeydown.bind(this)
   }
 
-  getSuggestions(query: string): Note[] {
+  onClose(): void {
+    this.mutationObserver.disconnect()
+  }
+
+  getSuggestions(query: string): OmniNote[] {
     console.log('query: ' + query)
     this.plugin.lastSearch = query
 
@@ -138,23 +192,28 @@ class OmnisearchModal extends SuggestModal<Note> {
     })
   }
 
-  renderSuggestion(value: Note, el: HTMLElement): void {
+  renderSuggestion(value: OmniNote, el: HTMLElement): void {
+    el.setAttribute('data-note-id', value.path)
     // title
     const title = el.createEl('div', { cls: 'osresult__title' })
     title.innerHTML = value.title
 
     // filename
-    const name = el.createEl('span', { cls: 'osresult__name' })
+    const name = document.createElement('span')
+    name.className = 'osresult__name'
     name.innerHTML = value.name
-    title.appendChild(name)
 
     // body
-    const body = el.createEl('div', { cls: 'osresult__body' })
+    const body = document.createElement('span')
     body.innerHTML = value.body
+
+    // body container
+    const bodyContainer = el.createEl('div', { cls: 'osresult__body' })
+    bodyContainer.appendChild(name)
+    bodyContainer.appendChild(body)
   }
 
-  onChooseSuggestion(item: Note, evt: MouseEvent | KeyboardEvent): void {
-    // this.app.workspace
+  onChooseSuggestion(item: OmniNote): void {
     this.app.workspace.openLinkText(item.path, '')
   }
 }
@@ -189,7 +248,7 @@ function removeFirstLine(text: string): string {
   // https://stackoverflow.com/questions/2528076/delete-a-line-of-text-in-javascript
   const lines = splitLines(text.trim())
   lines.splice(0, 1)
-  return lines.join('\n')
+  return lines.join('.')
 }
 
 function splitLines(text: string): string[] {
@@ -198,6 +257,5 @@ function splitLines(text: string): string[] {
 
 function removeFrontMatter(text: string): string {
   // Regex to recognize YAML Front Matter (at beginning of file, 3 hyphens, than any charecter, including newlines, then 3 hyphens).
-  const YAMLFrontMatter = /^---\s*\n(.*?)\n?^---\s?/ms
-  return text.replace(YAMLFrontMatter, '')
+  return text.replace(regexYaml, '')
 }
