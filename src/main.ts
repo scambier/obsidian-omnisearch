@@ -107,6 +107,7 @@ export default class OmnisearchPlugin extends Plugin {
   }
 
   removeFromIndex(path: string): void {
+    if (!path.endsWith('.md')) return
     const note = this.notes[path]
     this.minisearch.remove(note)
     delete this.notes[path]
