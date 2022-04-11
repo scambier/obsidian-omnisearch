@@ -35,18 +35,22 @@ export default class OmnisearchPlugin extends Plugin {
     // Listeners to keep the search index up-to-date
     this.registerEvent(this.app.vault.on('create', this.addToIndex.bind(this)))
     this.registerEvent(
-      this.app.vault.on('delete', this.removeFromIndex.bind(this)),
+      this.app.vault.on('delete', file => {
+        this.removeFromIndex(file)
+      }),
     )
     this.registerEvent(
       this.app.vault.on('modify', async file => {
-        this.removeFromIndex(file.path)
+        this.removeFromIndex(file)
         await this.addToIndex(file)
       }),
     )
     this.registerEvent(
       this.app.vault.on('rename', async (file, oldPath) => {
-        this.removeFromIndex(oldPath)
-        await this.addToIndex(file)
+        if (file instanceof TFile && file.path.endsWith('.md')) {
+          this.removeFromIndexByPath(oldPath)
+          await this.addToIndex(file)
+        }
       }),
     )
   }
@@ -106,8 +110,13 @@ export default class OmnisearchPlugin extends Plugin {
     }
   }
 
-  removeFromIndex(path: string): void {
-    if (!path.endsWith('.md')) return
+  removeFromIndex(file: TAbstractFile): void {
+    if (file instanceof TFile && file.path.endsWith('.md')) {
+      return this.removeFromIndexByPath(file.path)
+    }
+  }
+
+  removeFromIndexByPath(path: string): void {
     const note = this.notes[path]
     this.minisearch.remove(note)
     delete this.notes[path]
