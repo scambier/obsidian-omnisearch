@@ -239,7 +239,7 @@ class OmnisearchModal extends SuggestModal<OmniNote> {
       // Sort the terms from smaller to larger
       // and highlight them in the title and body
       const terms = result.terms.sort((a, b) => a.length - b.length)
-      const reg = new RegExp(escapeRegex(terms.join('|')), 'gi')
+      const reg = new RegExp(terms.map(escapeRegex).join('|'), 'gi')
       body = body.replace(reg, highlighter)
       title = title.replace(reg, highlighter)
       name = name.replace(reg, highlighter)
