@@ -12,6 +12,8 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
     super(plugin.app)
     this.plugin = plugin
 
+    this.modalEl.addClass('omnisearch-modal')
+
     this.setPlaceholder('Type to search through your notes')
 
     this.setInstructions([
@@ -137,13 +139,14 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
 
   renderSuggestion(value: ResultNote, el: HTMLElement): void {
     el.setAttribute('data-note-id', value.path)
+    el.addClass('omnisearch-result')
 
     // title
-    const title = el.createEl('div', { cls: 'osresult__title' })
+    const title = el.createEl('div', { cls: 'omnisearch-result__title' })
     title.innerHTML = value.basename
 
     // body
-    const body = el.createEl('div', { cls: 'osresult__body' })
+    const body = el.createEl('div', { cls: 'omnisearch-result__body' })
     body.innerHTML = value.content
   }
 

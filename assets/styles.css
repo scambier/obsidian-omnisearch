@@ -1,17 +1,14 @@
-.osresult__title {
+.omnisearch-modal {
+}
+
+.omnisearch-result {
+}
+
+.omnisearch-result__title {
   font-weight: bold;
 }
 
-.osresult__name {
-  padding-right: .5em;
-  font-size: small;
-  font-weight: normal;
-  color: var(--text-normal);
-  /* color: var(--text-muted);
-  text-decoration: underline; */
-}
-
-.osresult__body {
+.omnisearch-result__body {
   white-space: normal;
   font-size: small;
   word-wrap: normal;
