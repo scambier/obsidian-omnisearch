@@ -1,18 +1,20 @@
 import { Notice, Plugin, SuggestModal, TAbstractFile, TFile } from 'obsidian'
 import MiniSearch from 'minisearch'
-import { markdownToTxt } from 'markdown-to-txt'
+import {
+  clearContent,
+  escapeRegex,
+  getTitleLine,
+  highlighter,
+  removeTitleLine,
+  wait,
+} from './utils'
 
 type OmniNote = {
   path: string
-  name: string
+  basename: string
   title: string
   body: string
 }
-
-// Matches a wikiling that begins a string
-const regexWikilink = /^!?\[\[(?<name>.+?)(\|(?<alias>.+?))?\]\]/
-const regexLineSplit = /\r?\n|\r|((\.|\?|!)( |\r?\n|\r))/g
-const regexYaml = /^---\s*\n(.*?)\n?^---\s?/ms
 
 export default class OmnisearchPlugin extends Plugin {
   minisearch: MiniSearch<OmniNote>
@@ -59,7 +61,7 @@ export default class OmnisearchPlugin extends Plugin {
     this.notes = {}
     this.minisearch = new MiniSearch<OmniNote>({
       idField: 'path',
-      fields: ['body', 'title', 'name'],
+      fields: ['body', 'title', 'basename'],
     })
 
     // Index files that are already present
@@ -89,7 +91,7 @@ export default class OmnisearchPlugin extends Plugin {
     if (!(file instanceof TFile) || file.extension !== 'md') return
     try {
       if (this.notes[file.path]) {
-        throw new Error(`${file.name} is already indexed`)
+        throw new Error(`${file.basename} is already indexed`)
       }
       // Fetch content from the cache,
       // trim the markdown, remove embeds and clear wikilinks
@@ -100,12 +102,12 @@ export default class OmnisearchPlugin extends Plugin {
       const body = removeTitleLine(content)
 
       // Make the document and index it
-      const note = { name: file.name, title, body, path: file.path }
+      const note = { basename: file.basename, title, body, path: file.path }
       this.minisearch.add(note)
       this.notes[file.path] = note
     }
     catch (e) {
-      console.trace('Error while indexing ' + file.name)
+      console.trace('Error while indexing ' + file.basename)
       console.error(e)
     }
   }
@@ -219,7 +221,7 @@ class OmnisearchModal extends SuggestModal<OmniNote> {
         prefix: true,
         fuzzy: term => (term.length > 4 ? 0.2 : false),
         combineWith: 'AND',
-        boost: { name: 2, title: 1.5 },
+        boost: { basename: 2, title: 1.5 },
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, 50)
@@ -229,7 +231,7 @@ class OmnisearchModal extends SuggestModal<OmniNote> {
     return results.map(result => {
       const note = this.plugin.notes[result.id]
       // result.id == the file's path
-      let name = note.name
+      let basename = note.basename
       let title = note.title
       let body = note.body
 
@@ -252,11 +254,11 @@ class OmnisearchModal extends SuggestModal<OmniNote> {
       const reg = new RegExp(terms.map(escapeRegex).join('|'), 'gi')
       body = body.replace(reg, highlighter)
       title = title.replace(reg, highlighter)
-      name = name.replace(reg, highlighter)
+      basename = basename.replace(reg, highlighter)
 
       return {
         path: result.id,
-        name,
+        basename,
         title,
         body,
       }
@@ -272,7 +274,7 @@ class OmnisearchModal extends SuggestModal<OmniNote> {
     // filename
     const name = document.createElement('span')
     name.className = 'osresult__name'
-    name.innerHTML = value.name
+    name.innerHTML = value.basename
 
     // body
     const body = document.createElement('span')
@@ -287,68 +289,4 @@ class OmnisearchModal extends SuggestModal<OmniNote> {
   onChooseSuggestion(item: OmniNote): void {
     this.app.workspace.openLinkText(item.path, '')
   }
-}
-
-function highlighter(str: string): string {
-  return '<span class="search-result-file-matched-text">' + str + '</span>'
-}
-
-/**
- * Strips the markdown and frontmatter
- * @param text
- */
-function clearContent(text: string): string {
-  return markdownToTxt(removeFrontMatter(text))
-}
-
-/**
- * The "title" line is the first line that isn't a wikilink
- * @param text
- * @returns
- */
-function getTitleLineIndex(lines: string[]): number {
-  const index = lines.findIndex(l => !regexWikilink.test(l))
-  return index > -1 ? index : 0
-}
-
-/**
- * Returns the "title" line from a text
- * @param text
- * @returns
- */
-function getTitleLine(text: string): string {
-  const lines = splitLines(text.trim())
-  return lines[getTitleLineIndex(lines)]
-}
-
-/**
- * Removes the "title" line from a text
- * @param text
- * @returns
- */
-function removeTitleLine(text: string): string {
-  const lines = splitLines(text.trim())
-  const index = getTitleLineIndex(lines)
-  lines.splice(index, 1)
-  return lines.join('. ')
-}
-
-function splitLines(text: string): string[] {
-  return text.split(regexLineSplit).filter(l => !!l && l.length > 2)
-}
-
-function removeFrontMatter(text: string): string {
-  // Regex to recognize YAML Front Matter (at beginning of file, 3 hyphens, than any charecter, including newlines, then 3 hyphens).
-  return text.replace(regexYaml, '')
-}
-
-function wait(ms: number): Promise<void> {
-  return new Promise((resolve, reject) => {
-    setTimeout(resolve, ms)
-  })
-}
-
-// https://stackoverflow.com/a/3561711
-function escapeRegex(str: string): string {
-  return str.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
 }
