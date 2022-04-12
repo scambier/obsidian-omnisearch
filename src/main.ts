@@ -1,6 +1,6 @@
 import { Notice, Plugin, TAbstractFile, TFile } from 'obsidian'
 import MiniSearch from 'minisearch'
-import { clearContent, getTitleLine, removeTitleLine, wait } from './utils'
+import { clearContent, getTitleLine, wait } from './utils'
 import { IndexedNote } from './globals'
 import { OmnisearchModal } from './modal'
 
@@ -66,7 +66,9 @@ export default class OmnisearchPlugin extends Plugin {
 
     // This is basically the same behavior as MiniSearch's `addAllAsync()`.
     // We index files by batches of 10
-    if (files.length) { console.log('Omnisearch - indexing ' + files.length + ' files') }
+    if (files.length) {
+      console.log('Omnisearch - indexing ' + files.length + ' files')
+    }
     for (let i = 0; i < files.length; ++i) {
       if (i % 10 === 0) await wait(0)
       const file = files[i]
@@ -86,6 +88,8 @@ export default class OmnisearchPlugin extends Plugin {
   async addToIndex(file: TAbstractFile): Promise<void> {
     if (!(file instanceof TFile) || file.extension !== 'md') return
     try {
+      // console.log(`Omnisearch - adding ${file.path} to index`)
+
       if (this.indexedNotes[file.path]) {
         throw new Error(`${file.basename} is already indexed`)
       }
@@ -114,6 +118,7 @@ export default class OmnisearchPlugin extends Plugin {
 
   removeFromIndex(file: TAbstractFile): void {
     if (file instanceof TFile && file.path.endsWith('.md')) {
+      // console.log(`Omnisearch - removing ${file.path} from index`)
       return this.removeFromIndexByPath(file.path)
     }
   }

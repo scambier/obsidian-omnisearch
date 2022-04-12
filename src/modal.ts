@@ -1,4 +1,4 @@
-import { SuggestModal } from 'obsidian'
+import { MarkdownView, SuggestModal, TFile } from 'obsidian'
 import { ResultNote } from './globals'
 import OmnisearchPlugin from './main'
 import { escapeRegex, highlighter } from './utils'
@@ -133,7 +133,14 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
       content = content.replace(reg, highlighter)
       basename = basename.replace(reg, highlighter)
 
-      return { content, basename, path: note.path }
+      const resultNote: ResultNote = {
+        content,
+        basename,
+        path: note.path,
+        keyword: result.terms[0],
+        occurence: 0,
+      }
+      return resultNote
     })
   }
 
@@ -150,7 +157,20 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
     body.innerHTML = value.content
   }
 
-  onChooseSuggestion(item: ResultNote): void {
-    this.app.workspace.openLinkText(item.path, '')
+  async onChooseSuggestion(item: ResultNote): Promise<void> {
+    const file = this.app.vault.getAbstractFileByPath(item.path) as TFile
+    const content = (await this.app.vault.cachedRead(file)).toLowerCase()
+    const offset = content.indexOf(item.keyword.toLowerCase())
+    await this.app.workspace.openLinkText(item.path, '')
+
+    const view = this.app.workspace.getActiveViewOfType(MarkdownView)
+    const pos = view.editor.offsetToPos(offset)
+    pos.ch = 0
+
+    view.editor.setCursor(pos)
+    view.editor.scrollIntoView({
+      from: { line: pos.line - 10, ch: 0 },
+      to: { line: pos.line + 10, ch: 0 },
+    })
   }
 }

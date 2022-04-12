@@ -19,4 +19,6 @@ export type ResultNote = {
   path: string
   basename: string
   content: string
+  keyword: string
+  occurence: number
 }
