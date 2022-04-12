@@ -93,10 +93,14 @@ export default class OmnisearchPlugin extends Plugin {
       // trim the markdown, remove embeds and clear wikilinks
       const content = clearContent(await this.app.vault.cachedRead(file))
 
+      // Purge HTML before indexing
+      const tmp = document.createElement('div')
+      tmp.innerHTML = content
+
       // Make the document and index it
       const note: IndexedNote = {
         basename: file.basename,
-        content,
+        content: tmp.innerText,
         path: file.path,
       }
       this.minisearch.add(note)
