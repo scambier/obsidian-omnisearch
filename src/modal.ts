@@ -29,7 +29,7 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
     const noteId = this.selectedNoteId
     if (ev.key !== 'Enter' || !noteId) return
 
-    if (ev.ctrlKey) {
+    if (ev.ctrlKey || ev.metaKey) {
       // Open in a new pane
       await this.app.workspace.openLinkText(noteId, '', true)
     }
