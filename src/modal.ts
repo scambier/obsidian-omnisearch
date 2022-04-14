@@ -1,7 +1,8 @@
 import { MarkdownView, SuggestModal, TFile } from 'obsidian'
-import { ResultNote } from './globals'
-import OmnisearchPlugin from './main'
+import type { ResultNote } from './globals'
+import type OmnisearchPlugin from './main'
 import { escapeRegex, getAllIndexes, highlighter } from './utils'
+import Component from './Component.svelte'
 
 export class OmnisearchModal extends SuggestModal<ResultNote> {
   private plugin: OmnisearchPlugin
@@ -64,7 +65,8 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
       const record = events.find(event =>
         (event.target as HTMLDivElement).classList.contains('is-selected'),
       )
-      const id = (record?.target as HTMLElement)?.getAttribute('data-note-id') ?? null
+      const id =
+        (record?.target as HTMLElement)?.getAttribute('data-note-id') ?? null
       if (id) {
         this.selectedNoteId = id
       }
@@ -160,6 +162,10 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
   }
 
   renderSuggestion(value: ResultNote, el: HTMLElement): void {
+    const component = new Component({
+      target: el,
+      props: { variable: 1 },
+    })
     el.setAttribute('data-note-id', value.path)
     el.addClass('omnisearch-result')
 

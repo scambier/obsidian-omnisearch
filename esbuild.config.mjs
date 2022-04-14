@@ -1,7 +1,9 @@
 import esbuild from 'esbuild'
+import sveltePlugin from 'esbuild-svelte'
+import sveltePreprocess from 'svelte-preprocess'
+import { copy } from 'esbuild-plugin-copy'
 import process from 'process'
 import builtins from 'builtin-modules'
-import { copy } from 'esbuild-plugin-copy'
 import path from 'path'
 
 const banner = `/*
@@ -47,6 +49,9 @@ esbuild
     ],
     outfile: path.join('./dist', 'main.js'),
     plugins: [
+      sveltePlugin({
+        preprocess: sveltePreprocess(),
+      }),
       copy({
         assets: {
           from: ['./assets/*'],

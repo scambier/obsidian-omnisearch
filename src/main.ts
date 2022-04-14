@@ -1,11 +1,7 @@
 import { Notice, Plugin, TAbstractFile, TFile } from 'obsidian'
 import MiniSearch from 'minisearch'
-import {
-  clearContent,
-  extractHeadingsFromCache,
-  wait,
-} from './utils'
-import { IndexedNote } from './globals'
+import { clearContent, extractHeadingsFromCache, wait } from './utils'
+import type { IndexedNote } from './globals'
 import { OmnisearchModal } from './modal'
 
 export default class OmnisearchPlugin extends Plugin {
@@ -108,9 +104,15 @@ export default class OmnisearchPlugin extends Plugin {
         basename: file.basename,
         content: tmp.innerText,
         path: file.path,
-        headings1: fileCache ? extractHeadingsFromCache(fileCache, 1).join(' ') : '',
-        headings2: fileCache ? extractHeadingsFromCache(fileCache, 2).join(' ') : '',
-        headings3: fileCache ? extractHeadingsFromCache(fileCache, 3).join(' ') : '',
+        headings1: fileCache
+          ? extractHeadingsFromCache(fileCache, 1).join(' ')
+          : '',
+        headings2: fileCache
+          ? extractHeadingsFromCache(fileCache, 2).join(' ')
+          : '',
+        headings3: fileCache
+          ? extractHeadingsFromCache(fileCache, 3).join(' ')
+          : '',
       }
       this.minisearch.add(note)
       this.indexedNotes[file.path] = note
