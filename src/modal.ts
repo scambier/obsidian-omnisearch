@@ -84,6 +84,7 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
       this.inputEl.value = this.plugin.lastSearch
       this.inputEl.dispatchEvent(event)
       this.inputEl.select()
+      this.inputEl.spellcheck = false
     }
 
     this.inputEl.onkeydown = this.onKeydown.bind(this)
