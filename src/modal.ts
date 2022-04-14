@@ -1,7 +1,7 @@
 import { MarkdownView, SuggestModal, TFile } from 'obsidian'
 import { ResultNote } from './globals'
 import OmnisearchPlugin from './main'
-import { escapeRegex, highlighter } from './utils'
+import { escapeRegex, getAllIndexes, highlighter } from './utils'
 
 export class OmnisearchModal extends SuggestModal<ResultNote> {
   private plugin: OmnisearchPlugin
@@ -43,8 +43,12 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
         await this.app.workspace.openLinkText(file.path, '')
       }
       catch (e) {
-        if (e.message === 'File already exists.') {
+        if (e instanceof Error && e.message === 'File already exists.') {
+          // Open the existing file instead of creating it
           await this.app.workspace.openLinkText(this.inputEl.value, '')
+        }
+        else {
+          console.error(e)
         }
       }
     }
@@ -60,7 +64,7 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
       const record = events.find(event =>
         (event.target as HTMLDivElement).classList.contains('is-selected'),
       )
-      const id = (record?.target as HTMLElement).getAttribute('data-note-id')
+      const id = (record?.target as HTMLElement)?.getAttribute('data-note-id') ?? null
       if (id) {
         this.selectedNoteId = id
       }
@@ -91,7 +95,9 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
   }
 
   onClose(): void {
-    this.mutationObserver.disconnect()
+    if (this.mutationObserver) {
+      this.mutationObserver.disconnect()
+    }
   }
 
   async getSuggestions(query: string): Promise<ResultNote[]> {
@@ -102,47 +108,55 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
         prefix: true,
         fuzzy: term => (term.length > 4 ? 0.2 : false),
         combineWith: 'AND',
-        boost: { basename: 2, title: 1.5 },
+        boost: { basename: 2, headings1: 1.5, headings2: 1.3, headings3: 1.1 },
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, 50)
-    // console.log('Omnisearch - Results:')
+    // console.log(`Omnisearch - Results for "${query}"`)
     // console.log(results)
 
-    return results.map(result => {
-      const note = this.plugin.indexedNotes[result.id]
-      let content = note.content
-      let basename = note.basename
+    const suggestions = await Promise.all(
+      results.map(async result => {
+        const file = this.app.vault.getAbstractFileByPath(result.id) as TFile
+        // const metadata = this.app.metadataCache.getFileCache(file)
+        let content = (await this.app.vault.cachedRead(file)).toLowerCase()
+        let basename = file.basename
 
-      // If the body contains a searched term, find its position
-      // and trim the text around it
-      const pos = content.toLowerCase().indexOf(result.terms[0])
-      const surroundLen = 180
-      if (pos > -1) {
-        const from = Math.max(0, pos - surroundLen)
-        const to = Math.min(content.length - 1, pos + surroundLen)
-        content =
-          (from > 0 ? '…' : '') +
-          content.slice(from, to).trim() +
-          (to < content.length - 1 ? '…' : '')
-      }
+        // Sort the terms from smaller to larger
+        // and highlight them in the title and body
+        const terms = result.terms.sort((a, b) => a.length - b.length)
+        const reg = new RegExp(terms.map(escapeRegex).join('|'), 'gi')
+        const matches = getAllIndexes(content, reg)
 
-      // Sort the terms from smaller to larger
-      // and highlight them in the title and body
-      const terms = result.terms.sort((a, b) => a.length - b.length)
-      const reg = new RegExp(terms.map(escapeRegex).join('|'), 'gi')
-      content = content.replace(reg, highlighter)
-      basename = basename.replace(reg, highlighter)
+        // If the body contains a searched term, find its position
+        // and trim the text around it
+        const pos = content.toLowerCase().indexOf(result.terms[0])
+        const surroundLen = 180
+        if (pos > -1) {
+          const from = Math.max(0, pos - surroundLen)
+          const to = Math.min(content.length - 1, pos + surroundLen)
+          content =
+            (from > 0 ? '…' : '') +
+            content.slice(from, to).trim() +
+            (to < content.length - 1 ? '…' : '')
+        }
 
-      const resultNote: ResultNote = {
-        content,
-        basename,
-        path: note.path,
-        keyword: result.terms[0],
-        occurence: 0,
-      }
-      return resultNote
-    })
+        // console.log(matches)
+        content = content.replace(reg, highlighter)
+        basename = basename.replace(reg, highlighter)
+
+        const resultNote: ResultNote = {
+          content,
+          basename,
+          path: file.path,
+          matches,
+          occurence: 0,
+        }
+        return resultNote
+      }),
+    )
+
+    return suggestions
   }
 
   renderSuggestion(value: ResultNote, el: HTMLElement): void {
@@ -160,11 +174,18 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
 
   async onChooseSuggestion(item: ResultNote): Promise<void> {
     const file = this.app.vault.getAbstractFileByPath(item.path) as TFile
+    // const fileCache = this.app.metadataCache.getFileCache(file)
+    // console.log(fileCache)
     const content = (await this.app.vault.cachedRead(file)).toLowerCase()
-    const offset = content.indexOf(item.keyword.toLowerCase())
+    const offset = content.indexOf(
+      item.matches[item.occurence].match.toLowerCase(),
+    )
     await this.app.workspace.openLinkText(item.path, '')
 
     const view = this.app.workspace.getActiveViewOfType(MarkdownView)
+    if (!view) {
+      throw new Error('OmniSearch - No active MarkdownView')
+    }
     const pos = view.editor.offsetToPos(offset)
     pos.ch = 0
 

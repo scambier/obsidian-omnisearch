@@ -1,13 +1,17 @@
 import { Notice, Plugin, TAbstractFile, TFile } from 'obsidian'
 import MiniSearch from 'minisearch'
-import { clearContent, getTitleLine, wait } from './utils'
+import {
+  clearContent,
+  extractHeadingsFromCache,
+  wait,
+} from './utils'
 import { IndexedNote } from './globals'
 import { OmnisearchModal } from './modal'
 
 export default class OmnisearchPlugin extends Plugin {
-  minisearch: MiniSearch<IndexedNote>
+  minisearch!: MiniSearch<IndexedNote>
   lastSearch?: string
-  indexedNotes: Record<string, IndexedNote>
+  indexedNotes: Record<string, IndexedNote> = {}
 
   async onload(): Promise<void> {
     await this.instantiateMinisearch()
@@ -53,11 +57,7 @@ export default class OmnisearchPlugin extends Plugin {
     this.indexedNotes = {}
     this.minisearch = new MiniSearch({
       idField: 'path',
-      fields: ['content', 'title', 'basename'],
-      extractField: (document, fieldname: 'content' | 'title' | 'basename') => {
-        if (fieldname === 'title') return getTitleLine(document.content)
-        return document[fieldname]
-      },
+      fields: ['basename', 'content', 'headings1', 'headings2', 'headings3'],
     })
 
     // Index files that are already present
@@ -89,6 +89,8 @@ export default class OmnisearchPlugin extends Plugin {
     if (!(file instanceof TFile) || file.extension !== 'md') return
     try {
       // console.log(`Omnisearch - adding ${file.path} to index`)
+      const fileCache = this.app.metadataCache.getFileCache(file)
+      // console.log(fileCache)
 
       if (this.indexedNotes[file.path]) {
         throw new Error(`${file.basename} is already indexed`)
@@ -106,6 +108,9 @@ export default class OmnisearchPlugin extends Plugin {
         basename: file.basename,
         content: tmp.innerText,
         path: file.path,
+        headings1: fileCache ? extractHeadingsFromCache(fileCache, 1).join(' ') : '',
+        headings2: fileCache ? extractHeadingsFromCache(fileCache, 2).join(' ') : '',
+        headings3: fileCache ? extractHeadingsFromCache(fileCache, 3).join(' ') : '',
       }
       this.minisearch.add(note)
       this.indexedNotes[file.path] = note

@@ -1,5 +1,12 @@
 import markdownToTxt from 'markdown-to-txt'
-import { regexLineSplit, regexWikilink, regexYaml } from './globals'
+import { CachedMetadata } from 'obsidian'
+import {
+  isSearchMatch,
+  regexLineSplit,
+  regexWikilink,
+  regexYaml,
+  SearchMatch,
+} from './globals'
 
 export function highlighter(str: string): string {
   return '<span class="search-result-file-matched-text">' + str + '</span>'
@@ -63,4 +70,26 @@ export function wait(ms: number): Promise<void> {
 // https://stackoverflow.com/a/3561711
 export function escapeRegex(str: string): string {
   return str.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
+}
+
+/**
+ * Returns the positions of all occurences of `val` inside of `text`
+ * https://stackoverflow.com/a/58828841
+ * @param text
+ * @param val
+ * @returns
+ */
+export function getAllIndexes(text: string, val: RegExp): SearchMatch[] {
+  return [...text.matchAll(val)]
+    .map(o => ({ match: o[0], index: o.index }))
+    .filter(isSearchMatch)
+}
+
+export function extractHeadingsFromCache(
+  cache: CachedMetadata,
+  level: number,
+): string[] {
+  return (
+    cache.headings?.filter(h => h.level === level).map(h => h.heading) ?? []
+  )
 }
