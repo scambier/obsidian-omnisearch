@@ -14,6 +14,7 @@ specifiers:
   eslint-plugin-import: 2.22.1
   eslint-plugin-node: 11.1.0
   eslint-plugin-promise: 5.0.0
+  eslint-plugin-svelte3: ^3.4.1
   minisearch: ^5.0.0-beta1
   obsidian: latest
   prettier: ^2.6.2
@@ -40,6 +41,7 @@ devDependencies:
   eslint-plugin-import: 2.22.1_eslint@7.12.1
   eslint-plugin-node: 11.1.0_eslint@7.12.1
   eslint-plugin-promise: 5.0.0_eslint@7.12.1
+  eslint-plugin-svelte3: 3.4.1_eslint@7.12.1+svelte@3.47.0
   obsidian: 0.14.6
   prettier: 2.6.2
   prettier-eslint: 13.0.0
@@ -987,6 +989,17 @@ packages:
       eslint: ^7.0.0
     dependencies:
       eslint: 7.12.1
+    dev: true
+
+  /eslint-plugin-svelte3/3.4.1_eslint@7.12.1+svelte@3.47.0:
+    resolution: {integrity: sha512-7p59WG8qV8L6wLdl4d/c3mdjkgVglQCdv5XOTk/iNPBKXuuV+Q0eFP5Wa6iJd/G2M1qR3BkLPEzaANOqKAZczw==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      eslint: '>=6.0.0'
+      svelte: ^3.2.0
+    dependencies:
+      eslint: 7.12.1
+      svelte: 3.47.0
     dev: true
 
   /eslint-scope/5.1.1:
