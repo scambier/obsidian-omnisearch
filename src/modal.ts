@@ -1,12 +1,13 @@
 import { MarkdownView, SuggestModal, TFile } from 'obsidian'
 import type { ResultNote } from './globals'
 import type OmnisearchPlugin from './main'
-import Component from './Component.svelte'
+import CmpNoteResult from './CmpNoteResult.svelte'
 import { escapeHTML, escapeRegex, getAllIndexes, highlighter } from './utils'
+import { selectedNoteId } from './store'
+import { get } from 'svelte/store'
 
 export class OmnisearchModal extends SuggestModal<ResultNote> {
   private plugin: OmnisearchPlugin
-  private selectedNoteId?: string
   private mutationObserver?: MutationObserver
 
   constructor(plugin: OmnisearchPlugin) {
@@ -27,7 +28,7 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
   }
 
   async onKeydown(ev: KeyboardEvent): Promise<void> {
-    const noteId = this.selectedNoteId
+    const noteId = get(selectedNoteId)
     if (ev.key !== 'Enter' || !noteId) return
 
     if (ev.ctrlKey || ev.metaKey) {
@@ -66,9 +67,11 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
         (event.target as HTMLDivElement).classList.contains('is-selected'),
       )
       const id =
-        (record?.target as HTMLElement)?.getAttribute('data-note-id') ?? null
+        (record?.target?.firstChild as HTMLElement)?.getAttribute(
+          'data-note-id',
+        ) ?? null
       if (id) {
-        this.selectedNoteId = id
+        selectedNoteId.set(id)
       }
     })
     this.mutationObserver.observe(modalEl, {
@@ -79,8 +82,7 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
 
   onOpen(): void {
     this.inputEl.focus()
-    this.setupObserver(this.modalEl)
-
+    this.inputEl.onkeydown = this.onKeydown.bind(this)
     // Reload last search, if any
     if (this.plugin.lastSearch) {
       const event = new Event('input', {
@@ -93,7 +95,7 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
       this.inputEl.spellcheck = false
     }
 
-    this.inputEl.onkeydown = this.onKeydown.bind(this)
+    this.setupObserver(this.modalEl)
   }
 
   onClose(): void {
@@ -110,7 +112,12 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
         prefix: true,
         fuzzy: term => (term.length > 4 ? 0.2 : false),
         combineWith: 'AND',
-        boost: { basename: 2, headings1: 1.5, headings2: 1.3, headings3: 1.1 },
+        boost: {
+          basename: 2,
+          headings1: 1.5,
+          headings2: 1.3,
+          headings3: 1.1,
+        },
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, 50)
@@ -164,20 +171,15 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
   }
 
   renderSuggestion(value: ResultNote, el: HTMLElement): void {
-    const component = new Component({
+    new CmpNoteResult({
       target: el,
-      props: { variable: 1 },
+      props: {
+        id: value.path,
+        title: value.basename,
+        content: value.content,
+        nbMatches: value.matches.length,
+      },
     })
-    el.setAttribute('data-note-id', value.path)
-    el.addClass('omnisearch-result')
-
-    // title
-    const title = el.createEl('div', { cls: 'omnisearch-result__title' })
-    title.innerHTML = value.basename
-
-    // body
-    const body = el.createEl('div', { cls: 'omnisearch-result__body' })
-    body.innerHTML = value.content
   }
 
   async onChooseSuggestion(item: ResultNote): Promise<void> {

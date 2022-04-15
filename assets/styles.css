@@ -8,6 +8,10 @@
   font-weight: bold;
 }
 
+.omnisearch-result__counter {
+  font-size: 0.7rem;
+}
+
 .omnisearch-result__body {
   white-space: normal;
   font-size: small;
