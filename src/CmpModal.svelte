@@ -1,6 +1,4 @@
 <script lang="ts">
-import { get } from 'svelte/store'
-import type { TFile } from 'obsidian'
 import CmpInput from './CmpInput.svelte'
 import CmpNoteResult from './CmpNoteResult.svelte'
 import type { ResultNote } from './globals'
@@ -11,15 +9,14 @@ import { escapeHTML, escapeRegex, getAllIndexes, highlighter } from './utils'
 export let plugin: OmnisearchPlugin
 
 searchQuery.subscribe(q => {
-  getSuggestions(q).then(results => {
-    resultNotes.set(results)
-    if (results.length) {
-      selectedNoteId.set(results[0].path)
-    }
-  })
+  const results = getSuggestions(q)
+  resultNotes.set(results)
+  if (results.length) {
+    selectedNoteId.set(results[0].path)
+  }
 })
 
-async function getSuggestions(query: string): Promise<ResultNote[]> {
+function getSuggestions(query: string): ResultNote[] {
   const results = plugin.minisearch
     .search(query, {
       prefix: true,
@@ -37,14 +34,11 @@ async function getSuggestions(query: string): Promise<ResultNote[]> {
   // console.log(`Omnisearch - Results for "${query}"`)
   // console.log(results)
 
-  const suggestions = await Promise.all(
-    results.map(async result => {
-      const file = plugin.app.vault.getAbstractFileByPath(result.id) as TFile
-      // const metadata = this.app.metadataCache.getFileCache(file)
-      let content = escapeHTML(
-        await plugin.app.vault.cachedRead(file),
-      ).toLowerCase()
-      let basename = file.basename
+  const suggestions =
+    results.map(result => {
+      let note = plugin.indexedNotes[result.id]
+      let basename = escapeHTML(note.basename)
+      let content = escapeHTML(note.content)
 
       // Sort the terms from smaller to larger
       // and highlight them in the title and body
@@ -72,13 +66,14 @@ async function getSuggestions(query: string): Promise<ResultNote[]> {
       const resultNote: ResultNote = {
         content,
         basename,
-        path: file.path,
+        path: note.path,
         matches,
         occurence: 0,
       }
+
       return resultNote
-    }),
-  )
+    })
+
 
   return suggestions
 }
