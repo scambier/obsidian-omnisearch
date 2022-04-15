@@ -1,61 +1,97 @@
-import { MarkdownView, SuggestModal, TFile } from 'obsidian'
+import { MarkdownView, Modal, TFile } from 'obsidian'
 import type { ResultNote } from './globals'
 import type OmnisearchPlugin from './main'
 import CmpNoteResult from './CmpNoteResult.svelte'
+import CmpModal from './CmpModal.svelte'
 import { escapeHTML, escapeRegex, getAllIndexes, highlighter } from './utils'
-import { selectedNoteId } from './store'
-import { get } from 'svelte/store'
+import { selectedNoteId } from './stores'
 
-export class OmnisearchModal extends SuggestModal<ResultNote> {
+export class OmnisearchModal extends Modal {
   private plugin: OmnisearchPlugin
   private mutationObserver?: MutationObserver
+  private cmp: CmpModal
 
   constructor(plugin: OmnisearchPlugin) {
     super(plugin.app)
     this.plugin = plugin
+    this.modalEl.addClass('omnisearch-modal', 'prompt')
+    this.modalEl.replaceChildren() // Remove all the default Modal's children
 
-    this.modalEl.addClass('omnisearch-modal')
+    this.cmp = new CmpModal({
+      target: this.modalEl,
+      props: {
+        plugin,
+      },
+    })
 
-    this.setPlaceholder('Type to search through your notes')
+    // this.modalEl.addClass('omnisearch-modal')
 
-    this.setInstructions([
-      { command: '↑↓', purpose: 'to navigate' },
-      { command: '↵', purpose: 'to open' },
-      { command: 'ctrl ↵', purpose: 'to open in a new pane' },
-      { command: 'shift ↵', purpose: 'to create' },
-      { command: 'esc', purpose: 'to dismiss' },
-    ])
+    // this.setPlaceholder('Type to search through your notes')
+
+    // this.setInstructions([
+    //   { command: '↑↓', purpose: 'to navigate' },
+    //   { command: '↵', purpose: 'to open' },
+    //   { command: 'ctrl ↵', purpose: 'to open in a new pane' },
+    //   { command: 'shift ↵', purpose: 'to create' },
+    //   { command: 'esc', purpose: 'to dismiss' },
+    // ])
   }
 
-  async onKeydown(ev: KeyboardEvent): Promise<void> {
-    const noteId = get(selectedNoteId)
-    if (ev.key !== 'Enter' || !noteId) return
+  onOpen(): void {
+    this.containerEl.style.border = '1px solid red'
+    this.modalEl.style.border = '1px solid blue'
+    this.contentEl.style.border = '1px solid green'
+    // this.inputEl.focus()
+    // this.inputEl.onkeydown = this.onKeydown.bind(this)
+    // Reload last search, if any
+    // if (this.plugin.lastSearch) {
+    //   const event = new Event('input', {
+    //     bubbles: true,
+    //     cancelable: true,
+    //   })
+    //   // this.inputEl.value = this.plugin.lastSearch
+    //   // this.inputEl.dispatchEvent(event)
+    //   // this.inputEl.select()
+    //   // this.inputEl.spellcheck = false
+    // }
 
-    if (ev.ctrlKey || ev.metaKey) {
-      // Open in a new pane
-      await this.app.workspace.openLinkText(noteId, '', true)
-    }
-    else if (ev.shiftKey) {
-      // Create a note
-      try {
-        const file = await this.app.vault.create(
-          this.inputEl.value + '.md',
-          '# ' + this.inputEl.value,
-        )
-        await this.app.workspace.openLinkText(file.path, '')
-      }
-      catch (e) {
-        if (e instanceof Error && e.message === 'File already exists.') {
-          // Open the existing file instead of creating it
-          await this.app.workspace.openLinkText(this.inputEl.value, '')
-        }
-        else {
-          console.error(e)
-        }
-      }
-    }
-    this.close()
+    // this.setupObserver(this.modalEl)
   }
+
+
+  // async onKeydown(ev: KeyboardEvent): Promise<void> {
+  //   if (ev.key === 'ArrowRight') {
+  //     console.log('TODO: open in-note search')
+  //     return
+  //   }
+  //   const noteId = get(selectedNoteId)
+  //   if (ev.key !== 'Enter' || !noteId) return
+
+  //   if (ev.ctrlKey || ev.metaKey) {
+  //     // Open in a new pane
+  //     await this.app.workspace.openLinkText(noteId, '', true)
+  //   }
+  //   else if (ev.shiftKey) {
+  //     // Create a note
+  //     try {
+  //       const file = await this.app.vault.create(
+  //         this.inputEl.value + '.md',
+  //         '# ' + this.inputEl.value,
+  //       )
+  //       await this.app.workspace.openLinkText(file.path, '')
+  //     }
+  //     catch (e) {
+  //       if (e instanceof Error && e.message === 'File already exists.') {
+  //         // Open the existing file instead of creating it
+  //         await this.app.workspace.openLinkText(this.inputEl.value, '')
+  //       }
+  //       else {
+  //         console.error(e)
+  //       }
+  //     }
+  //   }
+  //   this.close()
+  // }
 
   /**
    * Observes the modal element to keep track of which search result is currently selected
@@ -77,108 +113,6 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
     this.mutationObserver.observe(modalEl, {
       attributes: true,
       subtree: true,
-    })
-  }
-
-  onOpen(): void {
-    this.inputEl.focus()
-    this.inputEl.onkeydown = this.onKeydown.bind(this)
-    // Reload last search, if any
-    if (this.plugin.lastSearch) {
-      const event = new Event('input', {
-        bubbles: true,
-        cancelable: true,
-      })
-      this.inputEl.value = this.plugin.lastSearch
-      this.inputEl.dispatchEvent(event)
-      this.inputEl.select()
-      this.inputEl.spellcheck = false
-    }
-
-    this.setupObserver(this.modalEl)
-  }
-
-  onClose(): void {
-    if (this.mutationObserver) {
-      this.mutationObserver.disconnect()
-    }
-  }
-
-  async getSuggestions(query: string): Promise<ResultNote[]> {
-    this.plugin.lastSearch = query
-
-    const results = this.plugin.minisearch
-      .search(query, {
-        prefix: true,
-        fuzzy: term => (term.length > 4 ? 0.2 : false),
-        combineWith: 'AND',
-        boost: {
-          basename: 2,
-          headings1: 1.5,
-          headings2: 1.3,
-          headings3: 1.1,
-        },
-      })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 50)
-    // console.log(`Omnisearch - Results for "${query}"`)
-    // console.log(results)
-
-    const suggestions = await Promise.all(
-      results.map(async result => {
-        const file = this.app.vault.getAbstractFileByPath(result.id) as TFile
-        // const metadata = this.app.metadataCache.getFileCache(file)
-        let content = escapeHTML(
-          await this.app.vault.cachedRead(file),
-        ).toLowerCase()
-        let basename = file.basename
-
-        // Sort the terms from smaller to larger
-        // and highlight them in the title and body
-        const terms = result.terms.sort((a, b) => a.length - b.length)
-        const reg = new RegExp(terms.map(escapeRegex).join('|'), 'gi')
-        const matches = getAllIndexes(content, reg)
-
-        // If the body contains a searched term, find its position
-        // and trim the text around it
-        const pos = content.toLowerCase().indexOf(result.terms[0])
-        const surroundLen = 180
-        if (pos > -1) {
-          const from = Math.max(0, pos - surroundLen)
-          const to = Math.min(content.length - 1, pos + surroundLen)
-          content =
-            (from > 0 ? '…' : '') +
-            content.slice(from, to).trim() +
-            (to < content.length - 1 ? '…' : '')
-        }
-
-        // console.log(matches)
-        content = content.replace(reg, highlighter)
-        basename = basename.replace(reg, highlighter)
-
-        const resultNote: ResultNote = {
-          content,
-          basename,
-          path: file.path,
-          matches,
-          occurence: 0,
-        }
-        return resultNote
-      }),
-    )
-
-    return suggestions
-  }
-
-  renderSuggestion(value: ResultNote, el: HTMLElement): void {
-    new CmpNoteResult({
-      target: el,
-      props: {
-        id: value.path,
-        title: value.basename,
-        content: value.content,
-        nbMatches: value.matches.length,
-      },
     })
   }
 
