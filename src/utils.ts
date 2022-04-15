@@ -1,4 +1,3 @@
-import markdownToTxt from 'markdown-to-txt'
 import { CachedMetadata } from 'obsidian'
 import {
   isSearchMatch,
@@ -12,12 +11,13 @@ export function highlighter(str: string): string {
   return '<span class="search-result-file-matched-text">' + str + '</span>'
 }
 
-/**
- * Strips the markdown and frontmatter
- * @param text
- */
-export function clearContent(text: string): string {
-  return markdownToTxt(removeFrontMatter(text))
+export function escapeHTML(html: string): string {
+  return html
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;')
 }
 
 /**

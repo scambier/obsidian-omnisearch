@@ -30,7 +30,6 @@
     "typescript": "4.4.4"
   },
   "dependencies": {
-    "markdown-to-txt": "^2.0.0",
     "minisearch": "^5.0.0-beta1"
   }
 }

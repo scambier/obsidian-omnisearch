@@ -12,7 +12,6 @@ specifiers:
   eslint-plugin-import: 2.22.1
   eslint-plugin-node: 11.1.0
   eslint-plugin-promise: 5.0.0
-  markdown-to-txt: ^2.0.0
   minisearch: ^5.0.0-beta1
   obsidian: latest
   prettier: ^2.6.2
@@ -21,7 +20,6 @@ specifiers:
   typescript: 4.4.4
 
 dependencies:
-  markdown-to-txt: 2.0.0
   minisearch: 5.0.0-beta1
 
 devDependencies:
@@ -36,7 +34,7 @@ devDependencies:
   eslint-plugin-import: 2.22.1_eslint@7.12.1
   eslint-plugin-node: 11.1.0_eslint@7.12.1
   eslint-plugin-promise: 5.0.0_eslint@7.12.1
-  obsidian: 0.14.4
+  obsidian: 0.14.6
   prettier: 2.6.2
   prettier-eslint: 13.0.0
   tslib: 2.3.1
@@ -1490,17 +1488,9 @@ packages:
       path-exists: 3.0.0
     dev: true
 
-  /lodash.escape/4.0.1:
-    resolution: {integrity: sha1-yQRGkMIeBClL6qUXcS/e0fqI3pg=}
-    dev: false
-
   /lodash.merge/4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
     dev: true
-
-  /lodash.unescape/4.0.1:
-    resolution: {integrity: sha1-vyJJiGzlFM2hEvrpIYzcBlIR/Jw=}
-    dev: false
 
   /lodash/4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
@@ -1524,20 +1514,6 @@ packages:
     dependencies:
       yallist: 4.0.0
     dev: true
-
-  /markdown-to-txt/2.0.0:
-    resolution: {integrity: sha512-H5DSAY6frUQ6/CR0nJMlGCEuSA3pvi14dYfICJPKLAvd/rDk6eb+cj84zU5XTNYzECyCcujoAL1PHhjmOgeqUw==}
-    dependencies:
-      lodash.escape: 4.0.1
-      lodash.unescape: 4.0.1
-      marked: 3.0.8
-    dev: false
-
-  /marked/3.0.8:
-    resolution: {integrity: sha512-0gVrAjo5m0VZSJb4rpL59K1unJAMb/hm8HRXqasD8VeC8m91ytDPMritgFSlKonfdt+rRYYpP/JfLxgIX8yoSw==}
-    engines: {node: '>= 12'}
-    hasBin: true
-    dev: false
 
   /merge2/1.4.1:
     resolution: {integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==}
@@ -1573,8 +1549,8 @@ packages:
       minimist: 1.2.6
     dev: true
 
-  /moment/2.29.1:
-    resolution: {integrity: sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==}
+  /moment/2.29.2:
+    resolution: {integrity: sha512-UgzG4rvxYpN15jgCmVJwac49h9ly9NurikMWGPdVxm8GZD6XjkKPxDTjQQ43gtGgnV3X0cAyWDdP2Wexoquifg==}
     dev: true
 
   /ms/2.0.0:
@@ -1626,13 +1602,13 @@ packages:
       es-abstract: 1.19.2
     dev: true
 
-  /obsidian/0.14.4:
-    resolution: {integrity: sha512-lWU1w/NlXuswAa35ImAbyElLOOno1C13KCZE19kqtcxSPIquvi5Fzy8zBbQ6ZRZZvkvftUiToCp5lcZFRMGxrQ==}
+  /obsidian/0.14.6:
+    resolution: {integrity: sha512-oXPJ8Zt10WhN19bk5l4mZuXRZbbdT1QoMgxGGJ0bB7UcJa0bozDzugS5L/QiV9gDoujpUPxDWNVahEel6r0Fpw==}
     dependencies:
       '@codemirror/state': 0.19.9
       '@codemirror/view': 0.19.48
       '@types/codemirror': 0.0.108
-      moment: 2.29.1
+      moment: 2.29.2
     dev: true
 
   /once/1.4.0:

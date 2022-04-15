@@ -1,7 +1,7 @@
 import { MarkdownView, SuggestModal, TFile } from 'obsidian'
 import { ResultNote } from './globals'
 import OmnisearchPlugin from './main'
-import { escapeRegex, getAllIndexes, highlighter } from './utils'
+import { escapeHTML, escapeRegex, getAllIndexes, highlighter } from './utils'
 
 export class OmnisearchModal extends SuggestModal<ResultNote> {
   private plugin: OmnisearchPlugin
@@ -64,7 +64,8 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
       const record = events.find(event =>
         (event.target as HTMLDivElement).classList.contains('is-selected'),
       )
-      const id = (record?.target as HTMLElement)?.getAttribute('data-note-id') ?? null
+      const id =
+        (record?.target as HTMLElement)?.getAttribute('data-note-id') ?? null
       if (id) {
         this.selectedNoteId = id
       }
@@ -119,7 +120,9 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
       results.map(async result => {
         const file = this.app.vault.getAbstractFileByPath(result.id) as TFile
         // const metadata = this.app.metadataCache.getFileCache(file)
-        let content = (await this.app.vault.cachedRead(file)).toLowerCase()
+        let content = escapeHTML(
+          await this.app.vault.cachedRead(file),
+        ).toLowerCase()
         let basename = file.basename
 
         // Sort the terms from smaller to larger
