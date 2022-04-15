@@ -1,6 +1,6 @@
 {
   "name": "scambier.obsidian-search",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Search over organization",
   "main": "dist/main.js",
   "scripts": {
@@ -34,7 +34,6 @@
     "typescript": "^4.6.3"
   },
   "dependencies": {
-    "markdown-to-txt": "^2.0.0",
     "minisearch": "^5.0.0-beta1"
   }
 }

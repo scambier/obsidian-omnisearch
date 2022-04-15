@@ -1,7 +1,7 @@
 import { Notice, Plugin, TAbstractFile, TFile } from 'obsidian'
 import MiniSearch from 'minisearch'
-import { clearContent, extractHeadingsFromCache, wait } from './utils'
 import type { IndexedNote } from './globals'
+import { escapeHTML, extractHeadingsFromCache, wait } from './utils'
 import { OmnisearchModal } from './modal'
 
 export default class OmnisearchPlugin extends Plugin {
@@ -93,7 +93,7 @@ export default class OmnisearchPlugin extends Plugin {
       }
       // Fetch content from the cache,
       // trim the markdown, remove embeds and clear wikilinks
-      const content = clearContent(await this.app.vault.cachedRead(file))
+      const content = escapeHTML(await this.app.vault.cachedRead(file))
 
       // Purge HTML before indexing
       const tmp = document.createElement('div')
@@ -102,7 +102,7 @@ export default class OmnisearchPlugin extends Plugin {
       // Make the document and index it
       const note: IndexedNote = {
         basename: file.basename,
-        content: tmp.innerText,
+        content: tmp.innerText, // content,
         path: file.path,
         headings1: fileCache
           ? extractHeadingsFromCache(fileCache, 1).join(' ')

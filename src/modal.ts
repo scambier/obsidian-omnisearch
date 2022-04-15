@@ -1,8 +1,8 @@
 import { MarkdownView, SuggestModal, TFile } from 'obsidian'
 import type { ResultNote } from './globals'
 import type OmnisearchPlugin from './main'
-import { escapeRegex, getAllIndexes, highlighter } from './utils'
 import Component from './Component.svelte'
+import { escapeHTML, escapeRegex, getAllIndexes, highlighter } from './utils'
 
 export class OmnisearchModal extends SuggestModal<ResultNote> {
   private plugin: OmnisearchPlugin
@@ -121,7 +121,9 @@ export class OmnisearchModal extends SuggestModal<ResultNote> {
       results.map(async result => {
         const file = this.app.vault.getAbstractFileByPath(result.id) as TFile
         // const metadata = this.app.metadataCache.getFileCache(file)
-        let content = (await this.app.vault.cachedRead(file)).toLowerCase()
+        let content = escapeHTML(
+          await this.app.vault.cachedRead(file),
+        ).toLowerCase()
         let basename = file.basename
 
         // Sort the terms from smaller to larger
