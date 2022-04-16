@@ -2,17 +2,30 @@
 import type { ResultNote } from "./globals"
 import { openNote } from "./notes"
 import { modal, selectedNote } from "./stores"
-import { escapeHTML } from "./utils"
+import { escapeHTML, escapeRegex, getAllIndices, highlighter } from "./utils"
 
 export let selected = false
 export let note: ResultNote
 
-$: cleanContent = (() => {
-  const content = escapeHTML(note.content)
+function cleanContent(content: string): string {
+  const pos = content.toLowerCase().indexOf(note.searchResult.terms[0])
+  const surroundLen = 180
+  if (pos > -1) {
+    const from = Math.max(0, pos - surroundLen)
+    const to = Math.min(content.length - 1, pos + surroundLen)
+    content =
+      (from > 0 ? "…" : "") +
+      content.slice(from, to).trim() +
+      (to < content.length - 1 ? "…" : "")
+  }
   const tmp = document.createElement("div")
-  tmp.innerHTML = content
-  return tmp.textContent
-})()
+  tmp.innerHTML = escapeHTML(content)
+
+  return tmp.textContent ?? ''
+}
+$: reg = new RegExp(note.searchResult.terms.map(escapeRegex).join('|'), 'gi')
+
+$: cleanedContent = cleanContent(note.content)
 
 function onHover() {
   $selectedNote = note
@@ -32,12 +45,12 @@ function onClick() {
   on:click={onClick}
 >
   <span class="omnisearch-result__title">
-    {@html note.basename}
+    {@html note.basename.replace(reg, highlighter)}
   </span>
   <span class="omnisearch-result__counter">
     {note.matches.length}&nbsp;{note.matches.length > 1 ? "matches" : "match"}
   </span>
   <div class="omnisearch-result__body">
-    {@html cleanContent}
+    {@html cleanedContent.replace(reg, highlighter)}
   </div>
 </div>

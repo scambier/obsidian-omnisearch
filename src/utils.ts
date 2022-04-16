@@ -6,6 +6,7 @@ import {
   regexYaml,
 } from './globals'
 import type { SearchMatch } from './globals'
+import { uniqBy } from 'lodash-es'
 
 export function highlighter(str: string): string {
   return '<span class="search-result-file-matched-text">' + str + '</span>'
@@ -76,13 +77,41 @@ export function escapeRegex(str: string): string {
  * Returns the positions of all occurences of `val` inside of `text`
  * https://stackoverflow.com/a/58828841
  * @param text
- * @param val
+ * @param regex
  * @returns
  */
-export function getAllIndexes(text: string, val: RegExp): SearchMatch[] {
-  return [...text.matchAll(val)]
+export function getAllIndices(text: string, regex: RegExp): SearchMatch[] {
+  return [...text.matchAll(regex)]
     .map(o => ({ match: o[0], index: o.index }))
     .filter(isSearchMatch)
+}
+
+// export function getAllIndices(text: string, terms: string[]): SearchMatch[] {
+//   let matches: SearchMatch[] = []
+//   for (const term of terms) {
+//     matches = [
+//       ...matches,
+//       ...[...text.matchAll(new RegExp(escapeRegex(term), 'gi'))]
+//         .map(o => ({ match: o[0], index: o.index }))
+//         .filter(isSearchMatch),
+//     ]
+//   }
+//   return matches
+//   // matches.sort((a, b) => b.match.length - a.match.length)
+//   // return uniqBy(matches, 'index')
+// }
+
+export function replaceAll(
+  text: string,
+  terms: string[],
+  cb: (t: string) => string,
+): string {
+  terms.sort((a, b) => a.length - b.length)
+  const regs = terms.map(term => new RegExp(escapeRegex(term), 'gi'))
+  for (const reg of regs) {
+    text = text.replaceAll(reg, cb)
+  }
+  return text
 }
 
 export function extractHeadingsFromCache(

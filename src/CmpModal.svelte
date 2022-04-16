@@ -40,6 +40,7 @@ async function createOrOpenNote(item: ResultNote): Promise<void> {
 }
 
 function onInputEnter(event: CustomEvent<ResultNote>): void {
+  console.log(event.detail)
   openNote(event.detail)
   $modal.close()
 }

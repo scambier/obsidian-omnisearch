@@ -8,10 +8,10 @@ export async function openNote(
   newPane = false,
 ): Promise<void> {
   const app = get(plugin).app
-  const file = app.vault.getAbstractFileByPath(item.path) as TFile
+  // const file = app.vault.getAbstractFileByPath(item.path) as TFile
   // const fileCache = app.metadataCache.getFileCache(file)
   // console.log(fileCache)
-  const content = (await app.vault.cachedRead(file)).toLowerCase()
+  const content = item.content// (await app.vault.cachedRead(file)).toLowerCase()
   const offset = content.indexOf(
     item.matches[item.occurence].match.toLowerCase(),
   )

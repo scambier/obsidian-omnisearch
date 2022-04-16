@@ -4,11 +4,9 @@ import type { IndexedNote, ResultNote } from './globals'
 import { indexedNotes, plugin } from './stores'
 import { get } from 'svelte/store'
 import {
-  escapeHTML,
   escapeRegex,
   extractHeadingsFromCache,
-  getAllIndexes,
-  highlighter,
+  getAllIndices,
   wait,
 } from './utils'
 
@@ -67,40 +65,21 @@ export function getSuggestions(query: string): ResultNote[] {
     if (!note) {
       throw new Error(`Note "${result.id}" not indexed`)
     }
-    let basename = escapeHTML(note.basename)
-    let content = escapeHTML(note.content)
-
-    // Sort the terms from smaller to larger
-    // and highlight them in the title and body
-    const terms = result.terms.sort((a, b) => a.length - b.length)
-    const reg = new RegExp(terms.map(escapeRegex).join('|'), 'gi')
-    const matches = getAllIndexes(content, reg)
-
-    // If the body contains a searched term, find its position
-    // and trim the text around it
-    const pos = content.toLowerCase().indexOf(result.terms[0])
-    const surroundLen = 180
-    if (pos > -1) {
-      const from = Math.max(0, pos - surroundLen)
-      const to = Math.min(content.length - 1, pos + surroundLen)
-      content =
-        (from > 0 ? '…' : '') +
-        content.slice(from, to).trim() +
-        (to < content.length - 1 ? '…' : '')
-    }
-
-    // console.log(matches)
-    content = content.replace(reg, highlighter)
-    basename = basename.replace(reg, highlighter)
-
+    const reg = new RegExp(result.terms.map(escapeRegex).join('|'), 'gi')
+    const matches = getAllIndices(note.content, reg)
     const resultNote: ResultNote = {
-      content,
-      basename,
-      path: note.path,
-      matches,
+      searchResult: result,
       occurence: 0,
+      matches,
+      ...note,
     }
-
+    if (note.basename === 'Search') {
+      console.log('=======')
+      // console.log([...note.content.matchAll(reg)])
+      // console.log(reg)
+      console.log(result)
+      console.log(resultNote)
+    }
     return resultNote
   })
 
