@@ -1,12 +1,33 @@
 import { get, writable } from 'svelte/store'
-import type { ResultNote } from './globals'
+import type { IndexedNote, ResultNote } from './globals'
+import type OmnisearchPlugin from './main'
+import type { OmnisearchModal } from './modal'
 
-// export const selectedNoteId = writable<string>('')
-export const searchQuery = writable<string>('')
-export const resultNotes = writable<ResultNote[]>([])
+function createIndexedNotes() {
+  const { subscribe, set, update } = writable<Record<string, IndexedNote>>({})
+  return {
+    subscribe,
+    set,
+    add(note: IndexedNote) {
+      update(notes => {
+        notes[note.path] = note
+        return notes
+      })
+    },
+    remove(path: string) {
+      update(notes => {
+        delete notes[path]
+        return notes
+      })
+    },
+    get(path: string): IndexedNote | undefined {
+      return get(indexedNotes)[path]
+    },
+  }
+}
 
 function createSelectedNote() {
-  const { subscribe, set, update } = writable<ResultNote|null>(null)
+  const { subscribe, set, update } = writable<ResultNote | null>(null)
   return {
     subscribe,
     set,
@@ -31,4 +52,9 @@ function createSelectedNote() {
   }
 }
 
+export const searchQuery = writable<string>('')
+export const resultNotes = writable<ResultNote[]>([])
+export const plugin = writable<OmnisearchPlugin>()
+export const modal = writable<OmnisearchModal>()
 export const selectedNote = createSelectedNote()
+export const indexedNotes = createIndexedNotes()

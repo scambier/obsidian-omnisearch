@@ -34,7 +34,7 @@ module.exports = {
     // 'simple-import-sort/exports': 'warn',
     '@typescript-eslint/func-call-spacing': ['error'],
     '@typescript-eslint/explicit-function-return-type': [
-      'error',
+      'warn',
       {
         allowExpressions: true,
         allowTypedFunctionExpressions: true,

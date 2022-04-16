@@ -12,21 +12,16 @@ onMount(async () => {
   input.select()
 })
 
-selectedNote.subscribe((note) => {
-  const elem = document.querySelector(`[data-note-id="${note?.path}"]`)
-  elem?.scrollIntoView({ behavior: "auto", block: "nearest" })
-})
-
 // const throttledMoveNoteSelection = throttle(moveNoteSelection, 75)
 function moveNoteSelection(ev: KeyboardEvent): void {
   switch (ev.key) {
     case "ArrowDown":
-      selectedNote.next()
       ev.preventDefault()
+      selectedNote.next()
       break
     case "ArrowUp":
-      selectedNote.previous()
       ev.preventDefault()
+      selectedNote.previous()
       break
     case "ArrowLeft":
       break
@@ -34,6 +29,7 @@ function moveNoteSelection(ev: KeyboardEvent): void {
       break
 
     case "Enter":
+      ev.preventDefault()
       if (ev.ctrlKey || ev.metaKey) {
         // Open in a new pane
         dispatch("ctrl-enter", $selectedNote)
@@ -45,6 +41,14 @@ function moveNoteSelection(ev: KeyboardEvent): void {
         dispatch("enter", $selectedNote)
       }
       break
+  }
+
+  // Scroll selected note into view when selecting with keyboard
+  if ($selectedNote) {
+    const elem = document.querySelector(
+      `[data-note-id="${$selectedNote.path}"]`
+    )
+    elem?.scrollIntoView({ behavior: "auto", block: "nearest" })
   }
 }
 </script>
