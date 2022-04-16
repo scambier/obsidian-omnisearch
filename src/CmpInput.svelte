@@ -23,12 +23,12 @@ function moveNoteSelection(ev: KeyboardEvent): void {
       ev.preventDefault()
       selectedNote.previous()
       break
-    case "ArrowLeft":
-      ev.preventDefault()
-      break
-    case "ArrowRight":
-      ev.preventDefault()
-      break
+    // case "ArrowLeft":
+    //   ev.preventDefault()
+    //   break
+    // case "ArrowRight":
+    //   ev.preventDefault()
+    //   break
 
     case "Enter":
       ev.preventDefault()

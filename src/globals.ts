@@ -22,17 +22,18 @@ export type IndexedNote = {
 
 export type SearchMatch = {
   match: string
-  index: number
+  offset: number
 }
-export const isSearchMatch = (o: { index?: number }): o is SearchMatch => {
-  return o.index !== undefined
+export const isSearchMatch = (o: { offset?: number }): o is SearchMatch => {
+  return o.offset !== undefined
 }
 
 export type ResultNote = {
-  searchResult: SearchResult
+  // searchResult: SearchResult
   path: string
   basename: string
   content: string
+  foundWords: string[]
   matches: SearchMatch[]
   occurence: number
 }

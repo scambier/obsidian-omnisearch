@@ -1,20 +1,17 @@
-import { MarkdownView, TFile } from 'obsidian'
+import { MarkdownView } from 'obsidian'
 import { get } from 'svelte/store'
 import type { ResultNote } from './globals'
 import { plugin } from './stores'
+import { stringsToRegex } from './utils'
 
 export async function openNote(
   item: ResultNote,
   newPane = false,
 ): Promise<void> {
   const app = get(plugin).app
-  // const file = app.vault.getAbstractFileByPath(item.path) as TFile
-  // const fileCache = app.metadataCache.getFileCache(file)
-  // console.log(fileCache)
-  const content = item.content// (await app.vault.cachedRead(file)).toLowerCase()
-  const offset = content.indexOf(
-    item.matches[item.occurence].match.toLowerCase(),
-  )
+  const reg = stringsToRegex(item.foundWords)
+  reg.exec(item.content)
+  const offset = reg.lastIndex
   await app.workspace.openLinkText(item.path, '', newPane)
 
   const view = app.workspace.getActiveViewOfType(MarkdownView)

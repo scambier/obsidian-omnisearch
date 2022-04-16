@@ -21,38 +21,6 @@ export function escapeHTML(html: string): string {
     .replaceAll("'", '&#039;')
 }
 
-/**
- * The "title" line is the first line that isn't a wikilink
- * @param text
- * @returns
- */
-export function getTitleLineIndex(lines: string[]): number {
-  const index = lines.findIndex(l => !regexWikilink.test(l))
-  return index > -1 ? index : 0
-}
-
-/**
- * Returns the "title" line from a text
- * @param text
- * @returns
- */
-export function getTitleLine(text: string): string {
-  const lines = splitLines(text.trim())
-  return lines[getTitleLineIndex(lines)]
-}
-
-/**
- * Removes the "title" line from a text
- * @param text
- * @returns
- */
-export function removeTitleLine(text: string): string {
-  const lines = splitLines(text.trim())
-  const index = getTitleLineIndex(lines)
-  lines.splice(index, 1)
-  return lines.join('. ')
-}
-
 export function splitLines(text: string): string[] {
   return text.split(regexLineSplit).filter(l => !!l && l.length > 2)
 }
@@ -82,7 +50,7 @@ export function escapeRegex(str: string): string {
  */
 export function getAllIndices(text: string, regex: RegExp): SearchMatch[] {
   return [...text.matchAll(regex)]
-    .map(o => ({ match: o[0], index: o.index }))
+    .map(o => ({ match: o[0], offset: o.index }))
     .filter(isSearchMatch)
 }
 
@@ -100,6 +68,10 @@ export function getAllIndices(text: string, regex: RegExp): SearchMatch[] {
 //   // matches.sort((a, b) => b.match.length - a.match.length)
 //   // return uniqBy(matches, 'index')
 // }
+
+export function stringsToRegex(strings: string[]): RegExp {
+  return new RegExp(strings.map(escapeRegex).join('|'), 'gi')
+}
 
 export function replaceAll(
   text: string,

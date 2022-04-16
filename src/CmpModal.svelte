@@ -16,9 +16,10 @@ import {
 searchQuery.subscribe(async (q) => {
   const results = getSuggestions(q)
   resultNotes.set(results)
-  if (results.length) {
+  const firstResult = results[0]
+  if (firstResult) {
     await tick()
-    selectedNote.set(results[0])
+    selectedNote.set(firstResult)
   }
 })
 

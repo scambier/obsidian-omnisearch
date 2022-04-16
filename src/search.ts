@@ -1,12 +1,13 @@
 import { Notice, TFile, type TAbstractFile } from 'obsidian'
 import MiniSearch from 'minisearch'
-import type { IndexedNote, ResultNote } from './globals'
+import type { IndexedNote, ResultNote, SearchMatch } from './globals'
 import { indexedNotes, plugin } from './stores'
 import { get } from 'svelte/store'
 import {
   escapeRegex,
   extractHeadingsFromCache,
   getAllIndices,
+  stringsToRegex,
   wait,
 } from './utils'
 
@@ -30,7 +31,8 @@ export async function instantiateMinisearch(): Promise<void> {
   }
   for (let i = 0; i < files.length; ++i) {
     if (i % 10 === 0) await wait(0)
-    await addToIndex(files[i])
+    const file = files[i]
+    if (file) await addToIndex(file)
   }
 
   if (files.length > 0) {
@@ -40,6 +42,16 @@ export async function instantiateMinisearch(): Promise<void> {
       }ms`,
     )
   }
+}
+
+export function getMatches(text: string, reg: RegExp): SearchMatch[] {
+  let match: RegExpExecArray | null = null
+  const matches: SearchMatch[] = []
+  while ((match = reg.exec(text)) !== null) {
+    const m = match[0]
+    if (m) matches.push({ match: m, offset: match.index })
+  }
+  return matches
 }
 
 export function getSuggestions(query: string): ResultNote[] {
@@ -65,21 +77,20 @@ export function getSuggestions(query: string): ResultNote[] {
     if (!note) {
       throw new Error(`Note "${result.id}" not indexed`)
     }
-    const reg = new RegExp(result.terms.map(escapeRegex).join('|'), 'gi')
-    const matches = getAllIndices(note.content, reg)
+    const words = Object.keys(result.match)
+    const matches = getMatches(note.content, stringsToRegex(words))
     const resultNote: ResultNote = {
-      searchResult: result,
+      // searchResult: result,
+      foundWords: words,
       occurence: 0,
       matches,
       ...note,
     }
-    if (note.basename === 'Search') {
-      console.log('=======')
-      // console.log([...note.content.matchAll(reg)])
-      // console.log(reg)
-      console.log(result)
-      console.log(resultNote)
-    }
+    // if (note.basename === 'Search') {
+    //   console.log('=======')
+    //   console.log(result)
+    //   console.log(resultNote)
+    // }
     return resultNote
   })
 

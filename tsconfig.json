@@ -6,6 +6,7 @@
       "node"
     ],
     "strict": true,
+    "noUncheckedIndexedAccess": true,
     "baseUrl": ".",
     "module": "ESNext",
     "target": "ES6",
