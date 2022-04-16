@@ -81,7 +81,7 @@ function getSuggestions(query: string): ResultNote[] {
   return suggestions
 }
 
-async function onChooseSuggestion(item: ResultNote): Promise<void> {
+async function openNote(item: ResultNote, newPane = false): Promise<void> {
   const file = plugin.app.vault.getAbstractFileByPath(item.path) as TFile
   // const fileCache = this.app.metadataCache.getFileCache(file)
   // console.log(fileCache)
@@ -89,7 +89,7 @@ async function onChooseSuggestion(item: ResultNote): Promise<void> {
   const offset = content.indexOf(
     item.matches[item.occurence].match.toLowerCase()
   )
-  await plugin.app.workspace.openLinkText(item.path, "")
+  await plugin.app.workspace.openLinkText(item.path, "", newPane)
 
   const view = plugin.app.workspace.getActiveViewOfType(MarkdownView)
   if (!view) {
@@ -105,16 +105,47 @@ async function onChooseSuggestion(item: ResultNote): Promise<void> {
   })
 }
 
-function openNote(event: CustomEvent<ResultNote>): void {
-  onChooseSuggestion(event.detail)
+async function createOrOpenNote(item: ResultNote): Promise<void> {
+  try {
+    const file = await plugin.app.vault.create(
+      $searchQuery + ".md",
+      "# " + $searchQuery
+    )
+    await plugin.app.workspace.openLinkText(file.path, "")
+  } catch (e) {
+    if (e instanceof Error && e.message === "File already exists.") {
+      // Open the existing file instead of creating it
+      await openNote(item)
+    } else {
+      console.error(e)
+    }
+  }
+}
+
+function onInputEnter(event: CustomEvent<ResultNote>): void {
+  openNote(event.detail)
+  modal.close()
+}
+
+function onInputCtrlEnter(event: CustomEvent<ResultNote>): void {
+  openNote(event.detail, true)
+  modal.close()
+}
+
+function onInputShiftEnter(event: CustomEvent<ResultNote>): void {
+  createOrOpenNote(event.detail)
   modal.close()
 }
 </script>
 
-<CmpInput on:enter={openNote} />
+<CmpInput
+  on:enter={onInputEnter}
+  on:shift-enter={onInputShiftEnter}
+  on:ctrl-enter={onInputCtrlEnter}
+/>
 
 <div class="prompt-results">
-  {#each $resultNotes as result (result.path)}
+  {#each $resultNotes as result}
     <CmpNoteResult selected={result === $selectedNote} note={result} />
   {/each}
 </div>

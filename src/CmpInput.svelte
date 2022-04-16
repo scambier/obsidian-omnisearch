@@ -9,6 +9,7 @@ const dispatch = createEventDispatcher()
 onMount(async () => {
   await tick()
   input.focus()
+  input.select()
 })
 
 selectedNote.subscribe((note) => {
@@ -33,7 +34,16 @@ function moveNoteSelection(ev: KeyboardEvent): void {
       break
 
     case "Enter":
-      dispatch("enter", $selectedNote)
+      if (ev.ctrlKey || ev.metaKey) {
+        // Open in a new pane
+        dispatch("ctrl-enter", $selectedNote)
+      } else if (ev.shiftKey) {
+        // Create a new note
+        dispatch("shift-enter", $selectedNote)
+      } else {
+        // Open in current pane
+        dispatch("enter", $selectedNote)
+      }
       break
   }
 }
