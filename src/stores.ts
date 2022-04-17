@@ -34,20 +34,20 @@ function createSelectedNote() {
     next: () =>
       update(v => {
         const notes = get(resultNotes)
-        let id = notes.findIndex(n => n.path === v?.path)
         if (!notes.length) return null
-        if (id === -1) return notes[0]
+        let id = notes.findIndex(n => n.path === v?.path)
+        if (id === -1) return notes[0] ?? null
         id = id < notes.length - 1 ? id + 1 : 0
-        return notes[id]
+        return notes[id] ?? null
       }),
     previous: () =>
       update(v => {
         const notes = get(resultNotes)
-        let id = notes.findIndex(n => n.path === v?.path)
         if (!notes.length) return null
-        if (id === -1) return notes[0]
+        let id = notes.findIndex(n => n.path === v?.path)
+        if (id === -1) return notes[0] ?? null
         id = id > 0 ? id - 1 : notes.length - 1
-        return notes[id]
+        return notes[id] ?? null
       }),
   }
 }
