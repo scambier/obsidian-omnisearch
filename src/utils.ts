@@ -2,7 +2,6 @@ import type { CachedMetadata } from 'obsidian'
 import {
   isSearchMatch,
   regexLineSplit,
-  regexWikilink,
   regexYaml,
 } from './globals'
 import type { SearchMatch } from './globals'

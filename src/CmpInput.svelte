@@ -1,9 +1,10 @@
 <script lang="ts">
+import { debounce } from "obsidian";
 import { createEventDispatcher, onMount, tick } from "svelte"
-// import { throttle } from "lodash-es"
 import { searchQuery, selectedNote } from "./stores"
 
 let input: HTMLInputElement
+let inputValue: string
 const dispatch = createEventDispatcher()
 
 onMount(async () => {
@@ -11,6 +12,8 @@ onMount(async () => {
   input.focus()
   input.select()
 })
+
+const debouncedOnInput = debounce(() => $searchQuery = inputValue, 100)
 
 // const throttledMoveNoteSelection = throttle(moveNoteSelection, 75)
 function moveNoteSelection(ev: KeyboardEvent): void {
@@ -57,7 +60,8 @@ function moveNoteSelection(ev: KeyboardEvent): void {
 
 <input
   bind:this={input}
-  bind:value={$searchQuery}
+  bind:value={inputValue}
+  on:input={debouncedOnInput}
   on:keydown={moveNoteSelection}
   type="text"
   class="prompt-input"
