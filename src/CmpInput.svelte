@@ -11,6 +11,7 @@ onMount(async () => {
   await tick()
   input.focus()
   input.select()
+  input.value = $searchQuery
 })
 
 const debouncedOnInput = debounce(() => $searchQuery = inputValue, 100)
@@ -41,6 +42,9 @@ function moveNoteSelection(ev: KeyboardEvent): void {
       } else if (ev.shiftKey) {
         // Create a new note
         dispatch("shift-enter", $selectedNote)
+      } else if (ev.altKey) {
+        // Create a new note
+        dispatch("alt-enter", $selectedNote)
       } else {
         // Open in current pane
         dispatch("enter", $selectedNote)

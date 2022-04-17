@@ -1,9 +1,9 @@
-import { Plugin, TFile } from 'obsidian'
+import { MarkdownView, Plugin, TFile } from 'obsidian'
 import { OmnisearchModal } from './modal'
 import { plugin } from './stores'
 import {
   addToIndex,
-  instantiateMinisearch,
+  initGlobalSearchIndex,
   removeFromIndex,
   removeFromIndexByPath,
 } from './search'
@@ -12,15 +12,31 @@ export default class OmnisearchPlugin extends Plugin {
   async onload(): Promise<void> {
     plugin.set(this)
 
-    await instantiateMinisearch()
+    await initGlobalSearchIndex()
 
     // Commands to display Omnisearch modal
     this.addCommand({
       id: 'show-modal',
-      name: 'Open Omnisearch',
+      name: 'Vault search',
       // hotkeys: [{ modifiers: ['Mod'], key: 'o' }],
       callback: () => {
         new OmnisearchModal(this).open()
+      },
+    })
+
+    this.addCommand({
+      id: 'show-modal-infile',
+      name: 'In-file search',
+      // hotkeys: [{ modifiers: ['Mod'], key: 'o' }],
+      checkCallback: (checking: boolean) => {
+        const view = this.app.workspace.getActiveViewOfType(MarkdownView)
+        if (view) {
+          if (!checking) {
+            new OmnisearchModal(this, view.file).open()
+          }
+          return true
+        }
+        return false
       },
     })
 

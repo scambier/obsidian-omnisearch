@@ -5,7 +5,6 @@ import {
   regexYaml,
 } from './globals'
 import type { SearchMatch } from './globals'
-import { uniqBy } from 'lodash-es'
 
 export function highlighter(str: string): string {
   return '<span class="search-result-file-matched-text">' + str + '</span>'

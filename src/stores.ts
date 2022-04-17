@@ -1,3 +1,4 @@
+import type { TFile } from 'obsidian'
 import { get, writable } from 'svelte/store'
 import type { IndexedNote, ResultNote } from './globals'
 import type OmnisearchPlugin from './main'
@@ -52,9 +53,37 @@ function createSelectedNote() {
   }
 }
 
+/**
+ * If this field is set, the search will be limited to the given file
+ */
+export const inFileSearch = writable<TFile | null>(null)
+
+/**
+ * The current search query
+ */
 export const searchQuery = writable<string>('')
+
+/**
+ * The search results list, according to the current search query
+ */
 export const resultNotes = writable<ResultNote[]>([])
-export const plugin = writable<OmnisearchPlugin>()
-export const modal = writable<OmnisearchModal>()
+
+/**
+ * The currently selected/hovered note in the results list
+ */
 export const selectedNote = createSelectedNote()
+
+/**
+ * A reference to the plugin instance
+ */
+export const plugin = writable<OmnisearchPlugin>()
+
+/**
+ * A reference to the modal instance
+ */
+export const modal = writable<OmnisearchModal>()
+
+/**
+ * The entire list of indexed notes, constantly kept up-to-date.
+ */
 export const indexedNotes = createIndexedNotes()

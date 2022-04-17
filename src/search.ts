@@ -1,21 +1,15 @@
 import { Notice, TFile, type TAbstractFile } from 'obsidian'
-import MiniSearch from 'minisearch'
+import MiniSearch, { type SearchResult } from 'minisearch'
 import type { IndexedNote, ResultNote, SearchMatch } from './globals'
 import { indexedNotes, plugin } from './stores'
 import { get } from 'svelte/store'
-import {
-  escapeRegex,
-  extractHeadingsFromCache,
-  getAllIndices,
-  stringsToRegex,
-  wait,
-} from './utils'
+import { extractHeadingsFromCache, stringsToRegex, wait } from './utils'
 
-let minisearch: MiniSearch<IndexedNote>
+let minisearchInstance: MiniSearch<IndexedNote>
 
-export async function instantiateMinisearch(): Promise<void> {
+export async function initGlobalSearchIndex(): Promise<void> {
   indexedNotes.set({})
-  minisearch = new MiniSearch({
+  minisearchInstance = new MiniSearch({
     idField: 'path',
     fields: ['basename', 'content', 'headings1', 'headings2', 'headings3'],
   })
@@ -54,23 +48,34 @@ export function getMatches(text: string, reg: RegExp): SearchMatch[] {
   return matches
 }
 
-export function getSuggestions(query: string): ResultNote[] {
-  const results = minisearch
-    .search(query, {
-      prefix: true,
-      fuzzy: term => (term.length > 4 ? 0.2 : false),
-      combineWith: 'AND',
-      boost: {
-        basename: 2,
-        headings1: 1.5,
-        headings2: 1.3,
-        headings3: 1.1,
-      },
-    })
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 50)
-  // console.log(`Omnisearch - Results for "${query}"`)
-  // console.log(results)
+function search(query: string): SearchResult[] {
+  return minisearchInstance.search(query, {
+    prefix: true,
+    fuzzy: term => (term.length > 4 ? 0.2 : false),
+    combineWith: 'AND',
+    boost: {
+      basename: 2,
+      headings1: 1.5,
+      headings2: 1.3,
+      headings3: 1.1,
+    },
+  })
+}
+
+export function getSuggestions(
+  query: string,
+  options?: Partial<{ singleFile: TFile }>,
+): ResultNote[] {
+  let results = search(query)
+  if (options?.singleFile) {
+    const file = options.singleFile
+    const result = results.find(r => r.id === file.path)
+    if (result) results = [result]
+    else results = []
+  }
+  else {
+    results = results.sort((a, b) => b.score - a.score).slice(0, 50)
+  }
 
   const suggestions = results.map(result => {
     const note = indexedNotes.get(result.id)
@@ -80,17 +85,11 @@ export function getSuggestions(query: string): ResultNote[] {
     const words = Object.keys(result.match)
     const matches = getMatches(note.content, stringsToRegex(words))
     const resultNote: ResultNote = {
-      // searchResult: result,
       foundWords: words,
       occurence: 0,
       matches,
       ...note,
     }
-    // if (note.basename === 'Search') {
-    //   console.log('=======')
-    //   console.log(result)
-    //   console.log(resultNote)
-    // }
     return resultNote
   })
 
@@ -127,7 +126,7 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
         ? extractHeadingsFromCache(fileCache, 3).join(' ')
         : '',
     }
-    minisearch.add(note)
+    minisearchInstance.add(note)
     indexedNotes.add(note)
   }
   catch (e) {
@@ -146,7 +145,7 @@ export function removeFromIndex(file: TAbstractFile): void {
 export function removeFromIndexByPath(path: string): void {
   const note = indexedNotes.get(path)
   if (note) {
-    minisearch.remove(note)
+    minisearchInstance.remove(note)
     indexedNotes.remove(path)
   }
 }
