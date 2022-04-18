@@ -3,7 +3,7 @@ import MiniSearch, { type SearchResult } from 'minisearch'
 import type { IndexedNote, ResultNote, SearchMatch } from './globals'
 import {
   indexedNotes,
-  inFileSearch,
+  inFileSearch as singleFileSearch,
   plugin,
   resultNotes,
   searchQuery,
@@ -75,15 +75,20 @@ function search(query: string): SearchResult[] {
 }
 
 /**
- * Subscribe to the searchQuery store,
- * and automatically triggers a search when the query changes
+ * Automatically re-trigger the search when the query or the
+ * inFileSearch changes
  */
 function subscribeToQuery(): void {
-  searchQuery.subscribe(async q => {
+  singleFileSearch.subscribe(async file => {
+    triggerQuery(get(searchQuery))
+  })
+  searchQuery.subscribe(triggerQuery)
+
+  async function triggerQuery(q: string): Promise<void> {
     // If we're in "single file" mode, the search results array
     // will contain a single result, related to this file
-    const results = get(inFileSearch)
-      ? getSuggestions(q, { singleFile: get(inFileSearch) })
+    const results = get(singleFileSearch)
+      ? getSuggestions(q, { singleFile: get(singleFileSearch) })
       : getSuggestions(q)
     console.log(results)
 
@@ -96,7 +101,7 @@ function subscribeToQuery(): void {
       await tick()
       selectedNote.set(firstResult)
     }
-  })
+  }
 }
 
 /**

@@ -1,18 +1,9 @@
 <script lang="ts">
-import { onMount, tick } from "svelte"
 import CmpInput from "./CmpInput.svelte"
 import CmpNoteInternalResult from "./CmpInfileResult.svelte"
-import CmpNoteResult from "./CmpNoteResult.svelte"
 import type { ResultNote } from "./globals"
-import { openNote } from "./notes"
-import { getSuggestions } from "./search"
 import {
-  inFileSearch,
-  modal,
-  plugin,
   resultNotes,
-  searchQuery,
-  selectedNote,
 } from "./stores"
 
 $: firstResult = $resultNotes[0]

@@ -10,8 +10,8 @@ const dispatch = createEventDispatcher()
 onMount(async () => {
   await tick()
   elInput.focus()
-  elInput.select()
   elInput.value = $searchQuery
+  elInput.select()
 })
 
 const debouncedOnInput = debounce(() => $searchQuery = inputValue, 100)

@@ -30,6 +30,6 @@ function cleanContent(content: string): string {
 
 <div class="suggestion-item omnisearch-result">
   <div class="omnisearch-result__body">
-    {cleanContent(note?.content ?? '')}
+    {@html cleanContent(note?.content ?? '')}
   </div>
 </div>
