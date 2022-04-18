@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { ResultNote } from "./globals"
+import { surroundLen, type ResultNote } from "./globals"
 import { openNote } from "./notes"
 import { getMatches } from "./search";
 import { modal, selectedNote } from "./stores"
@@ -20,7 +20,6 @@ export let note: ResultNote
 function cleanContent(content: string): string {
   const pos = note.matches[0]?.offset ?? -1
   if (pos > -1) {
-    const surroundLen = 180
     const from = Math.max(0, pos - surroundLen)
     const to = Math.min(content.length - 1, pos + surroundLen)
     content =

@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { IndexedNote, SearchMatch } from "./globals"
+import { surroundLen, type IndexedNote, type SearchMatch } from "./globals"
 import { indexedNotes, inFileSearch } from "./stores"
 import { escapeHTML } from "./utils";
 
@@ -15,7 +15,6 @@ inFileSearch.subscribe((file) => {
 function cleanContent(content: string): string {
   const pos = match.offset ?? -1
   if (pos > -1) {
-    const surroundLen = 180
     const from = Math.max(0, pos - surroundLen)
     const to = Math.min(content.length - 1, pos + surroundLen)
     content =

@@ -1,12 +1,47 @@
 <script lang="ts">
 import CmpInput from "./CmpInput.svelte"
 import CmpNoteInternalResult from "./CmpInfileResult.svelte"
-import type { ResultNote } from "./globals"
-import {
-  resultNotes,
-} from "./stores"
+import { surroundLen, type ResultNote, type SearchMatch } from "./globals"
+import { resultNotes } from "./stores"
+import type { SearchResult } from "minisearch"
+import { stringsToRegex } from "./utils"
 
 $: firstResult = $resultNotes[0]
+$: matches = firstResult?.matches ?? []
+$: groupedMatches = (() => {
+  const groups = getGroups()
+  return groups.map((group) => ({
+    match: "",
+    offset: (group.first()!.offset + group.last()!.offset) / 2,
+  }))
+})()
+
+/**
+ * Group together close
+ */
+function getGroups(): SearchMatch[][] {
+  const groups: SearchMatch[][] = []
+  let lastOffset = -1
+  while (true) {
+    const group = getGroupedMatches(matches, lastOffset, surroundLen)
+    if (!group.length) break
+    lastOffset = group.last()!.offset
+    groups.push(group)
+  }
+  return groups
+}
+
+function getGroupedMatches(
+  matches: SearchMatch[],
+  offsetFrom: number,
+  maxLen: number
+): SearchMatch[] {
+  const first = matches.find((m) => m.offset >= offsetFrom)
+  if (!first) return []
+  return matches.filter(
+    (m) => m.offset > offsetFrom && m.offset <= first.offset + maxLen
+  )
+}
 
 function onInputEnter(event: CustomEvent<ResultNote>): void {
   // console.log(event.detail)
@@ -20,8 +55,8 @@ function onInputEnter(event: CustomEvent<ResultNote>): void {
 
 <div class="modal-content">
   <div class="prompt-results">
-    {#if firstResult}
-      {#each firstResult.matches as match}
+    {#if groupedMatches.length}
+      {#each groupedMatches as match}
         <CmpNoteInternalResult {match} />
       {/each}
     {:else}
