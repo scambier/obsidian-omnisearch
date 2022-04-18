@@ -43,3 +43,7 @@ Obsidian works best with a well-organized vault, but most of my notes are unrela
 I want (_need_) a fast and easy way to search my notes, something that _**just works**_. That's what Omnisearch is.
 
 Since I like to favor "search over organization", I wanted to make a search interface that would be useful for me.
+
+## LICENSE
+
+Omnisearch is licensed under [GPL-3](https://tldrlegal.com/license/gnu-general-public-license-v3-(gpl-3)).
