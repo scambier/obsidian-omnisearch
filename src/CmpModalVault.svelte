@@ -1,9 +1,18 @@
 <script lang="ts">
+import { tick } from "svelte"
 import CmpInput from "./CmpInput.svelte"
 import CmpNoteResult from "./CmpNoteResult.svelte"
 import type { ResultNote } from "./globals"
 import { openNote } from "./notes"
-import { modal, plugin, resultNotes, searchQuery, selectedNote } from "./stores"
+import { modal, plugin, resultNotes, searchQuery } from "./stores"
+import { loopIndex } from "./utils"
+
+let selectedIndex = 0
+$: selectedNote = $resultNotes[selectedIndex]!
+
+searchQuery.subscribe((q) => {
+  selectedIndex = 0
+})
 
 async function createOrOpenNote(item: ResultNote): Promise<void> {
   try {
@@ -22,20 +31,41 @@ async function createOrOpenNote(item: ResultNote): Promise<void> {
   }
 }
 
-function onInputEnter(event: CustomEvent<ResultNote>): void {
+function onClick() {
+  openNote(selectedNote)
+  $modal.close()
+}
+
+function onInputEnter(event: CustomEvent<unknown>): void {
   // console.log(event.detail)
-  openNote(event.detail)
+  openNote(selectedNote)
   $modal.close()
 }
 
-function onInputCtrlEnter(event: CustomEvent<ResultNote>): void {
-  openNote(event.detail, true)
+function onInputCtrlEnter(event: CustomEvent<unknown>): void {
+  openNote(selectedNote, true)
   $modal.close()
 }
 
-function onInputShiftEnter(event: CustomEvent<ResultNote>): void {
-  createOrOpenNote(event.detail)
+function onInputShiftEnter(event: CustomEvent<unknown>): void {
+  createOrOpenNote(selectedNote)
   $modal.close()
+}
+
+function moveIndex(dir: 1 | -1): void {
+  selectedIndex = loopIndex(selectedIndex + dir, $resultNotes.length)
+  scrollIntoView()
+}
+
+function scrollIntoView(): void {
+  if (selectedNote) {
+    tick().then(() => {
+      const elem = document.querySelector(
+        `[data-note-id="${selectedNote.path}"]`
+      )
+      elem?.scrollIntoView({ behavior: "auto", block: "nearest" })
+    })
+  }
 }
 </script>
 
@@ -44,12 +74,19 @@ function onInputShiftEnter(event: CustomEvent<ResultNote>): void {
   on:enter={onInputEnter}
   on:shift-enter={onInputShiftEnter}
   on:ctrl-enter={onInputCtrlEnter}
+  on:arrow-up={() => moveIndex(-1)}
+  on:arrow-down={() => moveIndex(1)}
 />
 
 <div class="modal-content">
   <div class="prompt-results">
-    {#each $resultNotes as result}
-      <CmpNoteResult selected={result === $selectedNote} note={result} />
+    {#each $resultNotes as result, i}
+      <CmpNoteResult
+        selected={i === selectedIndex}
+        note={result}
+        on:hover={(e) => (selectedIndex = i)}
+        on:click={onClick}
+      />
     {/each}
   </div>
 </div>

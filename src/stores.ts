@@ -27,32 +27,6 @@ function createIndexedNotes() {
   }
 }
 
-function createSelectedNote() {
-  const { subscribe, set, update } = writable<ResultNote | null>(null)
-  return {
-    subscribe,
-    set,
-    next: () =>
-      update(v => {
-        const notes = get(resultNotes)
-        if (!notes.length) return null
-        let id = notes.findIndex(n => n.path === v?.path)
-        if (id === -1) return notes[0] ?? null
-        id = id < notes.length - 1 ? id + 1 : 0
-        return notes[id] ?? null
-      }),
-    previous: () =>
-      update(v => {
-        const notes = get(resultNotes)
-        if (!notes.length) return null
-        let id = notes.findIndex(n => n.path === v?.path)
-        if (id === -1) return notes[0] ?? null
-        id = id > 0 ? id - 1 : notes.length - 1
-        return notes[id] ?? null
-      }),
-  }
-}
-
 /**
  * If this field is set, the search will be limited to the given file
  */
@@ -67,11 +41,6 @@ export const searchQuery = writable<string>('')
  * The search results list, according to the current search query
  */
 export const resultNotes = writable<ResultNote[]>([])
-
-/**
- * The currently selected/hovered note in the results list
- */
-export const selectedNote = createSelectedNote()
 
 /**
  * A reference to the plugin instance

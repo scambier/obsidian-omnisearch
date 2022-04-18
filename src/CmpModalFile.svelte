@@ -1,11 +1,15 @@
 <script lang="ts">
 import CmpInput from "./CmpInput.svelte"
-import CmpNoteInternalResult from "./CmpInfileResult.svelte"
-import { excerptAfter, type ResultNote, type SearchMatch } from "./globals"
-import { resultNotes } from "./stores"
+import CmpInFileResult from "./CmpInfileResult.svelte"
+import { excerptAfter, type SearchMatch } from "./globals"
+import { modal, plugin, resultNotes } from "./stores"
+import { loopIndex } from "./utils"
+import { tick } from "svelte"
+import { MarkdownView } from "obsidian"
 
 let matches: SearchMatch[] = []
 let groupedOffsets: number[] = []
+let selectedIndex = 0
 
 $: note = $resultNotes[0]
 $: {
@@ -47,21 +51,58 @@ function getGroupedMatches(
   )
 }
 
-function onInputEnter(event: CustomEvent<ResultNote>): void {
-  // console.log(event.detail)
-  // openNote(event.detail)
-  // $modal.close()
+function moveIndex(dir: 1 | -1): void {
+  selectedIndex = loopIndex(selectedIndex + dir, groupedOffsets.length)
+  scrollIntoView()
+}
+
+function scrollIntoView(): void {
+  tick().then(() => {
+    const elem = document.querySelector(`[data-item-id="${selectedIndex}"]`)
+    elem?.scrollIntoView({ behavior: "auto", block: "nearest" })
+  })
+}
+
+function openSelection(): void {
+  // TODO: clean me, merge with notes.openNote()
+  if (note) {
+    $plugin.app.workspace.openLinkText(note.path, "")
+    const view = $plugin.app.workspace.getActiveViewOfType(MarkdownView)
+    if (!view) {
+      throw new Error("OmniSearch - No active MarkdownView")
+    }
+    const offset = groupedOffsets[selectedIndex] ?? 0
+    const pos = view.editor.offsetToPos(offset)
+    pos.ch = 0
+    view.editor.setCursor(pos)
+    view.editor.scrollIntoView({
+      from: { line: pos.line - 10, ch: 0 },
+      to: { line: pos.line + 10, ch: 0 },
+    })
+    $modal.close()
+  }
 }
 </script>
 
 <div class="modal-title">Omnisearch - File</div>
-<CmpInput on:enter={onInputEnter} />
+<CmpInput
+  on:enter={openSelection}
+  on:arrow-up={() => moveIndex(-1)}
+  on:arrow-down={() => moveIndex(1)}
+/>
 
 <div class="modal-content">
   <div class="prompt-results">
     {#if groupedOffsets.length && note}
-      {#each groupedOffsets as offset}
-        <CmpNoteInternalResult {offset} {note} />
+      {#each groupedOffsets as offset, i}
+        <CmpInFileResult
+          {offset}
+          {note}
+          index={i}
+          selected={i === selectedIndex}
+          on:hover={(e) => (selectedIndex = i)}
+          on:click={openSelection}
+        />
       {/each}
     {:else}
       We found 0 result for your search here.
@@ -75,14 +116,6 @@ function onInputEnter(event: CustomEvent<ResultNote>): void {
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">↵</span><span>to open</span>
   </div>
-  <!-- <div class="prompt-instruction">
-      <span class="prompt-instruction-command">ctrl ↵</span>
-      <span>to open in a new pane</span>
-    </div>
-    <div class="prompt-instruction">
-      <span class="prompt-instruction-command">shift ↵</span>
-      <span>to create</span>
-    </div> -->
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">esc</span><span>to dismiss</span>
   </div>

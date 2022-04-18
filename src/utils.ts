@@ -53,21 +53,6 @@ export function getAllIndices(text: string, regex: RegExp): SearchMatch[] {
     .filter(isSearchMatch)
 }
 
-// export function getAllIndices(text: string, terms: string[]): SearchMatch[] {
-//   let matches: SearchMatch[] = []
-//   for (const term of terms) {
-//     matches = [
-//       ...matches,
-//       ...[...text.matchAll(new RegExp(escapeRegex(term), 'gi'))]
-//         .map(o => ({ match: o[0], index: o.index }))
-//         .filter(isSearchMatch),
-//     ]
-//   }
-//   return matches
-//   // matches.sort((a, b) => b.match.length - a.match.length)
-//   // return uniqBy(matches, 'index')
-// }
-
 export function stringsToRegex(strings: string[]): RegExp {
   return new RegExp(strings.map(escapeRegex).join('|'), 'gi')
 }
@@ -92,4 +77,8 @@ export function extractHeadingsFromCache(
   return (
     cache.headings?.filter(h => h.level === level).map(h => h.heading) ?? []
   )
+}
+
+export function loopIndex(index: number, nbItems: number): number {
+  return (index + nbItems) % nbItems
 }

@@ -7,11 +7,9 @@ import {
   plugin,
   resultNotes,
   searchQuery,
-  selectedNote,
 } from './stores'
 import { get } from 'svelte/store'
 import { extractHeadingsFromCache, stringsToRegex, wait } from './utils'
-import { tick } from 'svelte'
 
 let minisearchInstance: MiniSearch<IndexedNote>
 
@@ -96,13 +94,6 @@ function subscribeToQuery(): void {
 
     // Save the results in the store
     resultNotes.set(results)
-
-    // Automatically select the first result
-    const firstResult = results[0]
-    if (firstResult) {
-      await tick()
-      selectedNote.set(firstResult)
-    }
   }
 }
 

@@ -1,21 +1,16 @@
 <script lang="ts">
-import {  excerptAfter, excerptBefore, type ResultNote } from "./globals"
-import { openNote } from "./notes"
-import { getMatches } from "./search";
-import { modal, selectedNote } from "./stores"
+import { createEventDispatcher } from "svelte"
+import { excerptAfter, excerptBefore, type ResultNote } from "./globals"
+import { getMatches } from "./search"
 import { escapeHTML, highlighter, stringsToRegex } from "./utils"
 
+const dispatch = createEventDispatcher()
 export let selected = false
 export let note: ResultNote
 
-// function getMatches(text: string) {
-//   let match: RegExpExecArray | null = null
-//   const matches: { term: string; index: number }[] = []
-//   while (null !== (match = reg.exec(text))) {
-//     matches.push({ term: match[0], index: match.index })
-//   }
-//   return matches
-// }
+$: reg = stringsToRegex(note.foundWords)
+$: matches = getMatches(note.content, reg)
+$: cleanedContent = cleanContent(note.content)
 
 function cleanContent(content: string): string {
   const pos = note.matches[0]?.offset ?? -1
@@ -29,27 +24,14 @@ function cleanContent(content: string): string {
   }
   return escapeHTML(content)
 }
-
-$: reg = stringsToRegex(note.foundWords)
-$: matches = getMatches(note.content, reg)
-$: cleanedContent = cleanContent(note.content)
-
-function onHover() {
-  $selectedNote = note
-}
-function onClick() {
-  openNote(note)
-  $modal.close()
-}
 </script>
 
 <div
   data-note-id={note.path}
   class="suggestion-item omnisearch-result"
   class:is-selected={selected}
-  on:mouseover={onHover}
-  on:focus={onHover}
-  on:click={onClick}
+  on:mousemove={(e) => dispatch("hover")}
+  on:click={(e) => dispatch("click")}
 >
   <span class="omnisearch-result__title">
     <!-- {@html note.basename.replace(reg, highlighter)} -->

@@ -1,16 +1,17 @@
 <script lang="ts">
+import { createEventDispatcher } from "svelte"
 import {
-excerptAfter,
-excerptBefore,
-  type IndexedNote,
+  excerptAfter,
+  excerptBefore,
   type ResultNote,
-  type SearchMatch,
 } from "./globals"
-import { indexedNotes, inFileSearch } from "./stores"
 import { escapeHTML, highlighter, stringsToRegex } from "./utils"
 
+const dispatch = createEventDispatcher()
 export let offset: number
 export let note: ResultNote
+export let index = 0
+export let selected = false
 
 $: reg = stringsToRegex(note.foundWords)
 
@@ -26,9 +27,16 @@ function cleanContent(content: string): string {
   }
   return escapeHTML(content)
 }
+
 </script>
 
-<div class="suggestion-item omnisearch-result">
+<div
+  class="suggestion-item omnisearch-result"
+  data-item-id={index}
+  class:is-selected={selected}
+  on:mousemove={(e) => dispatch("hover")}
+  on:click={(e) => dispatch("click")}
+>
   <div class="omnisearch-result__body">
     {@html cleanContent(note?.content ?? "").replace(reg, highlighter)}
   </div>
