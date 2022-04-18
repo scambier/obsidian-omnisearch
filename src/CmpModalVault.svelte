@@ -1,13 +1,9 @@
 <script lang="ts">
-import { onMount, tick } from "svelte"
 import CmpInput from "./CmpInput.svelte"
-import CmpNoteInternalResult from "./CmpNoteInternalResult.svelte"
 import CmpNoteResult from "./CmpNoteResult.svelte"
 import type { ResultNote } from "./globals"
 import { openNote } from "./notes"
-import { getSuggestions } from "./search"
 import {
-  inFileSearch,
   modal,
   plugin,
   resultNotes,
@@ -15,25 +11,7 @@ import {
   selectedNote,
 } from "./stores"
 
-$: firstResult = $resultNotes[0]
 
-searchQuery.subscribe(async (q) => {
-  // If we're in "single file" mode, the search results array
-  // will contain a single result, related to this file
-  const results = $inFileSearch
-    ? getSuggestions(q, { singleFile: $inFileSearch })
-    : getSuggestions(q)
-
-  console.log(results)
-
-  // Search on the whole vault
-  resultNotes.set(results)
-  const firstResult = results[0]
-  if (firstResult) {
-    await tick()
-    selectedNote.set(firstResult)
-  }
-})
 
 async function createOrOpenNote(item: ResultNote): Promise<void> {
   try {
@@ -69,30 +47,18 @@ function onInputShiftEnter(event: CustomEvent<ResultNote>): void {
 }
 </script>
 
-<div class="modal-title">Omnisearch</div>
+<div class="modal-title">Omnisearch - Vault</div>
 <CmpInput
-on:enter={onInputEnter}
-on:shift-enter={onInputShiftEnter}
-on:ctrl-enter={onInputCtrlEnter}
+  on:enter={onInputEnter}
+  on:shift-enter={onInputShiftEnter}
+  on:ctrl-enter={onInputCtrlEnter}
 />
 
 <div class="modal-content">
   <div class="prompt-results">
-    {#if $inFileSearch}
-      <!-- In-file results -->
-      {#if firstResult}
-        {#each firstResult.matches as match}
-          <CmpNoteInternalResult {match} />
-        {/each}
-      {:else}
-        We found 0 result for your search here.
-      {/if}
-    {:else}
-      <!-- Multi-files results -->
-      {#each $resultNotes as result}
-        <CmpNoteResult selected={result === $selectedNote} note={result} />
-      {/each}
-    {/if}
+    {#each $resultNotes as result}
+      <CmpNoteResult selected={result === $selectedNote} note={result} />
+    {/each}
   </div>
   <div class="prompt-instructions">
     <div class="prompt-instruction">

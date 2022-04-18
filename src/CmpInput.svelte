@@ -3,20 +3,19 @@ import { debounce } from "obsidian";
 import { createEventDispatcher, onMount, tick } from "svelte"
 import { searchQuery, selectedNote } from "./stores"
 
-let input: HTMLInputElement
+let elInput: HTMLInputElement
 let inputValue: string
 const dispatch = createEventDispatcher()
 
 onMount(async () => {
   await tick()
-  input.focus()
-  input.select()
-  input.value = $searchQuery
+  elInput.focus()
+  elInput.select()
+  elInput.value = $searchQuery
 })
 
 const debouncedOnInput = debounce(() => $searchQuery = inputValue, 100)
 
-// const throttledMoveNoteSelection = throttle(moveNoteSelection, 75)
 function moveNoteSelection(ev: KeyboardEvent): void {
   switch (ev.key) {
     case "ArrowDown":
@@ -63,7 +62,7 @@ function moveNoteSelection(ev: KeyboardEvent): void {
 </script>
 
 <input
-  bind:this={input}
+  bind:this={elInput}
   bind:value={inputValue}
   on:input={debouncedOnInput}
   on:keydown={moveNoteSelection}

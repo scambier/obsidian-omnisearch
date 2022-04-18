@@ -12,13 +12,10 @@ export default class OmnisearchPlugin extends Plugin {
   async onload(): Promise<void> {
     plugin.set(this)
 
-    await initGlobalSearchIndex()
-
-    // Commands to display Omnisearch modal
+    // Commands to display Omnisearch modals
     this.addCommand({
       id: 'show-modal',
       name: 'Vault search',
-      // hotkeys: [{ modifiers: ['Mod'], key: 'o' }],
       callback: () => {
         new OmnisearchModal(this).open()
       },
@@ -27,7 +24,6 @@ export default class OmnisearchPlugin extends Plugin {
     this.addCommand({
       id: 'show-modal-infile',
       name: 'In-file search',
-      // hotkeys: [{ modifiers: ['Mod'], key: 'o' }],
       checkCallback: (checking: boolean) => {
         const view = this.app.workspace.getActiveViewOfType(MarkdownView)
         if (view) {
@@ -65,5 +61,7 @@ export default class OmnisearchPlugin extends Plugin {
         }
       }),
     )
+
+    initGlobalSearchIndex()
   }
 }

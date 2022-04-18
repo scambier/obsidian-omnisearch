@@ -1,12 +1,24 @@
 import { Notice, TFile, type TAbstractFile } from 'obsidian'
 import MiniSearch, { type SearchResult } from 'minisearch'
 import type { IndexedNote, ResultNote, SearchMatch } from './globals'
-import { indexedNotes, plugin } from './stores'
+import {
+  indexedNotes,
+  inFileSearch,
+  plugin,
+  resultNotes,
+  searchQuery,
+  selectedNote,
+} from './stores'
 import { get } from 'svelte/store'
 import { extractHeadingsFromCache, stringsToRegex, wait } from './utils'
+import { tick } from 'svelte'
 
 let minisearchInstance: MiniSearch<IndexedNote>
 
+/**
+ * Initializes the MiniSearch instance,
+ * and adds all the notes to the index
+ */
 export async function initGlobalSearchIndex(): Promise<void> {
   indexedNotes.set({})
   minisearchInstance = new MiniSearch({
@@ -36,19 +48,19 @@ export async function initGlobalSearchIndex(): Promise<void> {
       }ms`,
     )
   }
+
+  // Listen to the query input to trigger a search
+  subscribeToQuery()
 }
 
-export function getMatches(text: string, reg: RegExp): SearchMatch[] {
-  let match: RegExpExecArray | null = null
-  const matches: SearchMatch[] = []
-  while ((match = reg.exec(text)) !== null) {
-    const m = match[0]
-    if (m) matches.push({ match: m, offset: match.index })
-  }
-  return matches
-}
-
+/**
+ * Searches the index for the given query,
+ * and returns an array of raw results
+ * @param query
+ * @returns
+ */
 function search(query: string): SearchResult[] {
+  if (!query) return []
   return minisearchInstance.search(query, {
     prefix: true,
     fuzzy: term => (term.length > 4 ? 0.2 : false),
@@ -62,11 +74,65 @@ function search(query: string): SearchResult[] {
   })
 }
 
+/**
+ * Subscribe to the searchQuery store,
+ * and automatically triggers a search when the query changes
+ */
+function subscribeToQuery(): void {
+  searchQuery.subscribe(async q => {
+    // If we're in "single file" mode, the search results array
+    // will contain a single result, related to this file
+    const results = get(inFileSearch)
+      ? getSuggestions(q, { singleFile: get(inFileSearch) })
+      : getSuggestions(q)
+    console.log(results)
+
+    // Save the results in the store
+    resultNotes.set(results)
+
+    // Automatically select the first result
+    const firstResult = results[0]
+    if (firstResult) {
+      await tick()
+      selectedNote.set(firstResult)
+    }
+  })
+}
+
+/**
+ * Parses a text against a regex, and returns the { string, offset } matches
+ * @param text
+ * @param reg
+ * @returns
+ */
+export function getMatches(text: string, reg: RegExp): SearchMatch[] {
+  let match: RegExpExecArray | null = null
+  const matches: SearchMatch[] = []
+  while ((match = reg.exec(text)) !== null) {
+    const m = match[0]
+    if (m) matches.push({ match: m, offset: match.index })
+  }
+  return matches
+}
+
+/**
+ * Searches the index, and returns an array of ResultNote objects.
+ * If we have the singleFile option set,
+ * the array contains a single result from that file
+ * @param query
+ * @param options
+ * @returns
+ */
 export function getSuggestions(
   query: string,
-  options?: Partial<{ singleFile: TFile }>,
+  options?: Partial<{ singleFile: TFile | null }>,
 ): ResultNote[] {
+  // Get the raw results
   let results = search(query)
+  if (!results.length) return []
+
+  // Either keep the 50 first results,
+  // or the one corresponding to `singleFile`
   if (options?.singleFile) {
     const file = options.singleFile
     const result = results.find(r => r.id === file.path)
@@ -77,6 +143,7 @@ export function getSuggestions(
     results = results.sort((a, b) => b.score - a.score).slice(0, 50)
   }
 
+  // Map the raw results to get usable suggestions
   const suggestions = results.map(result => {
     const note = indexedNotes.get(result.id)
     if (!note) {
@@ -96,8 +163,15 @@ export function getSuggestions(
   return suggestions
 }
 
+/**
+ * Adds a file to the index
+ * @param file
+ * @returns
+ */
 export async function addToIndex(file: TAbstractFile): Promise<void> {
-  if (!(file instanceof TFile) || file.extension !== 'md') return
+  if (!(file instanceof TFile) || file.extension !== 'md') {
+    return
+  }
   try {
     const app = get(plugin).app
     // console.log(`Omnisearch - adding ${file.path} to index`)
@@ -135,6 +209,11 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
   }
 }
 
+/**
+ * Removes a file from the index
+ * @param file
+ * @returns
+ */
 export function removeFromIndex(file: TAbstractFile): void {
   if (file instanceof TFile && file.path.endsWith('.md')) {
     // console.log(`Omnisearch - removing ${file.path} from index`)
@@ -142,6 +221,10 @@ export function removeFromIndex(file: TAbstractFile): void {
   }
 }
 
+/**
+ * Removes a file from the index, by its path
+ * @param path
+ */
 export function removeFromIndexByPath(path: string): void {
   const note = indexedNotes.get(path)
   if (note) {
