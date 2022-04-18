@@ -1,11 +1,11 @@
 import { Modal, TFile } from 'obsidian'
 import type OmnisearchPlugin from './main'
 import CmpModalVault from './CmpModalVault.svelte'
-import CmpModalFile from './CmpModalFile.svelte'
+import CmpModalInFile from './CmpModalInFile.svelte'
 import { inFileSearch, modal } from './stores'
 
 export class OmnisearchModal extends Modal {
-  constructor(plugin: OmnisearchPlugin, file?: TFile) {
+  constructor(plugin: OmnisearchPlugin, file?: TFile, canGoBack = false) {
     super(plugin.app)
 
     // Remove all the default modal's children (except the close button)
@@ -19,8 +19,11 @@ export class OmnisearchModal extends Modal {
     modal.set(this)
 
     if (file) {
-      new CmpModalFile({
+      new CmpModalInFile({
         target: this.modalEl,
+        props: {
+          canGoBack,
+        },
       })
     }
     else {

@@ -36,7 +36,7 @@ function moveNoteSelection(ev: KeyboardEvent): void {
         // Create a new note
         dispatch("shift-enter")
       } else if (ev.altKey) {
-        // Create a new note
+        // Expand in-note results
         dispatch("alt-enter")
       } else {
         // Open in current pane

@@ -1,11 +1,15 @@
 <script lang="ts">
 import CmpInput from "./CmpInput.svelte"
-import CmpInFileResult from "./CmpInfileResult.svelte"
+import CmpResultInFile from "./CmpResultInFile.svelte"
 import { excerptAfter, type SearchMatch } from "./globals"
 import { modal, plugin, resultNotes } from "./stores"
 import { loopIndex } from "./utils"
 import { tick } from "svelte"
 import { MarkdownView } from "obsidian"
+import CmpModalVault from "./CmpModalVault.svelte"
+import { OmnisearchModal } from "./modal"
+
+export let canGoBack = false
 
 let matches: SearchMatch[] = []
 let groupedOffsets: number[] = []
@@ -21,6 +25,15 @@ $: {
     )
     // console.log(groups)
     // console.log(groupedOffsets)
+  }
+}
+$: {
+  if (canGoBack) {
+    $modal.onClose = () => {
+      if (canGoBack) {
+        new OmnisearchModal($plugin).open()
+      }
+    }
   }
 }
 
@@ -95,7 +108,7 @@ function openSelection(): void {
   <div class="prompt-results">
     {#if groupedOffsets.length && note}
       {#each groupedOffsets as offset, i}
-        <CmpInFileResult
+        <CmpResultInFile
           {offset}
           {note}
           index={i}
@@ -117,6 +130,11 @@ function openSelection(): void {
     <span class="prompt-instruction-command">↵</span><span>to open</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">esc</span><span>to dismiss</span>
+    <span class="prompt-instruction-command">esc</span>
+    {#if canGoBack}
+      <span>to go back to Vault Search</span>
+    {:else}
+      <span>to dismiss</span>
+    {/if}
   </div>
 </div>

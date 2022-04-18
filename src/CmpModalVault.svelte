@@ -1,8 +1,10 @@
 <script lang="ts">
+import { TFile } from "obsidian"
 import { tick } from "svelte"
 import CmpInput from "./CmpInput.svelte"
-import CmpNoteResult from "./CmpNoteResult.svelte"
+import CmpResultNote from "./CmpResultNote.svelte"
 import type { ResultNote } from "./globals"
+import { OmnisearchModal } from "./modal"
 import { openNote } from "./notes"
 import { modal, plugin, resultNotes, searchQuery } from "./stores"
 import { loopIndex } from "./utils"
@@ -36,20 +38,30 @@ function onClick() {
   $modal.close()
 }
 
-function onInputEnter(event: CustomEvent<unknown>): void {
+function onInputEnter(): void {
   // console.log(event.detail)
   openNote(selectedNote)
   $modal.close()
 }
 
-function onInputCtrlEnter(event: CustomEvent<unknown>): void {
+function onInputCtrlEnter(): void {
   openNote(selectedNote, true)
   $modal.close()
 }
 
-function onInputShiftEnter(event: CustomEvent<unknown>): void {
+function onInputShiftEnter(): void {
   createOrOpenNote(selectedNote)
   $modal.close()
+}
+
+function onInputAltEnter(): void {
+  if (selectedNote) {
+    const file = $plugin.app.vault.getAbstractFileByPath(selectedNote.path)
+    if (file && file instanceof TFile) {
+      // $modal.close()
+      new OmnisearchModal($plugin, file, true).open()
+    }
+  }
 }
 
 function moveIndex(dir: 1 | -1): void {
@@ -74,6 +86,7 @@ function scrollIntoView(): void {
   on:enter={onInputEnter}
   on:shift-enter={onInputShiftEnter}
   on:ctrl-enter={onInputCtrlEnter}
+  on:alt-enter={onInputAltEnter}
   on:arrow-up={() => moveIndex(-1)}
   on:arrow-down={() => moveIndex(1)}
 />
@@ -81,7 +94,7 @@ function scrollIntoView(): void {
 <div class="modal-content">
   <div class="prompt-results">
     {#each $resultNotes as result, i}
-      <CmpNoteResult
+      <CmpResultNote
         selected={i === selectedIndex}
         note={result}
         on:hover={(e) => (selectedIndex = i)}
@@ -94,6 +107,11 @@ function scrollIntoView(): void {
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">↑↓</span><span>to navigate</span>
   </div>
+  <div class="prompt-instruction">
+    <span class="prompt-instruction-command">alt ↵</span>
+    <span>to expand in-note results</span>
+  </div>
+  <br />
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">↵</span><span>to open</span>
   </div>
