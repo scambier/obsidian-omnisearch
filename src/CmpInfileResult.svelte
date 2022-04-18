@@ -1,22 +1,24 @@
 <script lang="ts">
-import { surroundLen, type IndexedNote, type SearchMatch } from "./globals"
+import {
+excerptAfter,
+excerptBefore,
+  type IndexedNote,
+  type ResultNote,
+  type SearchMatch,
+} from "./globals"
 import { indexedNotes, inFileSearch } from "./stores"
-import { escapeHTML } from "./utils";
+import { escapeHTML, highlighter, stringsToRegex } from "./utils"
 
-export let match: SearchMatch
+export let offset: number
+export let note: ResultNote
 
-let note: IndexedNote | null = null
-inFileSearch.subscribe((file) => {
-  if (file) {
-    note = indexedNotes.get(file.path) ?? null
-  }
-})
+$: reg = stringsToRegex(note.foundWords)
 
 function cleanContent(content: string): string {
-  const pos = match.offset ?? -1
+  const pos = offset ?? -1
   if (pos > -1) {
-    const from = Math.max(0, pos - surroundLen)
-    const to = Math.min(content.length - 1, pos + surroundLen)
+    const from = Math.max(0, pos - excerptBefore)
+    const to = Math.min(content.length - 1, pos + excerptAfter)
     content =
       (from > 0 ? "…" : "") +
       content.slice(from, to).trim() +
@@ -24,11 +26,10 @@ function cleanContent(content: string): string {
   }
   return escapeHTML(content)
 }
-
 </script>
 
 <div class="suggestion-item omnisearch-result">
   <div class="omnisearch-result__body">
-    {@html cleanContent(note?.content ?? '')}
+    {@html cleanContent(note?.content ?? "").replace(reg, highlighter)}
   </div>
 </div>

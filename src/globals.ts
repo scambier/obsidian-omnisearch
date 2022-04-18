@@ -3,7 +3,8 @@ export const regexWikilink = /^!?\[\[(?<name>.+?)(\|(?<alias>.+?))?\]\]/
 export const regexLineSplit = /\r?\n|\r|((\.|\?|!)( |\r?\n|\r))/g
 export const regexYaml = /^---\s*\n(.*?)\n?^---\s?/ms
 
-export const surroundLen = 180
+export const excerptBefore = 100
+export const excerptAfter = 180
 
 export type SearchNote = {
   path: string

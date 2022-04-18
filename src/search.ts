@@ -90,6 +90,8 @@ function subscribeToQuery(): void {
     const results = get(singleFileSearch)
       ? getSuggestions(q, { singleFile: get(singleFileSearch) })
       : getSuggestions(q)
+
+    console.log('Search results')
     console.log(results)
 
     // Save the results in the store
