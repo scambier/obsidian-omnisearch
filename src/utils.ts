@@ -1,5 +1,6 @@
 import type { CachedMetadata } from 'obsidian'
 import {
+  highlightClass,
   isSearchMatch,
   regexLineSplit,
   regexYaml,
@@ -7,7 +8,7 @@ import {
 import type { SearchMatch } from './globals'
 
 export function highlighter(str: string): string {
-  return '<span class="search-result-file-matched-text">' + str + '</span>'
+  return `<span class="${highlightClass}">${str}</span>`
 }
 
 export function escapeHTML(html: string): string {

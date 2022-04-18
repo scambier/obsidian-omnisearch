@@ -6,6 +6,8 @@ export const regexYaml = /^---\s*\n(.*?)\n?^---\s?/ms
 export const excerptBefore = 100
 export const excerptAfter = 180
 
+export const highlightClass = 'suggestion-highlight omnisearch-highlight'
+
 export type SearchNote = {
   path: string
   basename: string

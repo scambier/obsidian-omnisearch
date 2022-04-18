@@ -3,15 +3,7 @@ import CmpInput from "./CmpInput.svelte"
 import CmpNoteResult from "./CmpNoteResult.svelte"
 import type { ResultNote } from "./globals"
 import { openNote } from "./notes"
-import {
-  modal,
-  plugin,
-  resultNotes,
-  searchQuery,
-  selectedNote,
-} from "./stores"
-
-
+import { modal, plugin, resultNotes, searchQuery, selectedNote } from "./stores"
 
 async function createOrOpenNote(item: ResultNote): Promise<void> {
   try {
@@ -60,23 +52,23 @@ function onInputShiftEnter(event: CustomEvent<ResultNote>): void {
       <CmpNoteResult selected={result === $selectedNote} note={result} />
     {/each}
   </div>
-  <div class="prompt-instructions">
-    <div class="prompt-instruction">
-      <span class="prompt-instruction-command">↑↓</span><span>to navigate</span>
-    </div>
-    <div class="prompt-instruction">
-      <span class="prompt-instruction-command">↵</span><span>to open</span>
-    </div>
-    <div class="prompt-instruction">
-      <span class="prompt-instruction-command">ctrl ↵</span>
-      <span>to open in a new pane</span>
-    </div>
-    <div class="prompt-instruction">
-      <span class="prompt-instruction-command">shift ↵</span>
-      <span>to create</span>
-    </div>
-    <div class="prompt-instruction">
-      <span class="prompt-instruction-command">esc</span><span>to dismiss</span>
-    </div>
+</div>
+<div class="prompt-instructions">
+  <div class="prompt-instruction">
+    <span class="prompt-instruction-command">↑↓</span><span>to navigate</span>
+  </div>
+  <div class="prompt-instruction">
+    <span class="prompt-instruction-command">↵</span><span>to open</span>
+  </div>
+  <div class="prompt-instruction">
+    <span class="prompt-instruction-command">ctrl ↵</span>
+    <span>to open in a new pane</span>
+  </div>
+  <div class="prompt-instruction">
+    <span class="prompt-instruction-command">shift ↵</span>
+    <span>to create</span>
+  </div>
+  <div class="prompt-instruction">
+    <span class="prompt-instruction-command">esc</span><span>to dismiss</span>
   </div>
 </div>

@@ -15,8 +15,8 @@ $: {
     groupedOffsets = groups.map((group) =>
       Math.round((group.first()!.offset + group.last()!.offset) / 2)
     )
-    console.log(groups)
-    console.log(groupedOffsets)
+    // console.log(groups)
+    // console.log(groupedOffsets)
   }
 }
 
