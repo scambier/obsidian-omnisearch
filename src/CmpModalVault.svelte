@@ -1,26 +1,39 @@
 <script lang="ts">
 import { TFile } from "obsidian"
-import { tick } from "svelte"
+import { onMount, tick } from "svelte"
 import CmpInput from "./CmpInput.svelte"
 import CmpResultNote from "./CmpResultNote.svelte"
 import type { ResultNote } from "./globals"
 import { OmnisearchModal } from "./modal"
 import { openNote } from "./notes"
-import { modal, plugin, resultNotes, searchQuery } from "./stores"
+import { getSuggestions } from "./search"
+import { lastSearch, modal, plugin } from "./stores"
 import { loopIndex } from "./utils"
 
 let selectedIndex = 0
-$: selectedNote = $resultNotes[selectedIndex]!
+let searchQuery: string
+let resultNotes: ResultNote[] = []
+$: selectedNote = resultNotes[selectedIndex]!
 
-searchQuery.subscribe((q) => {
+$: {
+  if (searchQuery) {
+    resultNotes = getSuggestions(searchQuery)
+    $lastSearch = searchQuery
+  }
   selectedIndex = 0
+  scrollIntoView()
+}
+
+onMount(async () => {
+  await tick()
+  searchQuery = $lastSearch
 })
 
 async function createOrOpenNote(item: ResultNote): Promise<void> {
   try {
     const file = await $plugin.app.vault.create(
-      $searchQuery + ".md",
-      "# " + $searchQuery
+      searchQuery + ".md",
+      "# " + searchQuery
     )
     await $plugin.app.workspace.openLinkText(file.path, "")
   } catch (e) {
@@ -65,7 +78,7 @@ function onInputAltEnter(): void {
 }
 
 function moveIndex(dir: 1 | -1): void {
-  selectedIndex = loopIndex(selectedIndex + dir, $resultNotes.length)
+  selectedIndex = loopIndex(selectedIndex + dir, resultNotes.length)
   scrollIntoView()
 }
 
@@ -83,6 +96,7 @@ function scrollIntoView(): void {
 
 <div class="modal-title">Omnisearch - Vault</div>
 <CmpInput
+  bind:debouncedValue={searchQuery}
   on:enter={onInputEnter}
   on:shift-enter={onInputShiftEnter}
   on:ctrl-enter={onInputCtrlEnter}
@@ -93,7 +107,7 @@ function scrollIntoView(): void {
 
 <div class="modal-content">
   <div class="prompt-results">
-    {#each $resultNotes as result, i}
+    {#each resultNotes as result, i}
       <CmpResultNote
         selected={i === selectedIndex}
         note={result}

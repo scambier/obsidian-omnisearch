@@ -30,17 +30,7 @@ function createIndexedNotes() {
 /**
  * If this field is set, the search will be limited to the given file
  */
-export const inFileSearch = writable<TFile | null>(null)
-
-/**
- * The current search query
- */
-export const searchQuery = writable<string>('')
-
-/**
- * The search results list, according to the current search query
- */
-export const resultNotes = writable<ResultNote[]>([])
+// export const inFileSearch = writable<TFile | null>(null)
 
 /**
  * A reference to the plugin instance
@@ -56,3 +46,5 @@ export const modal = writable<OmnisearchModal>()
  * The entire list of indexed notes, constantly kept up-to-date.
  */
 export const indexedNotes = createIndexedNotes()
+
+export const lastSearch = writable('')

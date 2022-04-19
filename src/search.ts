@@ -1,13 +1,7 @@
 import { Notice, TFile, type TAbstractFile } from 'obsidian'
 import MiniSearch, { type SearchResult } from 'minisearch'
-import type { IndexedNote, ResultNote, SearchMatch } from './globals'
-import {
-  indexedNotes,
-  inFileSearch as singleFileSearch,
-  plugin,
-  resultNotes,
-  searchQuery,
-} from './stores'
+import { SPACE_OR_PUNCTUATION, type IndexedNote, type ResultNote, type SearchMatch } from './globals'
+import { indexedNotes, plugin } from './stores'
 import { get } from 'svelte/store'
 import { extractHeadingsFromCache, stringsToRegex, wait } from './utils'
 
@@ -20,6 +14,7 @@ let minisearchInstance: MiniSearch<IndexedNote>
 export async function initGlobalSearchIndex(): Promise<void> {
   indexedNotes.set({})
   minisearchInstance = new MiniSearch({
+    tokenize: text => text.split(SPACE_OR_PUNCTUATION),
     idField: 'path',
     fields: ['basename', 'content', 'headings1', 'headings2', 'headings3'],
   })
@@ -48,7 +43,7 @@ export async function initGlobalSearchIndex(): Promise<void> {
   }
 
   // Listen to the query input to trigger a search
-  subscribeToQuery()
+  // subscribeToQuery()
 }
 
 /**
@@ -70,31 +65,6 @@ function search(query: string): SearchResult[] {
       headings3: 1.1,
     },
   })
-}
-
-/**
- * Automatically re-trigger the search when the query or the
- * inFileSearch changes
- */
-function subscribeToQuery(): void {
-  singleFileSearch.subscribe(async file => {
-    triggerQuery(get(searchQuery))
-  })
-  searchQuery.subscribe(triggerQuery)
-
-  async function triggerQuery(q: string): Promise<void> {
-    // If we're in "single file" mode, the search results array
-    // will contain a single result, related to this file
-    const results = get(singleFileSearch)
-      ? getSuggestions(q, { singleFile: get(singleFileSearch) })
-      : getSuggestions(q)
-
-    // console.log('Search results')
-    // console.log(results)
-
-    // Save the results in the store
-    resultNotes.set(results)
-  }
 }
 
 /**
@@ -123,7 +93,7 @@ export function getMatches(text: string, reg: RegExp): SearchMatch[] {
  */
 export function getSuggestions(
   query: string,
-  options?: Partial<{ singleFile: TFile | null }>,
+  options?: Partial<{ singleFilePath: string | null }>,
 ): ResultNote[] {
   // Get the raw results
   let results = search(query)
@@ -131,9 +101,8 @@ export function getSuggestions(
 
   // Either keep the 50 first results,
   // or the one corresponding to `singleFile`
-  if (options?.singleFile) {
-    const file = options.singleFile
-    const result = results.find(r => r.id === file.path)
+  if (options?.singleFilePath) {
+    const result = results.find(r => r.id === options.singleFilePath)
     if (result) results = [result]
     else results = []
   }
@@ -150,8 +119,8 @@ export function getSuggestions(
     const words = Object.keys(result.match)
     const matches = getMatches(note.content, stringsToRegex(words))
     const resultNote: ResultNote = {
+      score: result.score,
       foundWords: words,
-      occurence: 0,
       matches,
       ...note,
     }

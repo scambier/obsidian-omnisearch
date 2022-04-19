@@ -2,7 +2,7 @@ import { Modal, TFile } from 'obsidian'
 import type OmnisearchPlugin from './main'
 import CmpModalVault from './CmpModalVault.svelte'
 import CmpModalInFile from './CmpModalInFile.svelte'
-import { inFileSearch, modal } from './stores'
+import { modal } from './stores'
 
 export class OmnisearchModal extends Modal {
   constructor(plugin: OmnisearchPlugin, file?: TFile, canGoBack = false) {
@@ -15,7 +15,6 @@ export class OmnisearchModal extends Modal {
     this.modalEl.append(closeEl)
     this.modalEl.addClass('omnisearch-modal', 'prompt')
 
-    inFileSearch.set(file ?? null)
     modal.set(this)
 
     if (file) {
@@ -23,6 +22,7 @@ export class OmnisearchModal extends Modal {
         target: this.modalEl,
         props: {
           canGoBack,
+          singleFilePath: file.path,
         },
       })
     }

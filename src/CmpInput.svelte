@@ -1,7 +1,8 @@
 <script lang="ts">
 import { debounce } from "obsidian"
 import { createEventDispatcher, onMount, tick } from "svelte"
-import { searchQuery } from "./stores"
+
+export let debouncedValue: string
 
 let elInput: HTMLInputElement
 let inputValue: string
@@ -10,11 +11,11 @@ const dispatch = createEventDispatcher()
 onMount(async () => {
   await tick()
   elInput.focus()
-  elInput.value = $searchQuery
+  // elInput.value = $searchQuery
   elInput.select()
 })
 
-const debouncedOnInput = debounce(() => ($searchQuery = inputValue), 100)
+const debouncedOnInput = debounce(() => (debouncedValue = inputValue), 100)
 
 function moveNoteSelection(ev: KeyboardEvent): void {
   switch (ev.key) {
@@ -46,7 +47,7 @@ function moveNoteSelection(ev: KeyboardEvent): void {
   }
 }
 </script>
-
+{inputValue} - {debouncedValue}
 <input
   bind:this={elInput}
   bind:value={inputValue}

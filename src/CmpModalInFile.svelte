@@ -1,25 +1,29 @@
 <script lang="ts">
 import CmpInput from "./CmpInput.svelte"
 import CmpResultInFile from "./CmpResultInFile.svelte"
-import { excerptAfter, type SearchMatch } from "./globals"
-import { modal, plugin, resultNotes } from "./stores"
+import { excerptAfter, type ResultNote, type SearchMatch } from "./globals"
+import { modal, plugin } from "./stores"
 import { loopIndex } from "./utils"
 import { tick } from "svelte"
 import { MarkdownView } from "obsidian"
-import CmpModalVault from "./CmpModalVault.svelte"
-import { OmnisearchModal } from "./modal"
+import { getSuggestions } from "./search"
 
 export let canGoBack = false
-
-let matches: SearchMatch[] = []
+export let singleFilePath = ""
 let groupedOffsets: number[] = []
 let selectedIndex = 0
+let searchQuery: string
+let note: ResultNote | null = null
 
-$: note = $resultNotes[0]
+$: {
+  note = getSuggestions(searchQuery, { singleFilePath })[0] ?? null
+  selectedIndex = 0
+  scrollIntoView()
+}
+
 $: {
   if (note) {
-    matches = note.matches
-    const groups = getGroups()
+    const groups = getGroups(note.matches)
     groupedOffsets = groups.map((group) =>
       Math.round((group.first()!.offset + group.last()!.offset) / 2)
     )
@@ -27,20 +31,11 @@ $: {
     // console.log(groupedOffsets)
   }
 }
-$: {
-  if (canGoBack) {
-    $modal.onClose = () => {
-      if (canGoBack) {
-        new OmnisearchModal($plugin).open()
-      }
-    }
-  }
-}
 
 /**
  * Group together close
  */
-function getGroups(): SearchMatch[][] {
+function getGroups(matches: SearchMatch[]): SearchMatch[][] {
   const groups: SearchMatch[][] = []
   let lastOffset = -1
   while (true) {
@@ -99,6 +94,7 @@ function openSelection(): void {
 
 <div class="modal-title">Omnisearch - File</div>
 <CmpInput
+  bind:debouncedValue={searchQuery}
   on:enter={openSelection}
   on:arrow-up={() => moveIndex(-1)}
   on:arrow-down={() => moveIndex(1)}
