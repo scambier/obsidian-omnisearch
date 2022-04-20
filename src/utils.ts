@@ -1,14 +1,14 @@
 import type { CachedMetadata } from 'obsidian'
 import {
+  highlightClass,
   isSearchMatch,
   regexLineSplit,
   regexYaml,
 } from './globals'
 import type { SearchMatch } from './globals'
-import { uniqBy } from 'lodash-es'
 
 export function highlighter(str: string): string {
-  return '<span class="search-result-file-matched-text">' + str + '</span>'
+  return `<span class="${highlightClass}">${str}</span>`
 }
 
 export function escapeHTML(html: string): string {
@@ -53,21 +53,6 @@ export function getAllIndices(text: string, regex: RegExp): SearchMatch[] {
     .filter(isSearchMatch)
 }
 
-// export function getAllIndices(text: string, terms: string[]): SearchMatch[] {
-//   let matches: SearchMatch[] = []
-//   for (const term of terms) {
-//     matches = [
-//       ...matches,
-//       ...[...text.matchAll(new RegExp(escapeRegex(term), 'gi'))]
-//         .map(o => ({ match: o[0], index: o.index }))
-//         .filter(isSearchMatch),
-//     ]
-//   }
-//   return matches
-//   // matches.sort((a, b) => b.match.length - a.match.length)
-//   // return uniqBy(matches, 'index')
-// }
-
 export function stringsToRegex(strings: string[]): RegExp {
   return new RegExp(strings.map(escapeRegex).join('|'), 'gi')
 }
@@ -92,4 +77,8 @@ export function extractHeadingsFromCache(
   return (
     cache.headings?.filter(h => h.level === level).map(h => h.heading) ?? []
   )
+}
+
+export function loopIndex(index: number, nbItems: number): number {
+  return (index + nbItems) % nbItems
 }

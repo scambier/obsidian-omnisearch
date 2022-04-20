@@ -1,66 +1,57 @@
 <script lang="ts">
-import { debounce } from "obsidian";
+import { debounce } from "obsidian"
 import { createEventDispatcher, onMount, tick } from "svelte"
-import { searchQuery, selectedNote } from "./stores"
 
-let input: HTMLInputElement
-let inputValue: string
+export let value = ''
 const dispatch = createEventDispatcher()
+
+let elInput: HTMLInputElement
 
 onMount(async () => {
   await tick()
-  input.focus()
-  input.select()
+  elInput.focus()
+  // elInput.value = $searchQuery
+  elInput.select()
 })
 
-const debouncedOnInput = debounce(() => $searchQuery = inputValue, 100)
+const debouncedOnInput = debounce(() => {
+  dispatch("input", value)
+}, 100)
 
-// const throttledMoveNoteSelection = throttle(moveNoteSelection, 75)
 function moveNoteSelection(ev: KeyboardEvent): void {
   switch (ev.key) {
     case "ArrowDown":
       ev.preventDefault()
-      selectedNote.next()
+      dispatch("arrow-down")
       break
     case "ArrowUp":
       ev.preventDefault()
-      selectedNote.previous()
+      dispatch("arrow-up")
       break
-    // case "ArrowLeft":
-    //   ev.preventDefault()
-    //   break
-    // case "ArrowRight":
-    //   ev.preventDefault()
-    //   break
 
     case "Enter":
       ev.preventDefault()
       if (ev.ctrlKey || ev.metaKey) {
         // Open in a new pane
-        dispatch("ctrl-enter", $selectedNote)
+        dispatch("ctrl-enter")
       } else if (ev.shiftKey) {
         // Create a new note
-        dispatch("shift-enter", $selectedNote)
+        dispatch("shift-enter")
+      } else if (ev.altKey) {
+        // Expand in-note results
+        dispatch("alt-enter")
       } else {
         // Open in current pane
-        dispatch("enter", $selectedNote)
+        dispatch("enter")
       }
       break
-  }
-
-  // Scroll selected note into view when selecting with keyboard
-  if ($selectedNote) {
-    const elem = document.querySelector(
-      `[data-note-id="${$selectedNote.path}"]`
-    )
-    elem?.scrollIntoView({ behavior: "auto", block: "nearest" })
   }
 }
 </script>
 
 <input
-  bind:this={input}
-  bind:value={inputValue}
+  bind:value
+  bind:this={elInput}
   on:input={debouncedOnInput}
   on:keydown={moveNoteSelection}
   type="text"
