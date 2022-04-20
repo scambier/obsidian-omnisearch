@@ -27,14 +27,8 @@ Once activated, you can access Omnisearch through the Command Palette by looking
   - The relevance of a document against a query depends on the number of times the query terms appear in the document, its filename, and its headings
 - Instant search results, with highlighting
 - Fuzzy/partial search, resistance to typos
-
-### In the works
-
-- UI to show multiple matches in the same note
-- Search in open notes
-- Settings to ignore folders 
-- Settings to configure the weighting variables
-
+- In-file search to quickly skim multiple results in a single note
+- Resistance to typos
 
 ## Motivation
 
