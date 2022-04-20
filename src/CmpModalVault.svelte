@@ -8,7 +8,7 @@ import { onMount, tick } from "svelte"
 import CmpInput from "./CmpInput.svelte"
 import CmpResultNote from "./CmpResultNote.svelte"
 import type { ResultNote } from "./globals"
-import { ModalInFile, type ModalVault } from "./modal";
+import { ModalInFile, type ModalVault } from "./modal"
 import { openNote } from "./notes"
 import { getSuggestions } from "./search"
 import { plugin } from "./stores"
@@ -124,6 +124,9 @@ function scrollIntoView(): void {
         on:click={onClick}
       />
     {/each}
+    {#if !resultNotes.length && searchQuery}
+      <center> We found 0 result for your search here. </center>
+    {/if}
   </div>
 </div>
 <div class="prompt-instructions">

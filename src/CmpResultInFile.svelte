@@ -1,10 +1,6 @@
 <script lang="ts">
 import { createEventDispatcher } from "svelte"
-import {
-  excerptAfter,
-  excerptBefore,
-  type ResultNote,
-} from "./globals"
+import { excerptAfter, excerptBefore, type ResultNote } from "./globals"
 import { escapeHTML, highlighter, stringsToRegex } from "./utils"
 
 const dispatch = createEventDispatcher()
@@ -27,7 +23,6 @@ function cleanContent(content: string): string {
   }
   return escapeHTML(content)
 }
-
 </script>
 
 <div

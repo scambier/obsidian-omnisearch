@@ -132,7 +132,7 @@ async function openSelection(): Promise<void> {
         />
       {/each}
     {:else}
-      We found 0 result for your search here.
+      <center> We found 0 result for your search here. </center>
     {/if}
   </div>
 </div>
