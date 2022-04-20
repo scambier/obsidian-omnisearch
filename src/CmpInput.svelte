@@ -2,11 +2,10 @@
 import { debounce } from "obsidian"
 import { createEventDispatcher, onMount, tick } from "svelte"
 
-export let debouncedValue: string
+export let value = ''
+const dispatch = createEventDispatcher()
 
 let elInput: HTMLInputElement
-let inputValue: string
-const dispatch = createEventDispatcher()
 
 onMount(async () => {
   await tick()
@@ -15,7 +14,9 @@ onMount(async () => {
   elInput.select()
 })
 
-const debouncedOnInput = debounce(() => (debouncedValue = inputValue), 100)
+const debouncedOnInput = debounce(() => {
+  dispatch("input", value)
+}, 100)
 
 function moveNoteSelection(ev: KeyboardEvent): void {
   switch (ev.key) {
@@ -47,10 +48,10 @@ function moveNoteSelection(ev: KeyboardEvent): void {
   }
 }
 </script>
-{inputValue} - {debouncedValue}
+
 <input
+  bind:value
   bind:this={elInput}
-  bind:value={inputValue}
   on:input={debouncedOnInput}
   on:keydown={moveNoteSelection}
   type="text"

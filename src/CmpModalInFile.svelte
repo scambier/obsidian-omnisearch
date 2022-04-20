@@ -94,7 +94,7 @@ function openSelection(): void {
 
 <div class="modal-title">Omnisearch - File</div>
 <CmpInput
-  bind:debouncedValue={searchQuery}
+  on:input={(e) => (searchQuery = e.detail)}
   on:enter={openSelection}
   on:arrow-up={() => moveIndex(-1)}
   on:arrow-down={() => moveIndex(1)}

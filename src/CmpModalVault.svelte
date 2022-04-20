@@ -1,3 +1,7 @@
+<script lang="ts" context="module">
+let lastSearch = ""
+</script>
+
 <script lang="ts">
 import { TFile } from "obsidian"
 import { onMount, tick } from "svelte"
@@ -7,18 +11,18 @@ import type { ResultNote } from "./globals"
 import { OmnisearchModal } from "./modal"
 import { openNote } from "./notes"
 import { getSuggestions } from "./search"
-import { lastSearch, modal, plugin } from "./stores"
+import { modal, plugin } from "./stores"
 import { loopIndex } from "./utils"
 
 let selectedIndex = 0
 let searchQuery: string
 let resultNotes: ResultNote[] = []
-$: selectedNote = resultNotes[selectedIndex]!
+$: selectedNote = resultNotes[selectedIndex]
 
 $: {
   if (searchQuery) {
     resultNotes = getSuggestions(searchQuery)
-    $lastSearch = searchQuery
+    lastSearch = searchQuery
   }
   selectedIndex = 0
   scrollIntoView()
@@ -26,7 +30,7 @@ $: {
 
 onMount(async () => {
   await tick()
-  searchQuery = $lastSearch
+  searchQuery = lastSearch
 })
 
 async function createOrOpenNote(item: ResultNote): Promise<void> {
@@ -47,22 +51,26 @@ async function createOrOpenNote(item: ResultNote): Promise<void> {
 }
 
 function onClick() {
+  if (!selectedNote) return
   openNote(selectedNote)
   $modal.close()
 }
 
 function onInputEnter(): void {
   // console.log(event.detail)
+  if (!selectedNote) return
   openNote(selectedNote)
   $modal.close()
 }
 
 function onInputCtrlEnter(): void {
+  if (!selectedNote) return
   openNote(selectedNote, true)
   $modal.close()
 }
 
 function onInputShiftEnter(): void {
+  if (!selectedNote) return
   createOrOpenNote(selectedNote)
   $modal.close()
 }
@@ -83,20 +91,21 @@ function moveIndex(dir: 1 | -1): void {
 }
 
 function scrollIntoView(): void {
-  if (selectedNote) {
-    tick().then(() => {
+  tick().then(() => {
+    if (selectedNote) {
       const elem = document.querySelector(
         `[data-note-id="${selectedNote.path}"]`
       )
       elem?.scrollIntoView({ behavior: "auto", block: "nearest" })
-    })
-  }
+    }
+  })
 }
 </script>
 
 <div class="modal-title">Omnisearch - Vault</div>
 <CmpInput
-  bind:debouncedValue={searchQuery}
+  value={lastSearch}
+  on:input={(e) => (searchQuery = e.detail)}
   on:enter={onInputEnter}
   on:shift-enter={onInputShiftEnter}
   on:ctrl-enter={onInputCtrlEnter}
