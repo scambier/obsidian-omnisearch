@@ -1,8 +1,6 @@
-import type { TFile } from 'obsidian'
 import { get, writable } from 'svelte/store'
-import type { IndexedNote, ResultNote } from './globals'
+import type { IndexedNote } from './globals'
 import type OmnisearchPlugin from './main'
-import type { OmnisearchModal } from './modal'
 
 function createIndexedNotes() {
   const { subscribe, set, update } = writable<Record<string, IndexedNote>>({})
@@ -31,11 +29,6 @@ function createIndexedNotes() {
  * A reference to the plugin instance
  */
 export const plugin = writable<OmnisearchPlugin>()
-
-/**
- * A reference to the modal instance
- */
-export const modal = writable<OmnisearchModal>()
 
 /**
  * The entire list of indexed notes, constantly kept up-to-date.

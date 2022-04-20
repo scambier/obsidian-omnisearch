@@ -2,17 +2,21 @@
 import CmpInput from "./CmpInput.svelte"
 import CmpResultInFile from "./CmpResultInFile.svelte"
 import { excerptAfter, type ResultNote, type SearchMatch } from "./globals"
-import { modal, plugin } from "./stores"
+import { plugin } from "./stores"
 import { loopIndex } from "./utils"
 import { tick } from "svelte"
 import { MarkdownView } from "obsidian"
 import { getSuggestions } from "./search"
+import type { OmnisearchModal } from "./modal"
 
+export let modal: OmnisearchModal
+export let parent: OmnisearchModal | null = null
 export let canGoBack = false
 export let singleFilePath = ""
+let searchQuery: string
+
 let groupedOffsets: number[] = []
 let selectedIndex = 0
-let searchQuery: string
 let note: ResultNote | null = null
 
 $: {
@@ -71,14 +75,18 @@ function scrollIntoView(): void {
   })
 }
 
-function openSelection(): void {
+async function openSelection(): Promise<void> {
   // TODO: clean me, merge with notes.openNote()
   if (note) {
-    $plugin.app.workspace.openLinkText(note.path, "")
+    modal.close()
+    if (parent) parent.close()
+
+    await $plugin.app.workspace.openLinkText(note.path, "")
     const view = $plugin.app.workspace.getActiveViewOfType(MarkdownView)
     if (!view) {
       throw new Error("OmniSearch - No active MarkdownView")
     }
+
     const offset = groupedOffsets[selectedIndex] ?? 0
     const pos = view.editor.offsetToPos(offset)
     pos.ch = 0
@@ -87,7 +95,6 @@ function openSelection(): void {
       from: { line: pos.line - 10, ch: 0 },
       to: { line: pos.line + 10, ch: 0 },
     })
-    $modal.close()
   }
 }
 </script>

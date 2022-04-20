@@ -11,9 +11,10 @@ import type { ResultNote } from "./globals"
 import { OmnisearchModal } from "./modal"
 import { openNote } from "./notes"
 import { getSuggestions } from "./search"
-import { modal, plugin } from "./stores"
+import { plugin } from "./stores"
 import { loopIndex } from "./utils"
 
+export let modal: OmnisearchModal
 let selectedIndex = 0
 let searchQuery: string
 let resultNotes: ResultNote[] = []
@@ -53,34 +54,34 @@ async function createOrOpenNote(item: ResultNote): Promise<void> {
 function onClick() {
   if (!selectedNote) return
   openNote(selectedNote)
-  $modal.close()
+  modal.close()
 }
 
 function onInputEnter(): void {
   // console.log(event.detail)
   if (!selectedNote) return
   openNote(selectedNote)
-  $modal.close()
+  modal.close()
 }
 
 function onInputCtrlEnter(): void {
   if (!selectedNote) return
   openNote(selectedNote, true)
-  $modal.close()
+  modal.close()
 }
 
 function onInputShiftEnter(): void {
   if (!selectedNote) return
   createOrOpenNote(selectedNote)
-  $modal.close()
+  modal.close()
 }
 
 function onInputAltEnter(): void {
   if (selectedNote) {
     const file = $plugin.app.vault.getAbstractFileByPath(selectedNote.path)
     if (file && file instanceof TFile) {
-      // $modal.close()
-      new OmnisearchModal($plugin, file, true).open()
+      // modal.close()
+      new OmnisearchModal($plugin, file, true, modal).open()
     }
   }
 }
