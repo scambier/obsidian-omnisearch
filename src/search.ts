@@ -1,18 +1,25 @@
 import { Notice, TFile, type TAbstractFile } from 'obsidian'
 import MiniSearch, { type SearchResult } from 'minisearch'
-import { SPACE_OR_PUNCTUATION, type IndexedNote, type ResultNote, type SearchMatch } from './globals'
-import { indexedNotes, plugin } from './stores'
+import {
+  SPACE_OR_PUNCTUATION,
+  type IndexedNote,
+  type ResultNote,
+  type SearchMatch,
+} from './globals'
+import { plugin } from './stores'
 import { get } from 'svelte/store'
 import { extractHeadingsFromCache, stringsToRegex, wait } from './utils'
 
 let minisearchInstance: MiniSearch<IndexedNote>
+
+let indexedNotes: Record<string, IndexedNote> = {}
 
 /**
  * Initializes the MiniSearch instance,
  * and adds all the notes to the index
  */
 export async function initGlobalSearchIndex(): Promise<void> {
-  indexedNotes.set({})
+  indexedNotes = {}
   minisearchInstance = new MiniSearch({
     tokenize: text => text.split(SPACE_OR_PUNCTUATION),
     idField: 'path',
@@ -112,7 +119,7 @@ export function getSuggestions(
 
   // Map the raw results to get usable suggestions
   const suggestions = results.map(result => {
-    const note = indexedNotes.get(result.id)
+    const note = indexedNotes[result.id]
     if (!note) {
       throw new Error(`Note "${result.id}" not indexed`)
     }
@@ -145,7 +152,7 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
     const fileCache = app.metadataCache.getFileCache(file)
     // console.log(fileCache)
 
-    if (indexedNotes.get(file.path)) {
+    if (indexedNotes[file.path]) {
       throw new Error(`${file.basename} is already indexed`)
     }
 
@@ -168,7 +175,7 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
         : '',
     }
     minisearchInstance.add(note)
-    indexedNotes.add(note)
+    indexedNotes[note.path] = note
   }
   catch (e) {
     console.trace('Error while indexing ' + file.basename)
@@ -193,9 +200,9 @@ export function removeFromIndex(file: TAbstractFile): void {
  * @param path
  */
 export function removeFromIndexByPath(path: string): void {
-  const note = indexedNotes.get(path)
+  const note = indexedNotes[path]
   if (note) {
     minisearchInstance.remove(note)
-    indexedNotes.remove(path)
+    delete indexedNotes[path]
   }
 }
