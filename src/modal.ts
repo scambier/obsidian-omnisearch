@@ -3,13 +3,8 @@ import type OmnisearchPlugin from './main'
 import CmpModalVault from './CmpModalVault.svelte'
 import CmpModalInFile from './CmpModalInFile.svelte'
 
-export class OmnisearchModal extends Modal {
-  constructor(
-    plugin: OmnisearchPlugin,
-    file?: TFile,
-    canGoBack = false,
-    parent?: OmnisearchModal,
-  ) {
+abstract class ModalOmnisearch extends Modal {
+  constructor(plugin: OmnisearchPlugin) {
     super(plugin.app)
 
     // Remove all the default modal's children (except the close button)
@@ -18,25 +13,47 @@ export class OmnisearchModal extends Modal {
     this.modalEl.replaceChildren()
     this.modalEl.append(closeEl)
     this.modalEl.addClass('omnisearch-modal', 'prompt')
+  }
+}
 
-    if (file) {
-      new CmpModalInFile({
-        target: this.modalEl,
-        props: {
-          modal: this,
-          canGoBack,
-          singleFilePath: file.path,
-          parent: parent,
-        },
-      })
+export class ModalVault extends ModalOmnisearch {
+  constructor(plugin: OmnisearchPlugin) {
+    super(plugin)
+
+    new CmpModalVault({
+      target: this.modalEl,
+      props: {
+        modal: this,
+      },
+    })
+  }
+}
+
+export class ModalInFile extends ModalOmnisearch {
+  constructor(
+    plugin: OmnisearchPlugin,
+    file: TFile,
+    searchQuery: string = '',
+    parent?: ModalOmnisearch,
+  ) {
+    super(plugin)
+
+    if (parent) {
+      // Hide the parent modal
+      parent.containerEl.toggleVisibility(false)
+      this.onClose = () => {
+        parent.containerEl.toggleVisibility(true)
+      }
     }
-    else {
-      new CmpModalVault({
-        target: this.modalEl,
-        props: {
-          modal: this,
-        },
-      })
-    }
+
+    new CmpModalInFile({
+      target: this.modalEl,
+      props: {
+        modal: this,
+        singleFilePath: file.path,
+        parent: parent,
+        searchQuery,
+      },
+    })
   }
 }

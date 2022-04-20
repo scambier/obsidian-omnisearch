@@ -1,26 +1,36 @@
+<script lang="ts" context="module">
+let lastSearch = ""
+</script>
+
 <script lang="ts">
 import CmpInput from "./CmpInput.svelte"
 import CmpResultInFile from "./CmpResultInFile.svelte"
 import { excerptAfter, type ResultNote, type SearchMatch } from "./globals"
 import { plugin } from "./stores"
 import { loopIndex } from "./utils"
-import { tick } from "svelte"
+import { onMount, tick } from "svelte"
 import { MarkdownView } from "obsidian"
 import { getSuggestions } from "./search"
-import type { OmnisearchModal } from "./modal"
+import type { ModalInFile, ModalVault } from "./modal"
 
-export let modal: OmnisearchModal
-export let parent: OmnisearchModal | null = null
-export let canGoBack = false
+export let modal: ModalInFile
+export let parent: ModalVault | null = null
 export let singleFilePath = ""
-let searchQuery: string
+export let searchQuery: string
 
 let groupedOffsets: number[] = []
 let selectedIndex = 0
 let note: ResultNote | null = null
 
+onMount(() => {
+  searchQuery = lastSearch
+})
+
 $: {
-  note = getSuggestions(searchQuery, { singleFilePath })[0] ?? null
+  if (searchQuery) {
+    note = getSuggestions(searchQuery, { singleFilePath })[0] ?? null
+    lastSearch = searchQuery
+  }
   selectedIndex = 0
   scrollIntoView()
 }
@@ -101,6 +111,7 @@ async function openSelection(): Promise<void> {
 
 <div class="modal-title">Omnisearch - File</div>
 <CmpInput
+  value={searchQuery}
   on:input={(e) => (searchQuery = e.detail)}
   on:enter={openSelection}
   on:arrow-up={() => moveIndex(-1)}
@@ -134,7 +145,7 @@ async function openSelection(): Promise<void> {
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">esc</span>
-    {#if canGoBack}
+    {#if !!parent}
       <span>to go back to Vault Search</span>
     {:else}
       <span>to dismiss</span>

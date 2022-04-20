@@ -1,5 +1,4 @@
 import { MarkdownView, Plugin, TFile } from 'obsidian'
-import { OmnisearchModal } from './modal'
 import { plugin } from './stores'
 import {
   addToIndex,
@@ -7,6 +6,7 @@ import {
   removeFromIndex,
   removeFromIndexByPath,
 } from './search'
+import { ModalInFile, ModalVault } from './modal'
 
 export default class OmnisearchPlugin extends Plugin {
   async onload(): Promise<void> {
@@ -17,7 +17,7 @@ export default class OmnisearchPlugin extends Plugin {
       id: 'show-modal',
       name: 'Vault search',
       callback: () => {
-        new OmnisearchModal(this).open()
+        new ModalVault(this).open()
       },
     })
 
@@ -28,7 +28,7 @@ export default class OmnisearchPlugin extends Plugin {
         const view = this.app.workspace.getActiveViewOfType(MarkdownView)
         if (view) {
           if (!checking) {
-            new OmnisearchModal(this, view.file).open()
+            new ModalInFile(this, view.file).open()
           }
           return true
         }

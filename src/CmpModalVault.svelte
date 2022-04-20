@@ -8,13 +8,13 @@ import { onMount, tick } from "svelte"
 import CmpInput from "./CmpInput.svelte"
 import CmpResultNote from "./CmpResultNote.svelte"
 import type { ResultNote } from "./globals"
-import { OmnisearchModal } from "./modal"
+import { ModalInFile, type ModalVault } from "./modal";
 import { openNote } from "./notes"
 import { getSuggestions } from "./search"
 import { plugin } from "./stores"
 import { loopIndex } from "./utils"
 
-export let modal: OmnisearchModal
+export let modal: ModalVault
 let selectedIndex = 0
 let searchQuery: string
 let resultNotes: ResultNote[] = []
@@ -29,8 +29,7 @@ $: {
   scrollIntoView()
 }
 
-onMount(async () => {
-  await tick()
+onMount(() => {
   searchQuery = lastSearch
 })
 
@@ -81,7 +80,7 @@ function onInputAltEnter(): void {
     const file = $plugin.app.vault.getAbstractFileByPath(selectedNote.path)
     if (file && file instanceof TFile) {
       // modal.close()
-      new OmnisearchModal($plugin, file, true, modal).open()
+      new ModalInFile($plugin, file, searchQuery, modal).open()
     }
   }
 }
