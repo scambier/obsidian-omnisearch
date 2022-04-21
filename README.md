@@ -23,6 +23,7 @@ Once activated, you can access Omnisearch through the Command Palette by looking
 
 ## Features
 
+- Keyboard-centric, you never have to use your mouse
 - Automatic document scoring using the [BM25 algorithm](https://github.com/lucaong/minisearch/issues/129#issuecomment-1046257399)
   - The relevance of a document against a query depends on the number of times the query terms appear in the document, its filename, and its headings
 - Instant search results, with highlighting
