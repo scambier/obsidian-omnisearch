@@ -1,8 +1,8 @@
 <script lang="ts">
 import { createEventDispatcher } from "svelte"
-import { excerptAfter, excerptBefore, type ResultNote } from "./globals"
+import type { ResultNote } from "./globals"
 import { getMatches } from "./search"
-import { escapeHTML, highlighter, stringsToRegex } from "./utils"
+import { highlighter, makeExcerpt, stringsToRegex } from "./utils"
 
 const dispatch = createEventDispatcher()
 export let selected = false
@@ -10,20 +10,7 @@ export let note: ResultNote
 
 $: reg = stringsToRegex(note.foundWords)
 $: matches = getMatches(note.content, reg)
-$: cleanedContent = cleanContent(note.content)
-
-function cleanContent(content: string): string {
-  const pos = note.matches[0]?.offset ?? -1
-  if (pos > -1) {
-    const from = Math.max(0, pos - excerptBefore)
-    const to = Math.min(content.length - 1, pos + excerptAfter)
-    content =
-      (from > 0 ? "…" : "") +
-      content.slice(from, to).trim() +
-      (to < content.length - 1 ? "…" : "")
-  }
-  return escapeHTML(content)
-}
+$: cleanedContent = makeExcerpt(note.content, note.matches[0]?.offset ?? -1)
 </script>
 
 <div

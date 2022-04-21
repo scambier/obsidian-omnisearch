@@ -1,5 +1,7 @@
 import type { CachedMetadata } from 'obsidian'
 import {
+  excerptAfter,
+  excerptBefore,
   highlightClass,
   isSearchMatch,
   regexLineSplit,
@@ -81,4 +83,17 @@ export function extractHeadingsFromCache(
 
 export function loopIndex(index: number, nbItems: number): number {
   return (index + nbItems) % nbItems
+}
+
+export function makeExcerpt(content: string, offset: number): string {
+  const pos = offset ?? -1
+  if (pos > -1) {
+    const from = Math.max(0, pos - excerptBefore)
+    const to = Math.min(content.length - 1, pos + excerptAfter)
+    content =
+      (from > 0 ? '…' : '') +
+      content.slice(from, to).trim() +
+      (to < content.length - 1 ? '…' : '')
+  }
+  return escapeHTML(content)
 }
