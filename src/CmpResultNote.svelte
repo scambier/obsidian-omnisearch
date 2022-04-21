@@ -34,7 +34,7 @@ function cleanContent(content: string): string {
   on:click={(e) => dispatch("click")}
 >
   <span class="omnisearch-result__title">
-    {@html note.basename}
+    {@html note.basename.replace(reg, highlighter)}
   </span>
 
   <span class="omnisearch-result__counter">
