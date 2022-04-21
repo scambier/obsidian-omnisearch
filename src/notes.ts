@@ -1,14 +1,11 @@
 import { MarkdownView } from 'obsidian'
-import { get } from 'svelte/store'
 import type { ResultNote } from './globals'
-import { plugin } from './stores'
 import { stringsToRegex } from './utils'
 
 export async function openNote(
   item: ResultNote,
   newPane = false,
 ): Promise<void> {
-  const app = get(plugin).app
   const reg = stringsToRegex(item.foundWords)
   reg.exec(item.content)
   const offset = reg.lastIndex

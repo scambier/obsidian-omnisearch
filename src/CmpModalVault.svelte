@@ -11,7 +11,6 @@ import type { ResultNote } from "./globals"
 import { ModalInFile, type ModalVault } from "./modal"
 import { openNote } from "./notes"
 import { getSuggestions } from "./search"
-import { plugin } from "./stores"
 import { loopIndex } from "./utils"
 
 export let modal: ModalVault
@@ -35,11 +34,8 @@ onMount(() => {
 
 async function createOrOpenNote(item: ResultNote): Promise<void> {
   try {
-    const file = await $plugin.app.vault.create(
-      searchQuery + ".md",
-      "# " + searchQuery
-    )
-    await $plugin.app.workspace.openLinkText(file.path, "")
+    const file = await app.vault.create(searchQuery + ".md", "# " + searchQuery)
+    await app.workspace.openLinkText(file.path, "")
   } catch (e) {
     if (e instanceof Error && e.message === "File already exists.") {
       // Open the existing file instead of creating it
@@ -77,10 +73,10 @@ function onInputShiftEnter(): void {
 
 function onInputAltEnter(): void {
   if (selectedNote) {
-    const file = $plugin.app.vault.getAbstractFileByPath(selectedNote.path)
+    const file = app.vault.getAbstractFileByPath(selectedNote.path)
     if (file && file instanceof TFile) {
       // modal.close()
-      new ModalInFile($plugin, file, searchQuery, modal).open()
+      new ModalInFile(app, file, searchQuery, modal).open()
     }
   }
 }

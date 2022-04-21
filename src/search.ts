@@ -6,7 +6,6 @@ import {
   type ResultNote,
   type SearchMatch,
 } from './globals'
-import { plugin } from './stores'
 import { get } from 'svelte/store'
 import { extractHeadingsFromCache, stringsToRegex, wait } from './utils'
 
@@ -28,7 +27,7 @@ export async function initGlobalSearchIndex(): Promise<void> {
 
   // Index files that are already present
   const start = new Date().getTime()
-  const files = get(plugin).app.vault.getMarkdownFiles()
+  const files = app.vault.getMarkdownFiles()
 
   // This is basically the same behavior as MiniSearch's `addAllAsync()`.
   // We index files by batches of 10
@@ -147,7 +146,6 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
     return
   }
   try {
-    const app = get(plugin).app
     // console.log(`Omnisearch - adding ${file.path} to index`)
     const fileCache = app.metadataCache.getFileCache(file)
     // console.log(fileCache)

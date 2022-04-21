@@ -6,7 +6,6 @@ let lastSearch = ""
 import CmpInput from "./CmpInput.svelte"
 import CmpResultInFile from "./CmpResultInFile.svelte"
 import { excerptAfter, type ResultNote, type SearchMatch } from "./globals"
-import { plugin } from "./stores"
 import { loopIndex } from "./utils"
 import { onMount, tick } from "svelte"
 import { MarkdownView } from "obsidian"
@@ -91,8 +90,8 @@ async function openSelection(): Promise<void> {
     modal.close()
     if (parent) parent.close()
 
-    await $plugin.app.workspace.openLinkText(note.path, "")
-    const view = $plugin.app.workspace.getActiveViewOfType(MarkdownView)
+    await app.workspace.openLinkText(note.path, "")
+    const view = app.workspace.getActiveViewOfType(MarkdownView)
     if (!view) {
       throw new Error("OmniSearch - No active MarkdownView")
     }

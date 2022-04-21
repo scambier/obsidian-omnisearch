@@ -1,5 +1,5 @@
+/* global app */ // make eslint happy with Obisidian's global app reference
 import { MarkdownView, Plugin, TFile } from 'obsidian'
-import { plugin } from './stores'
 import {
   addToIndex,
   initGlobalSearchIndex,
@@ -10,14 +10,12 @@ import { ModalInFile, ModalVault } from './modal'
 
 export default class OmnisearchPlugin extends Plugin {
   async onload(): Promise<void> {
-    plugin.set(this)
-
     // Commands to display Omnisearch modals
     this.addCommand({
       id: 'show-modal',
       name: 'Vault search',
       callback: () => {
-        new ModalVault(this).open()
+        new ModalVault(app).open()
       },
     })
 
@@ -25,10 +23,10 @@ export default class OmnisearchPlugin extends Plugin {
       id: 'show-modal-infile',
       name: 'In-file search',
       checkCallback: (checking: boolean) => {
-        const view = this.app.workspace.getActiveViewOfType(MarkdownView)
+        const view = app.workspace.getActiveViewOfType(MarkdownView)
         if (view) {
           if (!checking) {
-            new ModalInFile(this, view.file).open()
+            new ModalInFile(app, view.file).open()
           }
           return true
         }

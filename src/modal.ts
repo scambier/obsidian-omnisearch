@@ -1,11 +1,10 @@
-import { Modal, TFile } from 'obsidian'
-import type OmnisearchPlugin from './main'
+import { App, Modal, TFile } from 'obsidian'
 import CmpModalVault from './CmpModalVault.svelte'
 import CmpModalInFile from './CmpModalInFile.svelte'
 
 abstract class ModalOmnisearch extends Modal {
-  constructor(plugin: OmnisearchPlugin) {
-    super(plugin.app)
+  constructor(app: App) {
+    super(app)
 
     // Remove all the default modal's children (except the close button)
     // so that we can more easily customize it
@@ -17,8 +16,8 @@ abstract class ModalOmnisearch extends Modal {
 }
 
 export class ModalVault extends ModalOmnisearch {
-  constructor(plugin: OmnisearchPlugin) {
-    super(plugin)
+  constructor(app: App) {
+    super(app)
 
     new CmpModalVault({
       target: this.modalEl,
@@ -31,12 +30,12 @@ export class ModalVault extends ModalOmnisearch {
 
 export class ModalInFile extends ModalOmnisearch {
   constructor(
-    plugin: OmnisearchPlugin,
+    app: App,
     file: TFile,
     searchQuery: string = '',
     parent?: ModalOmnisearch,
   ) {
-    super(plugin)
+    super(app)
 
     if (parent) {
       // Hide the parent modal
