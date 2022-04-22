@@ -4,6 +4,9 @@ module.exports = {
     es2021: true,
   },
   extends: ['standard'],
+  globals: {
+    app: 'readonly',
+  },
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 13,

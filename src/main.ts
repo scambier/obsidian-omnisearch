@@ -1,4 +1,3 @@
-/* global app */ // make eslint happy with Obisidian's global app reference
 import { MarkdownView, Plugin, TFile } from 'obsidian'
 import {
   addToIndex,
