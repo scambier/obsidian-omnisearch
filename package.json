@@ -1,12 +1,12 @@
 {
   "name": "scambier.obsidian-search",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Search over organization",
   "main": "dist/main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-    "version": "node version-bump.mjs && git add manifest.json versions.json",
+    "version": "node version-bump.mjs && git add manifest.json versions.json package.json",
     "lint": "eslint . --ext .ts --fix --ignore-path .gitignore"
   },
   "keywords": [],
