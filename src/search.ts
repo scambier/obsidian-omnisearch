@@ -6,7 +6,6 @@ import {
   type ResultNote,
   type SearchMatch,
 } from './globals'
-import { get } from 'svelte/store'
 import { extractHeadingsFromCache, stringsToRegex, wait } from './utils'
 
 let minisearchInstance: MiniSearch<IndexedNote>

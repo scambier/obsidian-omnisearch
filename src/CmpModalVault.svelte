@@ -7,7 +7,7 @@ import { TFile } from "obsidian"
 import { onMount, tick } from "svelte"
 import CmpInput from "./CmpInput.svelte"
 import CmpResultNote from "./CmpResultNote.svelte"
-import type { ResultNote } from "./globals"
+import { eventBus, type ResultNote } from "./globals"
 import { ModalInFile, type ModalVault } from "./modal"
 import { createNote, openNote } from "./notes"
 import { getSuggestions } from "./search"
@@ -30,6 +30,12 @@ $: {
 
 onMount(() => {
   searchQuery = lastSearch
+  eventBus.on("vault", "enter", onInputEnter)
+  eventBus.on("vault", "shift-enter", onInputShiftEnter)
+  eventBus.on("vault", "ctrl-enter", onInputCtrlEnter)
+  eventBus.on("vault", "alt-enter", onInputAltEnter)
+  eventBus.on("vault", "arrow-up", () => moveIndex(-1))
+  eventBus.on("vault", "arrow-down", () => moveIndex(1))
 })
 
 function onClick() {
@@ -84,16 +90,7 @@ function scrollIntoView(): void {
 </script>
 
 <div class="modal-title">Omnisearch - Vault</div>
-<CmpInput
-  value={lastSearch}
-  on:input={(e) => (searchQuery = e.detail)}
-  on:enter={onInputEnter}
-  on:shift-enter={onInputShiftEnter}
-  on:ctrl-enter={onInputCtrlEnter}
-  on:alt-enter={onInputAltEnter}
-  on:arrow-up={() => moveIndex(-1)}
-  on:arrow-down={() => moveIndex(1)}
-/>
+<CmpInput value={lastSearch} on:input={(e) => (searchQuery = e.detail)} />
 
 <div class="modal-content">
   <div class="prompt-results">

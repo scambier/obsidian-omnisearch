@@ -1,3 +1,5 @@
+import { EventBus } from './event-bus'
+
 // Matches a wikiling that begins a string
 export const regexWikilink = /^!?\[\[(?<name>.+?)(\|(?<alias>.+?))?\]\]/
 export const regexLineSplit = /\r?\n|\r|((\.|\?|!)( |\r?\n|\r))/g
@@ -7,6 +9,10 @@ export const excerptBefore = 100
 export const excerptAfter = 180
 
 export const highlightClass = 'suggestion-highlight omnisearch-highlight'
+
+export const eventBus = new EventBus()
+
+// export const eventBus = new EventBus()
 
 export type SearchNote = {
   path: string

@@ -32,7 +32,7 @@ export function removeFrontMatter(text: string): string {
 }
 
 export function wait(ms: number): Promise<void> {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     setTimeout(resolve, ms)
   })
 }

@@ -5,9 +5,14 @@ let lastSearch = ""
 <script lang="ts">
 import CmpInput from "./CmpInput.svelte"
 import CmpResultInFile from "./CmpResultInFile.svelte"
-import { excerptAfter, type ResultNote, type SearchMatch } from "./globals"
+import {
+  eventBus,
+  excerptAfter,
+  type ResultNote,
+  type SearchMatch,
+} from "./globals"
 import { loopIndex } from "./utils"
-import { onMount, tick } from "svelte"
+import { onDestroy, onMount, tick } from "svelte"
 import { MarkdownView } from "obsidian"
 import { getSuggestions } from "./search"
 import type { ModalInFile, ModalVault } from "./modal"
@@ -23,6 +28,14 @@ let note: ResultNote | null = null
 
 onMount(() => {
   searchQuery = lastSearch
+  eventBus.disable("vault")
+  eventBus.on("infile", "enter", openSelection)
+  eventBus.on("infile", "arrow-up", () => moveIndex(-1))
+  eventBus.on("infile", "arrow-down", () => moveIndex(1))
+})
+
+onDestroy(() => {
+  eventBus.enable("vaut")
 })
 
 $: {
@@ -109,13 +122,7 @@ async function openSelection(): Promise<void> {
 </script>
 
 <div class="modal-title">Omnisearch - File</div>
-<CmpInput
-  value={searchQuery}
-  on:input={(e) => (searchQuery = e.detail)}
-  on:enter={openSelection}
-  on:arrow-up={() => moveIndex(-1)}
-  on:arrow-down={() => moveIndex(1)}
-/>
+<CmpInput value={searchQuery} on:input={(e) => (searchQuery = e.detail)} />
 
 <div class="modal-content">
   <div class="prompt-results">
