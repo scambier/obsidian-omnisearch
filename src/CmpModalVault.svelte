@@ -9,7 +9,7 @@ import CmpInput from "./CmpInput.svelte"
 import CmpResultNote from "./CmpResultNote.svelte"
 import type { ResultNote } from "./globals"
 import { ModalInFile, type ModalVault } from "./modal"
-import { openNote } from "./notes"
+import { createNote, openNote } from "./notes"
 import { getSuggestions } from "./search"
 import { loopIndex } from "./utils"
 
@@ -32,20 +32,6 @@ onMount(() => {
   searchQuery = lastSearch
 })
 
-async function createOrOpenNote(item: ResultNote): Promise<void> {
-  try {
-    const file = await app.vault.create(searchQuery + ".md", "# " + searchQuery)
-    await app.workspace.openLinkText(file.path, "")
-  } catch (e) {
-    if (e instanceof Error && e.message === "File already exists.") {
-      // Open the existing file instead of creating it
-      await openNote(item)
-    } else {
-      console.error(e)
-    }
-  }
-}
-
 function onClick() {
   if (!selectedNote) return
   openNote(selectedNote)
@@ -65,9 +51,8 @@ function onInputCtrlEnter(): void {
   modal.close()
 }
 
-function onInputShiftEnter(): void {
-  if (!selectedNote) return
-  createOrOpenNote(selectedNote)
+async function onInputShiftEnter(): Promise<void> {
+  await createNote(searchQuery)
   modal.close()
 }
 
