@@ -10,7 +10,7 @@
     "noUncheckedIndexedAccess": false,
     "baseUrl": ".",
     "module": "ESNext",
-    "target": "ES6",
+    "target": "ES2021",
     "allowJs": true,
     "noImplicitAny": true,
     "moduleResolution": "node",
