@@ -3,7 +3,8 @@
   "compilerOptions": {
     "types": [
       "svelte",
-      "node"
+      "node",
+      "jest"
     ],
     "strict": true,
     "noUncheckedIndexedAccess": false,
@@ -22,5 +23,5 @@
   },
   "include": [
     "**/*.ts"
-  ]
+, "src/__tests__/event-bus-tests.mts"  ]
 }

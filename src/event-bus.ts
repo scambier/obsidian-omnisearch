@@ -6,13 +6,22 @@ export class EventBus {
 
   public on(ctx: string, event: string, callback: EventBusCallback): void {
     if (ctx.includes('@') || event.includes('@')) {
-      throw new Error('Invalid ctx/event name - Cannot contain @')
+      throw new Error('Invalid context/event name - Cannot contain @')
     }
     this.handlers.set(`${ctx}@${event}`, callback)
   }
 
-  public off(ctx: string, event: string): void {
-    this.handlers.delete(`${ctx}@${event}`)
+  public off(ctx: string, event?: string): void {
+    if (event) {
+      this.handlers.delete(`${ctx}@${event}`)
+    }
+    else {
+      for (const [key] of this.handlers.entries()) {
+        if (key.startsWith(`${ctx}@`)) {
+          this.handlers.delete(key)
+        }
+      }
+    }
   }
 
   public disable(ctx: string): void {
