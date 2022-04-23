@@ -28,14 +28,9 @@ let note: ResultNote | null = null
 
 onMount(() => {
   searchQuery = lastSearch
-  eventBus.disable("vault")
   eventBus.on("infile", "enter", openSelection)
   eventBus.on("infile", "arrow-up", () => moveIndex(-1))
   eventBus.on("infile", "arrow-down", () => moveIndex(1))
-})
-
-onDestroy(() => {
-  eventBus.enable("vaut")
 })
 
 $: {

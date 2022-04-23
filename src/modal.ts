@@ -73,7 +73,11 @@ export class ModalInFile extends ModalOmnisearch {
     if (parent) {
       // Hide the parent modal
       parent.containerEl.toggleVisibility(false)
+      this.onOpen = () => {
+        eventBus.disable('vault')
+      }
       this.onClose = () => {
+        eventBus.enable('vault')
         parent.containerEl.toggleVisibility(true)
       }
     }
