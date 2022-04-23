@@ -10,7 +10,6 @@ let elInput: HTMLInputElement
 onMount(async () => {
   await tick()
   elInput.focus()
-  // elInput.value = $searchQuery
   elInput.select()
 })
 

@@ -1,10 +1,9 @@
 <script lang="ts">
-import { createEventDispatcher } from "svelte"
-import type { ResultNote } from "./globals"
-import { getMatches } from "./search"
-import { highlighter, makeExcerpt, stringsToRegex } from "./utils"
+import type { ResultNote } from "../globals"
+import { getMatches } from "../search"
+import { highlighter, makeExcerpt, stringsToRegex } from "../utils"
+import ResultItemContainer from "./ResultItemContainer.svelte"
 
-const dispatch = createEventDispatcher()
 export let selected = false
 export let note: ResultNote
 
@@ -13,13 +12,7 @@ $: matches = getMatches(note.content, reg)
 $: cleanedContent = makeExcerpt(note.content, note.matches[0]?.offset ?? -1)
 </script>
 
-<div
-  data-note-id={note.path}
-  class="suggestion-item omnisearch-result"
-  class:is-selected={selected}
-  on:mousemove={(e) => dispatch("hover")}
-  on:click={(e) => dispatch("click")}
->
+<ResultItemContainer id={note.path} {selected} on:mousemove on:click>
   <span class="omnisearch-result__title">
     {@html note.basename.replace(reg, highlighter)}
   </span>
@@ -30,4 +23,4 @@ $: cleanedContent = makeExcerpt(note.content, note.matches[0]?.offset ?? -1)
   <div class="omnisearch-result__body">
     {@html cleanedContent.replace(reg, highlighter)}
   </div>
-</div>
+</ResultItemContainer>

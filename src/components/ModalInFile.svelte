@@ -3,22 +3,23 @@ let lastSearch = ""
 </script>
 
 <script lang="ts">
-import CmpInput from "./CmpInput.svelte"
-import CmpResultInFile from "./CmpResultInFile.svelte"
+import InputSearch from "./InputSearch.svelte"
+import ResultIemVault from "./ResultItemVault.svelte"
 import {
   eventBus,
   excerptAfter,
   type ResultNote,
   type SearchMatch,
-} from "./globals"
-import { loopIndex } from "./utils"
+} from "../globals"
+import { loopIndex } from "../utils"
 import { onDestroy, onMount, tick } from "svelte"
 import { MarkdownView } from "obsidian"
-import { getSuggestions } from "./search"
-import type { ModalInFile, ModalVault } from "./modal"
+import { getSuggestions } from "../search"
+import ModalContainer from "./ModalContainer.svelte"
+import type { OmnisearchInFileModal, OmnisearchVaultModal } from "src/modal";
 
-export let modal: ModalInFile
-export let parent: ModalVault | null = null
+export let modal: OmnisearchInFileModal
+export let parent: OmnisearchVaultModal | null = null
 export let singleFilePath = ""
 export let searchQuery: string
 
@@ -93,7 +94,7 @@ function moveIndex(dir: 1 | -1): void {
 
 function scrollIntoView(): void {
   tick().then(() => {
-    const elem = document.querySelector(`[data-item-id="${selectedIndex}"]`)
+    const elem = document.querySelector(`[data-result-id="${selectedIndex}"]`)
     elem?.scrollIntoView({ behavior: "auto", block: "nearest" })
   })
 }
@@ -123,18 +124,18 @@ async function openSelection(): Promise<void> {
 </script>
 
 <div class="modal-title">Omnisearch - File</div>
-<CmpInput value={searchQuery} on:input={(e) => (searchQuery = e.detail)} />
+<InputSearch value={searchQuery} on:input={(e) => (searchQuery = e.detail)} />
 
-<div class="modal-content">
+<ModalContainer>
   <div class="prompt-results">
     {#if groupedOffsets.length && note}
       {#each groupedOffsets as offset, i}
-        <CmpResultInFile
+        <ResultIemVault
           {offset}
           {note}
           index={i}
           selected={i === selectedIndex}
-          on:hover={(e) => (selectedIndex = i)}
+          on:mousemove={(e) => (selectedIndex = i)}
           on:click={openSelection}
         />
       {/each}
@@ -142,7 +143,7 @@ async function openSelection(): Promise<void> {
       <center> We found 0 result for your search here. </center>
     {/if}
   </div>
-</div>
+</ModalContainer>
 <div class="prompt-instructions">
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">↑↓</span><span>to navigate</span>

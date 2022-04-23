@@ -5,7 +5,7 @@ import {
   removeFromIndex,
   removeFromIndexByPath,
 } from './search'
-import { ModalInFile, ModalVault } from './modal'
+import { OmnisearchInFileModal, OmnisearchVaultModal } from './modal'
 
 export default class OmnisearchPlugin extends Plugin {
   async onload(): Promise<void> {
@@ -14,7 +14,7 @@ export default class OmnisearchPlugin extends Plugin {
       id: 'show-modal',
       name: 'Vault search',
       callback: () => {
-        new ModalVault(app).open()
+        new OmnisearchVaultModal(app).open()
       },
     })
 
@@ -25,7 +25,7 @@ export default class OmnisearchPlugin extends Plugin {
         const view = app.workspace.getActiveViewOfType(MarkdownView)
         if (view) {
           if (!checking) {
-            new ModalInFile(app, view.file).open()
+            new OmnisearchInFileModal(app, view.file).open()
           }
           return true
         }

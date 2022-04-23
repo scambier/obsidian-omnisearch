@@ -1,9 +1,9 @@
 import { App, Modal, TFile } from 'obsidian'
-import CmpModalVault from './CmpModalVault.svelte'
-import CmpModalInFile from './CmpModalInFile.svelte'
+import ModalVault from './components/ModalVault.svelte'
+import ModalInFile from './components/ModalInFile.svelte'
 import { eventBus } from './globals'
 
-abstract class ModalOmnisearch extends Modal {
+abstract class OmnisearchModal extends Modal {
   constructor(app: App) {
     super(app)
 
@@ -50,10 +50,10 @@ abstract class ModalOmnisearch extends Modal {
   }
 }
 
-export class ModalVault extends ModalOmnisearch {
+export class OmnisearchVaultModal extends OmnisearchModal {
   constructor(app: App) {
     super(app)
-    const cmp = new CmpModalVault({
+    const cmp = new ModalVault({
       target: this.modalEl,
       props: {
         modal: this,
@@ -68,16 +68,16 @@ export class ModalVault extends ModalOmnisearch {
   }
 }
 
-export class ModalInFile extends ModalOmnisearch {
+export class OmnisearchInFileModal extends OmnisearchModal {
   constructor(
     app: App,
     file: TFile,
     searchQuery: string = '',
-    parent?: ModalOmnisearch,
+    parent?: OmnisearchModal,
   ) {
     super(app)
 
-    const cmp = new CmpModalInFile({
+    const cmp = new ModalInFile({
       target: this.modalEl,
       props: {
         modal: this,

@@ -5,15 +5,16 @@ let lastSearch = ""
 <script lang="ts">
 import { TFile } from "obsidian"
 import { onMount, tick } from "svelte"
-import CmpInput from "./CmpInput.svelte"
-import CmpResultNote from "./CmpResultNote.svelte"
-import { eventBus, type ResultNote } from "./globals"
-import { ModalInFile, type ModalVault } from "./modal"
-import { createNote, openNote } from "./notes"
-import { getSuggestions } from "./search"
-import { loopIndex } from "./utils"
+import InputSearch from "./InputSearch.svelte"
+import ModalContainer from "./ModalContainer.svelte"
+import ResultIemInFile from "./ResultItemInFile.svelte"
+import { eventBus, type ResultNote } from "../globals"
+import { createNote, openNote } from "../notes"
+import { getSuggestions } from "../search"
+import { loopIndex } from "../utils"
+import { OmnisearchInFileModal, type OmnisearchVaultModal } from "src/modal"
 
-export let modal: ModalVault
+export let modal: OmnisearchVaultModal
 let selectedIndex = 0
 let searchQuery: string
 let resultNotes: ResultNote[] = []
@@ -67,7 +68,7 @@ function onInputAltEnter(): void {
     const file = app.vault.getAbstractFileByPath(selectedNote.path)
     if (file && file instanceof TFile) {
       // modal.close()
-      new ModalInFile(app, file, searchQuery, modal).open()
+      new OmnisearchInFileModal(app, file, searchQuery, modal).open()
     }
   }
 }
@@ -81,7 +82,7 @@ function scrollIntoView(): void {
   tick().then(() => {
     if (selectedNote) {
       const elem = document.querySelector(
-        `[data-note-id="${selectedNote.path}"]`
+        `[data-result-id="${selectedNote.path}"]`
       )
       elem?.scrollIntoView({ behavior: "auto", block: "nearest" })
     }
@@ -90,15 +91,15 @@ function scrollIntoView(): void {
 </script>
 
 <div class="modal-title">Omnisearch - Vault</div>
-<CmpInput value={lastSearch} on:input={(e) => (searchQuery = e.detail)} />
+<InputSearch value={lastSearch} on:input={(e) => (searchQuery = e.detail)} />
 
-<div class="modal-content">
+<ModalContainer>
   <div class="prompt-results">
     {#each resultNotes as result, i}
-      <CmpResultNote
+      <ResultIemInFile
         selected={i === selectedIndex}
         note={result}
-        on:hover={(e) => (selectedIndex = i)}
+        on:mousemove={(e) => (selectedIndex = i)}
         on:click={onClick}
       />
     {/each}
@@ -106,7 +107,8 @@ function scrollIntoView(): void {
       <center> We found 0 result for your search here. </center>
     {/if}
   </div>
-</div>
+</ModalContainer>
+
 <div class="prompt-instructions">
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">↑↓</span><span>to navigate</span>
