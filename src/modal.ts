@@ -13,8 +13,9 @@ abstract class ModalOmnisearch extends Modal {
     this.modalEl.replaceChildren()
     this.modalEl.append(closeEl)
     this.modalEl.addClass('omnisearch-modal', 'prompt')
-
     this.modalEl.tabIndex = -1
+
+    // Setup events that can be listened through the event bus
     this.modalEl.onkeydown = ev => {
       switch (ev.key) {
         case 'ArrowDown':
@@ -52,12 +53,18 @@ abstract class ModalOmnisearch extends Modal {
 export class ModalVault extends ModalOmnisearch {
   constructor(app: App) {
     super(app)
-    new CmpModalVault({
+    const cmp = new CmpModalVault({
       target: this.modalEl,
       props: {
         modal: this,
       },
     })
+
+    this.onClose = () => {
+      // Since the component is manually created,
+      // we also need to manually destroy it
+      cmp.$destroy()
+    }
   }
 }
 
@@ -70,19 +77,7 @@ export class ModalInFile extends ModalOmnisearch {
   ) {
     super(app)
 
-    if (parent) {
-      // Hide the parent modal
-      parent.containerEl.toggleVisibility(false)
-      this.onOpen = () => {
-        eventBus.disable('vault')
-      }
-      this.onClose = () => {
-        eventBus.enable('vault')
-        parent.containerEl.toggleVisibility(true)
-      }
-    }
-
-    new CmpModalInFile({
+    const cmp = new CmpModalInFile({
       target: this.modalEl,
       props: {
         modal: this,
@@ -91,5 +86,16 @@ export class ModalInFile extends ModalOmnisearch {
         searchQuery,
       },
     })
+
+    if (parent) {
+      // Hide the parent vault modal, and show it back when this one is closed
+      parent.containerEl.toggleVisibility(false)
+    }
+    this.onClose = () => {
+      if (parent) {
+        parent.containerEl.toggleVisibility(true)
+      }
+      cmp.$destroy()
+    }
   }
 }
