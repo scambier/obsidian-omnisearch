@@ -1,25 +1,13 @@
 # Omnisearch for Obsidian
 
-_**This plugin is in an early beta state.** It's usable, but things may break, features are missing, configuration is non-existent, etc._
+[![Active Development](https://img.shields.io/badge/Maintenance%20Level-Actively%20Developed-brightgreen.svg)](https://gist.github.com/cheerfulstoic/d107229326a01ff0f333a1d3476e068d)
 
-_If you experience what you consider to be a bug or performance problem, please [open an issue](https://github.com/scambier/obsidian-omnisearch/issues)._
-
----
 
 **Omnisearch** is a search engine that "_just works_". Type what you're looking for, and it will instantly show you the most relevant results.
 
 Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/minisearch) library.
 
 ![](images/omnisearch.gif)
-
-## Installation & Usage
-
-Omnisearch is not yet available on the official community plugins repository. You can either:
-
-- Install it through [BRAT](https://github.com/TfTHacker/obsidian42-brat)
-- Or download the `scambier.obsidian-omnisearch-x.y.z.zip` file from the [releases page](https://github.com/scambier/obsidian-omnisearch/releases) and unzip it in your `.obsidian/plugins` folder. You'll have to update it manually, though.
-
-Once activated, you can access Omnisearch through the Command Palette by looking for "Omnisearch". You can also assign it a keybind for faster access. The Omnisearch modal works like the Quick Switch plugin: just type your query, navigate with the arrows, and open the note with Enter.
 
 ## Features
 
@@ -29,15 +17,50 @@ Once activated, you can access Omnisearch through the Command Palette by looking
 - Instant search results, with highlighting
 - Fuzzy/partial search, resistance to typos
 - In-file search to quickly skim multiple results in a single note
-- Resistance to typos
 
-## Motivation
+## Installation
 
-Obsidian works best with a well-organized vault, but most of my notes are unrelated tidbits of knowledge and code snippets, without tags, links, of even folders.
+Omnisearch is not yet available on the official community plugins repository. You can either:
 
-I want (_need_) a fast and easy way to search my notes, something that _**just works**_. That's what Omnisearch is.
+- Install it through [BRAT](https://github.com/TfTHacker/obsidian42-brat)
+- Or download the `scambier.obsidian-omnisearch-x.y.z.zip` file from the [releases page](https://github.com/scambier/obsidian-omnisearch/releases) and unzip it in your `.obsidian/plugins` folder. You'll have to update it manually, though.
 
-Since I like to favor "search over organization", I wanted to make a search interface that would be useful for me.
+## Usage
+
+There are 2 ways to use Omnisearch:
+
+### Vault Search
+
+Omnisearch's core feature, accessible with the Command Palette "_Omnisearch: Vault search_". This modal searches through your vault and returns the most relevant notes first. The notes that contain the query terms in their filename or headings are weighted higher than the others.
+
+If you need to list all the matches of a single note, you can do so by using `alt+enter` to open the In-File Search.
+
+### In-File Search
+
+Also accessible through the command palette "_Omnisearch: In-file search_". This modal searches through the active note's content and lists the results.
+
+## Customization
+
+There are several CSS classes you can use to customize the appearance of Omnisearch.
+
+```css
+.omnisearch-modal
+.omnisearch-result
+.omnisearch-result__title
+.omnisearch-result__counter
+.omnisearch-result__body
+.omnisearch-highlight
+```
+
+For example, if you'd like the usual yellow highlight on search matches, you can add this code inside a CSS snippet file:
+
+```css
+.omnisearch-highlight {
+    color: var(--text-normal);
+    background-color: var(--text-highlight-bg);
+}
+```
+
 
 ## LICENSE
 
