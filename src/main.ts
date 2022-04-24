@@ -34,32 +34,34 @@ export default class OmnisearchPlugin extends Plugin {
       },
     })
 
-    // Listeners to keep the search index up-to-date
-    this.registerEvent(
-      this.app.vault.on('create', file => {
-        addToIndex(file)
-      }),
-    )
-    this.registerEvent(
-      this.app.vault.on('delete', file => {
-        removeFromIndex(file)
-      }),
-    )
-    this.registerEvent(
-      this.app.vault.on('modify', async file => {
-        removeFromIndex(file)
-        await addToIndex(file)
-      }),
-    )
-    this.registerEvent(
-      this.app.vault.on('rename', async (file, oldPath) => {
-        if (file instanceof TFile && file.path.endsWith('.md')) {
-          removeFromIndexByPath(oldPath)
+    app.workspace.onLayoutReady(async () => {
+      // Listeners to keep the search index up-to-date
+      this.registerEvent(
+        this.app.vault.on('create', file => {
+          addToIndex(file)
+        }),
+      )
+      this.registerEvent(
+        this.app.vault.on('delete', file => {
+          removeFromIndex(file)
+        }),
+      )
+      this.registerEvent(
+        this.app.vault.on('modify', async file => {
+          removeFromIndex(file)
           await addToIndex(file)
-        }
-      }),
-    )
+        }),
+      )
+      this.registerEvent(
+        this.app.vault.on('rename', async (file, oldPath) => {
+          if (file instanceof TFile && file.path.endsWith('.md')) {
+            removeFromIndexByPath(oldPath)
+            await addToIndex(file)
+          }
+        }),
+      )
 
-    initGlobalSearchIndex()
+      await initGlobalSearchIndex()
+    })
   }
 }
