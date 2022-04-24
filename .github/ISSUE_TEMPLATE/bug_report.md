@@ -1,25 +1,27 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: ''
+title: "[BUG]"
 labels: ''
 assignees: ''
 
 ---
 
-**Type of issue**
+<!--
+Please, if possible and before filing an issue,
+make sure that you have the latest available version of Omnisearch.
+-->
 
-- [ ] A bug
-- [ ] A performance problem
+**Problem description:**
 
-**Problem description**
+<!-- Describe your problem in details. -->
+<!-- If applicable, you can copy-paste the console logs (ctrl+shift+i in Obsidian) -->
+<!-- and attach screenshots -->
 
-<!-- Please describe your problem in details. -->
-<!-- You can copy-paste the console logs (ctrl+shift+i in Obsidian) and attach screenshots -->
+**Your environment:**
 
-**Your environment**
-
+- Omnisearch version:
+- Obsidian version:
 - Operating system: 
 - Number of notes in your vault (approx.):
-- Version of Obsidian:
 - Other plugins that may be related to the issue:
