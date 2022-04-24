@@ -1,18 +1,19 @@
 {
   "name": "scambier.obsidian-search",
-  "version": "0.2.3",
-  "description": "Search over organization",
+  "version": "0.2.4",
+  "description": "A search engine for Obsidian",
   "main": "dist/main.js",
   "scripts": {
-    "dev": "pnpm run build && node esbuild.config.mjs",
-    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "dev": "pnpm run check && node esbuild.config.mjs",
+    "build": "pnpm run check && node esbuild.config.mjs production",
+    "check": "tsc -noEmit -skipLibCheck",
     "version": "node version-bump.mjs && git add manifest.json versions.json package.json",
     "lint": "eslint . --ext .ts --fix --ignore-path .gitignore",
     "test": "jest"
   },
   "keywords": [],
-  "author": "",
-  "license": "MIT",
+  "author": "Simon Cambier",
+  "license": "GPL-3",
   "devDependencies": {
     "@babel/preset-env": "^7.16.11",
     "@babel/preset-typescript": "^7.16.7",
