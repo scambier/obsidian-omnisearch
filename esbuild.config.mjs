@@ -54,7 +54,7 @@ esbuild
       }),
       copy({
         assets: {
-          from: ['./assets/*'],
+          from: ['./assets/styles.css', './manifest.json'],
           to: ['./'],
         },
       }),
