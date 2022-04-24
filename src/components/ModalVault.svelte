@@ -12,7 +12,7 @@ import { eventBus, type ResultNote } from "../globals"
 import { createNote, openNote } from "../notes"
 import { getSuggestions } from "../search"
 import { loopIndex } from "../utils"
-import { OmnisearchInFileModal, type OmnisearchVaultModal } from "src/modal"
+import { OmnisearchInFileModal, type OmnisearchVaultModal } from "src/modals"
 
 export let modal: OmnisearchVaultModal
 let selectedIndex = 0

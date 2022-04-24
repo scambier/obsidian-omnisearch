@@ -16,7 +16,7 @@ import { onDestroy, onMount, tick } from "svelte"
 import { MarkdownView } from "obsidian"
 import { getSuggestions } from "../search"
 import ModalContainer from "./ModalContainer.svelte"
-import type { OmnisearchInFileModal, OmnisearchVaultModal } from "src/modal";
+import type { OmnisearchInFileModal, OmnisearchVaultModal } from "src/modals"
 
 export let modal: OmnisearchInFileModal
 export let parent: OmnisearchVaultModal | null = null

@@ -5,7 +5,7 @@ import {
   removeFromIndex,
   removeFromIndexByPath,
 } from './search'
-import { OmnisearchInFileModal, OmnisearchVaultModal } from './modal'
+import { OmnisearchInFileModal, OmnisearchVaultModal } from './modals'
 
 export default class OmnisearchPlugin extends Plugin {
   async onload(): Promise<void> {
@@ -22,6 +22,7 @@ export default class OmnisearchPlugin extends Plugin {
       id: 'show-modal-infile',
       name: 'In-file search',
       checkCallback: (checking: boolean) => {
+        // Can only be shown when a note is active
         const view = app.workspace.getActiveViewOfType(MarkdownView)
         if (view) {
           if (!checking) {
