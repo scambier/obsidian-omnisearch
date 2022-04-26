@@ -20,14 +20,14 @@ let searchQuery: string
 let resultNotes: ResultNote[] = []
 $: selectedNote = resultNotes[selectedIndex]
 
-$: {
+$: (async() => {
   if (searchQuery) {
-    resultNotes = getSuggestions(searchQuery)
+    resultNotes = await getSuggestions(searchQuery)
     lastSearch = searchQuery
   }
   selectedIndex = 0
   scrollIntoView()
-}
+})()
 
 onMount(() => {
   searchQuery = lastSearch

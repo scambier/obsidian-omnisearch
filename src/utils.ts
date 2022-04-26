@@ -97,3 +97,42 @@ export function makeExcerpt(content: string, offset: number): string {
   }
   return escapeHTML(content)
 }
+
+/**
+ * splits a string in words or "expressions in quotes"
+ * @param str
+ * @returns
+ */
+export function splitQuotes(str: string): string[] {
+  return str.match(/"(.*?)"/g)?.map(s => s.replace(/"/g, '')) ?? []
+}
+
+function mapAsync<T, U>(
+  array: T[],
+  callbackfn: (value: T, index: number, array: T[]) => Promise<U>,
+): Promise<U[]> {
+  return Promise.all(array.map(callbackfn))
+}
+
+/**
+ * https://stackoverflow.com/a/53508547
+ * @param arr
+ * @param callback
+ * @returns
+ */
+export async function filterAsync<T>(
+  array: T[],
+  callbackfn: (value: T, index: number, array: T[]) => Promise<boolean>,
+): Promise<T[]> {
+  const filterMap = await mapAsync(array, callbackfn)
+  return array.filter((value, index) => filterMap[index])
+}
+
+/**
+ * A simple function to strip bold and italic markdown chars from a string
+ * @param text
+ * @returns
+ */
+export function stripMarkdownCharacters(text: string): string {
+  return text.replace(/(\*|\_)+(.+?)(\*|\_)+/g, (match, p1, p2) => p2)
+}

@@ -6,7 +6,13 @@ import {
   type ResultNote,
   type SearchMatch,
 } from './globals'
-import { extractHeadingsFromCache, stringsToRegex, wait } from './utils'
+import {
+  extractHeadingsFromCache,
+  splitQuotes,
+  stringsToRegex,
+  stripMarkdownCharacters,
+  wait,
+} from './utils'
 
 let minisearchInstance: MiniSearch<IndexedNote>
 
@@ -57,9 +63,9 @@ export async function initGlobalSearchIndex(): Promise<void> {
  * @param query
  * @returns
  */
-function search(query: string): SearchResult[] {
+async function search(query: string): Promise<SearchResult[]> {
   if (!query) return []
-  return minisearchInstance.search(query, {
+  let results = minisearchInstance.search(query, {
     prefix: true,
     fuzzy: term => (term.length > 4 ? 0.2 : false),
     combineWith: 'AND',
@@ -70,6 +76,17 @@ function search(query: string): SearchResult[] {
       headings3: 1.1,
     },
   })
+  const quoted = splitQuotes(query.toLowerCase())
+
+  if (quoted.length) {
+    results = results.filter(r => {
+      const content = stripMarkdownCharacters(
+        indexedNotes[r.id]?.content ?? '',
+      ).toLowerCase()
+      return quoted.every(q => content.includes(q))
+    })
+  }
+  return results
 }
 
 /**
@@ -96,12 +113,12 @@ export function getMatches(text: string, reg: RegExp): SearchMatch[] {
  * @param options
  * @returns
  */
-export function getSuggestions(
+export async function getSuggestions(
   query: string,
   options?: Partial<{ singleFilePath: string | null }>,
-): ResultNote[] {
+): Promise<ResultNote[]> {
   // Get the raw results
-  let results = search(query)
+  let results = await search(query)
   if (!results.length) return []
 
   // Either keep the 50 first results,
