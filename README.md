@@ -23,7 +23,7 @@ Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/mi
 Omnisearch is not yet available on the official community plugins repository. You can either:
 
 - Install it through [BRAT](https://github.com/TfTHacker/obsidian42-brat)
-- Or download the `scambier.obsidian-omnisearch-x.y.z.zip` file from the [releases page](https://github.com/scambier/obsidian-omnisearch/releases) and unzip it in your `.obsidian/plugins` folder. You'll have to update it manually, though.
+- Or download the `omnisearch-x.y.z.zip` file from the [releases page](https://github.com/scambier/obsidian-omnisearch/releases) and unzip it in your `.obsidian/plugins` folder. You'll have to update it manually, though.
 
 ## Usage
 

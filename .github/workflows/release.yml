@@ -6,7 +6,7 @@ on:
       - "*"
 
 env:
-  PLUGIN_NAME: scambier.obsidian-omnisearch
+  PLUGIN_NAME: omnisearch
   DIST_FOLDER: ./dist
 
 jobs:
