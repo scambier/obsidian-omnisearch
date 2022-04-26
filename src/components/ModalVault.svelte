@@ -78,15 +78,14 @@ function moveIndex(dir: 1 | -1): void {
   scrollIntoView()
 }
 
-function scrollIntoView(): void {
-  tick().then(() => {
-    if (selectedNote) {
-      const elem = document.querySelector(
-        `[data-result-id="${selectedNote.path}"]`
-      )
-      elem?.scrollIntoView({ behavior: "auto", block: "nearest" })
-    }
-  })
+async function scrollIntoView(): Promise<void> {
+  await tick()
+  if (selectedNote) {
+    const elem = document.querySelector(
+      `[data-result-id="${selectedNote.path}"]`
+    )
+    elem?.scrollIntoView({ behavior: "auto", block: "nearest" })
+  }
 }
 </script>
 

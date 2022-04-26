@@ -92,11 +92,10 @@ function moveIndex(dir: 1 | -1): void {
   scrollIntoView()
 }
 
-function scrollIntoView(): void {
-  tick().then(() => {
-    const elem = document.querySelector(`[data-result-id="${selectedIndex}"]`)
-    elem?.scrollIntoView({ behavior: "auto", block: "nearest" })
-  })
+async function scrollIntoView(): Promise<void> {
+  await tick()
+  const elem = document.querySelector(`[data-result-id="${selectedIndex}"]`)
+  elem?.scrollIntoView({ behavior: "auto", block: "nearest" })
 }
 
 async function openSelection(): Promise<void> {
