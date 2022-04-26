@@ -7,12 +7,12 @@ import { TFile } from "obsidian"
 import { onMount, tick } from "svelte"
 import InputSearch from "./InputSearch.svelte"
 import ModalContainer from "./ModalContainer.svelte"
-import ResultIemInFile from "./ResultItemInFile.svelte"
 import { eventBus, type ResultNote } from "../globals"
 import { createNote, openNote } from "../notes"
 import { getSuggestions } from "../search"
 import { loopIndex } from "../utils"
 import { OmnisearchInFileModal, type OmnisearchVaultModal } from "src/modals"
+import ResultItemVault from "./ResultItemVault.svelte"
 
 export let modal: OmnisearchVaultModal
 let selectedIndex = 0
@@ -94,19 +94,17 @@ function scrollIntoView(): void {
 <InputSearch value={lastSearch} on:input={(e) => (searchQuery = e.detail)} />
 
 <ModalContainer>
-  <div class="prompt-results">
-    {#each resultNotes as result, i}
-      <ResultIemInFile
-        selected={i === selectedIndex}
-        note={result}
-        on:mousemove={(e) => (selectedIndex = i)}
-        on:click={onClick}
-      />
-    {/each}
-    {#if !resultNotes.length && searchQuery}
-      <center> We found 0 result for your search here. </center>
-    {/if}
-  </div>
+  {#each resultNotes as result, i}
+    <ResultItemVault
+      selected={i === selectedIndex}
+      note={result}
+      on:mousemove={(e) => (selectedIndex = i)}
+      on:click={onClick}
+    />
+  {/each}
+  {#if !resultNotes.length && searchQuery}
+    <center> We found 0 result for your search here. </center>
+  {/if}
 </ModalContainer>
 
 <div class="prompt-instructions">

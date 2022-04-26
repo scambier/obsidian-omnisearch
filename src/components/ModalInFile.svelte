@@ -4,7 +4,6 @@ let lastSearch = ""
 
 <script lang="ts">
 import InputSearch from "./InputSearch.svelte"
-import ResultIemVault from "./ResultItemVault.svelte"
 import {
   eventBus,
   excerptAfter,
@@ -17,6 +16,7 @@ import { MarkdownView } from "obsidian"
 import { getSuggestions } from "../search"
 import ModalContainer from "./ModalContainer.svelte"
 import type { OmnisearchInFileModal, OmnisearchVaultModal } from "src/modals"
+import ResultItemInFile from "./ResultItemInFile.svelte"
 
 export let modal: OmnisearchInFileModal
 export let parent: OmnisearchVaultModal | null = null
@@ -127,22 +127,20 @@ async function openSelection(): Promise<void> {
 <InputSearch value={searchQuery} on:input={(e) => (searchQuery = e.detail)} />
 
 <ModalContainer>
-  <div class="prompt-results">
-    {#if groupedOffsets.length && note}
-      {#each groupedOffsets as offset, i}
-        <ResultIemVault
-          {offset}
-          {note}
-          index={i}
-          selected={i === selectedIndex}
-          on:mousemove={(e) => (selectedIndex = i)}
-          on:click={openSelection}
-        />
-      {/each}
-    {:else}
-      <center> We found 0 result for your search here. </center>
-    {/if}
-  </div>
+  {#if groupedOffsets.length && note}
+    {#each groupedOffsets as offset, i}
+      <ResultItemInFile
+        {offset}
+        {note}
+        index={i}
+        selected={i === selectedIndex}
+        on:mousemove={(e) => (selectedIndex = i)}
+        on:click={openSelection}
+      />
+    {/each}
+  {:else}
+    <center> We found 0 result for your search here. </center>
+  {/if}
 </ModalContainer>
 <div class="prompt-instructions">
   <div class="prompt-instruction">

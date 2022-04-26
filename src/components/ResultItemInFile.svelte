@@ -1,25 +1,18 @@
 <script lang="ts">
 import type { ResultNote } from "../globals"
-import { getMatches } from "../search"
 import { highlighter, makeExcerpt, stringsToRegex } from "../utils"
 import ResultItemContainer from "./ResultItemContainer.svelte"
 
-export let selected = false
+export let offset: number
 export let note: ResultNote
+export let index = 0
+export let selected = false
 
 $: reg = stringsToRegex(note.foundWords)
-$: matches = getMatches(note.content, reg)
-$: cleanedContent = makeExcerpt(note.content, note.matches[0]?.offset ?? -1)
+$: cleanedContent = makeExcerpt(note?.content ?? "", offset)
 </script>
 
-<ResultItemContainer id={note.path} {selected} on:mousemove on:click>
-  <span class="omnisearch-result__title">
-    {@html note.basename.replace(reg, highlighter)}
-  </span>
-
-  <span class="omnisearch-result__counter">
-    {matches.length}&nbsp;{matches.length > 1 ? "matches" : "match"}
-  </span>
+<ResultItemContainer id={index.toString()} {selected} on:mousemove on:click>
   <div class="omnisearch-result__body">
     {@html cleanedContent.replace(reg, highlighter)}
   </div>

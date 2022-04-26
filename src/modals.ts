@@ -13,6 +13,7 @@ abstract class OmnisearchModal extends Modal {
     this.modalEl.replaceChildren()
     this.modalEl.append(closeEl)
     this.modalEl.addClass('omnisearch-modal', 'prompt')
+    this.modalEl.removeClass('modal')
     this.modalEl.tabIndex = -1
 
     // Setup events that can be listened through the event bus
