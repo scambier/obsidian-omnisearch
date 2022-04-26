@@ -1,4 +1,4 @@
-import { MarkdownView, Plugin, TFile } from 'obsidian'
+import { Plugin, TFile } from 'obsidian'
 import {
   addToIndex,
   initGlobalSearchIndex,
@@ -21,16 +21,8 @@ export default class OmnisearchPlugin extends Plugin {
     this.addCommand({
       id: 'show-modal-infile',
       name: 'In-file search',
-      checkCallback: (checking: boolean) => {
-        // Can only be shown when a note is active
-        const view = app.workspace.getActiveViewOfType(MarkdownView)
-        if (view) {
-          if (!checking) {
-            new OmnisearchInFileModal(app, view.file).open()
-          }
-          return true
-        }
-        return false
+      editorCallback: (_editor, view) => {
+        new OmnisearchInFileModal(app, view.file).open()
       },
     })
 
