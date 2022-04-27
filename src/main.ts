@@ -1,4 +1,4 @@
-import { Plugin, TFile } from 'obsidian'
+import { Notice, Plugin, TFile } from 'obsidian'
 import {
   addToIndex,
   initGlobalSearchIndex,
@@ -9,6 +9,8 @@ import { OmnisearchInFileModal, OmnisearchVaultModal } from './modals'
 
 export default class OmnisearchPlugin extends Plugin {
   async onload(): Promise<void> {
+    warningOldVersion()
+
     // Commands to display Omnisearch modals
     this.addCommand({
       id: 'show-modal',
@@ -55,5 +57,18 @@ export default class OmnisearchPlugin extends Plugin {
 
       await initGlobalSearchIndex()
     })
+  }
+}
+
+function warningOldVersion() {
+  const installed = (app as any).plugins.enabledPlugins as Set<string>
+  if (installed.has('scambier.omnisearch')) {
+    new Notice(
+      `OMNISEARCH
+It looks like you have 2 versions of Omnisearch installed.
+Please uninstall the old one (up to 0.2.5) and keep the new one (1.0.0+)
+(Click to dismiss)`,
+      0,
+    )
   }
 }
