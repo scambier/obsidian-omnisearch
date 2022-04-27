@@ -60,9 +60,9 @@ export default class OmnisearchPlugin extends Plugin {
   }
 }
 
-function warningOldVersion() {
-  const installed = (app as any).plugins.enabledPlugins as Set<string>
-  if (installed.has('scambier.omnisearch')) {
+function warningOldVersion(): void {
+  const plugins = ((app as any).plugins?.plugins ?? {}) as Record<string, any>
+  if (plugins['scambier.omnisearch']) {
     new Notice(
       `OMNISEARCH
 It looks like you have 2 versions of Omnisearch installed.
