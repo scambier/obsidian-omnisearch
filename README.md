@@ -7,7 +7,7 @@
 
 Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/minisearch) library.
 
-![](images/omnisearch.gif)
+![](https://raw.githubusercontent.com/scambier/obsidian-omnisearch/master/images/omnisearch.gif)
 
 ## Features
 
