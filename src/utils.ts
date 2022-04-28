@@ -89,7 +89,7 @@ export function makeExcerpt(content: string, offset: number): string {
   const pos = offset ?? -1
   if (pos > -1) {
     const from = Math.max(0, pos - excerptBefore)
-    const to = Math.min(content.length - 1, pos + excerptAfter)
+    const to = Math.min(content.length, pos + excerptAfter)
     content =
       (from > 0 ? '…' : '') +
       content.slice(from, to).trim() +
