@@ -76,8 +76,9 @@ async function search(query: string): Promise<SearchResult[]> {
       headings3: 1.1,
     },
   })
-  const quoted = splitQuotes(query.toLowerCase())
 
+  // If the search query contains quotes, filter out results that don't have the exact match
+  const quoted = splitQuotes(query.toLowerCase())
   if (quoted.length) {
     results = results.filter(r => {
       const content = stripMarkdownCharacters(
@@ -117,6 +118,7 @@ export async function getSuggestions(
   query: string,
   options?: Partial<{ singleFilePath: string | null }>,
 ): Promise<ResultNote[]> {
+  query = query.toLowerCase()
   // Get the raw results
   let results = await search(query)
   if (!results.length) return []
@@ -138,7 +140,17 @@ export async function getSuggestions(
     if (!note) {
       throw new Error(`Note "${result.id}" not indexed`)
     }
-    const words = Object.keys(result.match)
+
+    // Clean search matches that match quoted expresins,
+    // and inject those expressions instead
+    const quoted = splitQuotes(query)
+    let words = Object.keys(result.match)
+    for (const quote of quoted) {
+      for (const q of quote.toLowerCase()) {
+        words = words.filter(w => !w.toLowerCase().startsWith(q))
+      }
+      words.push(quote)
+    }
     const matches = getMatches(note.content, stringsToRegex(words))
     const resultNote: ResultNote = {
       score: result.score,
