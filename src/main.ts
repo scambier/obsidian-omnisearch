@@ -1,4 +1,4 @@
-import { MarkdownView, Plugin, TFile } from 'obsidian'
+import { Notice, Plugin, TFile } from 'obsidian'
 import {
   addToIndex,
   initGlobalSearchIndex,
@@ -9,6 +9,8 @@ import { OmnisearchInFileModal, OmnisearchVaultModal } from './modals'
 
 export default class OmnisearchPlugin extends Plugin {
   async onload(): Promise<void> {
+    warningOldVersion()
+
     // Commands to display Omnisearch modals
     this.addCommand({
       id: 'show-modal',
@@ -21,16 +23,8 @@ export default class OmnisearchPlugin extends Plugin {
     this.addCommand({
       id: 'show-modal-infile',
       name: 'In-file search',
-      checkCallback: (checking: boolean) => {
-        // Can only be shown when a note is active
-        const view = app.workspace.getActiveViewOfType(MarkdownView)
-        if (view) {
-          if (!checking) {
-            new OmnisearchInFileModal(app, view.file).open()
-          }
-          return true
-        }
-        return false
+      editorCallback: (_editor, view) => {
+        new OmnisearchInFileModal(app, view.file).open()
       },
     })
 
@@ -63,5 +57,18 @@ export default class OmnisearchPlugin extends Plugin {
 
       await initGlobalSearchIndex()
     })
+  }
+}
+
+function warningOldVersion(): void {
+  const plugins = ((app as any).plugins?.plugins ?? {}) as Record<string, any>
+  if (plugins['scambier.omnisearch']) {
+    new Notice(
+      `OMNISEARCH
+It looks like you have 2 versions of Omnisearch installed.
+Please uninstall the old one (up to 0.2.5) and keep the new one (1.0.0+)
+(Click to dismiss)`,
+      0,
+    )
   }
 }

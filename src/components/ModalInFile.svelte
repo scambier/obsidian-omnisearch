@@ -28,7 +28,9 @@ let selectedIndex = 0
 let note: ResultNote | null = null
 
 onMount(() => {
-  searchQuery = lastSearch
+  if (lastSearch && !searchQuery) {
+    searchQuery = lastSearch
+  }
   eventBus.disable("vault")
 
   eventBus.on("infile", "enter", openSelection)
@@ -61,7 +63,7 @@ $: {
 }
 
 /**
- * Group together close
+ * Group together close matches to reduce the number of results
  */
 function getGroups(matches: SearchMatch[]): SearchMatch[][] {
   const groups: SearchMatch[][] = []
