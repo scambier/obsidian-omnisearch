@@ -41,7 +41,7 @@ async function updateResults() {
   lastSearch = searchQuery
   selectedIndex = 0
   scrollIntoView()
-  if (resultNotes.length) console.log(resultNotes[0])
+  // if (resultNotes.length) console.log(resultNotes[0])
 }
 
 function onClick() {

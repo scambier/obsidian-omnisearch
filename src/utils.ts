@@ -5,6 +5,7 @@ import {
   highlightClass,
   isSearchMatch,
   regexLineSplit,
+  regexStripQuotes,
   regexYaml,
 } from './globals'
 import type { SearchMatch } from './globals'
@@ -104,7 +105,16 @@ export function makeExcerpt(content: string, offset: number): string {
  * @returns
  */
 export function splitQuotes(str: string): string[] {
-  return str.match(/"(.*?)"/g)?.map(s => s.replace(/"/g, '')) ?? []
+  return (
+    str
+      .match(/"(.*?)"/g)
+      ?.map(s => s.replace(/"/g, ''))
+      .filter(q => !!q) ?? []
+  )
+}
+
+export function stripSurroundingQuotes(str: string): string {
+  return str.replace(regexStripQuotes, '')
 }
 
 function mapAsync<T, U>(
@@ -134,5 +144,5 @@ export async function filterAsync<T>(
  * @returns
  */
 export function stripMarkdownCharacters(text: string): string {
-  return text.replace(/(\*|\_)+(.+?)(\*|\_)+/g, (match, p1, p2) => p2)
+  return text.replace(/(\*|_)+(.+?)(\*|_)+/g, (match, p1, p2) => p2)
 }

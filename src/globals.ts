@@ -4,6 +4,7 @@ import { EventBus } from './event-bus'
 export const regexWikilink = /^!?\[\[(?<name>.+?)(\|(?<alias>.+?))?\]\]/
 export const regexLineSplit = /\r?\n|\r|((\.|\?|!)( |\r?\n|\r))/g
 export const regexYaml = /^---\s*\n(.*?)\n?^---\s?/ms
+export const regexStripQuotes = /^"|"$|^'|'$/g
 
 export const excerptBefore = 100
 export const excerptAfter = 180
