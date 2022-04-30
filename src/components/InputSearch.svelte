@@ -13,14 +13,6 @@ onMount(async () => {
   elInput.select()
 })
 
-function onKeydown(e: KeyboardEvent) {
-  switch (e.key) {
-    case "ArrowUp":
-    case "ArrowDown":
-      e.preventDefault()
-  }
-}
-
 const debouncedOnInput = debounce(() => {
   dispatch("input", value)
 }, 100)
@@ -30,7 +22,6 @@ const debouncedOnInput = debounce(() => {
   bind:value
   bind:this={elInput}
   on:input={debouncedOnInput}
-  on:keydown={onKeydown}
   type="text"
   class="prompt-input"
   placeholder="Type to search through your notes"

@@ -7,9 +7,7 @@ import {
   type SearchMatch,
 } from './globals'
 import {
-  escapeRegex,
   extractHeadingsFromCache,
-  splitQuotes,
   stringsToRegex,
   stripMarkdownCharacters,
   wait,

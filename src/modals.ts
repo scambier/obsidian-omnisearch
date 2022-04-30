@@ -17,25 +17,32 @@ abstract class OmnisearchModal extends Modal {
     this.modalEl.tabIndex = -1
 
     // Setup events that can be listened through the event bus
-    this.scope.register([], 'ArrowDown', () => {
+    this.scope.register([], 'ArrowDown', e => {
+      e.preventDefault()
       eventBus.emit('arrow-down')
     })
-    this.scope.register([], 'ArrowUp', () => {
+    this.scope.register([], 'ArrowUp', e => {
+      e.preventDefault()
       eventBus.emit('arrow-up')
     })
-    this.scope.register(['Ctrl'], 'Enter', () => {
+    this.scope.register(['Ctrl'], 'Enter', e => {
+      e.preventDefault()
       eventBus.emit('ctrl-enter') // Open in new pane
     })
-    this.scope.register(['Meta'], 'Enter', () => {
+    this.scope.register(['Meta'], 'Enter', e => {
+      e.preventDefault()
       eventBus.emit('ctrl-enter') // Open in new pane (but on Mac)
     })
-    this.scope.register(['Alt'], 'Enter', () => {
+    this.scope.register(['Alt'], 'Enter', e => {
+      e.preventDefault()
       eventBus.emit('alt-enter') // Open the InFile modal
     })
-    this.scope.register(['Shift'], 'Enter', () => {
+    this.scope.register(['Shift'], 'Enter', e => {
+      e.preventDefault()
       eventBus.emit('shift-enter') // Create a new note
     })
-    this.scope.register([], 'Enter', () => {
+    this.scope.register([], 'Enter', e => {
+      e.preventDefault()
       eventBus.emit('enter') // Open in current pane
     })
   }
