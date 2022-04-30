@@ -13,8 +13,6 @@ export const highlightClass = 'suggestion-highlight omnisearch-highlight'
 
 export const eventBus = new EventBus()
 
-// export const eventBus = new EventBus()
-
 export type SearchNote = {
   path: string
   basename: string
