@@ -9,14 +9,15 @@ import {
   excerptAfter,
   type ResultNote,
   type SearchMatch,
-} from "../globals"
-import { loopIndex } from "../utils"
+} from "src/globals"
+import { loopIndex } from "src/utils"
 import { onDestroy, onMount, tick } from "svelte"
 import { MarkdownView } from "obsidian"
-import { getSuggestions } from "../search"
+import { getSuggestions } from "src/search"
 import ModalContainer from "./ModalContainer.svelte"
 import type { OmnisearchInFileModal, OmnisearchVaultModal } from "src/modals"
 import ResultItemInFile from "./ResultItemInFile.svelte"
+import { Query } from "src/query"
 
 export let modal: OmnisearchInFileModal
 export let parent: OmnisearchVaultModal | null = null
@@ -26,6 +27,7 @@ export let searchQuery: string
 let groupedOffsets: number[] = []
 let selectedIndex = 0
 let note: ResultNote | null = null
+let query: Query
 
 onMount(() => {
   if (lastSearch && !searchQuery) {
@@ -44,7 +46,8 @@ onDestroy(() => {
 
 $: (async () => {
   if (searchQuery) {
-    note = (await getSuggestions(searchQuery, { singleFilePath }))[0] ?? null
+    query = new Query(searchQuery)
+    note = (await getSuggestions(query, { singleFilePath }))[0] ?? null
     lastSearch = searchQuery
   }
   selectedIndex = 0

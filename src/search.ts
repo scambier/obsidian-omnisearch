@@ -7,16 +7,16 @@ import {
   type SearchMatch,
 } from './globals'
 import {
+  escapeRegex,
   extractHeadingsFromCache,
   splitQuotes,
   stringsToRegex,
   stripMarkdownCharacters,
   wait,
 } from './utils'
-import { Query } from './query'
+import type { Query } from './query'
 
 let minisearchInstance: MiniSearch<IndexedNote>
-
 let indexedNotes: Record<string, IndexedNote> = {}
 
 /**
@@ -65,8 +65,8 @@ export async function initGlobalSearchIndex(): Promise<void> {
  * @returns
  */
 async function search(query: Query): Promise<SearchResult[]> {
-  if (!query.getWordsStr()) return []
-  let results = minisearchInstance.search(query.getWordsStr(), {
+  if (!query.segmentsToStr()) return []
+  let results = minisearchInstance.search(query.segmentsToStr(), {
     prefix: true,
     fuzzy: term => (term.length > 4 ? 0.2 : false),
     combineWith: 'AND',
@@ -127,11 +127,10 @@ export function getMatches(text: string, reg: RegExp): SearchMatch[] {
  * @returns
  */
 export async function getSuggestions(
-  queryStr: string,
+  query: Query,
   options?: Partial<{ singleFilePath: string | null }>,
 ): Promise<ResultNote[]> {
   // Get the raw results
-  const query = new Query(queryStr)
   let results = await search(query)
   if (!results.length) return []
 
@@ -153,20 +152,18 @@ export async function getSuggestions(
       throw new Error(`Note "${result.id}" not indexed`)
     }
 
-    // Clean search matches that match quoted expresins,
+    // Clean search matches that match quoted expressions,
     // and inject those expressions instead
-    let words = Object.keys(result.match)
-    const quoted = splitQuotes(query.getWordsStr())
-    for (const quote of quoted) {
-      for (const q of quote.toLowerCase()) {
-        words = words.filter(w => !w.toLowerCase().startsWith(q))
-      }
-      words.push(quote)
-    }
-    const matches = getMatches(note.content, stringsToRegex(words))
+    const foundWords = [
+      ...Object.keys(result.match).filter(w =>
+        query.segments.some(s => w.startsWith(s.value)),
+      ),
+      ...query.segments.filter(s => s.exact).map(s => s.value),
+    ]
+    const matches = getMatches(note.content, stringsToRegex(foundWords))
     const resultNote: ResultNote = {
       score: result.score,
-      foundWords: words,
+      foundWords,
       matches,
       ...note,
     }

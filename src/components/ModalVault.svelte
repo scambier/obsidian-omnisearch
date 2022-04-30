@@ -7,17 +7,19 @@ import { TFile } from "obsidian"
 import { onMount, tick } from "svelte"
 import InputSearch from "./InputSearch.svelte"
 import ModalContainer from "./ModalContainer.svelte"
-import { eventBus, type ResultNote } from "../globals"
-import { createNote, openNote } from "../notes"
-import { getSuggestions } from "../search"
-import { loopIndex } from "../utils"
+import { eventBus, type ResultNote } from "src/globals"
+import { createNote, openNote } from "src/notes"
+import { getSuggestions } from "src/search"
+import { loopIndex } from "src/utils"
 import { OmnisearchInFileModal, type OmnisearchVaultModal } from "src/modals"
 import ResultItemVault from "./ResultItemVault.svelte"
+import { Query } from "src/query"
 
 export let modal: OmnisearchVaultModal
 let selectedIndex = 0
 let searchQuery: string
 let resultNotes: ResultNote[] = []
+let query: Query
 $: selectedNote = resultNotes[selectedIndex]
 
 $: if (searchQuery) {
@@ -37,7 +39,8 @@ onMount(() => {
 })
 
 async function updateResults() {
-  resultNotes = await getSuggestions(searchQuery)
+  query = new Query(searchQuery)
+  resultNotes = await getSuggestions(query)
   lastSearch = searchQuery
   selectedIndex = 0
   scrollIntoView()

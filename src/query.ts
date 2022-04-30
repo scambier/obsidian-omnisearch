@@ -1,4 +1,4 @@
-import { stripSurroundingQuotes } from './utils'
+import { escapeRegex, stringsToRegex, stripSurroundingQuotes } from './utils'
 
 type QueryToken = {
   /**
@@ -16,19 +16,23 @@ type QueryToken = {
  * This class is used to parse a query string into a structured object
  */
 export class Query {
-  public words: QueryToken[] = []
+  public segments: QueryToken[] = []
   public exclusions: QueryToken[] = []
 
-  constructor(text: string) {
+  constructor(text = '') {
     const tokens = parseQuery(text.toLowerCase(), { tokenize: true })
     this.exclusions = tokens.exclude.text
       .map(this.formatToken)
       .filter(o => !!o.value)
-    this.words = tokens.text.map(this.formatToken)
+    this.segments = tokens.text.map(this.formatToken)
   }
 
-  public getWordsStr(): string {
-    return this.words.map(({ value }) => value).join(' ')
+  public segmentsToStr(): string {
+    return this.segments.map(({ value }) => value).join(' ')
+  }
+
+  public segmentsToRegex(): RegExp {
+    return stringsToRegex(this.segments.map(s => s.value))
   }
 
   /**
@@ -36,7 +40,7 @@ export class Query {
    * @returns
    */
   public getExactTerms(): string[] {
-    return this.words.filter(({ exact }) => exact).map(({ value }) => value)
+    return this.segments.filter(({ exact }) => exact).map(({ value }) => value)
   }
 
   private formatToken(str: string): QueryToken {
