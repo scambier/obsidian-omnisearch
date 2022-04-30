@@ -42,14 +42,14 @@ onDestroy(() => {
   eventBus.enable("vault")
 })
 
-$: {
+$: (async () => {
   if (searchQuery) {
-    note = getSuggestions(searchQuery, { singleFilePath })[0] ?? null
+    note = (await getSuggestions(searchQuery, { singleFilePath }))[0] ?? null
     lastSearch = searchQuery
   }
   selectedIndex = 0
   scrollIntoView()
-}
+})()
 
 $: {
   if (note) {

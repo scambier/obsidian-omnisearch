@@ -20,13 +20,10 @@ let searchQuery: string
 let resultNotes: ResultNote[] = []
 $: selectedNote = resultNotes[selectedIndex]
 
-$: {
-  if (searchQuery) {
-    resultNotes = getSuggestions(searchQuery)
-    lastSearch = searchQuery
-  }
-  selectedIndex = 0
-  scrollIntoView()
+$: if (searchQuery) {
+  updateResults()
+} else {
+  resultNotes = []
 }
 
 onMount(() => {
@@ -38,6 +35,14 @@ onMount(() => {
   eventBus.on("vault", "arrow-up", () => moveIndex(-1))
   eventBus.on("vault", "arrow-down", () => moveIndex(1))
 })
+
+async function updateResults() {
+  resultNotes = await getSuggestions(searchQuery)
+  lastSearch = searchQuery
+  selectedIndex = 0
+  scrollIntoView()
+  // if (resultNotes.length) console.log(resultNotes[0])
+}
 
 function onClick() {
   if (!selectedNote) return

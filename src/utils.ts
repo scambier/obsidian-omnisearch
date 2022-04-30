@@ -5,6 +5,7 @@ import {
   highlightClass,
   isSearchMatch,
   regexLineSplit,
+  regexStripQuotes,
   regexYaml,
 } from './globals'
 import type { SearchMatch } from './globals'
@@ -89,11 +90,59 @@ export function makeExcerpt(content: string, offset: number): string {
   const pos = offset ?? -1
   if (pos > -1) {
     const from = Math.max(0, pos - excerptBefore)
-    const to = Math.min(content.length - 1, pos + excerptAfter)
+    const to = Math.min(content.length, pos + excerptAfter)
     content =
       (from > 0 ? '…' : '') +
       content.slice(from, to).trim() +
       (to < content.length - 1 ? '…' : '')
   }
   return escapeHTML(content)
+}
+
+/**
+ * splits a string in words or "expressions in quotes"
+ * @param str
+ * @returns
+ */
+export function splitQuotes(str: string): string[] {
+  return (
+    str
+      .match(/"(.*?)"/g)
+      ?.map(s => s.replace(/"/g, ''))
+      .filter(q => !!q) ?? []
+  )
+}
+
+export function stripSurroundingQuotes(str: string): string {
+  return str.replace(regexStripQuotes, '')
+}
+
+function mapAsync<T, U>(
+  array: T[],
+  callbackfn: (value: T, index: number, array: T[]) => Promise<U>,
+): Promise<U[]> {
+  return Promise.all(array.map(callbackfn))
+}
+
+/**
+ * https://stackoverflow.com/a/53508547
+ * @param arr
+ * @param callback
+ * @returns
+ */
+export async function filterAsync<T>(
+  array: T[],
+  callbackfn: (value: T, index: number, array: T[]) => Promise<boolean>,
+): Promise<T[]> {
+  const filterMap = await mapAsync(array, callbackfn)
+  return array.filter((value, index) => filterMap[index])
+}
+
+/**
+ * A simple function to strip bold and italic markdown chars from a string
+ * @param text
+ * @returns
+ */
+export function stripMarkdownCharacters(text: string): string {
+  return text.replace(/(\*|_)+(.+?)(\*|_)+/g, (match, p1, p2) => p2)
 }

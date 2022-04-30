@@ -6,7 +6,14 @@ import {
   type ResultNote,
   type SearchMatch,
 } from './globals'
-import { extractHeadingsFromCache, stringsToRegex, wait } from './utils'
+import {
+  extractHeadingsFromCache,
+  splitQuotes,
+  stringsToRegex,
+  stripMarkdownCharacters,
+  wait,
+} from './utils'
+import { Query } from './query'
 
 let minisearchInstance: MiniSearch<IndexedNote>
 
@@ -54,12 +61,12 @@ export async function initGlobalSearchIndex(): Promise<void> {
 /**
  * Searches the index for the given query,
  * and returns an array of raw results
- * @param query
+ * @param text
  * @returns
  */
-function search(query: string): SearchResult[] {
-  if (!query) return []
-  return minisearchInstance.search(query, {
+async function search(query: Query): Promise<SearchResult[]> {
+  if (!query.getWordsStr()) return []
+  let results = minisearchInstance.search(query.getWordsStr(), {
     prefix: true,
     fuzzy: term => (term.length > 4 ? 0.2 : false),
     combineWith: 'AND',
@@ -70,6 +77,29 @@ function search(query: string): SearchResult[] {
       headings3: 1.1,
     },
   })
+
+  // If the search query contains quotes, filter out results that don't have the exact match
+  const exactTerms = query.getExactTerms()
+  if (exactTerms.length) {
+    results = results.filter(r => {
+      const content = stripMarkdownCharacters(
+        indexedNotes[r.id]?.content ?? '',
+      ).toLowerCase()
+      return exactTerms.every(q => content.includes(q))
+    })
+  }
+
+  // // If the search query contains exclude terms, filter out results that have them
+  const exclusions = query.exclusions
+  if (exclusions.length) {
+    results = results.filter(r => {
+      const content = stripMarkdownCharacters(
+        indexedNotes[r.id]?.content ?? '',
+      ).toLowerCase()
+      return exclusions.every(q => !content.includes(q.value))
+    })
+  }
+  return results
 }
 
 /**
@@ -96,12 +126,13 @@ export function getMatches(text: string, reg: RegExp): SearchMatch[] {
  * @param options
  * @returns
  */
-export function getSuggestions(
-  query: string,
+export async function getSuggestions(
+  queryStr: string,
   options?: Partial<{ singleFilePath: string | null }>,
-): ResultNote[] {
+): Promise<ResultNote[]> {
   // Get the raw results
-  let results = search(query)
+  const query = new Query(queryStr)
+  let results = await search(query)
   if (!results.length) return []
 
   // Either keep the 50 first results,
@@ -121,7 +152,17 @@ export function getSuggestions(
     if (!note) {
       throw new Error(`Note "${result.id}" not indexed`)
     }
-    const words = Object.keys(result.match)
+
+    // Clean search matches that match quoted expresins,
+    // and inject those expressions instead
+    let words = Object.keys(result.match)
+    const quoted = splitQuotes(query.getWordsStr())
+    for (const quote of quoted) {
+      for (const q of quote.toLowerCase()) {
+        words = words.filter(w => !w.toLowerCase().startsWith(q))
+      }
+      words.push(quote)
+    }
     const matches = getMatches(note.content, stringsToRegex(words))
     const resultNote: ResultNote = {
       score: result.score,
