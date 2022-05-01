@@ -20,13 +20,14 @@ Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/mi
 
 ## Installation
 
-[Omnisearch is available on the official Community Plugins repository](https://obsidian.md/plugins?search=omnisearch#).
+- Omnisearch is available on [the official Community Plugins repository](https://obsidian.md/plugins?search=omnisearch#).
+- You can also install it through [BRAT](https://github.com/TfTHacker/obsidian42-brat) for pre-releases. Be advised that those versions can be buggy.
 
-You can also install it through [BRAT](https://github.com/TfTHacker/obsidian42-brat) for the future beta releases.
+You can check the [CHANGELOG](./CHANGELOG.md) for more information on the different versions.
 
 ## Usage
 
-There are 2 ways to use Omnisearch:
+Omnisearch can be used within 2 different contexts:
 
 ### Vault Search
 
