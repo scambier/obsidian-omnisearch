@@ -1,5 +1,4 @@
 <script lang="ts">
-import type { Query } from "src/query";
 import type { ResultNote } from "../globals"
 import { getMatches } from "../search"
 import { highlighter, makeExcerpt, stringsToRegex } from "../utils"
