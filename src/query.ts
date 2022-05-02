@@ -31,10 +31,6 @@ export class Query {
     return this.segments.map(({ value }) => value).join(' ')
   }
 
-  public segmentsToRegex(): RegExp {
-    return stringsToRegex(this.segments.map(s => s.value))
-  }
-
   /**
    * Returns the terms that are encased in quotes
    * @returns

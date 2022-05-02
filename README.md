@@ -1,6 +1,6 @@
 # Omnisearch for Obsidian
 
-[![Active Development](https://img.shields.io/badge/Maintenance%20Level-Actively%20Developed-brightgreen.svg)](https://gist.github.com/cheerfulstoic/d107229326a01ff0f333a1d3476e068d)
+![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/scambier/obsidian-omnisearch) ![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/scambier/obsidian-omnisearch?include_prereleases&label=BRAT%20beta) [![Active Development](https://img.shields.io/badge/Maintenance%20Level-Actively%20Developed-brightgreen.svg)](https://gist.github.com/cheerfulstoic/d107229326a01ff0f333a1d3476e068d)
 
 
 **Omnisearch** is a search engine that "_just works_". Type what you're looking for, and it will instantly show you the most relevant results.
@@ -15,7 +15,7 @@ Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/mi
 - Automatic document scoring using the [BM25 algorithm](https://github.com/lucaong/minisearch/issues/129#issuecomment-1046257399)
   - The relevance of a document against a query depends on the number of times the query terms appear in the document, its filename, and its headings
 - Instant search results, with highlighting
-- Fuzzy/partial search, resistance to typos
+- Resistance to typos
 - In-file search to quickly skim multiple results in a single note
 
 ## Installation

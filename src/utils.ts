@@ -57,6 +57,7 @@ export function getAllIndices(text: string, regex: RegExp): SearchMatch[] {
 }
 
 export function stringsToRegex(strings: string[]): RegExp {
+  if (!strings.length) return /^$/
   return new RegExp(strings.map(s => `(${escapeRegex(s)})`).join('|'), 'gi')
 }
 
