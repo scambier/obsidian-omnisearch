@@ -8,6 +8,7 @@ import {
 } from './globals'
 import {
   extractHeadingsFromCache,
+  getObsidianIgnoreFilters,
   stringsToRegex,
   stripMarkdownCharacters,
   wait,
@@ -26,6 +27,7 @@ export async function initGlobalSearchIndex(): Promise<void> {
   minisearchInstance = new MiniSearch({
     tokenize: text => text.split(SPACE_OR_PUNCTUATION),
     idField: 'path',
+    storeFields: ['ignored'],
     fields: ['basename', 'content', 'headings1', 'headings2', 'headings3'],
   })
 
@@ -74,6 +76,13 @@ async function search(query: Query): Promise<SearchResult[]> {
       headings2: 1.3,
       headings3: 1.1,
     },
+  })
+
+  // Half the score for files that are in Obsidian's excluded list
+  results.forEach(result => {
+    if (result.ignored) {
+      result.score /= 3 // TODO: make this value configurable?
+    }
   })
 
   // If the search query contains quotes, filter out results that don't have the exact match
@@ -183,11 +192,17 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
   try {
     // console.log(`Omnisearch - adding ${file.path} to index`)
     const fileCache = app.metadataCache.getFileCache(file)
-    // console.log(fileCache)
 
     if (indexedNotes[file.path]) {
       throw new Error(`${file.basename} is already indexed`)
     }
+
+    const userIgnore = getObsidianIgnoreFilters()
+    const ignored = userIgnore.some(
+      item =>
+        (typeof item === 'string' && file.path.startsWith(item)) ||
+        file.path.match(item),
+    )
 
     // Fetch content from the cache to index it as-is
     const content = await app.vault.cachedRead(file)
@@ -197,6 +212,7 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
       basename: file.basename,
       content,
       path: file.path,
+      ignored,
       headings1: fileCache
         ? extractHeadingsFromCache(fileCache, 1).join(' ')
         : '',

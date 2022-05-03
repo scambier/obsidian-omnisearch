@@ -23,6 +23,7 @@ export type IndexedNote = {
   path: string
   basename: string
   content: string
+  ignored: boolean
   headings1: string
   headings2: string
   headings3: string

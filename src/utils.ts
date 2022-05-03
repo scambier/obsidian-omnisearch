@@ -147,3 +147,12 @@ export async function filterAsync<T>(
 export function stripMarkdownCharacters(text: string): string {
   return text.replace(/(\*|_)+(.+?)(\*|_)+/g, (match, p1, p2) => p2)
 }
+
+export function getObsidianIgnoreFilters(): (string | RegExp)[] {
+  return (app.vault.config?.userIgnoreFilters ?? []).map(f => {
+    if (f.length > 2 && f.startsWith('/') && f.endsWith('/')) {
+      return new RegExp(f.slice(1, -1))
+    }
+    return f
+  })
+}
