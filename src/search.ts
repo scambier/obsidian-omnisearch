@@ -1,6 +1,7 @@
 import { Notice, TFile, type TAbstractFile } from 'obsidian'
 import MiniSearch, { type SearchResult } from 'minisearch'
 import {
+  chsRegex,
   SPACE_OR_PUNCTUATION,
   type IndexedNote,
   type ResultNote,
@@ -17,15 +18,13 @@ import type { Query } from './query'
 let minisearchInstance: MiniSearch<IndexedNote>
 let indexedNotes: Record<string, IndexedNote> = {}
 
-const chsPattern = /[\u4e00-\u9fa5]/
-
 const tokenize = (text: string): string[] => {
   const tokens = text.split(SPACE_OR_PUNCTUATION)
   const chsSegmenter = (app as any).plugins.plugins['cm-chs-patch']
 
   if (chsSegmenter) {
     return tokens.flatMap(word =>
-      chsPattern.test(word) ? chsSegmenter.cut(word) : [word],
+      chsRegex.test(word) ? chsSegmenter.cut(word) : [word],
     )
   }
   else return tokens
