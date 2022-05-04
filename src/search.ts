@@ -78,7 +78,7 @@ async function search(query: Query): Promise<SearchResult[]> {
 
   // Half the score for files that are in Obsidian's excluded list
   results.forEach(result => {
-    if (app.metadataCache.isUserIgnored(result.id)) {
+    if (app.metadataCache.isUserIgnored && app.metadataCache.isUserIgnored(result.id)) {
       result.score /= 3 // TODO: make this value configurable or toggleable?
     }
   })
