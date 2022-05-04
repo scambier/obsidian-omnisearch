@@ -1,9 +1,7 @@
-import { type Vault } from 'obsidian'
+import { type MetadataCache } from 'obsidian'
 
 declare module 'obsidian' {
-  interface Vault {
-    config?: {
-      userIgnoreFilters?: string[]
-    }
+  interface MetadataCache {
+    isUserIgnored(path:string):boolean
   }
 }
