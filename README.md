@@ -17,6 +17,8 @@ Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/mi
 - Instant search results, with highlighting
 - Resistance to typos
 - In-file search to quickly skim multiple results in a single note
+- Search filters: expressions in quotes and exclusions
+- Respects Obsidian's "Excluded Files" list (results are downranked, not hidden)
 
 ## Installation
 
