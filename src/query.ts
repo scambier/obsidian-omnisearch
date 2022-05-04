@@ -1,4 +1,4 @@
-import { escapeRegex, stringsToRegex, stripSurroundingQuotes } from './utils'
+import { stripSurroundingQuotes } from './utils'
 
 type QueryToken = {
   /**
