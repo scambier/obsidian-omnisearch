@@ -76,6 +76,13 @@ async function search(query: Query): Promise<SearchResult[]> {
     },
   })
 
+  // Half the score for files that are in Obsidian's excluded list
+  results.forEach(result => {
+    if (app.metadataCache.isUserIgnored(result.id)) {
+      result.score /= 3 // TODO: make this value configurable or toggleable?
+    }
+  })
+
   // If the search query contains quotes, filter out results that don't have the exact match
   const exactTerms = query.getExactTerms()
   if (exactTerms.length) {
@@ -183,7 +190,6 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
   try {
     // console.log(`Omnisearch - adding ${file.path} to index`)
     const fileCache = app.metadataCache.getFileCache(file)
-    // console.log(fileCache)
 
     if (indexedNotes[file.path]) {
       throw new Error(`${file.basename} is already indexed`)
