@@ -17,6 +17,20 @@ import type { Query } from './query'
 let minisearchInstance: MiniSearch<IndexedNote>
 let indexedNotes: Record<string, IndexedNote> = {}
 
+const chsPattern = /[\u4e00-\u9fa5]/
+
+const tokenize = (text: string): string[] => {
+  const tokens = text.split(SPACE_OR_PUNCTUATION)
+  const chsSegmenter = (app as any).plugins.plugins['cm-chs-patch']
+
+  if (chsSegmenter) {
+    return tokens.flatMap(word =>
+      chsPattern.test(word) ? chsSegmenter.cut(word) : [word],
+    )
+  }
+  else return tokens
+}
+
 /**
  * Initializes the MiniSearch instance,
  * and adds all the notes to the index
@@ -24,7 +38,7 @@ let indexedNotes: Record<string, IndexedNote> = {}
 export async function initGlobalSearchIndex(): Promise<void> {
   indexedNotes = {}
   minisearchInstance = new MiniSearch({
-    tokenize: text => text.split(SPACE_OR_PUNCTUATION),
+    tokenize,
     idField: 'path',
     fields: ['basename', 'content', 'headings1', 'headings2', 'headings3'],
   })
