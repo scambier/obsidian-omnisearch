@@ -1,9 +1,9 @@
 # Omnisearch Changelog
 
-## 1.2.0
+## 1.2.0, 1.2.1
 
 ### New
-* #42 Files that are present in Obsidian's "Excluded Files" list are downranked by a factor of 3
+* #42 Files that are present in Obsidian's "Excluded Files" list are downranked by a factor of 3 (_desktop only_)
 
 ## 1.2.1
 
