@@ -14,6 +14,7 @@ import {
   wait,
 } from './utils'
 import type { Query } from './query'
+import { settings } from './settings'
 
 let minisearchInstance: MiniSearch<IndexedNote>
 let indexedNotes: Record<string, IndexedNote> = {}
@@ -57,7 +58,7 @@ export async function initGlobalSearchIndex(): Promise<void> {
     if (file) await addToIndex(file)
   }
 
-  if (files.length > 0) {
+  if (files.length > 0 && settings.showIndexingNotices) {
     new Notice(
       `Omnisearch - Indexed ${files.length} notes in ${
         new Date().getTime() - start
@@ -82,19 +83,24 @@ async function search(query: Query): Promise<SearchResult[]> {
     fuzzy: term => (term.length > 4 ? 0.2 : false),
     combineWith: 'AND',
     boost: {
-      basename: 2,
-      headings1: 1.5,
-      headings2: 1.3,
-      headings3: 1.1,
+      basename: settings.weightBasename,
+      headings1: settings.weightH1,
+      headings2: settings.weightH2,
+      headings3: settings.weightH3,
     },
   })
 
-  // Half the score for files that are in Obsidian's excluded list
-  results.forEach(result => {
-    if (app.metadataCache.isUserIgnored && app.metadataCache.isUserIgnored(result.id)) {
-      result.score /= 3 // TODO: make this value configurable or toggleable?
-    }
-  })
+  // Downrank files that are in Obsidian's excluded list
+  if (settings.respectExcluded) {
+    results.forEach(result => {
+      if (
+        app.metadataCache.isUserIgnored &&
+        app.metadataCache.isUserIgnored(result.id)
+      ) {
+        result.score /= 3 // TODO: make this value configurable or toggleable?
+      }
+    })
+  }
 
   // If the search query contains quotes, filter out results that don't have the exact match
   const exactTerms = query.getExactTerms()
