@@ -85,7 +85,7 @@ export class SettingsTab extends PluginSettingTab {
 }
 
 export const DEFAULT_SETTINGS: OmnisearchSettings = {
-  showIndexingNotices: true,
+  showIndexingNotices: false,
   respectExcluded: true,
   weightBasename: 2,
   weightH1: 1.5,
