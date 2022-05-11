@@ -55,7 +55,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl).setName('Results weighting').setHeading()
 
     new Setting(containerEl)
-      .setName(`File name (default: ${DEFAULT_SETTINGS.weightBasename})`)
+      .setName(`File name & declared aliases (default: ${DEFAULT_SETTINGS.weightBasename})`)
       .addSlider(cb => this.weightSlider(cb, 'weightBasename'))
 
     new Setting(containerEl)

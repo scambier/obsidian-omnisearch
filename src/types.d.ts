@@ -4,4 +4,8 @@ declare module 'obsidian' {
   interface MetadataCache {
     isUserIgnored?(path: string): boolean
   }
+
+  interface FrontMatterCache {
+    aliases?: string[] | string
+  }
 }

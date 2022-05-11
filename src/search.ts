@@ -9,6 +9,7 @@ import {
 } from './globals'
 import {
   extractHeadingsFromCache,
+  getAliasesFromMetadata,
   stringsToRegex,
   stripMarkdownCharacters,
   wait,
@@ -40,7 +41,14 @@ export async function initGlobalSearchIndex(): Promise<void> {
   minisearchInstance = new MiniSearch({
     tokenize,
     idField: 'path',
-    fields: ['basename', 'content', 'headings1', 'headings2', 'headings3'],
+    fields: [
+      'basename',
+      'aliases',
+      'content',
+      'headings1',
+      'headings2',
+      'headings3',
+    ],
   })
 
   // Index files that are already present
@@ -84,6 +92,7 @@ async function search(query: Query): Promise<SearchResult[]> {
     combineWith: 'AND',
     boost: {
       basename: settings.weightBasename,
+      aliases: settings.weightBasename,
       headings1: settings.weightH1,
       headings2: settings.weightH2,
       headings3: settings.weightH3,
@@ -208,7 +217,7 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
   }
   try {
     // console.log(`Omnisearch - adding ${file.path} to index`)
-    const fileCache = app.metadataCache.getFileCache(file)
+    const metadata = app.metadataCache.getFileCache(file)
 
     if (indexedNotes[file.path]) {
       throw new Error(`${file.basename} is already indexed`)
@@ -222,14 +231,15 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
       basename: file.basename,
       content,
       path: file.path,
-      headings1: fileCache
-        ? extractHeadingsFromCache(fileCache, 1).join(' ')
+      aliases: getAliasesFromMetadata(metadata),
+      headings1: metadata
+        ? extractHeadingsFromCache(metadata, 1).join(' ')
         : '',
-      headings2: fileCache
-        ? extractHeadingsFromCache(fileCache, 2).join(' ')
+      headings2: metadata
+        ? extractHeadingsFromCache(metadata, 2).join(' ')
         : '',
-      headings3: fileCache
-        ? extractHeadingsFromCache(fileCache, 3).join(' ')
+      headings3: metadata
+        ? extractHeadingsFromCache(metadata, 3).join(' ')
         : '',
     }
     minisearchInstance.add(note)

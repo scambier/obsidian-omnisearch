@@ -24,6 +24,7 @@ export type IndexedNote = {
   path: string
   basename: string
   content: string
+  aliases: string
   headings1: string
   headings2: string
   headings3: string

@@ -147,3 +147,10 @@ export async function filterAsync<T>(
 export function stripMarkdownCharacters(text: string): string {
   return text.replace(/(\*|_)+(.+?)(\*|_)+/g, (match, p1, p2) => p2)
 }
+
+export function getAliasesFromMetadata(
+  metadata: CachedMetadata | null,
+): string {
+  const arrOrString = metadata?.frontmatter?.aliases ?? []
+  return Array.isArray(arrOrString) ? arrOrString.join(', ') : arrOrString
+}
