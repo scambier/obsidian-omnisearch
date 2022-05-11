@@ -26,9 +26,7 @@ export class SettingsTab extends PluginSettingTab {
     containerEl.empty()
 
     // Title
-    const title = document.createElement('h2')
-    title.textContent = 'Omnisearch settings'
-    containerEl.appendChild(title)
+    containerEl.createEl('h2', { text: 'Omnisearch settings' })
 
     // Show notices
     new Setting(containerEl)
