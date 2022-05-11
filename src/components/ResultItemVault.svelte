@@ -17,9 +17,11 @@ $: cleanedContent = makeExcerpt(note.content, note.matches[0]?.offset ?? -1)
     {@html note.basename.replace(reg, highlighter)}
   </span>
 
-  <span class="omnisearch-result__counter">
-    {matches.length}&nbsp;{matches.length > 1 ? "matches" : "match"}
-  </span>
+  {#if matches.length > 0}
+    <span class="omnisearch-result__counter">
+      {matches.length}&nbsp;{matches.length > 1 ? "matches" : "match"}
+    </span>
+  {/if}
   <div class="omnisearch-result__body">
     {@html cleanedContent.replace(reg, highlighter)}
   </div>
