@@ -3,21 +3,19 @@ import { getAliasesFromMetadata } from '../utils'
 
 describe('Utils', () => {
   describe('getAliasesFromMetadata', () => {
-    it('should return an empty string if no metadata is provided', () => {
+    it('should return an empty array if no metadata is provided', () => {
       // Act
       const actual = getAliasesFromMetadata(null)
       // Assert
-      expect(actual).toBe('')
+      expect(actual).toEqual([])
     })
-    it('should return an empty string if no aliases are provided', () => {
-      // Arrange
-      const metadata = {} as CachedMetadata
+    it('should return an empty array if no aliases are provided', () => {
       // Act
-      const actual = getAliasesFromMetadata(metadata)
+      const actual = getAliasesFromMetadata({})
       // Assert
-      expect(actual).toBe('')
+      expect(actual).toEqual([])
     })
-    it('should join aliases with a comma', () => {
+    it('should return the aliases array as-is', () => {
       // Arrange
       const metadata = {
         frontmatter: { aliases: ['foo', 'bar'] },
@@ -25,9 +23,9 @@ describe('Utils', () => {
       // Act
       const actual = getAliasesFromMetadata(metadata)
       // Assert
-      expect(actual).toBe('foo, bar')
+      expect(actual).toEqual(['foo', 'bar'])
     })
-    it('should return a single alias if only one is provided', () => {
+    it('should convert the aliases string into an array', () => {
       // Arrange
       const metadata = {
         frontmatter: { aliases: 'foo, bar' },
@@ -35,7 +33,17 @@ describe('Utils', () => {
       // Act
       const actual = getAliasesFromMetadata(metadata)
       // Assert
-      expect(actual).toBe('foo, bar')
+      expect(actual).toEqual(['foo', 'bar'])
+    })
+    it('should return an empty array if the aliases field is an empty string', () => {
+      // Arrange
+      const metadata = {
+        frontmatter: { aliases: '' },
+      } as CachedMetadata
+      // Act
+      const actual = getAliasesFromMetadata(metadata)
+      // Assert
+      expect(actual).toEqual([])
     })
   })
 })

@@ -228,10 +228,10 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
 
     // Make the document and index it
     const note: IndexedNote = {
-      basename: file.basename,
+      basename: file.path,
       content,
       path: file.path,
-      aliases: getAliasesFromMetadata(metadata),
+      aliases: getAliasesFromMetadata(metadata).join(''),
       headings1: metadata
         ? extractHeadingsFromCache(metadata, 1).join(' ')
         : '',
@@ -242,6 +242,7 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
         ? extractHeadingsFromCache(metadata, 3).join(' ')
         : '',
     }
+
     minisearchInstance.add(note)
     indexedNotes[note.path] = note
   }

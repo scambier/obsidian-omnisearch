@@ -150,7 +150,9 @@ export function stripMarkdownCharacters(text: string): string {
 
 export function getAliasesFromMetadata(
   metadata: CachedMetadata | null,
-): string {
+): string[] {
   const arrOrString = metadata?.frontmatter?.aliases ?? []
-  return Array.isArray(arrOrString) ? arrOrString.join(', ') : arrOrString
+  return (Array.isArray(arrOrString) ? arrOrString : arrOrString.split(','))
+  .map(s => s ? s.trim() : s)
+  .filter(s => !!s)
 }
