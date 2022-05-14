@@ -115,10 +115,11 @@ async function search(query: Query): Promise<SearchResult[]> {
   const exactTerms = query.getExactTerms()
   if (exactTerms.length) {
     results = results.filter(r => {
+      const title = indexedNotes[r.id]?.path.toLowerCase() ?? ''
       const content = stripMarkdownCharacters(
         indexedNotes[r.id]?.content ?? '',
       ).toLowerCase()
-      return exactTerms.every(q => content.includes(q))
+      return exactTerms.every(q => content.includes(q) || title.includes(q))
     })
   }
 
