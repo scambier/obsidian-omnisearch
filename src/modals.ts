@@ -1,7 +1,7 @@
 import { App, Modal, TFile } from 'obsidian'
 import ModalVault from './components/ModalVault.svelte'
 import ModalInFile from './components/ModalInFile.svelte'
-import { eventBus } from './globals'
+import { eventBus, isInputComposition } from './globals'
 
 abstract class OmnisearchModal extends Modal {
   constructor(app: App) {
@@ -42,8 +42,10 @@ abstract class OmnisearchModal extends Modal {
       eventBus.emit('shift-enter') // Create a new note
     })
     this.scope.register([], 'Enter', e => {
-      e.preventDefault()
-      eventBus.emit('enter') // Open in current pane
+      if (!isInputComposition()) { // Check if the user is still typing
+        e.preventDefault()
+        eventBus.emit('enter') // Open in current pane
+      }
     })
   }
 }
