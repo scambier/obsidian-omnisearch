@@ -16,9 +16,15 @@ import {
 } from './utils'
 import type { Query } from './query'
 import { settings } from './settings'
+import {
+  removeNoteFromCache,
+  getNoteFromCache,
+  getNonExistingNotes,
+  resetNotesCache,
+  addNoteToCache,
+} from './notes'
 
 let minisearchInstance: MiniSearch<IndexedNote>
-let indexedNotes: Record<string, IndexedNote> = {}
 
 const tokenize = (text: string): string[] => {
   const tokens = text.split(SPACE_OR_PUNCTUATION)
@@ -37,7 +43,7 @@ const tokenize = (text: string): string[] => {
  * and adds all the notes to the index
  */
 export async function initGlobalSearchIndex(): Promise<void> {
-  indexedNotes = {}
+  resetNotesCache()
   minisearchInstance = new MiniSearch({
     tokenize,
     idField: 'path',
@@ -73,9 +79,6 @@ export async function initGlobalSearchIndex(): Promise<void> {
       }ms`,
     )
   }
-
-  // Listen to the query input to trigger a search
-  // subscribeToQuery()
 }
 
 /**
@@ -115,20 +118,20 @@ async function search(query: Query): Promise<SearchResult[]> {
   const exactTerms = query.getExactTerms()
   if (exactTerms.length) {
     results = results.filter(r => {
-      const title = indexedNotes[r.id]?.path.toLowerCase() ?? ''
+      const title = getNoteFromCache(r.id)?.path.toLowerCase() ?? ''
       const content = stripMarkdownCharacters(
-        indexedNotes[r.id]?.content ?? '',
+        getNoteFromCache(r.id)?.content ?? '',
       ).toLowerCase()
       return exactTerms.every(q => content.includes(q) || title.includes(q))
     })
   }
 
-  // // If the search query contains exclude terms, filter out results that have them
+  // If the search query contains exclude terms, filter out results that have them
   const exclusions = query.exclusions
   if (exclusions.length) {
     results = results.filter(r => {
       const content = stripMarkdownCharacters(
-        indexedNotes[r.id]?.content ?? '',
+        getNoteFromCache(r.id)?.content ?? '',
       ).toLowerCase()
       return exclusions.every(q => !content.includes(q.value))
     })
@@ -145,7 +148,9 @@ async function search(query: Query): Promise<SearchResult[]> {
 export function getMatches(text: string, reg: RegExp): SearchMatch[] {
   let match: RegExpExecArray | null = null
   const matches: SearchMatch[] = []
+  let count = 0 // TODO: FIXME: this is a hack to avoid infinite loops
   while ((match = reg.exec(text)) !== null) {
+    if (++count > 100) break
     const m = match[0]
     if (m) matches.push({ match: m, offset: match.index })
   }
@@ -181,7 +186,7 @@ export async function getSuggestions(
 
   // Map the raw results to get usable suggestions
   const suggestions = results.map(result => {
-    const note = indexedNotes[result.id]
+    const note = getNoteFromCache(result.id)
     if (!note) {
       throw new Error(`Note "${result.id}" not indexed`)
     }
@@ -216,11 +221,27 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
   if (!(file instanceof TFile) || file.extension !== 'md') {
     return
   }
+
+  // Check if the file was already indexed as non-existent,
+  // and if so, remove it from the index (before adding it again)
+  if (getNoteFromCache(file.path)?.doesNotExist) {
+    removeFromIndex(file.path)
+  }
+
   try {
     // console.log(`Omnisearch - adding ${file.path} to index`)
-    const metadata = app.metadataCache.getFileCache(file)
 
-    if (indexedNotes[file.path]) {
+    // Look for links that lead to non-existing files,
+    // and index them as well
+    const metadata = app.metadataCache.getFileCache(file)
+    if (metadata) {
+      const nonExisting = getNonExistingNotes(file, metadata)
+      for (const name of nonExisting.filter(o => !getNoteFromCache(o))) {
+        addNonExistingToIndex(name)
+      }
+    }
+
+    if (getNoteFromCache(file.path)) {
       throw new Error(`${file.basename} is already indexed`)
     }
 
@@ -245,7 +266,7 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
     }
 
     minisearchInstance.add(note)
-    indexedNotes[note.path] = note
+    addNoteToCache(note.path, note)
   }
   catch (e) {
     console.trace('Error while indexing ' + file.basename)
@@ -254,25 +275,42 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
 }
 
 /**
- * Removes a file from the index
- * @param file
- * @returns
+ * Index a non-existing note.
+ * Useful to find internal links that lead (yet) to nowhere
+ * @param name
  */
-export function removeFromIndex(file: TAbstractFile): void {
-  if (file instanceof TFile && file.path.endsWith('.md')) {
-    // console.log(`Omnisearch - removing ${file.path} from index`)
-    return removeFromIndexByPath(file.path)
-  }
+export function addNonExistingToIndex(name: string): void {
+  const filename = name + (name.endsWith('.md') ? '' : '.md')
+  const note = {
+    path: filename,
+    basename: name,
+    content: '',
+    aliases: '',
+    headings1: '',
+    headings2: '',
+    headings3: '',
+    doesNotExist: true,
+  } as IndexedNote
+  minisearchInstance.add(note)
+  addNoteToCache(filename, note)
 }
 
 /**
  * Removes a file from the index, by its path
  * @param path
  */
-export function removeFromIndexByPath(path: string): void {
-  const note = indexedNotes[path]
+export function removeFromIndex(path: string): void {
+  if (!path.endsWith('.md')) {
+    console.info(`"${path}" is not a .md file`)
+    return
+  }
+  const note = getNoteFromCache(path)
   if (note) {
+    // Delete the original
     minisearchInstance.remove(note)
-    delete indexedNotes[path]
+    removeNoteFromCache(path)
+  }
+  else {
+    console.warn(`not not found under path ${path}`)
   }
 }

@@ -1,9 +1,9 @@
 import { Plugin, TFile } from 'obsidian'
 import {
+  addNonExistingToIndex,
   addToIndex,
   initGlobalSearchIndex,
   removeFromIndex,
-  removeFromIndexByPath,
 } from './search'
 import { OmnisearchInFileModal, OmnisearchVaultModal } from './modals'
 import { loadSettings, SettingsTab } from './settings'
@@ -39,19 +39,21 @@ export default class OmnisearchPlugin extends Plugin {
       )
       this.registerEvent(
         this.app.vault.on('delete', file => {
-          removeFromIndex(file)
+          removeFromIndex(file.path)
+          // Re-index the note as non-existing file
+          addNonExistingToIndex(file.name)
         }),
       )
       this.registerEvent(
         this.app.vault.on('modify', async file => {
-          removeFromIndex(file)
+          removeFromIndex(file.path)
           await addToIndex(file)
         }),
       )
       this.registerEvent(
         this.app.vault.on('rename', async (file, oldPath) => {
           if (file instanceof TFile && file.path.endsWith('.md')) {
-            removeFromIndexByPath(oldPath)
+            removeFromIndex(oldPath)
             await addToIndex(file)
           }
         }),

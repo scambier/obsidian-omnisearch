@@ -1,6 +1,26 @@
-import { MarkdownView } from 'obsidian'
-import type { ResultNote } from './globals'
+import { MarkdownView, TFile, type CachedMetadata } from 'obsidian'
+import type { IndexedNote, ResultNote } from './globals'
 import { stringsToRegex } from './utils'
+
+/**
+ * This is an in-memory cache of the notes, with all their computed fields
+ * used by the search engine.
+ * This cache allows us to quickly de-index notes when they are deleted or updated.
+ */
+export let notesCache: Record<string, IndexedNote> = {}
+
+export function resetNotesCache(): void {
+  notesCache = {}
+}
+export function getNoteFromCache(key: string): IndexedNote | undefined {
+  return notesCache[key]
+}
+export function addNoteToCache(key: string, note: IndexedNote): void {
+  notesCache[key] = note
+}
+export function removeNoteFromCache(key: string): void {
+  delete notesCache[key]
+}
 
 export async function openNote(
   item: ResultNote,
@@ -39,4 +59,24 @@ export async function createNote(name: string): Promise<void> {
   catch (e) {
     console.error(e)
   }
+}
+
+/**
+ * For a given file, returns a list of links leading to notes that don't exist
+ * @param file
+ * @param metadata
+ * @returns
+ */
+export function getNonExistingNotes(
+  file: TFile,
+  metadata: CachedMetadata,
+): string[] {
+  return (metadata.links ?? [])
+    .map(l => {
+      const path = l.link.split(/[\^#]+/)[0] // Remove anchors and headings
+      return app.metadataCache.getFirstLinkpathDest(path, file.path)
+        ? ''
+        : l.link
+    })
+    .filter(l => !!l)
 }

@@ -75,7 +75,9 @@ export function parseQuery(
   const regex =
     /(\S+:'(?:[^'\\]|\\.)*')|(\S+:"(?:[^"\\]|\\.)*")|(-?"(?:[^"\\]|\\.)*")|(-?'(?:[^'\\]|\\.)*')|\S+|\S+:\S+/g
   let match
+  let count = 0 // TODO: FIXME: this is a hack to avoid infinite loops
   while ((match = regex.exec(string)) !== null) {
+    if (++count > 100) break
     let term = match[0]
     const sepIndex = term.indexOf(':')
 

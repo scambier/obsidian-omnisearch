@@ -1,8 +1,9 @@
 <script lang="ts">
-import { createEventDispatcher } from "svelte"
+import GlyphAddNote from "./GlyphAddNote.svelte"
 
 export let id: string
 export let selected = false
+export let glyph = false
 </script>
 
 <div
@@ -13,5 +14,8 @@ export let selected = false
   on:click
   on:auxclick
 >
+  {#if glyph}
+    <GlyphAddNote />
+  {/if}
   <slot />
 </div>

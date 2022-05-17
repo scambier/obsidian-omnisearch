@@ -28,6 +28,8 @@ export type IndexedNote = {
   headings1: string
   headings2: string
   headings3: string
+
+  doesNotExist?: boolean
 }
 
 export type SearchMatch = {
