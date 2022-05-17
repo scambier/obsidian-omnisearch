@@ -13,6 +13,12 @@ Please read this document before beginning work on a Pull Request.
 - Omnisearch is still in its infancy: some important features are missing, and there will be architectural changes.
   - As such, I may refuse your PR simply because it will have to be refactored in a short-ish term
 
+## "Good First Issue"
+
+Are you a beginner, looking for a small open source contribution? Look at the "[good first issues](https://github.com/scambier/obsidian-omnisearch/labels/good%20first%20issue)". Those issues have a limited scope, don't require intricate knowledge of the code, and are easy enough to locate, fix, and test.
+
+If you wish to work on one of these issues, leave a comment and I'll assign it to you and give you some pointers.
+
 ## Code guidelines
 
 - Respect the existing style
@@ -38,4 +44,5 @@ Always respect those UI & UX points:
 
 ## Style guidelines
 
-(todo)
+- .ts files must be formatted with "Prettier ESLint"
+- .svelte files must be formatted with "Svelte for VS Code"
