@@ -1,6 +1,5 @@
 import { Plugin, TFile } from 'obsidian'
 import {
-  addNonExistingToIndex,
   addToIndex,
   initGlobalSearchIndex,
   removeFromIndex,
@@ -40,8 +39,6 @@ export default class OmnisearchPlugin extends Plugin {
       this.registerEvent(
         this.app.vault.on('delete', file => {
           removeFromIndex(file.path)
-          // Re-index the note as non-existing file
-          addNonExistingToIndex(file.name)
         }),
       )
       this.registerEvent(

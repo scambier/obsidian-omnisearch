@@ -15,6 +15,9 @@ export function resetNotesCache(): void {
 export function getNoteFromCache(key: string): IndexedNote | undefined {
   return notesCache[key]
 }
+export function getNonExistingNotesFromCache(): IndexedNote[] {
+  return Object.values(notesCache).filter(note => note.doesNotExist)
+}
 export function addNoteToCache(key: string, note: IndexedNote): void {
   notesCache[key] = note
 }
@@ -73,10 +76,19 @@ export function getNonExistingNotes(
 ): string[] {
   return (metadata.links ?? [])
     .map(l => {
-      const path = l.link.split(/[\^#]+/)[0] // Remove anchors and headings
+      const path = removeAnchors(l.link)
       return app.metadataCache.getFirstLinkpathDest(path, file.path)
         ? ''
         : l.link
     })
     .filter(l => !!l)
+}
+
+/**
+ * Removes anchors and headings
+ * @param name
+ * @returns
+ */
+export function removeAnchors(name: string): string {
+  return name.split(/[\^#]+/)[0]
 }

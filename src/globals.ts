@@ -30,6 +30,7 @@ export type IndexedNote = {
   headings3: string
 
   doesNotExist?: boolean
+  parent?: string
 }
 
 export type SearchMatch = {

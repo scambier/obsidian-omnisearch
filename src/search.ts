@@ -22,6 +22,8 @@ import {
   getNonExistingNotes,
   resetNotesCache,
   addNoteToCache,
+  removeAnchors,
+  getNonExistingNotesFromCache,
 } from './notes'
 
 let minisearchInstance: MiniSearch<IndexedNote>
@@ -237,7 +239,7 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
     if (metadata) {
       const nonExisting = getNonExistingNotes(file, metadata)
       for (const name of nonExisting.filter(o => !getNoteFromCache(o))) {
-        addNonExistingToIndex(name)
+        addNonExistingToIndex(name, file.path)
       }
     }
 
@@ -279,7 +281,10 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
  * Useful to find internal links that lead (yet) to nowhere
  * @param name
  */
-export function addNonExistingToIndex(name: string): void {
+export function addNonExistingToIndex(name: string, parent:string): void {
+  name = removeAnchors(name)
+  if (getNoteFromCache(name)) return
+
   const filename = name + (name.endsWith('.md') ? '' : '.md')
   const note = {
     path: filename,
@@ -289,7 +294,9 @@ export function addNonExistingToIndex(name: string): void {
     headings1: '',
     headings2: '',
     headings3: '',
+
     doesNotExist: true,
+    parent,
   } as IndexedNote
   minisearchInstance.add(note)
   addNoteToCache(filename, note)
@@ -306,9 +313,11 @@ export function removeFromIndex(path: string): void {
   }
   const note = getNoteFromCache(path)
   if (note) {
-    // Delete the original
     minisearchInstance.remove(note)
     removeNoteFromCache(path)
+    getNonExistingNotesFromCache().filter(n => n.parent === path).forEach(n => {
+      removeFromIndex(n.path)
+    })
   }
   else {
     console.warn(`not not found under path ${path}`)
