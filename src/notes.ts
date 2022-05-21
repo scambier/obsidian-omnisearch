@@ -61,6 +61,7 @@ export async function createNote(name: string): Promise<void> {
   }
   catch (e) {
     console.error(e)
+    throw e
   }
 }
 

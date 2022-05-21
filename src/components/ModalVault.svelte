@@ -3,7 +3,7 @@ let lastSearch = ""
 </script>
 
 <script lang="ts">
-import { TFile } from "obsidian"
+import { Notice, TFile } from "obsidian"
 import { onMount, tick } from "svelte"
 import InputSearch from "./InputSearch.svelte"
 import ModalContainer from "./ModalContainer.svelte"
@@ -67,7 +67,13 @@ function onInputCtrlEnter(): void {
 }
 
 async function onInputShiftEnter(): Promise<void> {
-  await createNote(searchQuery)
+  try {
+    await createNote(searchQuery)
+  }
+  catch(e) {
+    new Notice((e as Error).message)
+    return
+  }
   modal.close()
 }
 
