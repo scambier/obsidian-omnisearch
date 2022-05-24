@@ -40,6 +40,14 @@ describe('The Query class', () => {
     ).toBeTruthy()
   })
 
+  it('should not exclude words when there is no space before', () => {
+    // Act
+    const query = new Query('foo bar-baz')
+
+    // Assert
+    expect(query.exclusions).toHaveLength(0)
+  })
+
   describe('.getExactTerms()', () => {
     it('should an array of strings containg "exact" values', () => {
       // Act

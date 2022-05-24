@@ -183,7 +183,7 @@ export async function getSuggestions(
     else results = []
   }
   else {
-    results = results.sort((a, b) => b.score - a.score).slice(0, 50)
+    results = results.slice(0, 50)
   }
 
   // Map the raw results to get usable suggestions
