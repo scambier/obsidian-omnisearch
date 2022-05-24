@@ -1,14 +1,23 @@
 import { Plugin, TFile } from 'obsidian'
 import {
+  addNoteToReindex,
   addToIndex,
   initGlobalSearchIndex,
+  reindexNotes,
   removeFromIndex,
 } from './search'
 import { OmnisearchInFileModal, OmnisearchVaultModal } from './modals'
-import { loadSettings, SettingsTab } from './settings'
+import { loadSettings, settings, SettingsTab } from './settings'
+
+const mainWindow = require('electron').remote.getCurrentWindow()
+const onBlur = (): void => {
+  reindexNotes()
+}
 
 export default class OmnisearchPlugin extends Plugin {
   async onload(): Promise<void> {
+    mainWindow.on('blur', onBlur)
+
     await loadSettings(this)
     this.addSettingTab(new SettingsTab(this))
 
@@ -43,8 +52,13 @@ export default class OmnisearchPlugin extends Plugin {
       )
       this.registerEvent(
         this.app.vault.on('modify', async file => {
-          removeFromIndex(file.path)
-          await addToIndex(file)
+          if (settings.reindexInRealTime) {
+            removeFromIndex(file.path)
+            await addToIndex(file)
+          }
+          else {
+            addNoteToReindex(file)
+          }
         }),
       )
       this.registerEvent(
@@ -58,5 +72,9 @@ export default class OmnisearchPlugin extends Plugin {
 
       await initGlobalSearchIndex()
     })
+  }
+
+  onunload(): void {
+    mainWindow.off('blur', onBlur)
   }
 }

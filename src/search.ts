@@ -1,4 +1,4 @@
-import { Notice, TFile, type TAbstractFile } from 'obsidian'
+import { Notice, TAbstractFile, TFile } from 'obsidian'
 import MiniSearch, { type SearchResult } from 'minisearch'
 import {
   chsRegex,
@@ -281,7 +281,7 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
  * Useful to find internal links that lead (yet) to nowhere
  * @param name
  */
-export function addNonExistingToIndex(name: string, parent:string): void {
+export function addNonExistingToIndex(name: string, parent: string): void {
   name = removeAnchors(name)
   if (getNoteFromCache(name)) return
 
@@ -315,11 +315,25 @@ export function removeFromIndex(path: string): void {
   if (note) {
     minisearchInstance.remove(note)
     removeNoteFromCache(path)
-    getNonExistingNotesFromCache().filter(n => n.parent === path).forEach(n => {
-      removeFromIndex(n.path)
-    })
+    getNonExistingNotesFromCache()
+      .filter(n => n.parent === path)
+      .forEach(n => {
+        removeFromIndex(n.path)
+      })
   }
   else {
     console.warn(`not not found under path ${path}`)
   }
+}
+
+const notesToReindex = new Set<TAbstractFile>()
+export function addNoteToReindex(note: TAbstractFile): void {
+  notesToReindex.add(note)
+}
+export async function reindexNotes(): Promise<void> {
+  for (const note of notesToReindex) {
+    removeFromIndex(note.path)
+    await addToIndex(note)
+  }
+  notesToReindex.clear()
 }

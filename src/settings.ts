@@ -11,6 +11,7 @@ interface WeightingSettings {
 export interface OmnisearchSettings extends WeightingSettings {
   showIndexingNotices: boolean
   respectExcluded: boolean
+  reindexInRealTime: boolean
 }
 
 export class SettingsTab extends PluginSettingTab {
@@ -52,10 +53,23 @@ export class SettingsTab extends PluginSettingTab {
         }),
       )
 
+    // Index in real-time
+    new Setting(containerEl)
+      .setName('Reindex in real-time')
+      .setDesc('By default, notes a reindexed when Obsidian focus is lost. Enable this to reindex in real-time. May affect performances.')
+      .addToggle(toggle =>
+        toggle.setValue(settings.reindexInRealTime).onChange(async v => {
+          settings.reindexInRealTime = v
+          await saveSettings(this.plugin)
+        }),
+      )
+
     new Setting(containerEl).setName('Results weighting').setHeading()
 
     new Setting(containerEl)
-      .setName(`File name & declared aliases (default: ${DEFAULT_SETTINGS.weightBasename})`)
+      .setName(
+        `File name & declared aliases (default: ${DEFAULT_SETTINGS.weightBasename})`,
+      )
       .addSlider(cb => this.weightSlider(cb, 'weightBasename'))
 
     new Setting(containerEl)
@@ -85,6 +99,7 @@ export class SettingsTab extends PluginSettingTab {
 export const DEFAULT_SETTINGS: OmnisearchSettings = {
   showIndexingNotices: false,
   respectExcluded: true,
+  reindexInRealTime: false,
   weightBasename: 2,
   weightH1: 1.5,
   weightH2: 1.3,
