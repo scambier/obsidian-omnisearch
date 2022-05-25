@@ -53,16 +53,24 @@ export class SettingsTab extends PluginSettingTab {
         }),
       )
 
-    // Index in real-time
-    new Setting(containerEl)
-      .setName('Reindex in real-time')
-      .setDesc('By default, notes a reindexed when Obsidian focus is lost. Enable this to reindex in real-time. May affect performances.')
-      .addToggle(toggle =>
-        toggle.setValue(settings.reindexInRealTime).onChange(async v => {
-          settings.reindexInRealTime = v
-          await saveSettings(this.plugin)
-        }),
-      )
+    // Index in real-time, desktop only
+    if (require('electron')) {
+      new Setting(containerEl)
+        .setName('Reindex in real-time')
+        .setDesc(
+          'By default, notes a reindexed when Obsidian focus is lost. Enable this to reindex in real-time. May affect performances.',
+        )
+        .addToggle(toggle =>
+          toggle.setValue(settings.reindexInRealTime).onChange(async v => {
+            settings.reindexInRealTime = v
+            await saveSettings(this.plugin)
+          }),
+        )
+    }
+    else {
+      // No real time indexing on mobile
+      settings.reindexInRealTime = false
+    }
 
     new Setting(containerEl).setName('Results weighting').setHeading()
 

@@ -9,14 +9,23 @@ import {
 import { OmnisearchInFileModal, OmnisearchVaultModal } from './modals'
 import { loadSettings, settings, SettingsTab } from './settings'
 
-const mainWindow = require('electron').remote.getCurrentWindow()
+let mainWindow: { on: any; off: any } | null = null
+try {
+  mainWindow = require('electron').remote.getCurrentWindow()
+}
+catch (e) {
+  console.log("Can't load electron, mobile platform")
+}
+
 const onBlur = (): void => {
   reindexNotes()
 }
 
 export default class OmnisearchPlugin extends Plugin {
   async onload(): Promise<void> {
-    mainWindow.on('blur', onBlur)
+    if (mainWindow) {
+      mainWindow.on('blur', onBlur)
+    }
 
     await loadSettings(this)
     this.addSettingTab(new SettingsTab(this))
@@ -75,6 +84,8 @@ export default class OmnisearchPlugin extends Plugin {
   }
 
   onunload(): void {
-    mainWindow.off('blur', onBlur)
+    if (mainWindow) {
+      mainWindow.off('blur', onBlur)
+    }
   }
 }
