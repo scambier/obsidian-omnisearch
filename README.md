@@ -24,7 +24,7 @@ Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/mi
 
 ## Installation
 
-- Omnisearch is available on [the official Community Plugins repository](https://obsidian.md/plugins?search=omnisearch#).
+- Omnisearch is available on [the official Community Plugins repository](https://obsidian.md/plugins?search=Omnisearch).
 - Beta releases can be installed through [BRAT](https://github.com/TfTHacker/obsidian42-brat). Be advised that those versions can be buggy.
 
 You can check the [CHANGELOG](./CHANGELOG.md) for more information on the different versions.
