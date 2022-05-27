@@ -71,11 +71,13 @@ $: {
 function getGroups(matches: SearchMatch[]): SearchMatch[][] {
   const groups: SearchMatch[][] = []
   let lastOffset = -1
+  let count = 0 // TODO: FIXME: this is a hack to avoid infinite loops
   while (true) {
     const group = getGroupedMatches(matches, lastOffset, excerptAfter)
     if (!group.length) break
     lastOffset = group.last()!.offset
     groups.push(group)
+    if (++count > 100) break
   }
   return groups
 }
