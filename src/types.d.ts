@@ -1,4 +1,4 @@
-import { type MetadataCache } from 'obsidian'
+import type { MetadataCache, ViewState } from 'obsidian'
 
 declare module 'obsidian' {
   interface MetadataCache {
@@ -7,5 +7,11 @@ declare module 'obsidian' {
 
   interface FrontMatterCache {
     aliases?: string[] | string
+  }
+
+  interface ViewState {
+    state?: {
+      file?: string
+    }
   }
 }

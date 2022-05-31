@@ -1,4 +1,9 @@
-import { MarkdownView, TFile, type CachedMetadata } from 'obsidian'
+import {
+  MarkdownView,
+  TFile,
+  WorkspaceLeaf,
+  type CachedMetadata,
+} from 'obsidian'
 import type { IndexedNote, ResultNote } from './globals'
 import { stringsToRegex } from './utils'
 
@@ -32,7 +37,26 @@ export async function openNote(
   const reg = stringsToRegex(item.foundWords)
   reg.exec(item.content)
   const offset = reg.lastIndex
-  await app.workspace.openLinkText(item.path, '', newPane)
+
+  // Check if the note is already open
+  // const pane = MarkdownView.getPane(item.path)
+
+  // Check if the note is already open,
+  // to avoid opening it twice if the first one is pinned
+  let existing = false
+  app.workspace.iterateAllLeaves(leaf => {
+    if (leaf.view instanceof MarkdownView) {
+      if (leaf.getViewState().state?.file === item.path) {
+        app.workspace.setActiveLeaf(leaf, false, true)
+        existing = true
+      }
+    }
+  })
+
+  if (!existing) {
+    // Open a new note
+    await app.workspace.openLinkText(item.path, '', newPane)
+  }
 
   const view = app.workspace.getActiveViewOfType(MarkdownView)
   if (!view) {
