@@ -9,9 +9,10 @@ interface WeightingSettings {
 }
 
 export interface OmnisearchSettings extends WeightingSettings {
-  showIndexingNotices: boolean
   respectExcluded: boolean
   reindexInRealTime: boolean
+  showIndexingNotices: boolean
+  showShortName: boolean
   CtrlJK: boolean
   CtrlNP: boolean
 }
@@ -28,19 +29,31 @@ export class SettingsTab extends PluginSettingTab {
     const { containerEl } = this
     containerEl.empty()
 
-    // Title
+    // Settings main title
     containerEl.createEl('h2', { text: 'Omnisearch settings' })
 
-    // Show notices
-    new Setting(containerEl)
-      .setName('Show indexing notices')
-      .setDesc('Show a notice when indexing is done, usually at startup.')
-      .addToggle(toggle =>
-        toggle.setValue(settings.showIndexingNotices).onChange(async v => {
-          settings.showIndexingNotices = v
-          await saveSettings(this.plugin)
-        }),
-      )
+    // #region Behavior
+
+    new Setting(containerEl).setName('Behavior').setHeading()
+
+    // Index in real-time, desktop only
+    if (require('electron')) {
+      new Setting(containerEl)
+        .setName('Reindex in real-time')
+        .setDesc(
+          "By default, notes a reindexed when Obsidian focus is lost. Enable this to reindex in real-time. May affect Obsidian's performances when editing large notes.",
+        )
+        .addToggle(toggle =>
+          toggle.setValue(settings.reindexInRealTime).onChange(async v => {
+            settings.reindexInRealTime = v
+            await saveSettings(this.plugin)
+          }),
+        )
+    }
+    else {
+      // No real time indexing on mobile
+      settings.reindexInRealTime = false
+    }
 
     // Respect excluded files
     new Setting(containerEl)
@@ -55,24 +68,37 @@ export class SettingsTab extends PluginSettingTab {
         }),
       )
 
-    // Index in real-time, desktop only
-    if (require('electron')) {
-      new Setting(containerEl)
-        .setName('Reindex in real-time')
-        .setDesc(
-          'By default, notes a reindexed when Obsidian focus is lost. Enable this to reindex in real-time. May affect performances.',
-        )
-        .addToggle(toggle =>
-          toggle.setValue(settings.reindexInRealTime).onChange(async v => {
-            settings.reindexInRealTime = v
-            await saveSettings(this.plugin)
-          }),
-        )
-    }
-    else {
-      // No real time indexing on mobile
-      settings.reindexInRealTime = false
-    }
+    // #endregion Behavior
+
+    // #region User Interface
+
+    new Setting(containerEl).setName('User Interface').setHeading()
+
+    // Show notices
+    new Setting(containerEl)
+      .setName('Show indexing notices')
+      .setDesc('Show a notice when indexing is done, usually at startup.')
+      .addToggle(toggle =>
+        toggle.setValue(settings.showIndexingNotices).onChange(async v => {
+          settings.showIndexingNotices = v
+          await saveSettings(this.plugin)
+        }),
+      )
+
+    // Display note names without the full path
+    new Setting(containerEl)
+      .setName('Hide full path in results list')
+      .setDesc(
+        'In the search results, only show the note name, without the full path.',
+      )
+      .addToggle(toggle =>
+        toggle.setValue(settings.showShortName).onChange(async v => {
+          settings.showShortName = v
+          await saveSettings(this.plugin)
+        }),
+      )
+
+    // #endregion User Interface
 
     // #region Results Weighting
 
@@ -135,9 +161,11 @@ export class SettingsTab extends PluginSettingTab {
 }
 
 export const DEFAULT_SETTINGS: OmnisearchSettings = {
-  showIndexingNotices: false,
   respectExcluded: true,
   reindexInRealTime: false,
+
+  showIndexingNotices: false,
+  showShortName: false,
 
   weightBasename: 2,
   weightH1: 1.5,

@@ -252,7 +252,7 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
 
     // Make the document and index it
     const note: IndexedNote = {
-      basename: file.path,
+      basename: file.basename,
       content,
       path: file.path,
       aliases: getAliasesFromMetadata(metadata).join(''),
