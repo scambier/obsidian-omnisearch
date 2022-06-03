@@ -12,6 +12,8 @@ export interface OmnisearchSettings extends WeightingSettings {
   showIndexingNotices: boolean
   respectExcluded: boolean
   reindexInRealTime: boolean
+  CtrlJK: boolean
+  CtrlNP: boolean
 }
 
 export class SettingsTab extends PluginSettingTab {
@@ -72,6 +74,8 @@ export class SettingsTab extends PluginSettingTab {
       settings.reindexInRealTime = false
     }
 
+    // #region Results Weighting
+
     new Setting(containerEl).setName('Results weighting').setHeading()
 
     new Setting(containerEl)
@@ -91,6 +95,32 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName(`Headings level 3 (default: ${DEFAULT_SETTINGS.weightH3})`)
       .addSlider(cb => this.weightSlider(cb, 'weightH3'))
+
+    // #endregion Results Weighting
+
+    // #region Shortcuts
+
+    new Setting(containerEl).setName('Shortcuts').setHeading()
+
+    new Setting(containerEl)
+      .setName('Use [Ctrl/Cmd]+j/k to navigate up/down in the results')
+      .addToggle(toggle =>
+        toggle.setValue(settings.CtrlJK).onChange(async v => {
+          settings.CtrlJK = v
+          await saveSettings(this.plugin)
+        }),
+      )
+
+    new Setting(containerEl)
+      .setName('Use [Ctrl/Cmd]+n/p to navigate up/down in the results')
+      .addToggle(toggle =>
+        toggle.setValue(settings.CtrlNP).onChange(async v => {
+          settings.CtrlNP = v
+          await saveSettings(this.plugin)
+        }),
+      )
+
+    // #endregion Shortcuts
   }
 
   weightSlider(cb: SliderComponent, key: keyof WeightingSettings): void {
@@ -108,10 +138,14 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   showIndexingNotices: false,
   respectExcluded: true,
   reindexInRealTime: false,
+
   weightBasename: 2,
   weightH1: 1.5,
   weightH2: 1.3,
   weightH3: 1.1,
+
+  CtrlJK: false,
+  CtrlNP: false,
 } as const
 
 export let settings: OmnisearchSettings = Object.assign({}, DEFAULT_SETTINGS)

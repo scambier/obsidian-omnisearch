@@ -2,6 +2,7 @@ import { App, Modal, TFile } from 'obsidian'
 import ModalVault from './components/ModalVault.svelte'
 import ModalInFile from './components/ModalInFile.svelte'
 import { eventBus, isInputComposition } from './globals'
+import { settings } from './settings'
 
 abstract class OmnisearchModal extends Modal {
   constructor(app: App) {
@@ -17,6 +18,9 @@ abstract class OmnisearchModal extends Modal {
     this.modalEl.tabIndex = -1
 
     // Setup events that can be listened through the event bus
+
+    // #region Up/Down navigation
+
     this.scope.register([], 'ArrowDown', e => {
       e.preventDefault()
       eventBus.emit('arrow-down')
@@ -25,6 +29,39 @@ abstract class OmnisearchModal extends Modal {
       e.preventDefault()
       eventBus.emit('arrow-up')
     })
+
+    // Ctrl+j/k
+    for (const key of [
+      { k: 'j', dir: 'down' },
+      { k: 'k', dir: 'up' },
+    ] as const) {
+      for (const modifier of ['Ctrl', 'Meta'] as const) {
+        this.scope.register([modifier], key.k, e => {
+          if (settings.CtrlJK) {
+            e.preventDefault()
+            eventBus.emit('arrow-' + key.dir)
+          }
+        })
+      }
+    }
+
+    // Ctrl+n/p
+    for (const key of [
+      { k: 'n', dir: 'down' },
+      { k: 'p', dir: 'up' },
+    ] as const) {
+      for (const modifier of ['Ctrl', 'Meta'] as const) {
+        this.scope.register([modifier], key.k, e => {
+          if (settings.CtrlNP) {
+            e.preventDefault()
+            eventBus.emit('arrow-' + key.dir)
+          }
+        })
+      }
+    }
+
+    // #endregion Up/Down navigation
+
     this.scope.register(['Ctrl'], 'Enter', e => {
       e.preventDefault()
       eventBus.emit('ctrl-enter') // Open in new pane
@@ -33,16 +70,20 @@ abstract class OmnisearchModal extends Modal {
       e.preventDefault()
       eventBus.emit('ctrl-enter') // Open in new pane (but on Mac)
     })
+
     this.scope.register(['Alt'], 'Enter', e => {
       e.preventDefault()
       eventBus.emit('alt-enter') // Open the InFile modal
     })
+
     this.scope.register(['Shift'], 'Enter', e => {
       e.preventDefault()
       eventBus.emit('shift-enter') // Create a new note
     })
+
     this.scope.register([], 'Enter', e => {
-      if (!isInputComposition()) { // Check if the user is still typing
+      if (!isInputComposition()) {
+        // Check if the user is still typing
         e.preventDefault()
         eventBus.emit('enter') // Open in current pane
       }
