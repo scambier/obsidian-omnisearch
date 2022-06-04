@@ -37,7 +37,7 @@ abstract class OmnisearchModal extends Modal {
     ] as const) {
       for (const modifier of ['Ctrl', 'Meta'] as const) {
         this.scope.register([modifier], key.k, e => {
-          if (settings.CtrlJK) {
+          if (settings.CtrlJK && this.app.vault.getConfig('vimMode')) {
             e.preventDefault()
             eventBus.emit('arrow-' + key.dir)
           }
@@ -52,7 +52,7 @@ abstract class OmnisearchModal extends Modal {
     ] as const) {
       for (const modifier of ['Ctrl', 'Meta'] as const) {
         this.scope.register([modifier], key.k, e => {
-          if (settings.CtrlNP) {
+          if (settings.CtrlNP && this.app.vault.getConfig('vimMode')) {
             e.preventDefault()
             eventBus.emit('arrow-' + key.dir)
           }

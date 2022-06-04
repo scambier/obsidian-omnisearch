@@ -129,7 +129,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl).setName('Shortcuts').setHeading()
 
     new Setting(containerEl)
-      .setName('Use [Ctrl/Cmd]+j/k to navigate up/down in the results')
+      .setName('Use [Ctrl/Cmd]+j/k to navigate up/down in the results, if Vim mode is enabled')
       .addToggle(toggle =>
         toggle.setValue(settings.CtrlJK).onChange(async v => {
           settings.CtrlJK = v
@@ -138,7 +138,7 @@ export class SettingsTab extends PluginSettingTab {
       )
 
     new Setting(containerEl)
-      .setName('Use [Ctrl/Cmd]+n/p to navigate up/down in the results')
+      .setName('Use [Ctrl/Cmd]+n/p to navigate up/down in the results, if Vim mode is enabled')
       .addToggle(toggle =>
         toggle.setValue(settings.CtrlNP).onChange(async v => {
           settings.CtrlNP = v

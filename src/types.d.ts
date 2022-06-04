@@ -1,4 +1,4 @@
-import type { MetadataCache, ViewState } from 'obsidian'
+import type { MetadataCache, ViewState, Vault } from 'obsidian'
 
 declare module 'obsidian' {
   interface MetadataCache {
@@ -13,5 +13,9 @@ declare module 'obsidian' {
     state?: {
       file?: string
     }
+  }
+
+  interface Vault {
+    getConfig(string): unknown
   }
 }
