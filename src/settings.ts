@@ -11,6 +11,7 @@ interface WeightingSettings {
 export interface OmnisearchSettings extends WeightingSettings {
   respectExcluded: boolean
   reindexInRealTime: boolean
+  ignoreDiacritics: boolean
   showIndexingNotices: boolean
   showShortName: boolean
   CtrlJK: boolean
@@ -67,6 +68,19 @@ export class SettingsTab extends PluginSettingTab {
           await saveSettings(this.plugin)
         }),
       )
+
+    // Ignore diacritics
+    // new Setting(containerEl)
+    //   .setName('Ignore diacritics')
+    //   .setDesc(
+    //     'Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky". Needs a restart to take effect.',
+    //   )
+    //   .addToggle(toggle =>
+    //     toggle.setValue(settings.ignoreDiacritics).onChange(async v => {
+    //       settings.ignoreDiacritics = v
+    //       await saveSettings(this.plugin)
+    //     }),
+    //   )
 
     // #endregion Behavior
 
@@ -129,7 +143,9 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl).setName('Shortcuts').setHeading()
 
     new Setting(containerEl)
-      .setName('Use [Ctrl/Cmd]+j/k to navigate up/down in the results, if Vim mode is enabled')
+      .setName(
+        'Use [Ctrl/Cmd]+j/k to navigate up/down in the results, if Vim mode is enabled',
+      )
       .addToggle(toggle =>
         toggle.setValue(settings.CtrlJK).onChange(async v => {
           settings.CtrlJK = v
@@ -138,7 +154,9 @@ export class SettingsTab extends PluginSettingTab {
       )
 
     new Setting(containerEl)
-      .setName('Use [Ctrl/Cmd]+n/p to navigate up/down in the results, if Vim mode is enabled')
+      .setName(
+        'Use [Ctrl/Cmd]+n/p to navigate up/down in the results, if Vim mode is enabled',
+      )
       .addToggle(toggle =>
         toggle.setValue(settings.CtrlNP).onChange(async v => {
           settings.CtrlNP = v
@@ -163,6 +181,7 @@ export class SettingsTab extends PluginSettingTab {
 export const DEFAULT_SETTINGS: OmnisearchSettings = {
   respectExcluded: true,
   reindexInRealTime: false,
+  ignoreDiacritics: true,
 
   showIndexingNotices: false,
   showShortName: false,

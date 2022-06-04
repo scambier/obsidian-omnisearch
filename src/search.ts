@@ -10,6 +10,7 @@ import {
 import {
   extractHeadingsFromCache,
   getAliasesFromMetadata,
+  removeDiacritics,
   stringsToRegex,
   stripMarkdownCharacters,
   wait,
@@ -48,6 +49,8 @@ export async function initGlobalSearchIndex(): Promise<void> {
   resetNotesCache()
   minisearchInstance = new MiniSearch({
     tokenize,
+    processTerm: term =>
+      settings.ignoreDiacritics ? removeDiacritics(term) : term,
     idField: 'path',
     fields: [
       'basename',

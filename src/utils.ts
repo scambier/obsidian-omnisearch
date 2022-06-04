@@ -143,3 +143,10 @@ export function getAliasesFromMetadata(
     .map(s => (s ? s.trim() : s))
     .filter(s => !!s)
 }
+
+/**
+ * https://stackoverflow.com/a/37511463
+ */
+export function removeDiacritics(str: string): string {
+  return str.normalize('NFD').replace(/\p{Diacritic}/gu, '')
+}
