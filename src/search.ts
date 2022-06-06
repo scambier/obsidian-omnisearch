@@ -67,11 +67,11 @@ export async function initGlobalSearchIndex(): Promise<void> {
     try {
       const json = await app.vault.adapter.read(searchIndexFilePath)
       minisearchInstance = MiniSearch.loadJSON(json, options)
-      console.log("MiniSearch index loaded from the file")
+      console.log('MiniSearch index loaded from the file')
       await loadNotesCache()
     }
     catch(e) {
-      console.trace("Could not load MiniSearch index from the file")
+      console.trace('Could not load MiniSearch index from the file')
       console.error(e)
     }
   }
@@ -394,7 +394,7 @@ async function saveIndexToFile(): Promise<void> {
   if (settings.storeIndexInFile && minisearchInstance && isIndexChanged) {
     const json = JSON.stringify(minisearchInstance)
     await app.vault.adapter.write(searchIndexFilePath, json)
-    console.log("MiniSearch index saved to the file")
+    console.log('MiniSearch index saved to the file')
 
     await saveNotesCacheToFile()
     isIndexChanged = false

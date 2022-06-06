@@ -26,10 +26,10 @@ export async function loadNotesCache(): Promise<void> {
     try {
       const json = await app.vault.adapter.read(notesCacheFilePath)
       notesCache = JSON.parse(json)
-      console.log("Notes cache loaded from the file")
+      console.log('Notes cache loaded from the file')
     }
     catch(e) {
-      console.trace("Could not load Notes cache from the file")
+      console.trace('Could not load Notes cache from the file')
       console.error(e)
     } 
   }
@@ -142,7 +142,7 @@ export function removeAnchors(name: string): string {
 export async function saveNotesCacheToFile(): Promise<void> {
   const json = JSON.stringify(notesCache)
   await app.vault.adapter.write(notesCacheFilePath, json)
-  console.log("Notes cache saved to the file")
+  console.log('Notes cache saved to the file')
 }
 
 export function isCacheOutdated(file: TFile): boolean {
