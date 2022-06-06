@@ -22,7 +22,9 @@ export type SearchNote = {
 
 export type IndexedNote = {
   path: string
-  basename: string
+  basename: string,
+  mtime: number,
+
   content: string
   aliases: string
   headings1: string
