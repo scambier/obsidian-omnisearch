@@ -6,6 +6,7 @@ import {
 } from 'obsidian'
 import type { IndexedNote, ResultNote } from './globals'
 import { stringsToRegex } from './utils'
+import { settings } from './settings'
 
 /**
  * This is an in-memory cache of the notes, with all their computed fields
@@ -21,7 +22,7 @@ export function resetNotesCache(): void {
 }
 
 export async function loadNotesCache(): Promise<void> {
-  if (await app.vault.adapter.exists(notesCacheFilePath)) {
+  if (settings.storeIndexInFile && await app.vault.adapter.exists(notesCacheFilePath)) {
     try {
       const json = await app.vault.adapter.read(notesCacheFilePath)
       notesCache = JSON.parse(json)

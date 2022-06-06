@@ -63,11 +63,12 @@ export async function initGlobalSearchIndex(): Promise<void> {
     ],
   }
 
-  if (await app.vault.adapter.exists(searchIndexFilePath)) {
+  if (settings.storeIndexInFile && await app.vault.adapter.exists(searchIndexFilePath)) {
     try {
       const json = await app.vault.adapter.read(searchIndexFilePath)
       minisearchInstance = MiniSearch.loadJSON(json, options)
       console.log("MiniSearch index loaded from the file")
+      await loadNotesCache()
     }
     catch(e) {
       console.trace("Could not load MiniSearch index from the file")
@@ -80,16 +81,25 @@ export async function initGlobalSearchIndex(): Promise<void> {
     resetNotesCache()
   }
 
-  await loadNotesCache()
-
   // Index files that are already present
   const start = new Date().getTime()
-  const files = app.vault.getMarkdownFiles().filter(file => isCacheOutdated(file))
+
+  const allFiles = app.vault.getMarkdownFiles()
+
+  let files
+  let notesSuffix
+  if (settings.storeIndexInFile) {
+    files = allFiles.filter(file => isCacheOutdated(file))
+    notesSuffix = 'modified notes'
+  } else {
+    files = allFiles
+    notesSuffix = 'notes'
+  }
+
+  console.log(`Omnisearch - indexing ${files.length} ${notesSuffix}`)
 
   // This is basically the same behavior as MiniSearch's `addAllAsync()`.
   // We index files by batches of 10
-  console.log('Omnisearch - indexing ' + files.length + ' modified notes')
-
   for (let i = 0; i < files.length; ++i) {
     if (i % 10 === 0) await wait(0)
     const file = files[i]
@@ -102,9 +112,9 @@ export async function initGlobalSearchIndex(): Promise<void> {
   }
 
   if (files.length > 0) {
-    const message = `Omnisearch - Indexed ${files.length} modified notes in ${
-      new Date().getTime() - start
-    }ms`
+    const message = `Omnisearch - Indexed ${files.length} ${notesSuffix} in ${
+        new Date().getTime() - start
+      }ms`
 
     console.log(message)
 
@@ -381,7 +391,7 @@ export async function reindexNotes(): Promise<void> {
 }
 
 async function saveIndexToFile(): Promise<void> {
-  if (minisearchInstance && isIndexChanged) {
+  if (settings.storeIndexInFile && minisearchInstance && isIndexChanged) {
     const json = JSON.stringify(minisearchInstance)
     await app.vault.adapter.write(searchIndexFilePath, json)
     console.log("MiniSearch index saved to the file")
