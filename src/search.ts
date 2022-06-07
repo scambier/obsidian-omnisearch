@@ -251,7 +251,7 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
     }
 
     // Fetch content from the cache to index it as-is
-    const content = await app.vault.cachedRead(file)
+    const content = removeDiacritics(await app.vault.cachedRead(file))
 
     // Make the document and index it
     const note: IndexedNote = {
