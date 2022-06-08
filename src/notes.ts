@@ -6,6 +6,7 @@ import {
 } from 'obsidian'
 import type { IndexedNote, ResultNote } from './globals'
 import { stringsToRegex } from './utils'
+import { settings } from './settings'
 
 /**
  * This is an in-memory cache of the notes, with all their computed fields
@@ -14,8 +15,28 @@ import { stringsToRegex } from './utils'
  */
 export let notesCache: Record<string, IndexedNote> = {}
 
+const notesCacheFilePath = `${app.vault.configDir}/plugins/omnisearch/notesCache.json`
+
 export function resetNotesCache(): void {
   notesCache = {}
+}
+
+export async function loadNotesCache(): Promise<void> {
+  if (settings.storeIndexInFile && await app.vault.adapter.exists(notesCacheFilePath)) {
+    try {
+      const json = await app.vault.adapter.read(notesCacheFilePath)
+      notesCache = JSON.parse(json)
+      console.log('Notes cache loaded from the file')
+    }
+    catch(e) {
+      console.trace('Could not load Notes cache from the file')
+      console.error(e)
+    } 
+  }
+
+  if (!notesCache) {
+    notesCache = {}
+  }
 }
 export function getNoteFromCache(key: string): IndexedNote | undefined {
   return notesCache[key]
@@ -116,4 +137,15 @@ export function getNonExistingNotes(
  */
 export function removeAnchors(name: string): string {
   return name.split(/[\^#]+/)[0]
+}
+
+export async function saveNotesCacheToFile(): Promise<void> {
+  const json = JSON.stringify(notesCache)
+  await app.vault.adapter.write(notesCacheFilePath, json)
+  console.log('Notes cache saved to the file')
+}
+
+export function isCacheOutdated(file: TFile): boolean {
+  const indexedNote = getNoteFromCache(file.path)
+  return !indexedNote || indexedNote.mtime !== file.stat.mtime
 }

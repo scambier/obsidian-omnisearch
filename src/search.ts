@@ -25,9 +25,14 @@ import {
   addNoteToCache,
   removeAnchors,
   getNonExistingNotesFromCache,
+  loadNotesCache,
+  saveNotesCacheToFile,
+  isCacheOutdated
 } from './notes'
 
 let minisearchInstance: MiniSearch<IndexedNote>
+let isIndexChanged: boolean
+const searchIndexFilePath = `${app.vault.configDir}/plugins/omnisearch/searchIndex.json`
 
 const tokenize = (text: string): string[] => {
   const tokens = text.split(SPACE_OR_PUNCTUATION)
@@ -46,8 +51,7 @@ const tokenize = (text: string): string[] => {
  * and adds all the notes to the index
  */
 export async function initGlobalSearchIndex(): Promise<void> {
-  resetNotesCache()
-  minisearchInstance = new MiniSearch({
+  const options = {
     tokenize,
     processTerm: term =>
       settings.ignoreDiacritics ? removeDiacritics(term) : term,
@@ -60,29 +64,68 @@ export async function initGlobalSearchIndex(): Promise<void> {
       'headings2',
       'headings3',
     ],
-  })
+  }
+
+  if (settings.storeIndexInFile && await app.vault.adapter.exists(searchIndexFilePath)) {
+    try {
+      const json = await app.vault.adapter.read(searchIndexFilePath)
+      minisearchInstance = MiniSearch.loadJSON(json, options)
+      console.log('MiniSearch index loaded from the file')
+      await loadNotesCache()
+    }
+    catch(e) {
+      console.trace('Could not load MiniSearch index from the file')
+      console.error(e)
+    }
+  }
+  
+  if (!minisearchInstance) {
+    minisearchInstance = new MiniSearch(options)
+    resetNotesCache()
+  }
 
   // Index files that are already present
   const start = new Date().getTime()
-  const files = app.vault.getMarkdownFiles()
+
+  const allFiles = app.vault.getMarkdownFiles()
+
+  let files
+  let notesSuffix
+  if (settings.storeIndexInFile) {
+    files = allFiles.filter(file => isCacheOutdated(file))
+    notesSuffix = 'modified notes'
+  } else {
+    files = allFiles
+    notesSuffix = 'notes'
+  }
+
+  console.log(`Omnisearch - indexing ${files.length} ${notesSuffix}`)
 
   // This is basically the same behavior as MiniSearch's `addAllAsync()`.
   // We index files by batches of 10
-  if (files.length) {
-    console.log('Omnisearch - indexing ' + files.length + ' files')
-  }
   for (let i = 0; i < files.length; ++i) {
     if (i % 10 === 0) await wait(0)
     const file = files[i]
-    if (file) await addToIndex(file)
+    if (file) {
+      if (getNoteFromCache(file.path)) {
+        removeFromIndex(file.path)
+      }
+      await addToIndex(file)
+    }
   }
 
-  if (files.length > 0 && settings.showIndexingNotices) {
-    new Notice(
-      `Omnisearch - Indexed ${files.length} notes in ${
+  if (files.length > 0) {
+    const message = `Omnisearch - Indexed ${files.length} ${notesSuffix} in ${
         new Date().getTime() - start
-      }ms`,
-    )
+      }ms`
+
+    console.log(message)
+
+    if (settings.showIndexingNotices) {
+      new Notice(message)
+    }
+
+    await saveIndexToFile()
   }
 }
 
@@ -258,6 +301,8 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
       basename: file.basename,
       content,
       path: file.path,
+      mtime: file.stat.mtime,
+
       aliases: getAliasesFromMetadata(metadata).join(''),
       headings1: metadata
         ? extractHeadingsFromCache(metadata, 1).join(' ')
@@ -271,6 +316,7 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
     }
 
     minisearchInstance.add(note)
+    isIndexChanged = true
     addNoteToCache(note.path, note)
   }
   catch (e) {
@@ -292,6 +338,8 @@ export function addNonExistingToIndex(name: string, parent: string): void {
   const note = {
     path: filename,
     basename: name,
+    mtime: 0,
+
     content: '',
     aliases: '',
     headings1: '',
@@ -302,6 +350,7 @@ export function addNonExistingToIndex(name: string, parent: string): void {
     parent,
   } as IndexedNote
   minisearchInstance.add(note)
+  isIndexChanged = true
   addNoteToCache(filename, note)
 }
 
@@ -317,6 +366,7 @@ export function removeFromIndex(path: string): void {
   const note = getNoteFromCache(path)
   if (note) {
     minisearchInstance.remove(note)
+    isIndexChanged = true
     removeNoteFromCache(path)
     getNonExistingNotesFromCache()
       .filter(n => n.parent === path)
@@ -339,4 +389,17 @@ export async function reindexNotes(): Promise<void> {
     await addToIndex(note)
   }
   notesToReindex.clear()
+
+  await saveIndexToFile()
+}
+
+async function saveIndexToFile(): Promise<void> {
+  if (settings.storeIndexInFile && minisearchInstance && isIndexChanged) {
+    const json = JSON.stringify(minisearchInstance)
+    await app.vault.adapter.write(searchIndexFilePath, json)
+    console.log('MiniSearch index saved to the file')
+
+    await saveNotesCacheToFile()
+    isIndexChanged = false
+  }
 }

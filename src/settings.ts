@@ -16,6 +16,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   showShortName: boolean
   CtrlJK: boolean
   CtrlNP: boolean
+  storeIndexInFile: boolean
 }
 
 export class SettingsTab extends PluginSettingTab {
@@ -81,6 +82,18 @@ export class SettingsTab extends PluginSettingTab {
     //       await saveSettings(this.plugin)
     //     }),
     //   )
+
+    new Setting(containerEl)
+      .setName('Store index in file')
+      .setDesc(
+        'EXPERIMENTAL - index is store on disk, instead of being rebuilt on every startup.',
+      )
+      .addToggle(toggle =>
+        toggle.setValue(settings.storeIndexInFile).onChange(async v => {
+          settings.storeIndexInFile = v
+          await saveSettings(this.plugin)
+        }),
+      )
 
     // #endregion Behavior
 
@@ -193,6 +206,8 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
 
   CtrlJK: false,
   CtrlNP: false,
+
+  storeIndexInFile: false,
 } as const
 
 export let settings: OmnisearchSettings = Object.assign({}, DEFAULT_SETTINGS)
