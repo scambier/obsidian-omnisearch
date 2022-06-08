@@ -71,17 +71,17 @@ export class SettingsTab extends PluginSettingTab {
       )
 
     // Ignore diacritics
-    // new Setting(containerEl)
-    //   .setName('Ignore diacritics')
-    //   .setDesc(
-    //     'Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky". Needs a restart to take effect.',
-    //   )
-    //   .addToggle(toggle =>
-    //     toggle.setValue(settings.ignoreDiacritics).onChange(async v => {
-    //       settings.ignoreDiacritics = v
-    //       await saveSettings(this.plugin)
-    //     }),
-    //   )
+    new Setting(containerEl)
+      .setName('Ignore diacritics')
+      .setDesc(
+        'EXPERIMENTAL - Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky". Needs a restart to take effect.',
+      )
+      .addToggle(toggle =>
+        toggle.setValue(settings.ignoreDiacritics).onChange(async v => {
+          settings.ignoreDiacritics = v
+          await saveSettings(this.plugin)
+        }),
+      )
 
     new Setting(containerEl)
       .setName('Store index in file')
@@ -194,7 +194,7 @@ export class SettingsTab extends PluginSettingTab {
 export const DEFAULT_SETTINGS: OmnisearchSettings = {
   respectExcluded: true,
   reindexInRealTime: false,
-  ignoreDiacritics: true,
+  ignoreDiacritics: false,
 
   showIndexingNotices: false,
   showShortName: false,

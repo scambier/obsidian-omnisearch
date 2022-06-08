@@ -27,7 +27,7 @@ import {
   getNonExistingNotesFromCache,
   loadNotesCache,
   saveNotesCacheToFile,
-  isCacheOutdated
+  isCacheOutdated,
 } from './notes'
 
 let minisearchInstance: MiniSearch<IndexedNote>
@@ -53,7 +53,7 @@ const tokenize = (text: string): string[] => {
 export async function initGlobalSearchIndex(): Promise<void> {
   const options = {
     tokenize,
-    processTerm: term =>
+    processTerm: (term: string) =>
       settings.ignoreDiacritics ? removeDiacritics(term) : term,
     idField: 'path',
     fields: [
@@ -66,19 +66,22 @@ export async function initGlobalSearchIndex(): Promise<void> {
     ],
   }
 
-  if (settings.storeIndexInFile && await app.vault.adapter.exists(searchIndexFilePath)) {
+  if (
+    settings.storeIndexInFile &&
+    (await app.vault.adapter.exists(searchIndexFilePath))
+  ) {
     try {
       const json = await app.vault.adapter.read(searchIndexFilePath)
       minisearchInstance = MiniSearch.loadJSON(json, options)
       console.log('MiniSearch index loaded from the file')
       await loadNotesCache()
     }
-    catch(e) {
+    catch (e) {
       console.trace('Could not load MiniSearch index from the file')
       console.error(e)
     }
   }
-  
+
   if (!minisearchInstance) {
     minisearchInstance = new MiniSearch(options)
     resetNotesCache()
@@ -94,7 +97,8 @@ export async function initGlobalSearchIndex(): Promise<void> {
   if (settings.storeIndexInFile) {
     files = allFiles.filter(file => isCacheOutdated(file))
     notesSuffix = 'modified notes'
-  } else {
+  }
+  else {
     files = allFiles
     notesSuffix = 'notes'
   }
@@ -116,8 +120,8 @@ export async function initGlobalSearchIndex(): Promise<void> {
 
   if (files.length > 0) {
     const message = `Omnisearch - Indexed ${files.length} ${notesSuffix} in ${
-        new Date().getTime() - start
-      }ms`
+      new Date().getTime() - start
+    }ms`
 
     console.log(message)
 

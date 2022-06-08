@@ -1,4 +1,5 @@
-import { stripSurroundingQuotes } from './utils'
+import { settings } from './settings'
+import { removeDiacritics, stripSurroundingQuotes } from './utils'
 import { parseQuery } from './vendor/parse-query'
 
 type QueryToken = {
@@ -21,6 +22,7 @@ export class Query {
   public exclusions: QueryToken[] = []
 
   constructor(text = '') {
+    if (settings.ignoreDiacritics) text = removeDiacritics(text)
     const tokens = parseQuery(text.toLowerCase(), { tokenize: true })
     this.exclusions = tokens.exclude.text
       .map(this.formatToken)
@@ -48,5 +50,3 @@ export class Query {
     }
   }
 }
-
-

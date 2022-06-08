@@ -22,16 +22,19 @@ export function resetNotesCache(): void {
 }
 
 export async function loadNotesCache(): Promise<void> {
-  if (settings.storeIndexInFile && await app.vault.adapter.exists(notesCacheFilePath)) {
+  if (
+    settings.storeIndexInFile &&
+    (await app.vault.adapter.exists(notesCacheFilePath))
+  ) {
     try {
       const json = await app.vault.adapter.read(notesCacheFilePath)
       notesCache = JSON.parse(json)
       console.log('Notes cache loaded from the file')
     }
-    catch(e) {
+    catch (e) {
       console.trace('Could not load Notes cache from the file')
       console.error(e)
-    } 
+    }
   }
 
   if (!notesCache) {
