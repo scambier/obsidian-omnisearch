@@ -54,7 +54,7 @@ export async function initGlobalSearchIndex(): Promise<void> {
   const options = {
     tokenize,
     processTerm: (term: string) =>
-      settings.ignoreDiacritics ? removeDiacritics(term) : term,
+      (settings.ignoreDiacritics ? removeDiacritics(term) : term).toLowerCase(),
     idField: 'path',
     fields: [
       'basename',
