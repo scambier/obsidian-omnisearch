@@ -9,7 +9,7 @@ import InputSearch from "./InputSearch.svelte"
 import ModalContainer from "./ModalContainer.svelte"
 import { eventBus, type ResultNote } from "src/globals"
 import { createNote, openNote } from "src/notes"
-import { getSuggestions } from "src/search"
+import { getSuggestions, reindexNotes } from "src/search"
 import { loopIndex } from "src/utils"
 import { OmnisearchInFileModal, type OmnisearchVaultModal } from "src/modals"
 import ResultItemVault from "./ResultItemVault.svelte"
@@ -29,6 +29,7 @@ $: if (searchQuery) {
 }
 
 onMount(() => {
+  reindexNotes()
   searchQuery = lastSearch
   eventBus.on("vault", "enter", onInputEnter)
   eventBus.on("vault", "shift-enter", onInputShiftEnter)

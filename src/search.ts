@@ -388,9 +388,13 @@ export function addNoteToReindex(note: TAbstractFile): void {
   notesToReindex.add(note)
 }
 export async function reindexNotes(): Promise<void> {
+  if (settings.showIndexingNotices && notesToReindex.size > 0) {
+    new Notice(`Omnisearch - Reindexing ${notesToReindex.size} notes`, 2000)
+  }
   for (const note of notesToReindex) {
     removeFromIndex(note.path)
     await addToIndex(note)
+    await wait(0)
   }
   notesToReindex.clear()
 
@@ -401,7 +405,7 @@ async function saveIndexToFile(): Promise<void> {
   if (settings.storeIndexInFile && minisearchInstance && isIndexChanged) {
     const json = JSON.stringify(minisearchInstance)
     await app.vault.adapter.write(searchIndexFilePath, json)
-    console.log('MiniSearch index saved to the file')
+    console.log('Omnisearch - Index saved on disk')
 
     await saveNotesCacheToFile()
     isIndexChanged = false

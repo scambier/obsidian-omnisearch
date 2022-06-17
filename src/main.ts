@@ -3,30 +3,21 @@ import {
   addNoteToReindex,
   addToIndex,
   initGlobalSearchIndex,
-  reindexNotes,
   removeFromIndex,
 } from './search'
 import { OmnisearchInFileModal, OmnisearchVaultModal } from './modals'
-import { loadSettings, settings, SettingsTab } from './settings'
+import { loadSettings, SettingsTab } from './settings'
 
-let mainWindow: { on: any; off: any } | null = null
-try {
-  mainWindow = require('electron').remote.getCurrentWindow()
-}
-catch (e) {
-  console.log("Can't load electron, mobile platform")
-}
-
-const onBlur = (): void => {
-  reindexNotes()
-}
+// let mainWindow: { on: any; off: any } | null = null
+// try {
+//   mainWindow = require('electron').remote.getCurrentWindow()
+// }
+// catch (e) {
+//   console.log("Can't load electron, mobile platform")
+// }
 
 export default class OmnisearchPlugin extends Plugin {
   async onload(): Promise<void> {
-    if (mainWindow) {
-      mainWindow.on('blur', onBlur)
-    }
-
     await loadSettings(this)
     this.addSettingTab(new SettingsTab(this))
 
@@ -61,13 +52,7 @@ export default class OmnisearchPlugin extends Plugin {
       )
       this.registerEvent(
         this.app.vault.on('modify', async file => {
-          if (settings.reindexInRealTime) {
-            removeFromIndex(file.path)
-            await addToIndex(file)
-          }
-          else {
-            addNoteToReindex(file)
-          }
+          addNoteToReindex(file)
         }),
       )
       this.registerEvent(
@@ -83,9 +68,5 @@ export default class OmnisearchPlugin extends Plugin {
     })
   }
 
-  onunload(): void {
-    if (mainWindow) {
-      mainWindow.off('blur', onBlur)
-    }
-  }
+  onunload(): void {}
 }

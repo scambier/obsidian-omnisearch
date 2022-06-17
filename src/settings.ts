@@ -10,7 +10,6 @@ interface WeightingSettings {
 
 export interface OmnisearchSettings extends WeightingSettings {
   respectExcluded: boolean
-  reindexInRealTime: boolean
   ignoreDiacritics: boolean
   showIndexingNotices: boolean
   showShortName: boolean
@@ -37,25 +36,6 @@ export class SettingsTab extends PluginSettingTab {
     // #region Behavior
 
     new Setting(containerEl).setName('Behavior').setHeading()
-
-    // Index in real-time, desktop only
-    if (require('electron')) {
-      new Setting(containerEl)
-        .setName('Reindex in real-time')
-        .setDesc(
-          "By default, notes a reindexed when Obsidian focus is lost. Enable this to reindex in real-time. May affect Obsidian's performances when editing large notes.",
-        )
-        .addToggle(toggle =>
-          toggle.setValue(settings.reindexInRealTime).onChange(async v => {
-            settings.reindexInRealTime = v
-            await saveSettings(this.plugin)
-          }),
-        )
-    }
-    else {
-      // No real time indexing on mobile
-      settings.reindexInRealTime = false
-    }
 
     // Respect excluded files
     new Setting(containerEl)
@@ -193,7 +173,6 @@ export class SettingsTab extends PluginSettingTab {
 
 export const DEFAULT_SETTINGS: OmnisearchSettings = {
   respectExcluded: true,
-  reindexInRealTime: false,
   ignoreDiacritics: false,
 
   showIndexingNotices: false,
