@@ -144,6 +144,20 @@ export function getAliasesFromMetadata(
     .filter(s => !!s)
 }
 
+export function getTagsFromMetadata(metadata: CachedMetadata | null): string[] {
+  const arrOrString = metadata?.frontmatter?.tags ?? []
+  const fromFrontMatter = (
+    Array.isArray(arrOrString) ? arrOrString : arrOrString.split(',')
+  )
+    .map(s => (s ? s.trim() : s))
+    .filter(s => !!s)
+  const fromBody = (metadata?.tags ?? []).map(t => t.tag)
+
+  return [...fromFrontMatter, ...fromBody].map(t =>
+    t[0] !== '#' ? '#' + t : t,
+  )
+}
+
 /**
  * https://stackoverflow.com/a/37511463
  */

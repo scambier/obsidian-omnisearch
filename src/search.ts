@@ -1,5 +1,5 @@
 import { Notice, TAbstractFile, TFile } from 'obsidian'
-import MiniSearch, { type SearchResult } from 'minisearch'
+import MiniSearch, { type Options, type SearchResult } from 'minisearch'
 import {
   chsRegex,
   SPACE_OR_PUNCTUATION,
@@ -10,6 +10,7 @@ import {
 import {
   extractHeadingsFromCache,
   getAliasesFromMetadata,
+  getTagsFromMetadata,
   removeDiacritics,
   stringsToRegex,
   stripMarkdownCharacters,
@@ -51,7 +52,7 @@ const tokenize = (text: string): string[] => {
  * and adds all the notes to the index
  */
 export async function initGlobalSearchIndex(): Promise<void> {
-  const options = {
+  const options: Options<IndexedNote> = {
     tokenize,
     processTerm: (term: string) =>
       (settings.ignoreDiacritics ? removeDiacritics(term) : term).toLowerCase(),
@@ -64,6 +65,7 @@ export async function initGlobalSearchIndex(): Promise<void> {
       'headings2',
       'headings3',
     ],
+    storeFields: ['tags'],
   }
 
   if (
@@ -234,6 +236,18 @@ export async function getSuggestions(
   }
   else {
     results = results.slice(0, 50)
+
+    // Put the results with tags on top
+    const tags = query.segments
+      .filter(s => s.value.startsWith('#'))
+      .map(s => s.value)
+    for (const tag of tags) {
+      for (const result of results) {
+        if (result.tags.includes(tag)) {
+          result.score *= 100
+        }
+      }
+    }
   }
 
   // Map the raw results to get usable suggestions
@@ -243,6 +257,10 @@ export async function getSuggestions(
       throw new Error(`Note "${result.id}" not indexed`)
     }
 
+    // Remove '#' from tags, for highlighting
+    query.segments.forEach(s => {
+      s.value = s.value.replace(/^#/, '')
+    })
     // Clean search matches that match quoted expressions,
     // and inject those expressions instead
     const foundWords = [
@@ -251,6 +269,7 @@ export async function getSuggestions(
       ),
       ...query.segments.filter(s => s.exact).map(s => s.value),
     ]
+
     const matches = getMatches(note.content, stringsToRegex(foundWords))
     const resultNote: ResultNote = {
       score: result.score,
@@ -307,6 +326,7 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
       path: file.path,
       mtime: file.stat.mtime,
 
+      tags: getTagsFromMetadata(metadata),
       aliases: getAliasesFromMetadata(metadata).join(''),
       headings1: metadata
         ? extractHeadingsFromCache(metadata, 1).join(' ')

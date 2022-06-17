@@ -7,6 +7,7 @@ declare module 'obsidian' {
 
   interface FrontMatterCache {
     aliases?: string[] | string
+    tags?: string[] | string
   }
 
   interface ViewState {
