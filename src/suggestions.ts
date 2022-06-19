@@ -1,3 +1,5 @@
+// Parts of this code come from https://github.com/valentine195/obsidian-admonition/blob/e4aa52fe04bb68a5483421ef98414c2617d666b7/src/suggest/suggest.ts
+
 import {
   Editor,
   EditorSuggest,
@@ -13,15 +15,27 @@ export class OmnisearchSuggest extends EditorSuggest<string> {
     editor: Editor,
     file: TFile,
   ): EditorSuggestTriggerInfo | null {
-    const last2Chars = editor.getLine(cursor.line).slice(-2, cursor.ch)
-    if (last2Chars === '@@') {
-      return {
-        start: cursor,
-        end: cursor,
-        query: 'foo',
-      }
+    const line = editor.getLine(cursor.line)
+    // not inside the bracket
+    if (/\[@.+\]/.test(line.slice(0, cursor.ch))) return null
+    if (!/\[@.*/.test(line)) return null
+
+    const match = line.match(/\[@([^\]]*)\]?/) // [@(foo bar)] baz
+    if (!match) return null
+
+    const [_, query] = match
+    if (!query) {
+      return null
     }
-    return null
+    const matchData = {
+      end: cursor,
+      start: {
+        ch: (match.index ?? 0) + 4,
+        line: cursor.line,
+      },
+      query,
+    }
+    return matchData
   }
 
   getSuggestions(context: EditorSuggestContext): string[] | Promise<string[]> {
