@@ -1,5 +1,6 @@
 <script lang="ts">
 import { debounce } from "obsidian"
+import { toggleInputComposition } from "src/globals"
 import { createEventDispatcher, onMount, tick } from "svelte"
 
 export let value = ""
@@ -22,6 +23,8 @@ const debouncedOnInput = debounce(() => {
   bind:value
   bind:this={elInput}
   on:input={debouncedOnInput}
+  on:compositionstart={(_) => toggleInputComposition(true)}
+  on:compositionend={(_) => toggleInputComposition(false)}
   type="text"
   class="prompt-input"
   placeholder="Type to search through your notes"

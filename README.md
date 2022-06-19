@@ -1,9 +1,11 @@
 # Omnisearch for Obsidian
 
+[![Sponsor me](https://img.shields.io/badge/%E2%9D%A4%20Like%20this%20plugin%3F-Sponsor%20me!-ff69b4)](https://github.com/sponsors/scambier)
+
 ![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/scambier/obsidian-omnisearch) ![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/scambier/obsidian-omnisearch?include_prereleases&label=BRAT%20beta) [![Active Development](https://img.shields.io/badge/Maintenance%20Level-Actively%20Developed-brightgreen.svg)](https://gist.github.com/cheerfulstoic/d107229326a01ff0f333a1d3476e068d)
 
 
-**Omnisearch** is a search engine that "_just works_". Type what you're looking for, and it will instantly show you the most relevant results.
+**Omnisearch** is a search engine that "_just works_". It always instantly shows you the most relevant results, thanks to its smart weighting algorithm.
 
 Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/minisearch) library.
 
@@ -11,10 +13,10 @@ Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/mi
 
 ## Features
 
-- Keyboard-centric, you never have to use your mouse
 - Automatic document scoring using the [BM25 algorithm](https://github.com/lucaong/minisearch/issues/129#issuecomment-1046257399)
   - The relevance of a document against a query depends on the number of times the query terms appear in the document, its filename, and its headings
-- Instant search results, with highlighting
+- Keyboard first: you never have to use your mouse
+- Instant & highlighted search results
 - Resistance to typos
 - In-file search to quickly skim multiple results in a single note
 - Search filters: expressions in quotes and exclusions
@@ -22,8 +24,8 @@ Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/mi
 
 ## Installation
 
-- Omnisearch is available on [the official Community Plugins repository](https://obsidian.md/plugins?search=omnisearch#).
-- You can also install it through [BRAT](https://github.com/TfTHacker/obsidian42-brat) for pre-releases. Be advised that those versions can be buggy.
+- Omnisearch is available on [the official Community Plugins repository](https://obsidian.md/plugins?search=Omnisearch).
+- Beta releases can be installed through [BRAT](https://github.com/TfTHacker/obsidian42-brat). **Be advised that those versions can be buggy.**
 
 You can check the [CHANGELOG](./CHANGELOG.md) for more information on the different versions.
 
@@ -33,13 +35,13 @@ Omnisearch can be used within 2 different contexts:
 
 ### Vault Search
 
-Omnisearch's core feature, accessible with the Command Palette "_Omnisearch: Vault search_". This modal searches through your vault and returns the most relevant notes first. The notes that contain the query terms in their filename or headings are weighted higher than the others.
+Omnisearch's core feature, accessible with the Command Palette "**_Omnisearch: Vault search_**". This modal searches through your vault and returns the most relevant notes. That's all you need to _find_ a note.
 
-If you need to list all the matches of a single note, you can do so by using `alt+enter` to open the In-File Search.
+If you want to list all the search matches of a single note, you can do so by using `alt+enter` to open the In-File Search.
 
 ### In-File Search
 
-Also accessible through the command palette "_Omnisearch: In-file search_". This modal searches through the active note's content and lists the results.
+Also accessible through the Command Palette "**_Omnisearch: In-file search_**". This modal searches through the active note's content and lists the matching results. Just press enter to automatically scroll to the right place.
 
 ## Customization
 

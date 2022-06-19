@@ -9,8 +9,13 @@ interface WeightingSettings {
 }
 
 export interface OmnisearchSettings extends WeightingSettings {
-  showIndexingNotices: boolean
   respectExcluded: boolean
+  ignoreDiacritics: boolean
+  showIndexingNotices: boolean
+  showShortName: boolean
+  CtrlJK: boolean
+  CtrlNP: boolean
+  storeIndexInFile: boolean
 }
 
 export class SettingsTab extends PluginSettingTab {
@@ -25,21 +30,12 @@ export class SettingsTab extends PluginSettingTab {
     const { containerEl } = this
     containerEl.empty()
 
-    // Title
-    const title = document.createElement('h2')
-    title.textContent = 'Omnisearch settings'
-    containerEl.appendChild(title)
+    // Settings main title
+    containerEl.createEl('h2', { text: 'Omnisearch settings' })
 
-    // Show notices
-    new Setting(containerEl)
-      .setName('Show indexing notices')
-      .setDesc('Show a notice when indexing is done, usually at startup.')
-      .addToggle(toggle =>
-        toggle.setValue(settings.showIndexingNotices).onChange(async v => {
-          settings.showIndexingNotices = v
-          await saveSettings(this.plugin)
-        }),
-      )
+    // #region Behavior
+
+    new Setting(containerEl).setName('Behavior').setHeading()
 
     // Respect excluded files
     new Setting(containerEl)
@@ -54,10 +50,71 @@ export class SettingsTab extends PluginSettingTab {
         }),
       )
 
+    // Ignore diacritics
+    new Setting(containerEl)
+      .setName('Ignore diacritics')
+      .setDesc(
+        'EXPERIMENTAL - Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky". Needs a restart to take effect.',
+      )
+      .addToggle(toggle =>
+        toggle.setValue(settings.ignoreDiacritics).onChange(async v => {
+          settings.ignoreDiacritics = v
+          await saveSettings(this.plugin)
+        }),
+      )
+
+    new Setting(containerEl)
+      .setName('Store index in file')
+      .setDesc(
+        'EXPERIMENTAL - index is store on disk, instead of being rebuilt on every startup.',
+      )
+      .addToggle(toggle =>
+        toggle.setValue(settings.storeIndexInFile).onChange(async v => {
+          settings.storeIndexInFile = v
+          await saveSettings(this.plugin)
+        }),
+      )
+
+    // #endregion Behavior
+
+    // #region User Interface
+
+    new Setting(containerEl).setName('User Interface').setHeading()
+
+    // Show notices
+    new Setting(containerEl)
+      .setName('Show indexing notices')
+      .setDesc('Show a notice when indexing is done, usually at startup.')
+      .addToggle(toggle =>
+        toggle.setValue(settings.showIndexingNotices).onChange(async v => {
+          settings.showIndexingNotices = v
+          await saveSettings(this.plugin)
+        }),
+      )
+
+    // Display note names without the full path
+    new Setting(containerEl)
+      .setName('Hide full path in results list')
+      .setDesc(
+        'In the search results, only show the note name, without the full path.',
+      )
+      .addToggle(toggle =>
+        toggle.setValue(settings.showShortName).onChange(async v => {
+          settings.showShortName = v
+          await saveSettings(this.plugin)
+        }),
+      )
+
+    // #endregion User Interface
+
+    // #region Results Weighting
+
     new Setting(containerEl).setName('Results weighting').setHeading()
 
     new Setting(containerEl)
-      .setName(`File name (default: ${DEFAULT_SETTINGS.weightBasename})`)
+      .setName(
+        `File name & declared aliases (default: ${DEFAULT_SETTINGS.weightBasename})`,
+      )
       .addSlider(cb => this.weightSlider(cb, 'weightBasename'))
 
     new Setting(containerEl)
@@ -71,6 +128,36 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName(`Headings level 3 (default: ${DEFAULT_SETTINGS.weightH3})`)
       .addSlider(cb => this.weightSlider(cb, 'weightH3'))
+
+    // #endregion Results Weighting
+
+    // #region Shortcuts
+
+    new Setting(containerEl).setName('Shortcuts').setHeading()
+
+    new Setting(containerEl)
+      .setName(
+        'Use [Ctrl/Cmd]+j/k to navigate up/down in the results, if Vim mode is enabled',
+      )
+      .addToggle(toggle =>
+        toggle.setValue(settings.CtrlJK).onChange(async v => {
+          settings.CtrlJK = v
+          await saveSettings(this.plugin)
+        }),
+      )
+
+    new Setting(containerEl)
+      .setName(
+        'Use [Ctrl/Cmd]+n/p to navigate up/down in the results, if Vim mode is enabled',
+      )
+      .addToggle(toggle =>
+        toggle.setValue(settings.CtrlNP).onChange(async v => {
+          settings.CtrlNP = v
+          await saveSettings(this.plugin)
+        }),
+      )
+
+    // #endregion Shortcuts
   }
 
   weightSlider(cb: SliderComponent, key: keyof WeightingSettings): void {
@@ -85,12 +172,21 @@ export class SettingsTab extends PluginSettingTab {
 }
 
 export const DEFAULT_SETTINGS: OmnisearchSettings = {
-  showIndexingNotices: true,
   respectExcluded: true,
+  ignoreDiacritics: false,
+
+  showIndexingNotices: false,
+  showShortName: false,
+
   weightBasename: 2,
   weightH1: 1.5,
   weightH2: 1.3,
   weightH3: 1.1,
+
+  CtrlJK: false,
+  CtrlNP: false,
+
+  storeIndexInFile: false,
 } as const
 
 export let settings: OmnisearchSettings = Object.assign({}, DEFAULT_SETTINGS)

@@ -1,4 +1,6 @@
 <script lang="ts">
+import { getNoteFromCache } from "src/notes"
+import { settings } from "src/settings"
 import type { ResultNote } from "../globals"
 import { getMatches } from "../search"
 import { highlighter, makeExcerpt, stringsToRegex } from "../utils"
@@ -10,16 +12,20 @@ export let note: ResultNote
 $: reg = stringsToRegex(note.foundWords)
 $: matches = getMatches(note.content, reg)
 $: cleanedContent = makeExcerpt(note.content, note.matches[0]?.offset ?? -1)
+$: glyph = getNoteFromCache(note.path)?.doesNotExist
+$: title = settings.showShortName ? note.basename : note.path
 </script>
 
-<ResultItemContainer id={note.path} {selected} on:mousemove on:click>
+<ResultItemContainer id={note.path} {selected} on:mousemove on:click {glyph}>
   <span class="omnisearch-result__title">
-    {@html note.basename.replace(reg, highlighter)}
+    {@html title.replace(reg, highlighter)}
   </span>
 
-  <span class="omnisearch-result__counter">
-    {matches.length}&nbsp;{matches.length > 1 ? "matches" : "match"}
-  </span>
+  {#if matches.length > 0}
+    <span class="omnisearch-result__counter">
+      {matches.length}&nbsp;{matches.length > 1 ? "matches" : "match"}
+    </span>
+  {/if}
   <div class="omnisearch-result__body">
     {@html cleanedContent.replace(reg, highlighter)}
   </div>

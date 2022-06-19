@@ -23,10 +23,17 @@ export type SearchNote = {
 export type IndexedNote = {
   path: string
   basename: string
+  mtime: number
+
   content: string
+  aliases: string
+  tags: string[],
   headings1: string
   headings2: string
   headings3: string
+
+  doesNotExist?: boolean
+  parent?: string
 }
 
 export type SearchMatch = {
@@ -44,6 +51,14 @@ export type ResultNote = {
   content: string
   foundWords: string[]
   matches: SearchMatch[]
+}
+
+let inComposition = false
+export function toggleInputComposition(toggle: boolean): void {
+  inComposition = toggle
+}
+export function isInputComposition(): boolean {
+  return inComposition
 }
 
 export const SPACE_OR_PUNCTUATION =

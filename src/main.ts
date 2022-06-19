@@ -1,13 +1,21 @@
 import { Plugin, TFile } from 'obsidian'
 import {
+  addNoteToReindex,
   addToIndex,
   initGlobalSearchIndex,
   removeFromIndex,
-  removeFromIndexByPath,
 } from './search'
 import { OmnisearchInFileModal, OmnisearchVaultModal } from './modals'
 import { loadSettings, SettingsTab } from './settings'
 import { OmnisearchSuggest } from './suggestions'
+
+// let mainWindow: { on: any; off: any } | null = null
+// try {
+//   mainWindow = require('electron').remote.getCurrentWindow()
+// }
+// catch (e) {
+//   console.log("Can't load electron, mobile platform")
+// }
 
 export default class OmnisearchPlugin extends Plugin {
   async onload(): Promise<void> {
@@ -41,19 +49,18 @@ export default class OmnisearchPlugin extends Plugin {
       )
       this.registerEvent(
         this.app.vault.on('delete', file => {
-          removeFromIndex(file)
+          removeFromIndex(file.path)
         }),
       )
       this.registerEvent(
         this.app.vault.on('modify', async file => {
-          removeFromIndex(file)
-          await addToIndex(file)
+          addNoteToReindex(file)
         }),
       )
       this.registerEvent(
         this.app.vault.on('rename', async (file, oldPath) => {
           if (file instanceof TFile && file.path.endsWith('.md')) {
-            removeFromIndexByPath(oldPath)
+            removeFromIndex(oldPath)
             await addToIndex(file)
           }
         }),
@@ -62,4 +69,6 @@ export default class OmnisearchPlugin extends Plugin {
       await initGlobalSearchIndex()
     })
   }
+
+  onunload(): void {}
 }

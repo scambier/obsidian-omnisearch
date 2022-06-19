@@ -3,13 +3,13 @@ let lastSearch = ""
 </script>
 
 <script lang="ts">
-import { TFile } from "obsidian"
+import { Notice, TFile } from "obsidian"
 import { onMount, tick } from "svelte"
 import InputSearch from "./InputSearch.svelte"
 import ModalContainer from "./ModalContainer.svelte"
 import { eventBus, type ResultNote } from "src/globals"
 import { createNote, openNote } from "src/notes"
-import { getSuggestions } from "src/search"
+import { getSuggestions, reindexNotes } from "src/search"
 import { loopIndex } from "src/utils"
 import { OmnisearchInFileModal, type OmnisearchVaultModal } from "src/modals"
 import ResultItemVault from "./ResultItemVault.svelte"
@@ -29,6 +29,7 @@ $: if (searchQuery) {
 }
 
 onMount(() => {
+  reindexNotes()
   searchQuery = lastSearch
   eventBus.on("vault", "enter", onInputEnter)
   eventBus.on("vault", "shift-enter", onInputShiftEnter)
@@ -67,7 +68,13 @@ function onInputCtrlEnter(): void {
 }
 
 async function onInputShiftEnter(): Promise<void> {
-  await createNote(searchQuery)
+  try {
+    await createNote(searchQuery)
+  }
+  catch(e) {
+    new Notice((e as Error).message)
+    return
+  }
   modal.close()
 }
 

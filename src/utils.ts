@@ -61,19 +61,6 @@ export function stringsToRegex(strings: string[]): RegExp {
   return new RegExp(strings.map(s => `(${escapeRegex(s)})`).join('|'), 'gi')
 }
 
-export function replaceAll(
-  text: string,
-  terms: string[],
-  cb: (t: string) => string,
-): string {
-  terms.sort((a, b) => a.length - b.length)
-  const regs = terms.map(term => new RegExp(escapeRegex(term), 'gi'))
-  for (const reg of regs) {
-    text = text.replaceAll(reg, cb)
-  }
-  return text
-}
-
 export function extractHeadingsFromCache(
   cache: CachedMetadata,
   level: number,
@@ -146,4 +133,34 @@ export async function filterAsync<T>(
  */
 export function stripMarkdownCharacters(text: string): string {
   return text.replace(/(\*|_)+(.+?)(\*|_)+/g, (match, p1, p2) => p2)
+}
+
+export function getAliasesFromMetadata(
+  metadata: CachedMetadata | null,
+): string[] {
+  const arrOrString = metadata?.frontmatter?.aliases ?? []
+  return (Array.isArray(arrOrString) ? arrOrString : arrOrString.split(','))
+    .map(s => (s ? s.trim() : s))
+    .filter(s => !!s)
+}
+
+export function getTagsFromMetadata(metadata: CachedMetadata | null): string[] {
+  const arrOrString = metadata?.frontmatter?.tags ?? []
+  const fromFrontMatter = (
+    Array.isArray(arrOrString) ? arrOrString : arrOrString.split(',')
+  )
+    .map(s => (s ? s.trim() : s))
+    .filter(s => !!s)
+  const fromBody = (metadata?.tags ?? []).map(t => t.tag)
+
+  return [...fromFrontMatter, ...fromBody].map(t =>
+    t[0] !== '#' ? '#' + t : t,
+  )
+}
+
+/**
+ * https://stackoverflow.com/a/37511463
+ */
+export function removeDiacritics(str: string): string {
+  return str.normalize('NFD').replace(/\p{Diacritic}/gu, '')
 }
