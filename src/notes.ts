@@ -47,8 +47,8 @@ export function getNoteFromCache(key: string): IndexedNote | undefined {
 export function getNonExistingNotesFromCache(): IndexedNote[] {
   return Object.values(notesCache).filter(note => note.doesNotExist)
 }
-export function addNoteToCache(key: string, note: IndexedNote): void {
-  notesCache[key] = note
+export function addNoteToCache(filename: string, note: IndexedNote): void {
+  notesCache[filename] = note
 }
 export function removeNoteFromCache(key: string): void {
   delete notesCache[key]

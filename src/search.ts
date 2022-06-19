@@ -356,9 +356,9 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
  */
 export function addNonExistingToIndex(name: string, parent: string): void {
   name = removeAnchors(name)
-  if (getNoteFromCache(name)) return
-
   const filename = name + (name.endsWith('.md') ? '' : '.md')
+  if (getNoteFromCache(filename)) return
+
   const note = {
     path: filename,
     basename: name,
