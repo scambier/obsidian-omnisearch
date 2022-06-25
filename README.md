@@ -43,6 +43,43 @@ If you want to list all the search matches of a single note, you can do so by us
 
 Also accessible through the Command Palette "**_Omnisearch: In-file search_**". This modal searches through the active note's content and lists the matching results. Just press enter to automatically scroll to the right place.
 
+## Public API
+
+A simple API object is available to interact with Omnisearch. If you're using [this package](https://github.com/vanakat/plugin-api), it's accessible through `pluginApi('omnisearch')`. Otherwise, you can access it with `app.plugins.plugins.omnisearch.api`.
+
+At the time of writing, the API is a work-in-progress feature, but should be stable enough to use.
+
+**This API is an experimental feature, the ResultNote interface will likely change. The `search` function returns at most 50 results**
+
+```ts
+{
+  search: (query: string) => Promise<ResultNote[]>
+}
+
+type ResultNoteApi = {
+  score: number
+  path: string
+  basename: string
+  foundWords: string[]
+  matches: SearchMatch[]
+}
+
+type SearchMatch = {
+  match: string
+  offset: number
+}
+```
+
+DataviewJS example:
+
+~~~js
+```dataviewjs
+const results = await app.plugins.plugins.omnisearch.api.search('your query')
+const arr = dv.array(results).sort(r => r.score, 'desc')
+dv.table(['File', 'Score'], arr.map(o => [dv.fileLink(o.path), Math.round(o.score)]))
+```
+~~~
+
 ## Customization
 
 There are several CSS classes you can use to customize the appearance of Omnisearch.

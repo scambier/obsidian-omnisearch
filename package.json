@@ -45,6 +45,7 @@
     "typescript": "^4.6.4"
   },
   "dependencies": {
+    "@vanakat/plugin-api": "^0.1.0",
     "minisearch": "^5.0.0-beta1"
   }
 }

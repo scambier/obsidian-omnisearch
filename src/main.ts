@@ -8,6 +8,8 @@ import {
 import { OmnisearchInFileModal, OmnisearchVaultModal } from './modals'
 import { loadSettings, SettingsTab } from './settings'
 import { eventBus } from './globals'
+import { registerAPI } from '@vanakat/plugin-api'
+import api from './api'
 
 // let mainWindow: { on: any; off: any } | null = null
 // try {
@@ -17,9 +19,20 @@ import { eventBus } from './globals'
 //   console.log("Can't load electron, mobile platform")
 // }
 
+function _registerAPI(plugin: OmnisearchPlugin): void {
+  registerAPI('omnisearch', api, plugin)
+  ;(app as any).plugins.plugins.omnisearch.api = api
+  plugin.register(() => {
+    delete (app as any).plugins.plugins.omnisearch.api
+  })
+}
+
 export default class OmnisearchPlugin extends Plugin {
   async onload(): Promise<void> {
     await loadSettings(this)
+
+    _registerAPI(this)
+
     this.addSettingTab(new SettingsTab(this))
     eventBus.disable('vault')
     eventBus.disable('infile')
