@@ -20,7 +20,7 @@ import api from './api'
 // }
 
 function _registerAPI(plugin: OmnisearchPlugin): void {
-  registerAPI('omnisearch', api, plugin)
+  registerAPI('omnisearch', api, plugin as any)
   ;(app as any).plugins.plugins.omnisearch.api = api
   plugin.register(() => {
     delete (app as any).plugins.plugins.omnisearch.api
