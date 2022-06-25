@@ -3,8 +3,8 @@ let lastSearch = ""
 </script>
 
 <script lang="ts">
-import { Notice, TFile } from "obsidian"
-import { onMount, tick } from "svelte"
+import { MarkdownView, Notice, TFile } from "obsidian"
+import { onMount, onDestroy, tick } from "svelte"
 import InputSearch from "./InputSearch.svelte"
 import ModalContainer from "./ModalContainer.svelte"
 import { eventBus, type ResultNote } from "src/globals"
@@ -31,12 +31,18 @@ $: if (searchQuery) {
 onMount(() => {
   reindexNotes()
   searchQuery = lastSearch
-  eventBus.on("vault", "enter", onInputEnter)
-  eventBus.on("vault", "shift-enter", onInputShiftEnter)
-  eventBus.on("vault", "ctrl-enter", onInputCtrlEnter)
-  eventBus.on("vault", "alt-enter", onInputAltEnter)
+  eventBus.enable("vault")
+  eventBus.on("vault", "enter", openNoteAndCloseModal)
+  eventBus.on("vault", "shift-enter", createNoteAndCloseModal)
+  eventBus.on("vault", "ctrl-enter", openNoteInNewPane)
+  eventBus.on("vault", "alt-enter", insertLink)
+  eventBus.on("vault", "tab", switchToInFileModal)
   eventBus.on("vault", "arrow-up", () => moveIndex(-1))
   eventBus.on("vault", "arrow-down", () => moveIndex(1))
+})
+
+onDestroy(() => {
+  eventBus.disable("vault")
 })
 
 async function updateResults() {
@@ -54,36 +60,71 @@ function onClick() {
   modal.close()
 }
 
-function onInputEnter(): void {
+function openNoteAndCloseModal(): void {
   // console.log(event.detail)
   if (!selectedNote) return
   openNote(selectedNote)
   modal.close()
 }
 
-function onInputCtrlEnter(): void {
+function openNoteInNewPane(): void {
   if (!selectedNote) return
   openNote(selectedNote, true)
   modal.close()
 }
 
-async function onInputShiftEnter(): Promise<void> {
+async function createNoteAndCloseModal(): Promise<void> {
   try {
     await createNote(searchQuery)
-  }
-  catch(e) {
+  } catch (e) {
     new Notice((e as Error).message)
     return
   }
   modal.close()
 }
 
-function onInputAltEnter(): void {
+function insertLink(): void {
+  if (!selectedNote) return
+  const file = app.vault
+    .getMarkdownFiles()
+    .find((f) => f.path === selectedNote.path)
+  const active = app.workspace.getActiveFile()
+  const view = app.workspace.getActiveViewOfType(MarkdownView)
+  if (!view?.editor) {
+    new Notice("Omnisearch - Error - No active editor", 3000)
+    return
+  }
+
+  // Generate link
+  let link: string
+  if (file && active) {
+    link = app.fileManager.generateMarkdownLink(file, active.path)
+  } else {
+    link = `[[${selectedNote.basename}.md]]`
+  }
+
+  // Inject link
+  const cursor = view.editor.getCursor()
+  view.editor.replaceRange(link, cursor, cursor)
+  cursor.ch += link.length
+  view.editor.setCursor(cursor)
+
+  modal.close()
+}
+
+function switchToInFileModal(): void {
+  modal.close()
   if (selectedNote) {
+    // Open in-file modal for selected search result
     const file = app.vault.getAbstractFileByPath(selectedNote.path)
     if (file && file instanceof TFile) {
-      // modal.close()
-      new OmnisearchInFileModal(app, file, searchQuery, modal).open()
+      new OmnisearchInFileModal(app, file, searchQuery).open()
+    }
+  } else {
+    // Open in-file modal for active file
+    const view = app.workspace.getActiveViewOfType(MarkdownView)
+    if (view) {
+      new OmnisearchInFileModal(app, view.file, searchQuery).open()
     }
   }
 }
@@ -126,13 +167,14 @@ async function scrollIntoView(): Promise<void> {
     <span class="prompt-instruction-command">↑↓</span><span>to navigate</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">alt ↵</span>
-    <span>to expand in-note results</span>
-  </div>
-  <br />
-  <div class="prompt-instruction">
     <span class="prompt-instruction-command">↵</span><span>to open</span>
   </div>
+  <div class="prompt-instruction">
+    <span class="prompt-instruction-command">↹</span>
+    <span>to switch to In-File Search</span>
+  </div>
+  <br />
+
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">ctrl ↵</span>
     <span>to open in a new pane</span>
@@ -142,6 +184,10 @@ async function scrollIntoView(): Promise<void> {
     <span>to create</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">esc</span><span>to dismiss</span>
+    <span class="prompt-instruction-command">alt ↵</span>
+    <span>to insert a link</span>
+  </div>
+  <div class="prompt-instruction">
+    <span class="prompt-instruction-command">esc</span><span>to close</span>
   </div>
 </div>

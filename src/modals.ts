@@ -73,7 +73,7 @@ abstract class OmnisearchModal extends Modal {
 
     this.scope.register(['Alt'], 'Enter', e => {
       e.preventDefault()
-      eventBus.emit('alt-enter') // Open the InFile modal
+      eventBus.emit('alt-enter') // Insert link
     })
 
     this.scope.register(['Shift'], 'Enter', e => {
@@ -87,6 +87,11 @@ abstract class OmnisearchModal extends Modal {
         e.preventDefault()
         eventBus.emit('enter') // Open in current pane
       }
+    })
+
+    this.scope.register([], 'Tab', e => {
+      e.preventDefault()
+      eventBus.emit('tab') // Switch context
     })
   }
 }

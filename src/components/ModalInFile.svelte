@@ -15,7 +15,7 @@ import { onDestroy, onMount, tick } from "svelte"
 import { MarkdownView } from "obsidian"
 import { getSuggestions } from "src/search"
 import ModalContainer from "./ModalContainer.svelte"
-import type { OmnisearchInFileModal, OmnisearchVaultModal } from "src/modals"
+import { OmnisearchInFileModal, OmnisearchVaultModal } from "src/modals"
 import ResultItemInFile from "./ResultItemInFile.svelte"
 import { Query } from "src/query"
 
@@ -33,15 +33,16 @@ onMount(() => {
   if (lastSearch && !searchQuery) {
     searchQuery = lastSearch
   }
-  eventBus.disable("vault")
+  eventBus.enable("infile")
 
   eventBus.on("infile", "enter", openSelection)
   eventBus.on("infile", "arrow-up", () => moveIndex(-1))
   eventBus.on("infile", "arrow-down", () => moveIndex(1))
+  eventBus.on("infile", "tab", switchToVaultModal)
 })
 
 onDestroy(() => {
-  eventBus.enable("vault")
+  eventBus.disable("infile")
 })
 
 $: (async () => {
@@ -127,6 +128,11 @@ async function openSelection(): Promise<void> {
     })
   }
 }
+
+function switchToVaultModal(): void {
+  new OmnisearchVaultModal(app).open()
+  modal.close()
+}
 </script>
 
 <div class="modal-title">Omnisearch - File</div>
@@ -156,11 +162,15 @@ async function openSelection(): Promise<void> {
     <span class="prompt-instruction-command">↵</span><span>to open</span>
   </div>
   <div class="prompt-instruction">
+    <span class="prompt-instruction-command">↹</span>
+    <span>to switch to Vault Search</span>
+  </div>
+  <div class="prompt-instruction">
     <span class="prompt-instruction-command">esc</span>
     {#if !!parent}
       <span>to go back to Vault Search</span>
     {:else}
-      <span>to dismiss</span>
+      <span>to close</span>
     {/if}
   </div>
 </div>

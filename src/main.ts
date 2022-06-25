@@ -7,7 +7,7 @@ import {
 } from './search'
 import { OmnisearchInFileModal, OmnisearchVaultModal } from './modals'
 import { loadSettings, SettingsTab } from './settings'
-import { OmnisearchSuggest } from './suggestions'
+import { eventBus } from './globals'
 
 // let mainWindow: { on: any; off: any } | null = null
 // try {
@@ -21,7 +21,8 @@ export default class OmnisearchPlugin extends Plugin {
   async onload(): Promise<void> {
     await loadSettings(this)
     this.addSettingTab(new SettingsTab(this))
-    this.registerEditorSuggest(new OmnisearchSuggest(app))
+    eventBus.disable('vault')
+    eventBus.disable('infile')
 
     // Commands to display Omnisearch modals
     this.addCommand({

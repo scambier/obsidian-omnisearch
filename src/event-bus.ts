@@ -34,9 +34,10 @@ export class EventBus {
   }
 
   public emit(event: string, ...args: any[]): void {
-    for (const [key, handler] of this.handlers.entries()) {
-      const ctx = key.split('@')[0]
-      if (this.disabled.includes(ctx)) continue
+    const entries = [...this.handlers.entries()].filter(
+      ([k, h]) => !this.disabled.includes(k.split('@')[0]),
+    )
+    for (const [key, handler] of entries) {
       if (key.endsWith(`@${event}`)) {
         handler(...args)
       }
