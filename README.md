@@ -39,7 +39,7 @@ Omnisearch can be used within 2 different contexts:
 
 Omnisearch's core feature, accessible with the Command Palette "**_Omnisearch: Vault search_**". This modal searches through your vault and returns the most relevant notes. That's all you need to _find_ a note.
 
-If you want to list all the search matches of a single note, you can do so by using `alt+enter` to open the In-File Search.
+If you want to list all the search matches of a single note, you can do so by using `tab` to open the In-File Search.
 
 ### In-File Search 
 
