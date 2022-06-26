@@ -16,11 +16,13 @@ Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/mi
 - Automatic document scoring using the [BM25 algorithm](https://github.com/lucaong/minisearch/issues/129#issuecomment-1046257399)
   - The relevance of a document against a query depends on the number of times the query terms appear in the document, its filename, and its headings
 - Keyboard first: you never have to use your mouse
-- Instant & highlighted search results
+- Workflow similar to "Quick Switcher" plugins
 - Resistance to typos
-- In-file search to quickly skim multiple results in a single note
-- Search filters: expressions in quotes and exclusions
-- Respects Obsidian's "Excluded Files" list (results are downranked, not hidden)
+- Switch between Vault and In-file search to quickly skim multiple results in a single note
+- Supports `"expressions in quotes"` and `-exclusions`
+- Directly Insert a `[[link]]` from the search results
+- Respects Obsidian's "Excluded Files" list - results are downranked, not hidden
+- Optional support for Vim navigation keys (ctrl + j, k, n, p)
 
 ## Installation
 
@@ -39,20 +41,23 @@ Omnisearch's core feature, accessible with the Command Palette "**_Omnisearch: V
 
 If you want to list all the search matches of a single note, you can do so by using `alt+enter` to open the In-File Search.
 
-### In-File Search
+### In-File Search 
 
 Also accessible through the Command Palette "**_Omnisearch: In-file search_**". This modal searches through the active note's content and lists the matching results. Just press enter to automatically scroll to the right place.
 
+
 ## Public API
 
-A simple API object is available to interact with Omnisearch. If you're using [this package](https://github.com/vanakat/plugin-api), it's accessible through `pluginApi('omnisearch')`. Otherwise, you can access it with `app.plugins.plugins.omnisearch.api`.
+> This API is an experimental feature, the `ResultNote` interface may change in the future. The `search()` function returns at most 50 results.
 
-At the time of writing, the API is a work-in-progress feature, but should be stable enough to use.
+If you're a plugin developer, you can use [this "plugin-api" package](https://github.com/vanakat/plugin-api), and get the api through `pluginApi('omnisearch')`.
 
-**This API is an experimental feature, the ResultNote interface will likely change. The `search` function returns at most 50 results**
+Otherwise, you can access it with `app.plugins.plugins.omnisearch.api`.
 
 ```ts
+// API:
 {
+  // Returns a promise that will contain the same results than the Vault modal
   search: (query: string) => Promise<ResultNote[]>
 }
 
@@ -70,7 +75,9 @@ type SearchMatch = {
 }
 ```
 
-DataviewJS example:
+### Dataview Integration
+
+You can use the Omnisearch API directly within the [Dataview](https://blacksmithgu.github.io/obsidian-dataview/) plugin.
 
 ~~~js
 ```dataviewjs
@@ -80,7 +87,7 @@ dv.table(['File', 'Score'], arr.map(o => [dv.fileLink(o.path), Math.round(o.scor
 ```
 ~~~
 
-## Customization
+## CSS Customization
 
 There are several CSS classes you can use to customize the appearance of Omnisearch.
 

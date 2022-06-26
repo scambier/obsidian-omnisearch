@@ -1,5 +1,28 @@
 # Omnisearch Changelog
 
+## 1.4.x
+
+### New
+
+- Opt-in support for Vim navigation keys: https://github.com/scambier/obsidian-omnisearch/issues/26
+- Opt-in display of "short form" links: https://github.com/scambier/obsidian-omnisearch/issues/59
+- Opt-in search index serialization, for faster loading times: https://github.com/scambier/obsidian-omnisearch/pull/64 by @mnaoumov
+- Opt-out: diacritics can now be ignored
+- Added support for `#tag` searches: https://github.com/scambier/obsidian-omnisearch/issues/48
+- Added a basic public API for integration with other plugins: https://github.com/scambier/obsidian-omnisearch/issues/22 https://github.com/scambier/obsidian-omnisearch/issues/69
+- Use `alt+enter` to inject a link to the currently selected search result item: https://github.com/scambier/obsidian-omnisearch/issues/32
+
+
+### Improved
+
+- You can now switch between "Vault" and "In-File" modals with `tab`
+- Search index updates are now done only when Omnisearch is invoked: https://github.com/scambier/obsidian-omnisearch/issues/57
+
+### Fixed
+
+- Opening a pinned note would open it a second time: https://github.com/scambier/obsidian-omnisearch/issues/51
+- Fixed an issue that would index "non-existing notes" multiple times: https://github.com/scambier/obsidian-omnisearch/issues/68
+
 ## 1.3.x
 
 ### New
