@@ -57,7 +57,7 @@ Otherwise, you can access it with `app.plugins.plugins.omnisearch.api`.
 ```ts
 // API:
 {
-  // Returns a promise that will contain the same results than the Vault modal
+  // Returns a promise that will contain the same results as the Vault modal
   search: (query: string) => Promise<ResultNote[]>
 }
 
