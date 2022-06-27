@@ -39,7 +39,7 @@ Omnisearch can be used within 2 different contexts:
 
 Omnisearch's core feature, accessible with the Command Palette "**_Omnisearch: Vault search_**". This modal searches through your vault and returns the most relevant notes. That's all you need to _find_ a note.
 
-If you want to list all the search matches of a single note, you can do so by using `alt+enter` to open the In-File Search.
+If you want to list all the search matches of a single note, you can do so by using `tab` to open the In-File Search.
 
 ### In-File Search 
 
@@ -57,7 +57,7 @@ Otherwise, you can access it with `app.plugins.plugins.omnisearch.api`.
 ```ts
 // API:
 {
-  // Returns a promise that will contain the same results than the Vault modal
+  // Returns a promise that will contain the same results as the Vault modal
   search: (query: string) => Promise<ResultNote[]>
 }
 
