@@ -139,7 +139,7 @@ export function getAliasesFromMetadata(
   metadata: CachedMetadata | null,
 ): string[] {
   const arrOrString = metadata?.frontmatter?.aliases ?? []
-  return (Array.isArray(arrOrString) ? arrOrString : arrOrString.split(','))
+  return (Array.isArray(arrOrString) ? arrOrString : arrOrString.toString().split(','))
     .map(s => (s ? s.trim() : s))
     .filter(s => !!s)
 }
