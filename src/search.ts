@@ -321,7 +321,7 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
 
     // Make the document and index it
     const note: IndexedNote = {
-      basename: file.basename,
+      basename: removeDiacritics(file.basename),
       content,
       path: file.path,
       mtime: file.stat.mtime,
