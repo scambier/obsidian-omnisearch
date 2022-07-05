@@ -24,6 +24,8 @@ Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/mi
 - Respects Obsidian's "Excluded Files" list - results are downranked, not hidden
 - Optional support for Vim navigation keys (ctrl + j, k, n, p)
 
+**Note:** support of Chinese, Japanese, Korean, etc. depends on [this additional plugin](https://github.com/aidenlx/cm-chs-patch). Please read its documentation for more information.
+
 ## Installation
 
 - Omnisearch is available on [the official Community Plugins repository](https://obsidian.md/plugins?search=Omnisearch).
