@@ -17,15 +17,17 @@ $: title = settings.showShortName ? note.basename : note.path
 </script>
 
 <ResultItemContainer id={note.path} {selected} on:mousemove on:click {glyph}>
-  <span class="omnisearch-result__title">
-    {@html title.replace(reg, highlighter)}
-  </span>
+  <div>
+    <span class="omnisearch-result__title">
+      {@html title.replace(reg, highlighter)}
+    </span>
 
-  {#if matches.length > 0}
+    {#if matches.length > 0}
     <span class="omnisearch-result__counter">
       {matches.length}&nbsp;{matches.length > 1 ? "matches" : "match"}
     </span>
-  {/if}
+    {/if}
+  </div>
   <div class="omnisearch-result__body">
     {@html cleanedContent.replace(reg, highlighter)}
   </div>
