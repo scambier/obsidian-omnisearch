@@ -17,11 +17,13 @@
 
 - You can now switch between "Vault" and "In-File" modals with `tab`
 - Search index updates are now done only when Omnisearch is invoked: https://github.com/scambier/obsidian-omnisearch/issues/57
+- New files are now created empty: https://github.com/scambier/obsidian-omnisearch/issues/77
 
 ### Fixed
 
 - Opening a pinned note would open it a second time: https://github.com/scambier/obsidian-omnisearch/issues/51
 - Fixed an issue that would index "non-existing notes" multiple times: https://github.com/scambier/obsidian-omnisearch/issues/68
+- Fixed a visual bog for Obsidian 0.15.3: https://github.com/scambier/obsidian-omnisearch/issues/76 
 
 ## 1.3.x
 
