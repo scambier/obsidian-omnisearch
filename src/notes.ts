@@ -98,7 +98,7 @@ export async function openNote(
 
 export async function createNote(name: string): Promise<void> {
   try {
-    const file = await app.vault.create(name + '.md', '# ' + name + '\n')
+    const file = await app.vault.create(name + '.md', '')
     await app.workspace.openLinkText(file.path, '')
     const view = app.workspace.getActiveViewOfType(MarkdownView)
     if (!view) {
