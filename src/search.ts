@@ -2,6 +2,7 @@ import { Notice, TAbstractFile, TFile } from 'obsidian'
 import MiniSearch, { type Options, type SearchResult } from 'minisearch'
 import {
   chsRegex,
+  searchIndexFilePath,
   SPACE_OR_PUNCTUATION,
   type IndexedNote,
   type ResultNote,
@@ -33,7 +34,6 @@ import {
 
 let minisearchInstance: MiniSearch<IndexedNote>
 let isIndexChanged: boolean
-const searchIndexFilePath = `${app.vault.configDir}/plugins/omnisearch/searchIndex.json`
 
 const tokenize = (text: string): string[] => {
   const tokens = text.split(SPACE_OR_PUNCTUATION)

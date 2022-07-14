@@ -1,4 +1,5 @@
 import { Plugin, PluginSettingTab, Setting, SliderComponent } from 'obsidian'
+import { notesCacheFilePath, searchIndexFilePath } from './globals'
 import type OmnisearchPlugin from './main'
 
 interface WeightingSettings {
@@ -51,11 +52,15 @@ export class SettingsTab extends PluginSettingTab {
       )
 
     // Ignore diacritics
+    const diacriticsDesc = new DocumentFragment()
+    diacriticsDesc.createSpan({}, span => {
+      span.innerHTML = `Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky".<br/>
+        <strong>Needs a restart to fully take effect.</strong>
+        `
+    })
     new Setting(containerEl)
       .setName('Ignore diacritics')
-      .setDesc(
-        'Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky". Needs a restart to take effect.',
-      )
+      .setDesc(diacriticsDesc)
       .addToggle(toggle =>
         toggle.setValue(settings.ignoreDiacritics).onChange(async v => {
           settings.ignoreDiacritics = v
@@ -63,13 +68,20 @@ export class SettingsTab extends PluginSettingTab {
         }),
       )
 
+    const serializedIndexDesc = new DocumentFragment()
+    serializedIndexDesc.createSpan({}, span => {
+      span.innerHTML = `The search index is stored on disk, instead of being rebuilt at every startup. This results in faster loading times for bigger vaults and mobile devices.<br />
+        <em>⚠️ Note: the index can become corrupted - if you notice any issue, disable and re-enable this option to clear the cache.</em><br/>
+        <strong>Needs a restart to fully take effect.</strong>
+        `
+    })
     new Setting(containerEl)
-      .setName('Store index in file')
-      .setDesc(
-        'Index is stored on disk, instead of being rebuilt at every startup.',
-      )
+      .setName('EXPERIMENTAL - Store index in file')
+      .setDesc(serializedIndexDesc)
       .addToggle(toggle =>
         toggle.setValue(settings.storeIndexInFile).onChange(async v => {
+          app.vault.adapter.remove(notesCacheFilePath)
+          app.vault.adapter.remove(searchIndexFilePath)
           settings.storeIndexInFile = v
           await saveSettings(this.plugin)
         }),
@@ -173,7 +185,7 @@ export class SettingsTab extends PluginSettingTab {
 
 export const DEFAULT_SETTINGS: OmnisearchSettings = {
   respectExcluded: true,
-  ignoreDiacritics: false,
+  ignoreDiacritics: true,
 
   showIndexingNotices: false,
   showShortName: false,

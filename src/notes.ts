@@ -1,10 +1,9 @@
+import { MarkdownView, TFile, type CachedMetadata } from 'obsidian'
 import {
-  MarkdownView,
-  TFile,
-  WorkspaceLeaf,
-  type CachedMetadata,
-} from 'obsidian'
-import type { IndexedNote, ResultNote } from './globals'
+  notesCacheFilePath,
+  type IndexedNote,
+  type ResultNote,
+} from './globals'
 import { stringsToRegex } from './utils'
 import { settings } from './settings'
 
@@ -14,8 +13,6 @@ import { settings } from './settings'
  * This cache allows us to quickly de-index notes when they are deleted or updated.
  */
 export let notesCache: Record<string, IndexedNote> = {}
-
-const notesCacheFilePath = `${app.vault.configDir}/plugins/omnisearch/notesCache.json`
 
 export function resetNotesCache(): void {
   notesCache = {}
@@ -67,7 +64,11 @@ export async function openNote(
   let alreadyOpenAndPinned = false
   app.workspace.iterateAllLeaves(leaf => {
     if (leaf.view instanceof MarkdownView) {
-      if (!newPane && leaf.getViewState().state?.file === item.path && leaf.getViewState()?.pinned) {
+      if (
+        !newPane &&
+        leaf.getViewState().state?.file === item.path &&
+        leaf.getViewState()?.pinned
+      ) {
         app.workspace.setActiveLeaf(leaf, false, true)
         alreadyOpenAndPinned = true
       }
@@ -95,7 +96,10 @@ export async function openNote(
 
 export async function createNote(name: string): Promise<void> {
   try {
-    const file = await app.vault.create(`${app.vault.getConfig('newFileFolderPath')}/${name}.md`, '')
+    const file = await app.vault.create(
+      `${app.vault.getConfig('newFileFolderPath')}/${name}.md`,
+      '',
+    )
     await app.workspace.openLinkText(file.path, '')
     const view = app.workspace.getActiveViewOfType(MarkdownView)
     if (!view) {
