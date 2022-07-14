@@ -28,8 +28,8 @@ $: if (searchQuery) {
   resultNotes = []
 }
 
-onMount(() => {
-  reindexNotes()
+onMount(async () => {
+  await reindexNotes()
   searchQuery = lastSearch
   eventBus.enable("vault")
   eventBus.on("vault", "enter", openNoteAndCloseModal)
@@ -47,7 +47,7 @@ onDestroy(() => {
 
 async function updateResults() {
   query = new Query(searchQuery)
-  resultNotes = await getSuggestions(query)
+  resultNotes = (await getSuggestions(query)).sort((a, b) => b.score - a.score)
   lastSearch = searchQuery
   selectedIndex = 0
   scrollIntoView()

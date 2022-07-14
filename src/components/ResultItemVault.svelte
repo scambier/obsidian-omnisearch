@@ -23,9 +23,9 @@ $: title = settings.showShortName ? note.basename : note.path
     </span>
 
     {#if matches.length > 0}
-    <span class="omnisearch-result__counter">
-      {matches.length}&nbsp;{matches.length > 1 ? "matches" : "match"}
-    </span>
+      <span class="omnisearch-result__counter">
+        {matches.length}&nbsp;{matches.length > 1 ? "matches" : "match"}
+      </span>
     {/if}
   </div>
   <div class="omnisearch-result__body">

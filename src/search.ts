@@ -227,6 +227,11 @@ export async function getSuggestions(
   let results = await search(query)
   if (!results.length) return []
 
+  // Extract tags from the query
+  const tags = query.segments
+    .filter(s => s.value.startsWith('#'))
+    .map(s => s.value)
+
   // Either keep the 50 first results,
   // or the one corresponding to `singleFile`
   if (options?.singleFilePath) {
@@ -238,12 +243,9 @@ export async function getSuggestions(
     results = results.slice(0, 50)
 
     // Put the results with tags on top
-    const tags = query.segments
-      .filter(s => s.value.startsWith('#'))
-      .map(s => s.value)
     for (const tag of tags) {
       for (const result of results) {
-        if (result.tags.includes(tag)) {
+        if ((result.tags ?? []).includes(tag)) {
           result.score *= 100
         }
       }
@@ -268,6 +270,7 @@ export async function getSuggestions(
         query.segments.some(s => w.startsWith(s.value)),
       ),
       ...query.segments.filter(s => s.exact).map(s => s.value),
+      ...tags,
     ]
 
     const matches = getMatches(note.content, stringsToRegex(foundWords))
