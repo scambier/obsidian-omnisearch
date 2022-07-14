@@ -10,7 +10,7 @@ import ModalContainer from "./ModalContainer.svelte"
 import { eventBus, type ResultNote } from "src/globals"
 import { createNote, openNote } from "src/notes"
 import { getSuggestions, reindexNotes } from "src/search"
-import { loopIndex } from "src/utils"
+import { getCtrlKeyLabel, loopIndex } from "src/utils"
 import { OmnisearchInFileModal, type OmnisearchVaultModal } from "src/modals"
 import ResultItemVault from "./ResultItemVault.svelte"
 import { Query } from "src/query"
@@ -176,7 +176,7 @@ async function scrollIntoView(): Promise<void> {
   <br />
 
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">ctrl ↵</span>
+    <span class="prompt-instruction-command">{getCtrlKeyLabel()} ↵</span>
     <span>to open in a new pane</span>
   </div>
   <div class="prompt-instruction">

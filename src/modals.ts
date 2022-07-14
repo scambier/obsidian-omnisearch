@@ -1,4 +1,4 @@
-import { App, Modal, TFile } from 'obsidian'
+import { App, Modal, TFile, Platform } from 'obsidian'
 import ModalVault from './components/ModalVault.svelte'
 import ModalInFile from './components/ModalInFile.svelte'
 import { eventBus, isInputComposition } from './globals'
@@ -61,14 +61,9 @@ abstract class OmnisearchModal extends Modal {
     }
 
     // #endregion Up/Down navigation
-
-    this.scope.register(['Ctrl'], 'Enter', e => {
+    this.scope.register(['Mod'], 'Enter', e => {
       e.preventDefault()
       eventBus.emit('ctrl-enter') // Open in new pane
-    })
-    this.scope.register(['Meta'], 'Enter', e => {
-      e.preventDefault()
-      eventBus.emit('ctrl-enter') // Open in new pane (but on Mac)
     })
 
     this.scope.register(['Alt'], 'Enter', e => {

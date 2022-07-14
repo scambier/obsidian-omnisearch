@@ -1,4 +1,4 @@
-import type { CachedMetadata } from 'obsidian'
+import { Platform, type CachedMetadata } from 'obsidian'
 import {
   excerptAfter,
   excerptBefore,
@@ -163,4 +163,8 @@ export function getTagsFromMetadata(metadata: CachedMetadata | null): string[] {
  */
 export function removeDiacritics(str: string): string {
   return str.normalize('NFD').replace(/\p{Diacritic}/gu, '')
+}
+
+export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
+  return Platform.isMacOS ? '⌘' : 'ctrl'
 }

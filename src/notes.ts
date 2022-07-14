@@ -62,23 +62,20 @@ export async function openNote(
   reg.exec(item.content)
   const offset = reg.lastIndex
 
-  // Check if the note is already open
-  // const pane = MarkdownView.getPane(item.path)
-
   // Check if the note is already open,
   // to avoid opening it twice if the first one is pinned
-  let existing = false
+  let alreadyOpenAndPinned = false
   app.workspace.iterateAllLeaves(leaf => {
     if (leaf.view instanceof MarkdownView) {
-      if (leaf.getViewState().state?.file === item.path) {
+      if (!newPane && leaf.getViewState().state?.file === item.path && leaf.getViewState()?.pinned) {
         app.workspace.setActiveLeaf(leaf, false, true)
-        existing = true
+        alreadyOpenAndPinned = true
       }
     }
   })
 
-  if (!existing) {
-    // Open a new note
+  if (!alreadyOpenAndPinned) {
+    // Open the note normally
     await app.workspace.openLinkText(item.path, '', newPane)
   }
 
