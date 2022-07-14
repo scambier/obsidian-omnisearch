@@ -13,6 +13,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   respectExcluded: boolean
   ignoreDiacritics: boolean
   showIndexingNotices: boolean
+  ribbonIcon: boolean
   showShortName: boolean
   CtrlJK: boolean
   CtrlNP: boolean
@@ -92,6 +93,20 @@ export class SettingsTab extends PluginSettingTab {
     // #region User Interface
 
     new Setting(containerEl).setName('User Interface').setHeading()
+
+    // Show Ribbon Icon
+    new Setting(containerEl)
+      .setName('Show ribbon button')
+      .setDesc('Add a button on the sidebar to open the Vault search modal. Needs a restart to remove the button.')
+      .addToggle(toggle =>
+        toggle.setValue(settings.ribbonIcon).onChange(async v => {
+          settings.ribbonIcon = v
+          await saveSettings(this.plugin)
+          if (v) {
+            this.plugin.addRibbonButton()
+          }
+        }),
+      )
 
     // Show notices
     new Setting(containerEl)
@@ -189,6 +204,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
 
   showIndexingNotices: false,
   showShortName: false,
+  ribbonIcon: true,
 
   weightBasename: 2,
   weightH1: 1.5,

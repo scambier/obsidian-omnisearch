@@ -6,7 +6,7 @@ import {
   removeFromIndex,
 } from './search'
 import { OmnisearchInFileModal, OmnisearchVaultModal } from './modals'
-import { loadSettings, SettingsTab } from './settings'
+import { loadSettings, settings, SettingsTab } from './settings'
 import { eventBus } from './globals'
 import { registerAPI } from '@vanakat/plugin-api'
 import api from './api'
@@ -32,6 +32,10 @@ export default class OmnisearchPlugin extends Plugin {
     await loadSettings(this)
 
     _registerAPI(this)
+
+    if (settings.ribbonIcon) {
+      this.addRibbonButton()
+    }
 
     this.addSettingTab(new SettingsTab(this))
     eventBus.disable('vault')
@@ -85,4 +89,10 @@ export default class OmnisearchPlugin extends Plugin {
   }
 
   onunload(): void {}
+
+  addRibbonButton(): void {
+    this.addRibbonIcon('search', 'Omnisearch', evt => {
+      new OmnisearchVaultModal(app).open()
+    })
+  }
 }
