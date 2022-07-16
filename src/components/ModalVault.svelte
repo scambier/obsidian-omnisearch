@@ -51,12 +51,11 @@ async function updateResults() {
   lastSearch = searchQuery
   selectedIndex = 0
   scrollIntoView()
-  // if (resultNotes.length) console.log(resultNotes[0])
 }
 
-function onClick() {
+function onClick(evt: MouseEvent) {
   if (!selectedNote) return
-  openNote(selectedNote)
+  openNote(selectedNote, evt.ctrlKey) // Keep ctrl pressed to open in a new pane
   modal.close()
 }
 

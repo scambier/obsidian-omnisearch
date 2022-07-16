@@ -106,13 +106,13 @@ async function scrollIntoView(): Promise<void> {
   elem?.scrollIntoView({ behavior: "auto", block: "nearest" })
 }
 
-async function openSelection(): Promise<void> {
+async function openSelection(evt: MouseEvent): Promise<void> {
   // TODO: clean me, merge with notes.openNote()
   if (note) {
     modal.close()
     if (parent) parent.close()
 
-    await app.workspace.openLinkText(note.path, "")
+    await app.workspace.openLinkText(note.path, "", evt.ctrlKey)
     const view = app.workspace.getActiveViewOfType(MarkdownView)
     if (!view) {
       throw new Error("OmniSearch - No active MarkdownView")
