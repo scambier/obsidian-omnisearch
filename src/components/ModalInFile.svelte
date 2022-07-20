@@ -18,6 +18,7 @@ import ModalContainer from "./ModalContainer.svelte"
 import { OmnisearchInFileModal, OmnisearchVaultModal } from "src/modals"
 import ResultItemInFile from "./ResultItemInFile.svelte"
 import { Query } from "src/query"
+import { openNote } from "src/notes";
 
 export let modal: OmnisearchInFileModal
 export let parent: OmnisearchVaultModal | null = null
@@ -106,13 +107,15 @@ async function scrollIntoView(): Promise<void> {
   elem?.scrollIntoView({ behavior: "auto", block: "nearest" })
 }
 
-async function openSelection(evt: MouseEvent): Promise<void> {
-  // TODO: clean me, merge with notes.openNote()
+async function openSelection(evt?: MouseEvent | KeyboardEvent): Promise<void> {
   if (note) {
     modal.close()
     if (parent) parent.close()
 
-    await app.workspace.openLinkText(note.path, "", evt.ctrlKey)
+    // Open (or switch focus to) the note
+    await openNote(note, evt?.ctrlKey)
+
+    // Move cursor to the match
     const view = app.workspace.getActiveViewOfType(MarkdownView)
     if (!view) {
       throw new Error("OmniSearch - No active MarkdownView")

@@ -53,14 +53,13 @@ async function updateResults() {
   scrollIntoView()
 }
 
-function onClick(evt: MouseEvent) {
+function onClick(evt?: MouseEvent | KeyboardEvent) {
   if (!selectedNote) return
-  openNote(selectedNote, evt.ctrlKey) // Keep ctrl pressed to open in a new pane
+  openNote(selectedNote, evt?.ctrlKey) // Keep ctrl pressed to open in a new pane
   modal.close()
 }
 
 function openNoteAndCloseModal(): void {
-  // console.log(event.detail)
   if (!selectedNote) return
   openNote(selectedNote)
   modal.close()
