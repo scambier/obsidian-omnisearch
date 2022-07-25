@@ -266,10 +266,20 @@ export async function getSuggestions(
     // Clean search matches that match quoted expressions,
     // and inject those expressions instead
     const foundWords = [
-      ...Object.keys(result.match).filter(w =>
-        query.segments.some(s => w.startsWith(s.value)),
-      ),
+      // Matching terms from the result,
+      // do not necessarily match the query
+      ...Object.keys(result.match),
+
+      // // Matching terms from the query,
+      // // but only if they stem from the result's matches
+      // ...Object.keys(result.match).filter(w =>
+      //   query.segments.some(s => w.startsWith(s.value)),
+      // ),
+
+      // Quoted expressions
       ...query.segments.filter(s => s.exact).map(s => s.value),
+
+      // Tags, starting with #
       ...tags,
     ]
 
