@@ -1,5 +1,24 @@
 # Omnisearch Changelog
 
+## 1.5.x
+
+### New
+
+* Added a toggleable sidebar button to open Omnisearch: https://github.com/scambier/obsidian-omnisearch/issues/60
+* Added a cache-clearing mechanism in case of corruption: https://github.com/scambier/obsidian-omnisearch/issues/83
+
+### Improved
+
+* Notes created by Omnisearch now honour the default note location https://github.com/scambier/obsidian-omnisearch/pull/81
+* Ctrl+click now opens the note in a new pane https://github.com/scambier/obsidian-omnisearch/issues/61
+* Improved highlighting https://github.com/scambier/obsidian-omnisearch/issues/85
+
+### Fixed
+
+* Fixed some edge cases when opening an already open/pinned note https://github.com/scambier/obsidian-omnisearch/issues/51 https://github.com/scambier/obsidian-omnisearch/issues/80
+* Fixed nested tags searching https://github.com/scambier/obsidian-omnisearch/issues/79
+* Fixed a silent crash when clicking on In-File search results https://github.com/scambier/obsidian-omnisearch/issues/84
+
 ## 1.4.x
 
 ### New
@@ -23,7 +42,8 @@
 
 - Opening a pinned note would open it a second time: https://github.com/scambier/obsidian-omnisearch/issues/51
 - Fixed an issue that would index "non-existing notes" multiple times: https://github.com/scambier/obsidian-omnisearch/issues/68
-- Fixed a visual bog for Obsidian 0.15.3: https://github.com/scambier/obsidian-omnisearch/issues/76 
+- Fixed a visual bug for Obsidian 0.15.3: https://github.com/scambier/obsidian-omnisearch/issues/76 
+- Fixed the diacritics normalization of the note's title: https://github.com/scambier/obsidian-omnisearch/issues/72
 
 ## 1.3.x
 
