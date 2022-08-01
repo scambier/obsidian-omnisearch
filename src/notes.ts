@@ -96,10 +96,19 @@ export async function openNote(
 
 export async function createNote(name: string): Promise<void> {
   try {
-    const file = await app.vault.create(
-      `${app.vault.getConfig('newFileFolderPath')}/${name}.md`,
-      '',
-    )
+    let pathPrefix = ''
+    switch (app.vault.getConfig('newFileLocation')) {
+      case 'current':
+        pathPrefix = (app.workspace.getActiveFile()?.parent.path ?? '') + '/'
+        break
+      case 'folder':
+        pathPrefix = app.vault.getConfig('newFileFolderPath') + '/'
+        break
+      default: // 'root'
+        pathPrefix = ''
+        break
+    }
+    const file = await app.vault.create(`${pathPrefix}${name}.md`, '')
     await app.workspace.openLinkText(file.path, '')
     const view = app.workspace.getActiveViewOfType(MarkdownView)
     if (!view) {
@@ -109,6 +118,7 @@ export async function createNote(name: string): Promise<void> {
     pos.ch = 0
   }
   catch (e) {
+    (e as any).message = 'OmniSearch - Could not create note: ' + (e as any).message
     console.error(e)
     throw e
   }
