@@ -30,7 +30,7 @@ export type IndexedNote = {
 
   content: string
   aliases: string
-  tags: string[],
+  tags: string[]
   headings1: string
   headings2: string
   headings3: string

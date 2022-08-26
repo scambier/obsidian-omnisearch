@@ -30,13 +30,13 @@ describe('The Query class', () => {
     // Assert
     expect(query.segments.filter(s => s.exact)).toHaveLength(2)
     expect(
-      query.segments.find(o => o.value === 'lorem ipsum')!.exact,
+      query.segments.find(o => o.value === 'lorem ipsum')!.exact
     ).toBeTruthy()
     expect(query.segments.find(o => o.value === 'sit amet')!.exact).toBeTruthy()
 
     expect(query.exclusions.filter(s => s.exact)).toHaveLength(1)
     expect(
-      query.exclusions.find(o => o.value === 'quoted exclusion')!.exact,
+      query.exclusions.find(o => o.value === 'quoted exclusion')!.exact
     ).toBeTruthy()
   })
 

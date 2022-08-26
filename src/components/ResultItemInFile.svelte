@@ -1,15 +1,15 @@
 <script lang="ts">
-import type { ResultNote } from "../globals"
-import { highlighter, makeExcerpt, stringsToRegex } from "../utils"
-import ResultItemContainer from "./ResultItemContainer.svelte"
+  import type { ResultNote } from '../globals'
+  import { highlighter, makeExcerpt, stringsToRegex } from '../utils'
+  import ResultItemContainer from './ResultItemContainer.svelte'
 
-export let offset: number
-export let note: ResultNote
-export let index = 0
-export let selected = false
+  export let offset: number
+  export let note: ResultNote
+  export let index = 0
+  export let selected = false
 
-$: reg = stringsToRegex(note.foundWords)
-$: cleanedContent = makeExcerpt(note?.content ?? "", offset)
+  $: reg = stringsToRegex(note.foundWords)
+  $: cleanedContent = makeExcerpt(note?.content ?? '', offset)
 </script>
 
 <ResultItemContainer id={index.toString()} {selected} on:mousemove on:click>

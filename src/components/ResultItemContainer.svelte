@@ -1,9 +1,9 @@
 <script lang="ts">
-import GlyphAddNote from "./GlyphAddNote.svelte"
+  import GlyphAddNote from './GlyphAddNote.svelte'
 
-export let id: string
-export let selected = false
-export let glyph = false
+  export let id: string
+  export let selected = false
+  export let glyph = false
 </script>
 
 <div
@@ -12,8 +12,7 @@ export let glyph = false
   class:is-selected={selected}
   on:mousemove
   on:click
-  on:auxclick
->
+  on:auxclick>
   {#if glyph}
     <GlyphAddNote />
   {/if}

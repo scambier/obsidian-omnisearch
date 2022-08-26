@@ -4,10 +4,10 @@ describe('EventBus', () => {
   it('should refuse the registering of invalid ctx/event names', () => {
     const eventBus = new EventBus()
     expect(() => eventBus.on('@', 'event', () => {})).toThrowError(
-      'Invalid context/event name - Cannot contain @',
+      'Invalid context/event name - Cannot contain @'
     )
     expect(() => eventBus.on('context', '@', () => {})).toThrowError(
-      'Invalid context/event name - Cannot contain @',
+      'Invalid context/event name - Cannot contain @'
     )
   })
 

@@ -14,8 +14,7 @@ export class EventBus {
   public off(ctx: string, event?: string): void {
     if (event) {
       this.handlers.delete(`${ctx}@${event}`)
-    }
-    else {
+    } else {
       for (const [key] of this.handlers.entries()) {
         if (key.startsWith(`${ctx}@`)) {
           this.handlers.delete(key)
@@ -35,7 +34,7 @@ export class EventBus {
 
   public emit(event: string, ...args: any[]): void {
     const entries = [...this.handlers.entries()].filter(
-      ([k, h]) => !this.disabled.includes(k.split('@')[0]),
+      ([k, h]) => !this.disabled.includes(k.split('@')[0])
     )
     for (const [key, handler] of entries) {
       if (key.endsWith(`@${event}`)) {

@@ -114,7 +114,7 @@ export class OmnisearchInFileModal extends OmnisearchModal {
     app: App,
     file: TFile,
     searchQuery: string = '',
-    parent?: OmnisearchModal,
+    parent?: OmnisearchModal
   ) {
     super(app)
 

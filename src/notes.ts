@@ -27,8 +27,7 @@ export async function loadNotesCache(): Promise<void> {
       const json = await app.vault.adapter.read(notesCacheFilePath)
       notesCache = JSON.parse(json)
       console.log('Notes cache loaded from the file')
-    }
-    catch (e) {
+    } catch (e) {
       console.trace('Could not load Notes cache from the file')
       console.error(e)
     }
@@ -53,7 +52,7 @@ export function removeNoteFromCache(key: string): void {
 
 export async function openNote(
   item: ResultNote,
-  newPane = false,
+  newPane = false
 ): Promise<void> {
   const reg = stringsToRegex(item.foundWords)
   reg.exec(item.content)
@@ -116,9 +115,9 @@ export async function createNote(name: string): Promise<void> {
     }
     const pos = view.editor.offsetToPos(name.length + 5)
     pos.ch = 0
-  }
-  catch (e) {
-    (e as any).message = 'OmniSearch - Could not create note: ' + (e as any).message
+  } catch (e) {
+    ;(e as any).message =
+      'OmniSearch - Could not create note: ' + (e as any).message
     console.error(e)
     throw e
   }
@@ -132,7 +131,7 @@ export async function createNote(name: string): Promise<void> {
  */
 export function getNonExistingNotes(
   file: TFile,
-  metadata: CachedMetadata,
+  metadata: CachedMetadata
 ): string[] {
   return (metadata.links ?? [])
     .map(l => {

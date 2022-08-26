@@ -63,7 +63,7 @@ export function stringsToRegex(strings: string[]): RegExp {
 
 export function extractHeadingsFromCache(
   cache: CachedMetadata,
-  level: number,
+  level: number
 ): string[] {
   return (
     cache.headings?.filter(h => h.level === level).map(h => h.heading) ?? []
@@ -107,7 +107,7 @@ export function stripSurroundingQuotes(str: string): string {
 
 function mapAsync<T, U>(
   array: T[],
-  callbackfn: (value: T, index: number, array: T[]) => Promise<U>,
+  callbackfn: (value: T, index: number, array: T[]) => Promise<U>
 ): Promise<U[]> {
   return Promise.all(array.map(callbackfn))
 }
@@ -120,7 +120,7 @@ function mapAsync<T, U>(
  */
 export async function filterAsync<T>(
   array: T[],
-  callbackfn: (value: T, index: number, array: T[]) => Promise<boolean>,
+  callbackfn: (value: T, index: number, array: T[]) => Promise<boolean>
 ): Promise<T[]> {
   const filterMap = await mapAsync(array, callbackfn)
   return array.filter((value, index) => filterMap[index])
@@ -136,10 +136,12 @@ export function stripMarkdownCharacters(text: string): string {
 }
 
 export function getAliasesFromMetadata(
-  metadata: CachedMetadata | null,
+  metadata: CachedMetadata | null
 ): string[] {
   const arrOrString = metadata?.frontmatter?.aliases ?? []
-  return (Array.isArray(arrOrString) ? arrOrString : arrOrString.toString().split(','))
+  return (
+    Array.isArray(arrOrString) ? arrOrString : arrOrString.toString().split(',')
+  )
     .map(s => (s ? s.trim() : s))
     .filter(s => !!s)
 }
@@ -154,7 +156,7 @@ export function getTagsFromMetadata(metadata: CachedMetadata | null): string[] {
   const fromBody = (metadata?.tags ?? []).map(t => t.tag)
 
   return [...fromFrontMatter, ...fromBody].map(t =>
-    t[0] !== '#' ? '#' + t : t,
+    t[0] !== '#' ? '#' + t : t
   )
 }
 

@@ -43,13 +43,12 @@ interface SearchParserResult extends ISearchParserDictionary {
 
 export function parseQuery(
   string: string,
-  options: SearchParserOptions,
+  options: SearchParserOptions
 ): SearchParserResult {
   // Set a default options object when none is provided
   if (!options) {
     options = { offsets: true, tokenize: true }
-  }
-  else {
+  } else {
     // If options offsets was't passed, set it to true
     options.offsets =
       typeof options.offsets === 'undefined' ? true : options.offsets
@@ -131,8 +130,7 @@ export function parseQuery(
 
       if (isExcludedTerm) {
         exclusion.text.push(term)
-      }
-      else {
+      } else {
         terms.push({
           text: term,
           offsetStart: match.index,
@@ -164,8 +162,7 @@ export function parseQuery(
       let isExclusion = false
       if (!/^-/.test(key)) {
         isKeyword = !(options.keywords.indexOf(key) === -1)
-      }
-      else if (key[0] === '-') {
+      } else if (key[0] === '-') {
         const _key = key.slice(1)
         isKeyword = !(options.keywords.indexOf(_key) === -1)
         if (isKeyword) {
@@ -202,8 +199,7 @@ export function parseQuery(
                 if (values.length > 1) {
                   // ... concatenate both arrays.
                   exclusion[key] = exclusion[key].concat(values)
-                }
-                else {
+                } else {
                   // ... append the current single value.
                   exclusion[key].push(value)
                 }
@@ -229,15 +225,13 @@ export function parseQuery(
                 if (options.alwaysArray) {
                   // ...but we always return an array if option alwaysArray is true
                   exclusion[key] = [value]
-                }
-                else {
+                } else {
                   // Record its value as a string
                   exclusion[key] = value
                 }
               }
             }
-          }
-          else {
+          } else {
             // If we already have seen that keyword...
             if (query[key]) {
               // ...many times...
@@ -246,8 +240,7 @@ export function parseQuery(
                 if (values.length > 1) {
                   // ... concatenate both arrays.
                   query[key] = query[key].concat(values)
-                }
-                else {
+                } else {
                   // ... append the current single value.
                   query[key].push(value)
                 }
@@ -272,8 +265,7 @@ export function parseQuery(
                 if (options.alwaysArray) {
                   // ...but we always return an array if option alwaysArray is true
                   query[key] = [value]
-                }
-                else {
+                } else {
                   // Record its value as a string
                   query[key] = value
                 }
@@ -308,8 +300,7 @@ export function parseQuery(
         else {
           query[key].from = value
         }
-      }
-      else {
+      } else {
         // We add it as pure text
         const text = term.keyword + ':' + term.value
         query.text.push(text)

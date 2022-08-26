@@ -1,145 +1,147 @@
 <script lang="ts" context="module">
-let lastSearch = ""
+  let lastSearch = ''
 </script>
 
 <script lang="ts">
-import InputSearch from "./InputSearch.svelte"
-import {
-  eventBus,
-  excerptAfter,
-  type ResultNote,
-  type SearchMatch,
-} from "src/globals"
-import { loopIndex } from "src/utils"
-import { onDestroy, onMount, tick } from "svelte"
-import { MarkdownView } from "obsidian"
-import { getSuggestions } from "src/search"
-import ModalContainer from "./ModalContainer.svelte"
-import { OmnisearchInFileModal, OmnisearchVaultModal } from "src/modals"
-import ResultItemInFile from "./ResultItemInFile.svelte"
-import { Query } from "src/query"
-import { openNote } from "src/notes";
+  import InputSearch from './InputSearch.svelte'
+  import {
+    eventBus,
+    excerptAfter,
+    type ResultNote,
+    type SearchMatch,
+  } from 'src/globals'
+  import { loopIndex } from 'src/utils'
+  import { onDestroy, onMount, tick } from 'svelte'
+  import { MarkdownView } from 'obsidian'
+  import { getSuggestions } from 'src/search'
+  import ModalContainer from './ModalContainer.svelte'
+  import { OmnisearchInFileModal, OmnisearchVaultModal } from 'src/modals'
+  import ResultItemInFile from './ResultItemInFile.svelte'
+  import { Query } from 'src/query'
+  import { openNote } from 'src/notes'
 
-export let modal: OmnisearchInFileModal
-export let parent: OmnisearchVaultModal | null = null
-export let singleFilePath = ""
-export let searchQuery: string
+  export let modal: OmnisearchInFileModal
+  export let parent: OmnisearchVaultModal | null = null
+  export let singleFilePath = ''
+  export let searchQuery: string
 
-let groupedOffsets: number[] = []
-let selectedIndex = 0
-let note: ResultNote | null = null
-let query: Query
+  let groupedOffsets: number[] = []
+  let selectedIndex = 0
+  let note: ResultNote | null = null
+  let query: Query
 
-onMount(() => {
-  if (lastSearch && !searchQuery) {
-    searchQuery = lastSearch
-  }
-  eventBus.enable("infile")
-
-  eventBus.on("infile", "enter", openSelection)
-  eventBus.on("infile", "arrow-up", () => moveIndex(-1))
-  eventBus.on("infile", "arrow-down", () => moveIndex(1))
-  eventBus.on("infile", "tab", switchToVaultModal)
-})
-
-onDestroy(() => {
-  eventBus.disable("infile")
-})
-
-$: (async () => {
-  if (searchQuery) {
-    query = new Query(searchQuery)
-    note = (await getSuggestions(query, { singleFilePath }))[0] ?? null
-    lastSearch = searchQuery
-  }
-  selectedIndex = 0
-  scrollIntoView()
-})()
-
-$: {
-  if (note) {
-    const groups = getGroups(note.matches)
-    groupedOffsets = groups.map((group) =>
-      Math.round((group.first()!.offset + group.last()!.offset) / 2)
-    )
-    // console.log(groups)
-    // console.log(groupedOffsets)
-  }
-}
-
-/**
- * Group together close matches to reduce the number of results
- */
-function getGroups(matches: SearchMatch[]): SearchMatch[][] {
-  const groups: SearchMatch[][] = []
-  let lastOffset = -1
-  let count = 0 // TODO: FIXME: this is a hack to avoid infinite loops
-  while (true) {
-    const group = getGroupedMatches(matches, lastOffset, excerptAfter)
-    if (!group.length) break
-    lastOffset = group.last()!.offset
-    groups.push(group)
-    if (++count > 100) break
-  }
-  return groups
-}
-
-function getGroupedMatches(
-  matches: SearchMatch[],
-  offsetFrom: number,
-  maxLen: number
-): SearchMatch[] {
-  const first = matches.find((m) => m.offset > offsetFrom)
-  if (!first) return []
-  return matches.filter(
-    (m) => m.offset > offsetFrom && m.offset <= first.offset + maxLen
-  )
-}
-
-function moveIndex(dir: 1 | -1): void {
-  selectedIndex = loopIndex(selectedIndex + dir, groupedOffsets.length)
-  scrollIntoView()
-}
-
-async function scrollIntoView(): Promise<void> {
-  await tick()
-  const elem = document.querySelector(`[data-result-id="${selectedIndex}"]`)
-  elem?.scrollIntoView({ behavior: "auto", block: "nearest" })
-}
-
-async function openSelection(evt?: MouseEvent | KeyboardEvent): Promise<void> {
-  if (note) {
-    modal.close()
-    if (parent) parent.close()
-
-    // Open (or switch focus to) the note
-    await openNote(note, evt?.ctrlKey)
-
-    // Move cursor to the match
-    const view = app.workspace.getActiveViewOfType(MarkdownView)
-    if (!view) {
-      throw new Error("OmniSearch - No active MarkdownView")
+  onMount(() => {
+    if (lastSearch && !searchQuery) {
+      searchQuery = lastSearch
     }
+    eventBus.enable('infile')
 
-    const offset = groupedOffsets[selectedIndex] ?? 0
-    const pos = view.editor.offsetToPos(offset)
-    pos.ch = 0
-    view.editor.setCursor(pos)
-    view.editor.scrollIntoView({
-      from: { line: pos.line - 10, ch: 0 },
-      to: { line: pos.line + 10, ch: 0 },
-    })
+    eventBus.on('infile', 'enter', openSelection)
+    eventBus.on('infile', 'arrow-up', () => moveIndex(-1))
+    eventBus.on('infile', 'arrow-down', () => moveIndex(1))
+    eventBus.on('infile', 'tab', switchToVaultModal)
+  })
+
+  onDestroy(() => {
+    eventBus.disable('infile')
+  })
+
+  $: (async () => {
+    if (searchQuery) {
+      query = new Query(searchQuery)
+      note = (await getSuggestions(query, { singleFilePath }))[0] ?? null
+      lastSearch = searchQuery
+    }
+    selectedIndex = 0
+    scrollIntoView()
+  })()
+
+  $: {
+    if (note) {
+      const groups = getGroups(note.matches)
+      groupedOffsets = groups.map(group =>
+        Math.round((group.first()!.offset + group.last()!.offset) / 2)
+      )
+      // console.log(groups)
+      // console.log(groupedOffsets)
+    }
   }
-}
 
-function switchToVaultModal(): void {
-  new OmnisearchVaultModal(app).open()
-  modal.close()
-}
+  /**
+   * Group together close matches to reduce the number of results
+   */
+  function getGroups(matches: SearchMatch[]): SearchMatch[][] {
+    const groups: SearchMatch[][] = []
+    let lastOffset = -1
+    let count = 0 // TODO: FIXME: this is a hack to avoid infinite loops
+    while (true) {
+      const group = getGroupedMatches(matches, lastOffset, excerptAfter)
+      if (!group.length) break
+      lastOffset = group.last()!.offset
+      groups.push(group)
+      if (++count > 100) break
+    }
+    return groups
+  }
+
+  function getGroupedMatches(
+    matches: SearchMatch[],
+    offsetFrom: number,
+    maxLen: number
+  ): SearchMatch[] {
+    const first = matches.find(m => m.offset > offsetFrom)
+    if (!first) return []
+    return matches.filter(
+      m => m.offset > offsetFrom && m.offset <= first.offset + maxLen
+    )
+  }
+
+  function moveIndex(dir: 1 | -1): void {
+    selectedIndex = loopIndex(selectedIndex + dir, groupedOffsets.length)
+    scrollIntoView()
+  }
+
+  async function scrollIntoView(): Promise<void> {
+    await tick()
+    const elem = document.querySelector(`[data-result-id="${selectedIndex}"]`)
+    elem?.scrollIntoView({ behavior: 'auto', block: 'nearest' })
+  }
+
+  async function openSelection(
+    evt?: MouseEvent | KeyboardEvent
+  ): Promise<void> {
+    if (note) {
+      modal.close()
+      if (parent) parent.close()
+
+      // Open (or switch focus to) the note
+      await openNote(note, evt?.ctrlKey)
+
+      // Move cursor to the match
+      const view = app.workspace.getActiveViewOfType(MarkdownView)
+      if (!view) {
+        throw new Error('OmniSearch - No active MarkdownView')
+      }
+
+      const offset = groupedOffsets[selectedIndex] ?? 0
+      const pos = view.editor.offsetToPos(offset)
+      pos.ch = 0
+      view.editor.setCursor(pos)
+      view.editor.scrollIntoView({
+        from: { line: pos.line - 10, ch: 0 },
+        to: { line: pos.line + 10, ch: 0 },
+      })
+    }
+  }
+
+  function switchToVaultModal(): void {
+    new OmnisearchVaultModal(app).open()
+    modal.close()
+  }
 </script>
 
 <div class="modal-title">Omnisearch - File</div>
-<InputSearch value={searchQuery} on:input={(e) => (searchQuery = e.detail)} />
+<InputSearch value={searchQuery} on:input={e => (searchQuery = e.detail)} />
 
 <ModalContainer>
   {#if groupedOffsets.length && note}
@@ -149,9 +151,8 @@ function switchToVaultModal(): void {
         {note}
         index={i}
         selected={i === selectedIndex}
-        on:mousemove={(e) => (selectedIndex = i)}
-        on:click={openSelection}
-      />
+        on:mousemove={e => (selectedIndex = i)}
+        on:click={openSelection} />
     {/each}
   {:else}
     <center> We found 0 result for your search here. </center>

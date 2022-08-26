@@ -41,10 +41,9 @@ const tokenize = (text: string): string[] => {
 
   if (chsSegmenter) {
     return tokens.flatMap(word =>
-      chsRegex.test(word) ? chsSegmenter.cut(word) : [word],
+      chsRegex.test(word) ? chsSegmenter.cut(word) : [word]
     )
-  }
-  else return tokens
+  } else return tokens
 }
 
 /**
@@ -77,8 +76,7 @@ export async function initGlobalSearchIndex(): Promise<void> {
       minisearchInstance = MiniSearch.loadJSON(json, options)
       console.log('MiniSearch index loaded from the file')
       await loadNotesCache()
-    }
-    catch (e) {
+    } catch (e) {
       console.trace('Could not load MiniSearch index from the file')
       console.error(e)
     }
@@ -99,8 +97,7 @@ export async function initGlobalSearchIndex(): Promise<void> {
   if (settings.storeIndexInFile) {
     files = allFiles.filter(file => isCacheOutdated(file))
     notesSuffix = 'modified notes'
-  }
-  else {
+  } else {
     files = allFiles
     notesSuffix = 'notes'
   }
@@ -174,7 +171,7 @@ async function search(query: Query): Promise<SearchResult[]> {
     results = results.filter(r => {
       const title = getNoteFromCache(r.id)?.path.toLowerCase() ?? ''
       const content = stripMarkdownCharacters(
-        getNoteFromCache(r.id)?.content ?? '',
+        getNoteFromCache(r.id)?.content ?? ''
       ).toLowerCase()
       return exactTerms.every(q => content.includes(q) || title.includes(q))
     })
@@ -185,7 +182,7 @@ async function search(query: Query): Promise<SearchResult[]> {
   if (exclusions.length) {
     results = results.filter(r => {
       const content = stripMarkdownCharacters(
-        getNoteFromCache(r.id)?.content ?? '',
+        getNoteFromCache(r.id)?.content ?? ''
       ).toLowerCase()
       return exclusions.every(q => !content.includes(q.value))
     })
@@ -221,7 +218,7 @@ export function getMatches(text: string, reg: RegExp): SearchMatch[] {
  */
 export async function getSuggestions(
   query: Query,
-  options?: Partial<{ singleFilePath: string | null }>,
+  options?: Partial<{ singleFilePath: string | null }>
 ): Promise<ResultNote[]> {
   // Get the raw results
   let results = await search(query)
@@ -238,8 +235,7 @@ export async function getSuggestions(
     const result = results.find(r => r.id === options.singleFilePath)
     if (result) results = [result]
     else results = []
-  }
-  else {
+  } else {
     results = results.slice(0, 50)
 
     // Put the results with tags on top
@@ -355,8 +351,7 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
     minisearchInstance.add(note)
     isIndexChanged = true
     addNoteToCache(note.path, note)
-  }
-  catch (e) {
+  } catch (e) {
     console.trace('Error while indexing ' + file.basename)
     console.error(e)
   }
@@ -410,8 +405,7 @@ export function removeFromIndex(path: string): void {
       .forEach(n => {
         removeFromIndex(n.path)
       })
-  }
-  else {
+  } else {
     console.warn(`not not found under path ${path}`)
   }
 }

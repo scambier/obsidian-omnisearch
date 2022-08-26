@@ -63,17 +63,17 @@ export default class OmnisearchPlugin extends Plugin {
       this.registerEvent(
         this.app.vault.on('create', file => {
           addToIndex(file)
-        }),
+        })
       )
       this.registerEvent(
         this.app.vault.on('delete', file => {
           removeFromIndex(file.path)
-        }),
+        })
       )
       this.registerEvent(
         this.app.vault.on('modify', async file => {
           addNoteToReindex(file)
-        }),
+        })
       )
       this.registerEvent(
         this.app.vault.on('rename', async (file, oldPath) => {
@@ -81,7 +81,7 @@ export default class OmnisearchPlugin extends Plugin {
             removeFromIndex(oldPath)
             await addToIndex(file)
           }
-        }),
+        })
       )
 
       await initGlobalSearchIndex()

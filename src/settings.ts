@@ -43,13 +43,13 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Respect Obsidian\'s "Excluded Files"')
       .setDesc(
-        'Files that are in Obsidian\'s "Options > Files & Links > Excluded Files" list will be downranked in results.',
+        'Files that are in Obsidian\'s "Options > Files & Links > Excluded Files" list will be downranked in results.'
       )
       .addToggle(toggle =>
         toggle.setValue(settings.respectExcluded).onChange(async v => {
           settings.respectExcluded = v
           await saveSettings(this.plugin)
-        }),
+        })
       )
 
     // Ignore diacritics
@@ -66,7 +66,7 @@ export class SettingsTab extends PluginSettingTab {
         toggle.setValue(settings.ignoreDiacritics).onChange(async v => {
           settings.ignoreDiacritics = v
           await saveSettings(this.plugin)
-        }),
+        })
       )
 
     const serializedIndexDesc = new DocumentFragment()
@@ -85,7 +85,7 @@ export class SettingsTab extends PluginSettingTab {
           app.vault.adapter.remove(searchIndexFilePath)
           settings.storeIndexInFile = v
           await saveSettings(this.plugin)
-        }),
+        })
       )
 
     // #endregion Behavior
@@ -97,7 +97,9 @@ export class SettingsTab extends PluginSettingTab {
     // Show Ribbon Icon
     new Setting(containerEl)
       .setName('Show ribbon button')
-      .setDesc('Add a button on the sidebar to open the Vault search modal. Needs a restart to remove the button.')
+      .setDesc(
+        'Add a button on the sidebar to open the Vault search modal. Needs a restart to remove the button.'
+      )
       .addToggle(toggle =>
         toggle.setValue(settings.ribbonIcon).onChange(async v => {
           settings.ribbonIcon = v
@@ -105,7 +107,7 @@ export class SettingsTab extends PluginSettingTab {
           if (v) {
             this.plugin.addRibbonButton()
           }
-        }),
+        })
       )
 
     // Show notices
@@ -116,20 +118,20 @@ export class SettingsTab extends PluginSettingTab {
         toggle.setValue(settings.showIndexingNotices).onChange(async v => {
           settings.showIndexingNotices = v
           await saveSettings(this.plugin)
-        }),
+        })
       )
 
     // Display note names without the full path
     new Setting(containerEl)
       .setName('Hide full path in results list')
       .setDesc(
-        'In the search results, only show the note name, without the full path.',
+        'In the search results, only show the note name, without the full path.'
       )
       .addToggle(toggle =>
         toggle.setValue(settings.showShortName).onChange(async v => {
           settings.showShortName = v
           await saveSettings(this.plugin)
-        }),
+        })
       )
 
     // #endregion User Interface
@@ -140,7 +142,7 @@ export class SettingsTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName(
-        `File name & declared aliases (default: ${DEFAULT_SETTINGS.weightBasename})`,
+        `File name & declared aliases (default: ${DEFAULT_SETTINGS.weightBasename})`
       )
       .addSlider(cb => this.weightSlider(cb, 'weightBasename'))
 
@@ -164,24 +166,24 @@ export class SettingsTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName(
-        'Use [Ctrl/Cmd]+j/k to navigate up/down in the results, if Vim mode is enabled',
+        'Use [Ctrl/Cmd]+j/k to navigate up/down in the results, if Vim mode is enabled'
       )
       .addToggle(toggle =>
         toggle.setValue(settings.CtrlJK).onChange(async v => {
           settings.CtrlJK = v
           await saveSettings(this.plugin)
-        }),
+        })
       )
 
     new Setting(containerEl)
       .setName(
-        'Use [Ctrl/Cmd]+n/p to navigate up/down in the results, if Vim mode is enabled',
+        'Use [Ctrl/Cmd]+n/p to navigate up/down in the results, if Vim mode is enabled'
       )
       .addToggle(toggle =>
         toggle.setValue(settings.CtrlNP).onChange(async v => {
           settings.CtrlNP = v
           await saveSettings(this.plugin)
-        }),
+        })
       )
 
     // #endregion Shortcuts
