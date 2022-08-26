@@ -88,6 +88,16 @@ abstract class OmnisearchModal extends Modal {
       e.preventDefault()
       eventBus.emit('tab') // Switch context
     })
+
+    // Search history
+    this.scope.register(['Alt'], 'ArrowDown', e => {
+      e.preventDefault()
+      eventBus.emit('next-search-history')
+    })
+    this.scope.register(['Alt'], 'ArrowUp', e => {
+      e.preventDefault()
+      eventBus.emit('prev-search-history')
+    })
   }
 }
 

@@ -11,7 +11,10 @@
   onMount(async () => {
     await tick()
     elInput.focus()
-    elInput.select()
+    setTimeout(() => {
+      // tick() is not working here?
+      elInput.select()
+    }, 0)
   })
 
   const debouncedOnInput = debounce(() => {

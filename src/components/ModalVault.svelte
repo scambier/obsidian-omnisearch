@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-  let lastSearch = ''
+  let lastSearches: string[] = []
 </script>
 
 <script lang="ts">
@@ -17,10 +17,12 @@
 
   export let modal: OmnisearchVaultModal
   let selectedIndex = 0
+  let lastSearchIndex = 0
   let searchQuery: string
   let resultNotes: ResultNote[] = []
   let query: Query
   $: selectedNote = resultNotes[selectedIndex]
+  // $: lastSearch = lastSearches[lastSearchIndex]
 
   $: if (searchQuery) {
     updateResults()
@@ -30,7 +32,8 @@
 
   onMount(async () => {
     await reindexNotes()
-    searchQuery = lastSearch
+    searchQuery = lastSearches[lastSearchIndex]
+    console.log(lastSearches)
     eventBus.enable('vault')
     eventBus.on('vault', 'enter', openNoteAndCloseModal)
     eventBus.on('vault', 'shift-enter', createNoteAndCloseModal)
@@ -39,18 +42,32 @@
     eventBus.on('vault', 'tab', switchToInFileModal)
     eventBus.on('vault', 'arrow-up', () => moveIndex(-1))
     eventBus.on('vault', 'arrow-down', () => moveIndex(1))
+    eventBus.on('vault', 'prev-search-history', () => prevSearch())
+    eventBus.on('vault', 'next-search-history', () => nextSearch())
   })
 
   onDestroy(() => {
     eventBus.disable('vault')
   })
 
+  function prevSearch() {
+    if (++lastSearchIndex >= lastSearches.length) {
+      lastSearchIndex = 0
+    }
+    searchQuery = lastSearches[lastSearchIndex]
+  }
+  function nextSearch() {
+    if (--lastSearchIndex < 0) {
+      lastSearchIndex = lastSearches.length ? lastSearches.length - 1 : 0
+    }
+    searchQuery = lastSearches[lastSearchIndex]
+  }
+
   async function updateResults() {
     query = new Query(searchQuery)
     resultNotes = (await getSuggestions(query)).sort(
       (a, b) => b.score - a.score
     )
-    lastSearch = searchQuery
     selectedIndex = 0
     scrollIntoView()
   }
@@ -63,14 +80,19 @@
 
   function openNoteAndCloseModal(): void {
     if (!selectedNote) return
-    openNote(selectedNote)
+    openSearchResult(selectedNote)
     modal.close()
   }
 
   function openNoteInNewPane(): void {
     if (!selectedNote) return
-    openNote(selectedNote, true)
+    openSearchResult(selectedNote, true)
     modal.close()
+  }
+
+  function openSearchResult(note: ResultNote, newPane = false) {
+    lastSearches.unshift(searchQuery)
+    openNote(note, newPane)
   }
 
   async function createNoteAndCloseModal(): Promise<void> {
@@ -146,7 +168,7 @@
 </script>
 
 <div class="modal-title">Omnisearch - Vault</div>
-<InputSearch value={lastSearch} on:input={e => (searchQuery = e.detail)} />
+<InputSearch value={searchQuery} on:input={e => (searchQuery = e.detail)} />
 
 <ModalContainer>
   {#each resultNotes as result, i}
