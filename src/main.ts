@@ -10,6 +10,7 @@ import { loadSettings, settings, SettingsTab } from './settings'
 import { eventBus } from './globals'
 import { registerAPI } from '@vanakat/plugin-api'
 import api from './api'
+import { loadSearchHistory } from './search-history'
 
 // let mainWindow: { on: any; off: any } | null = null
 // try {
@@ -30,6 +31,7 @@ function _registerAPI(plugin: OmnisearchPlugin): void {
 export default class OmnisearchPlugin extends Plugin {
   async onload(): Promise<void> {
     await loadSettings(this)
+    await loadSearchHistory()
 
     _registerAPI(this)
 

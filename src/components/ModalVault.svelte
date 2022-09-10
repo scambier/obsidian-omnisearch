@@ -1,7 +1,3 @@
-<script lang="ts" context="module">
-  let lastSearches: string[] = []
-</script>
-
 <script lang="ts">
   import { MarkdownView, Notice, TFile } from 'obsidian'
   import { onMount, onDestroy, tick } from 'svelte'
@@ -14,10 +10,11 @@
   import { OmnisearchInFileModal, type OmnisearchVaultModal } from 'src/modals'
   import ResultItemVault from './ResultItemVault.svelte'
   import { Query } from 'src/query'
+import { saveSearchHistory, searchHistory } from 'src/search-history'
 
   export let modal: OmnisearchVaultModal
   let selectedIndex = 0
-  let lastSearchIndex = 0
+  let historySearchIndex = 0
   let searchQuery: string
   let resultNotes: ResultNote[] = []
   let query: Query
@@ -32,8 +29,7 @@
 
   onMount(async () => {
     await reindexNotes()
-    searchQuery = lastSearches[lastSearchIndex]
-    console.log(lastSearches)
+    searchQuery = searchHistory[historySearchIndex]
     eventBus.enable('vault')
     eventBus.on('vault', 'enter', openNoteAndCloseModal)
     eventBus.on('vault', 'shift-enter', createNoteAndCloseModal)
@@ -42,25 +38,25 @@
     eventBus.on('vault', 'tab', switchToInFileModal)
     eventBus.on('vault', 'arrow-up', () => moveIndex(-1))
     eventBus.on('vault', 'arrow-down', () => moveIndex(1))
-    eventBus.on('vault', 'prev-search-history', () => prevSearch())
-    eventBus.on('vault', 'next-search-history', () => nextSearch())
+    eventBus.on('vault', 'prev-search-history', () => prevSearchHistory())
+    eventBus.on('vault', 'next-search-history', () => nextSearchHistory())
   })
 
   onDestroy(() => {
     eventBus.disable('vault')
   })
 
-  function prevSearch() {
-    if (++lastSearchIndex >= lastSearches.length) {
-      lastSearchIndex = 0
+  function prevSearchHistory() {
+    if (++historySearchIndex >= searchHistory.length) {
+      historySearchIndex = 0
     }
-    searchQuery = lastSearches[lastSearchIndex]
+    searchQuery = searchHistory[historySearchIndex]
   }
-  function nextSearch() {
-    if (--lastSearchIndex < 0) {
-      lastSearchIndex = lastSearches.length ? lastSearches.length - 1 : 0
+  function nextSearchHistory() {
+    if (--historySearchIndex < 0) {
+      historySearchIndex = searchHistory.length ? searchHistory.length - 1 : 0
     }
-    searchQuery = lastSearches[lastSearchIndex]
+    searchQuery = searchHistory[historySearchIndex]
   }
 
   async function updateResults() {
@@ -91,7 +87,8 @@
   }
 
   function openSearchResult(note: ResultNote, newPane = false) {
-    lastSearches.unshift(searchQuery)
+    searchHistory.unshift(searchQuery)
+    saveSearchHistory()
     openNote(note, newPane)
   }
 
@@ -186,6 +183,10 @@
 <div class="prompt-instructions">
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">↑↓</span><span>to navigate</span>
+  </div>
+  <div class="prompt-instruction">
+    <span class="prompt-instruction-command">alt ↑↓</span><span
+      >to cycle history</span>
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">↵</span><span>to open</span>

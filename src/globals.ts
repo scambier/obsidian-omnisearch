@@ -16,6 +16,7 @@ export const eventBus = new EventBus()
 
 export const searchIndexFilePath = `${app.vault.configDir}/plugins/omnisearch/searchIndex.json`
 export const notesCacheFilePath = `${app.vault.configDir}/plugins/omnisearch/notesCache.json`
+export const historyFilePath = `${app.vault.configDir}/plugins/omnisearch/historyCache.json`
 
 export type SearchNote = {
   path: string

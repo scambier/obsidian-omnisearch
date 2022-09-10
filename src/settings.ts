@@ -71,8 +71,10 @@ export class SettingsTab extends PluginSettingTab {
 
     const serializedIndexDesc = new DocumentFragment()
     serializedIndexDesc.createSpan({}, span => {
-      span.innerHTML = `The search index is stored on disk, instead of being rebuilt at every startup. This results in faster loading times for bigger vaults and mobile devices.<br />
+      span.innerHTML = `The search index is stored on disk, instead of being rebuilt at every startup.
+        This results in faster loading times for bigger vaults and mobile devices.<br />
         <em>⚠️ Note: the index can become corrupted - if you notice any issue, disable and re-enable this option to clear the cache.</em><br/>
+        <em>⚠️ Cache files in <code>.obsidian/plugins/omnisearch/</code> must not be synchronized.</em><br/>
         <strong>Needs a restart to fully take effect.</strong>
         `
     })
