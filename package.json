@@ -14,12 +14,12 @@
   "author": "Simon Cambier",
   "license": "GPL-3",
   "devDependencies": {
-    "@babel/preset-env": "^7.18.10",
+    "@babel/preset-env": "^7.19.0",
     "@babel/preset-typescript": "^7.18.6",
     "@testing-library/jest-dom": "^5.16.5",
     "@tsconfig/svelte": "^3.0.0",
     "@types/jest": "^27.5.2",
-    "@types/node": "^16.11.56",
+    "@types/node": "^16.11.58",
     "babel-jest": "^27.5.1",
     "builtin-modules": "^3.3.0",
     "esbuild": "0.13.12",
@@ -28,11 +28,11 @@
     "jest": "^27.5.1",
     "obsidian": "latest",
     "prettier": "^2.7.1",
-    "svelte": "^3.49.0",
+    "svelte": "^3.50.1",
     "svelte-jester": "^2.3.2",
     "svelte-preprocess": "^4.10.7",
     "tslib": "2.3.1",
-    "typescript": "^4.8.2"
+    "typescript": "^4.8.3"
   },
   "dependencies": {
     "@vanakat/plugin-api": "^0.1.0",
