@@ -4,32 +4,53 @@ export class EventBus {
   private handlers: Map<string, EventBusCallback> = new Map()
   private disabled: string[] = []
 
-  public on(ctx: string, event: string, callback: EventBusCallback): void {
-    if (ctx.includes('@') || event.includes('@')) {
+  /**
+   * Adds a subscription for `event`, for the specified `context`.
+   * If a subscription for the same event in the same context already exists, this will overwrite it.
+   * @param context
+   * @param event
+   * @param callback
+   */
+  public on(context: string, event: string, callback: EventBusCallback): void {
+    if (context.includes('@') || event.includes('@')) {
       throw new Error('Invalid context/event name - Cannot contain @')
     }
-    this.handlers.set(`${ctx}@${event}`, callback)
+    this.handlers.set(`${context}@${event}`, callback)
   }
 
-  public off(ctx: string, event?: string): void {
+  /**
+   * Removes the subscription for an `event` in the `context`.
+   * If `event` is left empty, removes all subscriptions.
+   * @param context
+   * @param event
+   */
+  public off(context: string, event?: string): void {
     if (event) {
-      this.handlers.delete(`${ctx}@${event}`)
+      this.handlers.delete(`${context}@${event}`)
     } else {
       for (const [key] of this.handlers.entries()) {
-        if (key.startsWith(`${ctx}@`)) {
+        if (key.startsWith(`${context}@`)) {
           this.handlers.delete(key)
         }
       }
     }
   }
 
-  public disable(ctx: string): void {
-    this.enable(ctx)
-    this.disabled.push(ctx)
+  /**
+   * Disables a `context`. Does not remove subscriptions, but all events for related listeners will be ignored.
+   * @param context
+   */
+  public disable(context: string): void {
+    this.enable(context)
+    this.disabled.push(context)
   }
 
-  public enable(ctx: string): void {
-    this.disabled = this.disabled.filter(v => v !== ctx)
+  /**
+   * Re-enables a `context`.
+   * @param context
+   */
+  public enable(context: string): void {
+    this.disabled = this.disabled.filter(v => v !== context)
   }
 
   public emit(event: string, ...args: any[]): void {
