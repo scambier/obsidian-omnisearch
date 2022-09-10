@@ -10,7 +10,8 @@
   import { OmnisearchInFileModal, type OmnisearchVaultModal } from 'src/modals'
   import ResultItemVault from './ResultItemVault.svelte'
   import { Query } from 'src/query'
-import { saveSearchHistory, searchHistory } from 'src/search-history'
+  import { saveSearchHistory, searchHistory } from 'src/search-history'
+  import { SearchContextType, settings } from 'src/settings'
 
   export let modal: OmnisearchVaultModal
   let selectedIndex = 0
@@ -28,6 +29,7 @@ import { saveSearchHistory, searchHistory } from 'src/search-history'
   }
 
   onMount(async () => {
+    console.log('mount')
     await reindexNotes()
     searchQuery = searchHistory[historySearchIndex]
     eventBus.enable('vault')
@@ -38,8 +40,9 @@ import { saveSearchHistory, searchHistory } from 'src/search-history'
     eventBus.on('vault', 'tab', switchToInFileModal)
     eventBus.on('vault', 'arrow-up', () => moveIndex(-1))
     eventBus.on('vault', 'arrow-down', () => moveIndex(1))
-    eventBus.on('vault', 'prev-search-history', () => prevSearchHistory())
-    eventBus.on('vault', 'next-search-history', () => nextSearchHistory())
+    eventBus.on('vault', 'prev-search-history', prevSearchHistory)
+    eventBus.on('vault', 'next-search-history', nextSearchHistory)
+    eventBus.on('vault', 'toggle-context', toggleContext)
   })
 
   onDestroy(() => {
@@ -57,6 +60,16 @@ import { saveSearchHistory, searchHistory } from 'src/search-history'
       historySearchIndex = searchHistory.length ? searchHistory.length - 1 : 0
     }
     searchQuery = searchHistory[historySearchIndex]
+  }
+
+  function toggleContext() {
+    settings.update(s => {
+      s.showContext =
+        s.showContext === SearchContextType.None
+          ? SearchContextType.Simple
+          : SearchContextType.None
+      return s
+    })
   }
 
   async function updateResults() {
@@ -211,5 +224,11 @@ import { saveSearchHistory, searchHistory } from 'src/search-history'
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">esc</span><span>to close</span>
+  </div>
+  <br />
+
+  <div class="prompt-instruction">
+    <span class="prompt-instruction-command">ctrl+h</span><span
+      >to toggle context</span>
   </div>
 </div>
