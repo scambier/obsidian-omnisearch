@@ -1,11 +1,17 @@
-import { MarkdownView, TFile, type CachedMetadata } from 'obsidian'
+import {
+  MarkdownView,
+  TFile,
+  WorkspaceLeaf,
+  type CachedMetadata,
+} from 'obsidian'
 import {
   notesCacheFilePath,
   type IndexedNote,
   type ResultNote,
 } from './globals'
-import { stringsToRegex } from './utils'
+import { stringsToRegex, wait } from './utils'
 import { settings } from './settings'
+import { get } from 'svelte/store'
 
 /**
  * This is an in-memory cache of the notes, with all their computed fields
@@ -20,7 +26,7 @@ export function resetNotesCache(): void {
 
 export async function loadNotesCache(): Promise<void> {
   if (
-    settings.storeIndexInFile &&
+    get(settings).storeIndexInFile &&
     (await app.vault.adapter.exists(notesCacheFilePath))
   ) {
     try {
@@ -93,7 +99,7 @@ export async function openNote(
   })
 }
 
-export async function createNote(name: string): Promise<void> {
+export async function createNote(name: string, newLeaf = false): Promise<void> {
   try {
     let pathPrefix = ''
     switch (app.vault.getConfig('newFileLocation')) {
@@ -107,14 +113,7 @@ export async function createNote(name: string): Promise<void> {
         pathPrefix = ''
         break
     }
-    const file = await app.vault.create(`${pathPrefix}${name}.md`, '')
-    await app.workspace.openLinkText(file.path, '')
-    const view = app.workspace.getActiveViewOfType(MarkdownView)
-    if (!view) {
-      throw new Error('OmniSearch - No active MarkdownView')
-    }
-    const pos = view.editor.offsetToPos(name.length + 5)
-    pos.ch = 0
+    app.workspace.openLinkText(`${pathPrefix}${name}.md`, '', newLeaf)
   } catch (e) {
     ;(e as any).message =
       'OmniSearch - Could not create note: ' + (e as any).message

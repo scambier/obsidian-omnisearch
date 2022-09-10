@@ -18,7 +18,7 @@ import {
   wait,
 } from './utils'
 import type { Query } from './query'
-import { settings } from './settings'
+import { settings as storeSettings } from './settings'
 import {
   removeNoteFromCache,
   getNoteFromCache,
@@ -31,9 +31,12 @@ import {
   saveNotesCacheToFile,
   isCacheOutdated,
 } from './notes'
+import { get } from 'svelte/store'
 
 let minisearchInstance: MiniSearch<IndexedNote>
 let isIndexChanged: boolean
+
+const settings = get(storeSettings)
 
 const tokenize = (text: string): string[] => {
   const tokens = text.split(SPACE_OR_PUNCTUATION)
@@ -140,6 +143,7 @@ export async function initGlobalSearchIndex(): Promise<void> {
  */
 async function search(query: Query): Promise<SearchResult[]> {
   if (!query.segmentsToStr()) return []
+  
   let results = minisearchInstance.search(query.segmentsToStr(), {
     prefix: true,
     fuzzy: term => (term.length > 4 ? 0.2 : false),

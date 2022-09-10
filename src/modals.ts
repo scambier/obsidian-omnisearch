@@ -62,26 +62,35 @@ abstract class OmnisearchModal extends Modal {
     }
 
     // #endregion Up/Down navigation
+
+    // Open in new pane
     this.scope.register(['Mod'], 'Enter', e => {
       e.preventDefault()
-      eventBus.emit('ctrl-enter') // Open in new pane
+      eventBus.emit('open-in-new-pane')
     })
 
+    // Insert link
     this.scope.register(['Alt'], 'Enter', e => {
       e.preventDefault()
-      eventBus.emit('alt-enter') // Insert link
+      eventBus.emit('insert-link')
     })
 
+    // Create a new note
     this.scope.register(['Shift'], 'Enter', e => {
       e.preventDefault()
-      eventBus.emit('shift-enter') // Create a new note
+      eventBus.emit('create-note')
+    })
+    this.scope.register(['Ctrl', 'Shift'], 'Enter', e => {
+      e.preventDefault()
+      eventBus.emit('create-note', { newLeaf: true })
     })
 
+    // Open in current pane
     this.scope.register([], 'Enter', e => {
       if (!isInputComposition()) {
         // Check if the user is still typing
         e.preventDefault()
-        eventBus.emit('enter') // Open in current pane
+        eventBus.emit('enter')
       }
     })
 

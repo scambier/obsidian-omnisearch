@@ -34,9 +34,9 @@
     searchQuery = searchHistory[historySearchIndex]
     eventBus.enable('vault')
     eventBus.on('vault', 'enter', openNoteAndCloseModal)
-    eventBus.on('vault', 'shift-enter', createNoteAndCloseModal)
-    eventBus.on('vault', 'ctrl-enter', openNoteInNewPane)
-    eventBus.on('vault', 'alt-enter', insertLink)
+    eventBus.on('vault', 'create-note', createNoteAndCloseModal)
+    eventBus.on('vault', 'open-in-new-pane', openNoteInNewPane)
+    eventBus.on('vault', 'insert-link', insertLink)
     eventBus.on('vault', 'tab', switchToInFileModal)
     eventBus.on('vault', 'arrow-up', () => moveIndex(-1))
     eventBus.on('vault', 'arrow-down', () => moveIndex(1))
@@ -105,9 +105,12 @@
     openNote(note, newPane)
   }
 
-  async function createNoteAndCloseModal(): Promise<void> {
+  async function createNoteAndCloseModal(opt?: {
+    newLeaf: boolean
+  }): Promise<void> {
+    console.log(opt)
     try {
-      await createNote(searchQuery)
+      await createNote(searchQuery, opt?.newLeaf)
     } catch (e) {
       new Notice((e as Error).message)
       return
@@ -208,6 +211,7 @@
     <span class="prompt-instruction-command">↹</span>
     <span>to switch to In-File Search</span>
   </div>
+
   <br />
 
   <div class="prompt-instruction">
@@ -219,16 +223,21 @@
     <span>to create</span>
   </div>
   <div class="prompt-instruction">
+    <span class="prompt-instruction-command">ctrl shift ↵</span>
+    <span>to create in a new pane</span>
+  </div>
+
+  <br />
+
+  <div class="prompt-instruction">
     <span class="prompt-instruction-command">alt ↵</span>
     <span>to insert a link</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">esc</span><span>to close</span>
-  </div>
-  <br />
-
-  <div class="prompt-instruction">
     <span class="prompt-instruction-command">ctrl+h</span><span
       >to toggle context</span>
+  </div>
+  <div class="prompt-instruction">
+    <span class="prompt-instruction-command">esc</span><span>to close</span>
   </div>
 </div>

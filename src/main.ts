@@ -11,6 +11,7 @@ import { eventBus } from './globals'
 import { registerAPI } from '@vanakat/plugin-api'
 import api from './api'
 import { loadSearchHistory } from './search-history'
+import { get } from 'svelte/store'
 
 // let mainWindow: { on: any; off: any } | null = null
 // try {
@@ -35,7 +36,7 @@ export default class OmnisearchPlugin extends Plugin {
 
     _registerAPI(this)
 
-    if (settings.ribbonIcon) {
+    if (get(settings).ribbonIcon) {
       this.addRibbonButton()
     }
 
