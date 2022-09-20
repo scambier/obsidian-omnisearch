@@ -77,10 +77,10 @@ export async function initGlobalSearchIndex(): Promise<void> {
     try {
       const json = await app.vault.adapter.read(searchIndexFilePath)
       minisearchInstance = MiniSearch.loadJSON(json, options)
-      console.log('MiniSearch index loaded from the file')
+      console.log('Omnisearch - MiniSearch index loaded from the file')
       await loadNotesCache()
     } catch (e) {
-      console.trace('Could not load MiniSearch index from the file')
+      console.trace('Omnisearch - Could not load MiniSearch index from the file')
       console.error(e)
     }
   }
