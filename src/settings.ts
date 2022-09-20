@@ -16,15 +16,10 @@ export interface OmnisearchSettings extends WeightingSettings {
   showIndexingNotices: boolean
   ribbonIcon: boolean
   showShortName: boolean
-  showContext: SearchContextType
+  showContext: boolean
   CtrlJK: boolean
   CtrlNP: boolean
   storeIndexInFile: boolean
-}
-
-export enum SearchContextType {
-  None,
-  Simple,
 }
 
 export class SettingsTab extends PluginSettingTab {
@@ -122,6 +117,25 @@ export class SettingsTab extends PluginSettingTab {
         toggle.setValue(get(settings).ribbonIcon).onChange(async v => {
           settings.update(s => {
             s.ribbonIcon = v
+            return s
+          })
+          await saveSettings(this.plugin)
+          if (v) {
+            this.plugin.addRibbonButton()
+          }
+        })
+      )
+
+    // Show Context
+    new Setting(containerEl)
+      .setName('Show context')
+      .setDesc(
+        'Shows the part of the note that matches the search. Disable this to only show filenames in results.'
+      )
+      .addToggle(toggle =>
+        toggle.setValue(get(settings).showContext).onChange(async v => {
+          settings.update(s => {
+            s.showContext = v
             return s
           })
           await saveSettings(this.plugin)
@@ -243,7 +257,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   showIndexingNotices: false,
   showShortName: false,
   ribbonIcon: true,
-  showContext: SearchContextType.Simple,
+  showContext: true,
 
   weightBasename: 2,
   weightH1: 1.5,

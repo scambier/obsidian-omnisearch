@@ -11,7 +11,7 @@
   import ResultItemVault from './ResultItemVault.svelte'
   import { Query } from 'src/query'
   import { saveSearchHistory, searchHistory } from 'src/search-history'
-  import { SearchContextType, settings } from 'src/settings'
+  import { settings } from 'src/settings'
 
   export let modal: OmnisearchVaultModal
   let selectedIndex = 0
@@ -29,7 +29,6 @@
   }
 
   onMount(async () => {
-    console.log('mount')
     await reindexNotes()
     searchQuery = searchHistory[historySearchIndex]
     eventBus.enable('vault')
@@ -42,7 +41,6 @@
     eventBus.on('vault', 'arrow-down', () => moveIndex(1))
     eventBus.on('vault', 'prev-search-history', prevSearchHistory)
     eventBus.on('vault', 'next-search-history', nextSearchHistory)
-    eventBus.on('vault', 'toggle-context', toggleContext)
   })
 
   onDestroy(() => {
@@ -60,16 +58,6 @@
       historySearchIndex = searchHistory.length ? searchHistory.length - 1 : 0
     }
     searchQuery = searchHistory[historySearchIndex]
-  }
-
-  function toggleContext() {
-    settings.update(s => {
-      s.showContext =
-        s.showContext === SearchContextType.None
-          ? SearchContextType.Simple
-          : SearchContextType.None
-      return s
-    })
   }
 
   async function updateResults() {
@@ -108,7 +96,6 @@
   async function createNoteAndCloseModal(opt?: {
     newLeaf: boolean
   }): Promise<void> {
-    console.log(opt)
     try {
       await createNote(searchQuery, opt?.newLeaf)
     } catch (e) {
@@ -203,8 +190,8 @@
     <span class="prompt-instruction-command">↑↓</span><span>to navigate</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">alt ↑↓</span><span
-      >to cycle history</span>
+    <span class="prompt-instruction-command">alt ↑↓</span>
+    <span>to cycle history</span>
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">↵</span><span>to open</span>
@@ -236,8 +223,8 @@
     <span>to insert a link</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">ctrl+h</span><span
-      >to toggle context</span>
+    <span class="prompt-instruction-command">ctrl+h</span>
+    <span>to toggle context</span>
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">esc</span><span>to close</span>

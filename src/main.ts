@@ -43,6 +43,13 @@ export default class OmnisearchPlugin extends Plugin {
     this.addSettingTab(new SettingsTab(this))
     eventBus.disable('vault')
     eventBus.disable('infile')
+    eventBus.on('global', 'toggle-context', () => {
+      settings.update(s => {
+        s.showContext = !s.showContext
+        return s
+      })
+      this.saveData(get(settings))
+    })
 
     // Commands to display Omnisearch modals
     this.addCommand({
