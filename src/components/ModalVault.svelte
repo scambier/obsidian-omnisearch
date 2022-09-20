@@ -181,20 +181,22 @@
 </script>
 
 <div class="modal-title">Omnisearch - Vault</div>
-<InputSearch value={searchQuery} on:input={e => (searchQuery = e.detail)} />
+<div class="modal-content">
+  <InputSearch value={searchQuery} on:input={e => (searchQuery = e.detail)} />
 
-<ModalContainer>
-  {#each resultNotes as result, i}
-    <ResultItemVault
-      selected={i === selectedIndex}
-      note={result}
-      on:mousemove={e => (selectedIndex = i)}
-      on:click={onClick} />
-  {/each}
-  {#if !resultNotes.length && searchQuery}
-    <center> We found 0 result for your search here. </center>
-  {/if}
-</ModalContainer>
+  <ModalContainer>
+    {#each resultNotes as result, i}
+      <ResultItemVault
+        selected={i === selectedIndex}
+        note={result}
+        on:mousemove={e => (selectedIndex = i)}
+        on:click={onClick} />
+    {/each}
+    {#if !resultNotes.length && searchQuery}
+      <center> We found 0 result for your search here. </center>
+    {/if}
+  </ModalContainer>
+</div>
 
 <div class="prompt-instructions">
   <div class="prompt-instruction">

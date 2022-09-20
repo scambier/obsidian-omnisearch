@@ -9,13 +9,13 @@ abstract class OmnisearchModal extends Modal {
   constructor(app: App) {
     super(app)
 
-    // Remove all the default modal's children (except the close button)
+    // Remove all the default modal's children
     // so that we can more easily customize it
     const closeEl = this.containerEl.find('.modal-close-button')
     this.modalEl.replaceChildren()
     this.modalEl.append(closeEl)
     this.modalEl.addClass('omnisearch-modal', 'prompt')
-    this.modalEl.removeClass('modal')
+    // this.modalEl.removeClass('modal')
     this.modalEl.tabIndex = -1
 
     // Setup events that can be listened through the event bus
