@@ -153,7 +153,7 @@
         {note}
         index={i}
         selected={i === selectedIndex}
-        on:mousemove={e => (selectedIndex = i)}
+        on:mousemove={_e => (selectedIndex = i)}
         on:click={openSelection} />
     {/each}
   {:else}

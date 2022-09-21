@@ -80,7 +80,9 @@ export async function initGlobalSearchIndex(): Promise<void> {
       console.log('Omnisearch - MiniSearch index loaded from the file')
       await loadNotesCache()
     } catch (e) {
-      console.trace('Omnisearch - Could not load MiniSearch index from the file')
+      console.trace(
+        'Omnisearch - Could not load MiniSearch index from the file'
+      )
       console.error(e)
     }
   }
@@ -138,12 +140,12 @@ export async function initGlobalSearchIndex(): Promise<void> {
 /**
  * Searches the index for the given query,
  * and returns an array of raw results
- * @param text
+ * @param query
  * @returns
  */
 async function search(query: Query): Promise<SearchResult[]> {
   if (!query.segmentsToStr()) return []
-  
+
   let results = minisearchInstance.search(query.segmentsToStr(), {
     prefix: true,
     fuzzy: term => (term.length > 4 ? 0.2 : false),
@@ -253,7 +255,7 @@ export async function getSuggestions(
   }
 
   // Map the raw results to get usable suggestions
-  const suggestions = results.map(result => {
+  return results.map(result => {
     const note = getNoteFromCache(result.id)
     if (!note) {
       throw new Error(`Note "${result.id}" not indexed`)
@@ -292,8 +294,6 @@ export async function getSuggestions(
     }
     return resultNote
   })
-
-  return suggestions
 }
 
 /**
@@ -365,6 +365,7 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
  * Index a non-existing note.
  * Useful to find internal links that lead (yet) to nowhere
  * @param name
+ * @param parent The note referencing the
  */
 export function addNonExistingToIndex(name: string, parent: string): void {
   name = removeAnchors(name)
@@ -415,9 +416,11 @@ export function removeFromIndex(path: string): void {
 }
 
 const notesToReindex = new Set<TAbstractFile>()
+
 export function addNoteToReindex(note: TAbstractFile): void {
   notesToReindex.add(note)
 }
+
 export async function reindexNotes(): Promise<void> {
   if (settings.showIndexingNotices && notesToReindex.size > 0) {
     new Notice(`Omnisearch - Reindexing ${notesToReindex.size} notes`, 2000)

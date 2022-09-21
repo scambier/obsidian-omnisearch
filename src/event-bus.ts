@@ -55,7 +55,7 @@ export class EventBus {
 
   public emit(event: string, ...args: any[]): void {
     const entries = [...this.handlers.entries()].filter(
-      ([k, h]) => !this.disabled.includes(k.split('@')[0])
+      ([k, _]) => !this.disabled.includes(k.split('@')[0])
     )
     for (const [key, handler] of entries) {
       if (key.endsWith(`@${event}`)) {

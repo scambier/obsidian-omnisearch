@@ -101,7 +101,7 @@ export default class OmnisearchPlugin extends Plugin {
   onunload(): void {}
 
   addRibbonButton(): void {
-    this.addRibbonIcon('search', 'Omnisearch', evt => {
+    this.addRibbonIcon('search', 'Omnisearch', _evt => {
       new OmnisearchVaultModal(app).open()
     })
   }

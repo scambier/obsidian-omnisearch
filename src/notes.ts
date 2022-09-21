@@ -43,15 +43,19 @@ export async function loadNotesCache(): Promise<void> {
     notesCache = {}
   }
 }
+
 export function getNoteFromCache(key: string): IndexedNote | undefined {
   return notesCache[key]
 }
+
 export function getNonExistingNotesFromCache(): IndexedNote[] {
   return Object.values(notesCache).filter(note => note.doesNotExist)
 }
+
 export function addNoteToCache(filename: string, note: IndexedNote): void {
   notesCache[filename] = note
 }
+
 export function removeNoteFromCache(key: string): void {
   delete notesCache[key]
 }
@@ -74,7 +78,7 @@ export async function openNote(
         leaf.getViewState().state?.file === item.path &&
         leaf.getViewState()?.pinned
       ) {
-        app.workspace.setActiveLeaf(leaf, false, true)
+        app.workspace.setActiveLeaf(leaf, { focus: true })
         alreadyOpenAndPinned = true
       }
     }
@@ -101,7 +105,7 @@ export async function openNote(
 
 export async function createNote(name: string, newLeaf = false): Promise<void> {
   try {
-    let pathPrefix = ''
+    let pathPrefix: string
     switch (app.vault.getConfig('newFileLocation')) {
       case 'current':
         pathPrefix = (app.workspace.getActiveFile()?.parent.path ?? '') + '/'
@@ -113,7 +117,7 @@ export async function createNote(name: string, newLeaf = false): Promise<void> {
         pathPrefix = ''
         break
     }
-    app.workspace.openLinkText(`${pathPrefix}${name}.md`, '', newLeaf)
+    await app.workspace.openLinkText(`${pathPrefix}${name}.md`, '', newLeaf)
   } catch (e) {
     ;(e as any).message =
       'OmniSearch - Could not create note: ' + (e as any).message
