@@ -28,6 +28,7 @@
     "jest": "^27.5.1",
     "obsidian": "latest",
     "prettier": "^2.7.1",
+    "prettier-plugin-svelte": "^2.7.0",
     "svelte": "^3.50.1",
     "svelte-jester": "^2.3.2",
     "svelte-preprocess": "^4.10.7",
