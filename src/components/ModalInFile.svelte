@@ -140,28 +140,28 @@
   }
 </script>
 
-<div class="modal-title">Omnisearch - File</div>
-<div class="modal-content">
-  <InputSearch value={searchQuery} on:input={e => (searchQuery = e.detail)} />
+<InputSearch
+  value={searchQuery}
+  on:input={e => (searchQuery = e.detail)}
+  label="Omnisearch - File" />
 
-  <ModalContainer>
-    {#if groupedOffsets.length && note}
-      {#each groupedOffsets as offset, i}
-        <ResultItemInFile
-          {offset}
-          {note}
-          index={i}
-          selected={i === selectedIndex}
-          on:mousemove={e => (selectedIndex = i)}
-          on:click={openSelection} />
-      {/each}
-    {:else}
-      <div style="text-align: center;">
-        We found 0 result for your search here.
-      </div>
-    {/if}
-  </ModalContainer>
-</div>
+<ModalContainer>
+  {#if groupedOffsets.length && note}
+    {#each groupedOffsets as offset, i}
+      <ResultItemInFile
+        {offset}
+        {note}
+        index={i}
+        selected={i === selectedIndex}
+        on:mousemove={e => (selectedIndex = i)}
+        on:click={openSelection} />
+    {/each}
+  {:else}
+    <div style="text-align: center;">
+      We found 0 result for your search here.
+    </div>
+  {/if}
+</ModalContainer>
 
 <div class="prompt-instructions">
   <div class="prompt-instruction">

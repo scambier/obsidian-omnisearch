@@ -29,3 +29,22 @@
 
 .omnisearch-highlight {
 }
+
+.omnisearch-input-container {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+}
+
+.omnisearch-input-field {
+  position: relative;
+  flex-grow: 1;
+}
+
+.omnisearch-input__context {
+  position: absolute;
+  right: 1em;
+  top: calc(50% - 0.75em);
+  color: var(--text-faint);
+  font-size: small;
+}

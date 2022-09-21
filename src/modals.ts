@@ -1,4 +1,4 @@
-import { App, Modal, TFile, Platform } from 'obsidian'
+import { App, Modal, TFile } from 'obsidian'
 import ModalVault from './components/ModalVault.svelte'
 import ModalInFile from './components/ModalInFile.svelte'
 import { eventBus, isInputComposition } from './globals'
@@ -6,14 +6,14 @@ import { settings } from './settings'
 import { get } from 'svelte/store'
 
 abstract class OmnisearchModal extends Modal {
-  constructor(app: App) {
+  protected constructor(app: App) {
     super(app)
 
     // Remove all the default modal's children
     // so that we can more easily customize it
-    const closeEl = this.containerEl.find('.modal-close-button')
+    // const closeEl = this.containerEl.find('.modal-close-button')
     this.modalEl.replaceChildren()
-    this.modalEl.append(closeEl)
+    // this.modalEl.append(closeEl)
     this.modalEl.addClass('omnisearch-modal', 'prompt')
     // this.modalEl.removeClass('modal')
     this.modalEl.tabIndex = -1

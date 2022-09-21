@@ -11,7 +11,7 @@
   import ResultItemVault from './ResultItemVault.svelte'
   import { Query } from 'src/query'
   import { saveSearchHistory, searchHistory } from 'src/search-history'
-  import { settings } from 'src/settings'
+  import { settings } from '../settings'
 
   export let modal: OmnisearchVaultModal
   let selectedIndex = 0
@@ -53,6 +53,7 @@
     }
     searchQuery = searchHistory[historySearchIndex]
   }
+
   function nextSearchHistory() {
     if (--historySearchIndex < 0) {
       historySearchIndex = searchHistory.length ? searchHistory.length - 1 : 0
@@ -66,7 +67,7 @@
       (a, b) => b.score - a.score
     )
     selectedIndex = 0
-    scrollIntoView()
+    await scrollIntoView()
   }
 
   function onClick(evt?: MouseEvent | KeyboardEvent) {
@@ -167,23 +168,29 @@
   }
 </script>
 
-<div class="modal-title">Omnisearch - Vault</div>
-<div class="modal-content">
-  <InputSearch value={searchQuery} on:input={e => (searchQuery = e.detail)} />
+<InputSearch
+  value="{searchQuery}"
+  on:input="{e => (searchQuery = e.detail)}"
+  label="Omnisearch - Vault">
+  {#if $settings.showCreateButton}
+    <button on:click="{createNoteAndCloseModal}">Create note</button>
+  {/if}
+</InputSearch>
 
-  <ModalContainer>
-    {#each resultNotes as result, i}
-      <ResultItemVault
-        selected={i === selectedIndex}
-        note={result}
-        on:mousemove={e => (selectedIndex = i)}
-        on:click={onClick} />
-    {/each}
-    {#if !resultNotes.length && searchQuery}
-      <center> We found 0 result for your search here. </center>
-    {/if}
-  </ModalContainer>
-</div>
+<ModalContainer>
+  {#each resultNotes as result, i}
+    <ResultItemVault
+      selected="{i === selectedIndex}"
+      note="{result}"
+      on:mousemove="{_ => (selectedIndex = i)}"
+      on:click="{onClick}" />
+  {/each}
+  {#if !resultNotes.length && searchQuery}
+    <div style="text-align: center;">
+      We found 0 result for your search here.
+    </div>
+  {/if}
+</ModalContainer>
 
 <div class="prompt-instructions">
   <div class="prompt-instruction">

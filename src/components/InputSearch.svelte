@@ -4,6 +4,7 @@
   import { createEventDispatcher, onMount, tick } from 'svelte'
 
   export let value = ''
+  export let label = ''
   const dispatch = createEventDispatcher()
 
   let elInput: HTMLInputElement
@@ -22,13 +23,22 @@
   }, 100)
 </script>
 
-<input
-  bind:value
-  bind:this={elInput}
-  on:input={debouncedOnInput}
-  on:compositionstart={_ => toggleInputComposition(true)}
-  on:compositionend={_ => toggleInputComposition(false)}
-  type="text"
-  class="prompt-input"
-  placeholder="Type to search through your notes"
-  spellcheck="false" />
+<div class="omnisearch-input-container">
+  <div class="omnisearch-input-field">
+    <input
+      bind:value
+      bind:this="{elInput}"
+      on:input="{debouncedOnInput}"
+      on:compositionstart="{_ => toggleInputComposition(true)}"
+      on:compositionend="{_ => toggleInputComposition(false)}"
+      type="text"
+      class="prompt-input"
+      placeholder="Type to search through your notes"
+      spellcheck="false" />
+
+    <span class="omnisearch-input__context">
+      {label}
+    </span>
+  </div>
+  <slot></slot>
+</div>

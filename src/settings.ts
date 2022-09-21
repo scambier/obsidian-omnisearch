@@ -1,7 +1,7 @@
 import { Plugin, PluginSettingTab, Setting, SliderComponent } from 'obsidian'
 import { notesCacheFilePath, searchIndexFilePath } from './globals'
 import type OmnisearchPlugin from './main'
-import { get, readable, writable } from 'svelte/store'
+import { get, writable } from 'svelte/store'
 
 interface WeightingSettings {
   weightBasename: number
@@ -17,6 +17,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   ribbonIcon: boolean
   showShortName: boolean
   showContext: boolean
+  showCreateButton: boolean
   CtrlJK: boolean
   CtrlNP: boolean
   storeIndexInFile: boolean
@@ -61,8 +62,7 @@ export class SettingsTab extends PluginSettingTab {
     const diacriticsDesc = new DocumentFragment()
     diacriticsDesc.createSpan({}, span => {
       span.innerHTML = `Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky".<br/>
-        <strong>Needs a restart to fully take effect.</strong>
-        `
+        <strong>Needs a restart to fully take effect.</strong>`
     })
     new Setting(containerEl)
       .setName('Ignore diacritics')
@@ -77,6 +77,7 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
+    // Store index
     const serializedIndexDesc = new DocumentFragment()
     serializedIndexDesc.createSpan({}, span => {
       span.innerHTML = `The search index is stored on disk, instead of being rebuilt at every startup.
@@ -91,8 +92,8 @@ export class SettingsTab extends PluginSettingTab {
       .setDesc(serializedIndexDesc)
       .addToggle(toggle =>
         toggle.setValue(get(settings).storeIndexInFile).onChange(async v => {
-          app.vault.adapter.remove(notesCacheFilePath)
-          app.vault.adapter.remove(searchIndexFilePath)
+          await app.vault.adapter.remove(notesCacheFilePath)
+          await app.vault.adapter.remove(searchIndexFilePath)
           settings.update(s => {
             s.storeIndexInFile = v
             return s
@@ -145,10 +146,29 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
+    // Show "Create note" button
+    const createBtnDesc = new DocumentFragment()
+    createBtnDesc.createSpan({}, span => {
+      span.innerHTML = `Shows a button next to the search input, to create a note.
+        Acts the same as the <code>shift ↵</code> shortcut, can be useful for mobile device users.`
+    })
+    new Setting(containerEl)
+      .setName('Show "Create note" button')
+      .setDesc(createBtnDesc)
+      .addToggle(toggle =>
+        toggle.setValue(get(settings).showCreateButton).onChange(async v => {
+          settings.update(s => {
+            s.showCreateButton = v
+            return s
+          })
+          await saveSettings(this.plugin)
+        })
+      )
+
     // Show notices
     new Setting(containerEl)
       .setName('Show indexing notices')
-      .setDesc('Show a notice when indexing is done, usually at startup.')
+      .setDesc('Shows a notice when indexing is done, usually at startup.')
       .addToggle(toggle =>
         toggle.setValue(get(settings).showIndexingNotices).onChange(async v => {
           settings.update(s => {
@@ -258,6 +278,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   showShortName: false,
   ribbonIcon: true,
   showContext: true,
+  showCreateButton: false,
 
   weightBasename: 2,
   weightH1: 1.5,
