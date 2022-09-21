@@ -116,3 +116,7 @@ For example, if you'd like the usual yellow highlight on search matches, you can
 ## LICENSE
 
 Omnisearch is licensed under [GPL-3](https://tldrlegal.com/license/gnu-general-public-license-v3-(gpl-3)).
+
+## Sponsors
+
+![JetBrains Logo (Main) logo](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)
