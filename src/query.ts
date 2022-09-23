@@ -1,4 +1,3 @@
-import { get } from 'svelte/store'
 import { settings } from './settings'
 import { removeDiacritics, stripSurroundingQuotes } from './utils'
 import { parseQuery } from './vendor/parse-query'
@@ -23,7 +22,7 @@ export class Query {
   public exclusions: QueryToken[] = []
 
   constructor(text = '') {
-    if (get(settings).ignoreDiacritics) text = removeDiacritics(text)
+    if (settings.ignoreDiacritics) text = removeDiacritics(text)
     const tokens = parseQuery(text.toLowerCase(), { tokenize: true })
     this.exclusions = tokens.exclude.text
       .map(this.formatToken)

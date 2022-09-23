@@ -11,7 +11,6 @@ import {
 } from './globals'
 import { stringsToRegex, wait } from './utils'
 import { settings } from './settings'
-import { get } from 'svelte/store'
 
 /**
  * This is an in-memory cache of the notes, with all their computed fields
@@ -26,7 +25,7 @@ export function resetNotesCache(): void {
 
 export async function loadNotesCache(): Promise<void> {
   if (
-    get(settings).storeIndexInFile &&
+    settings.storeIndexInFile &&
     (await app.vault.adapter.exists(notesCacheFilePath))
   ) {
     try {

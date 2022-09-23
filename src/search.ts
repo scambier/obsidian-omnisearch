@@ -12,13 +12,14 @@ import {
   extractHeadingsFromCache,
   getAliasesFromMetadata,
   getTagsFromMetadata,
+  isFileIndexable,
   removeDiacritics,
   stringsToRegex,
   stripMarkdownCharacters,
   wait,
 } from './utils'
 import type { Query } from './query'
-import { settings as storeSettings } from './settings'
+import { settings  } from './settings'
 import {
   removeNoteFromCache,
   getNoteFromCache,
@@ -31,13 +32,9 @@ import {
   saveNotesCacheToFile,
   isCacheOutdated,
 } from './notes'
-import { get } from 'svelte/store'
 
 let minisearchInstance: MiniSearch<IndexedNote>
 let isIndexChanged: boolean
-
-const settings = get(storeSettings)
-
 const tokenize = (text: string): string[] => {
   const tokens = text.split(SPACE_OR_PUNCTUATION)
   const chsSegmenter = (app as any).plugins.plugins['cm-chs-patch']
@@ -95,7 +92,7 @@ export async function initGlobalSearchIndex(): Promise<void> {
   // Index files that are already present
   const start = new Date().getTime()
 
-  const allFiles = app.vault.getMarkdownFiles()
+  const allFiles = app.vault.getFiles().filter(f => isFileIndexable(f.path))
 
   let files
   let notesSuffix
@@ -302,7 +299,7 @@ export async function getSuggestions(
  * @returns
  */
 export async function addToIndex(file: TAbstractFile): Promise<void> {
-  if (!(file instanceof TFile) || file.extension !== 'md') {
+  if (!(file instanceof TFile) || !isFileIndexable(file.path)) {
     return
   }
 
@@ -396,8 +393,8 @@ export function addNonExistingToIndex(name: string, parent: string): void {
  * @param path
  */
 export function removeFromIndex(path: string): void {
-  if (!path.endsWith('.md')) {
-    console.info(`"${path}" is not a .md file`)
+  if (!isFileIndexable(path)) {
+    console.info(`"${path}" is not an indexable file`)
     return
   }
   const note = getNoteFromCache(path)

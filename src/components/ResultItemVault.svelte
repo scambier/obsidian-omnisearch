@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getNoteFromCache } from 'src/notes'
-  import { settings } from 'src/settings'
+  import { settings, showContext } from 'src/settings'
   import type { ResultNote } from '../globals'
   import { getMatches } from '../search'
   import { highlighter, makeExcerpt, stringsToRegex } from '../utils'
@@ -13,7 +13,7 @@
   $: matches = getMatches(note.content, reg)
   $: cleanedContent = makeExcerpt(note.content, note.matches[0]?.offset ?? -1)
   $: glyph = getNoteFromCache(note.path)?.doesNotExist
-  $: title = $settings.showShortName ? note.basename : note.path
+  $: title = settings.showShortName ? note.basename : note.path
 </script>
 
 <ResultItemContainer id={note.path} {selected} on:mousemove on:click {glyph}>
@@ -29,7 +29,7 @@
     {/if}
   </div>
 
-  {#if $settings.showContext}
+  {#if $showContext}
     <div class="omnisearch-result__body">
       {@html cleanedContent.replace(reg, highlighter)}
     </div>

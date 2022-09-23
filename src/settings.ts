@@ -1,7 +1,7 @@
 import { Plugin, PluginSettingTab, Setting, SliderComponent } from 'obsidian'
+import { writable } from 'svelte/store'
 import { notesCacheFilePath, searchIndexFilePath } from './globals'
 import type OmnisearchPlugin from './main'
-import { get, writable } from 'svelte/store'
 
 interface WeightingSettings {
   weightBasename: number
@@ -13,6 +13,9 @@ interface WeightingSettings {
 export interface OmnisearchSettings extends WeightingSettings {
   respectExcluded: boolean
   ignoreDiacritics: boolean
+  indexedFileTypes: string[]
+  storeIndexInFile: boolean
+
   showIndexingNotices: boolean
   ribbonIcon: boolean
   showShortName: boolean
@@ -20,8 +23,12 @@ export interface OmnisearchSettings extends WeightingSettings {
   showCreateButton: boolean
   CtrlJK: boolean
   CtrlNP: boolean
-  storeIndexInFile: boolean
 }
+
+/**
+ * A store to reactively toggle the `showContext` setting on the fly
+ */
+export const showContext = writable(false)
 
 export class SettingsTab extends PluginSettingTab {
   plugin: OmnisearchPlugin
@@ -29,6 +36,11 @@ export class SettingsTab extends PluginSettingTab {
   constructor(plugin: OmnisearchPlugin) {
     super(app, plugin)
     this.plugin = plugin
+
+    showContext.subscribe(async v => {
+      settings.showContext = v
+      await saveSettings(this.plugin)
+    })
   }
 
   display(): void {
@@ -49,11 +61,8 @@ export class SettingsTab extends PluginSettingTab {
         'Files that are in Obsidian\'s "Options > Files & Links > Excluded Files" list will be downranked in results.'
       )
       .addToggle(toggle =>
-        toggle.setValue(get(settings).respectExcluded).onChange(async v => {
-          settings.update(s => {
-            s.respectExcluded = v
-            return s
-          })
+        toggle.setValue(settings.respectExcluded).onChange(async v => {
+          settings.respectExcluded = v
           await saveSettings(this.plugin)
         })
       )
@@ -68,14 +77,32 @@ export class SettingsTab extends PluginSettingTab {
       .setName('Ignore diacritics')
       .setDesc(diacriticsDesc)
       .addToggle(toggle =>
-        toggle.setValue(get(settings).ignoreDiacritics).onChange(async v => {
-          settings.update(s => {
-            s.ignoreDiacritics = v
-            return s
-          })
+        toggle.setValue(settings.ignoreDiacritics).onChange(async v => {
+          settings.ignoreDiacritics = v
           await saveSettings(this.plugin)
         })
       )
+
+    // Additional files to index
+    const indexedFileTypesDesc = new DocumentFragment()
+    indexedFileTypesDesc.createSpan({}, span => {
+      span.innerHTML = `In addition to standard <code>md</code> files, Omnisearch can also index other plain text files.<br/>
+      Add extensions separated by a space. Example: <code>txt org</code>.<br />
+      This setting will also add these files in the navigation, and they will be treated as markdown.<br />
+      <strong>Needs a restart to fully take effect.</strong>`
+    })
+    new Setting(containerEl)
+      .setName('Additional files to index')
+      .setDesc(indexedFileTypesDesc)
+      .addText(component => {
+        component
+          .setValue(settings.indexedFileTypes.join(' '))
+          .setPlaceholder('Example: txt org')
+          .onChange(async v => {
+            settings.indexedFileTypes = v.split(' ')
+            await saveSettings(this.plugin)
+          })
+      })
 
     // Store index
     const serializedIndexDesc = new DocumentFragment()
@@ -91,13 +118,10 @@ export class SettingsTab extends PluginSettingTab {
       .setName('EXPERIMENTAL - Store index in file')
       .setDesc(serializedIndexDesc)
       .addToggle(toggle =>
-        toggle.setValue(get(settings).storeIndexInFile).onChange(async v => {
+        toggle.setValue(settings.storeIndexInFile).onChange(async v => {
           await app.vault.adapter.remove(notesCacheFilePath)
           await app.vault.adapter.remove(searchIndexFilePath)
-          settings.update(s => {
-            s.storeIndexInFile = v
-            return s
-          })
+          settings.storeIndexInFile = v
           await saveSettings(this.plugin)
         })
       )
@@ -115,11 +139,8 @@ export class SettingsTab extends PluginSettingTab {
         'Add a button on the sidebar to open the Vault search modal. Needs a restart to remove the button.'
       )
       .addToggle(toggle =>
-        toggle.setValue(get(settings).ribbonIcon).onChange(async v => {
-          settings.update(s => {
-            s.ribbonIcon = v
-            return s
-          })
+        toggle.setValue(settings.ribbonIcon).onChange(async v => {
+          settings.ribbonIcon = v
           await saveSettings(this.plugin)
           if (v) {
             this.plugin.addRibbonButton()
@@ -134,15 +155,8 @@ export class SettingsTab extends PluginSettingTab {
         'Shows the part of the note that matches the search. Disable this to only show filenames in results.'
       )
       .addToggle(toggle =>
-        toggle.setValue(get(settings).showContext).onChange(async v => {
-          settings.update(s => {
-            s.showContext = v
-            return s
-          })
-          await saveSettings(this.plugin)
-          if (v) {
-            this.plugin.addRibbonButton()
-          }
+        toggle.setValue(settings.showContext).onChange(async v => {
+          showContext.set(v)
         })
       )
 
@@ -156,11 +170,8 @@ export class SettingsTab extends PluginSettingTab {
       .setName('Show "Create note" button')
       .setDesc(createBtnDesc)
       .addToggle(toggle =>
-        toggle.setValue(get(settings).showCreateButton).onChange(async v => {
-          settings.update(s => {
-            s.showCreateButton = v
-            return s
-          })
+        toggle.setValue(settings.showCreateButton).onChange(async v => {
+          settings.showCreateButton = v
           await saveSettings(this.plugin)
         })
       )
@@ -170,11 +181,8 @@ export class SettingsTab extends PluginSettingTab {
       .setName('Show indexing notices')
       .setDesc('Shows a notice when indexing is done, usually at startup.')
       .addToggle(toggle =>
-        toggle.setValue(get(settings).showIndexingNotices).onChange(async v => {
-          settings.update(s => {
-            s.showIndexingNotices = v
-            return s
-          })
+        toggle.setValue(settings.showIndexingNotices).onChange(async v => {
+          settings.showIndexingNotices = v
           await saveSettings(this.plugin)
         })
       )
@@ -186,11 +194,8 @@ export class SettingsTab extends PluginSettingTab {
         'In the search results, only show the note name, without the full path.'
       )
       .addToggle(toggle =>
-        toggle.setValue(get(settings).showShortName).onChange(async v => {
-          settings.update(s => {
-            s.showShortName = v
-            return s
-          })
+        toggle.setValue(settings.showShortName).onChange(async v => {
+          settings.showShortName = v
           await saveSettings(this.plugin)
         })
       )
@@ -230,11 +235,8 @@ export class SettingsTab extends PluginSettingTab {
         'Use [Ctrl/Cmd]+j/k to navigate up/down in the results, if Vim mode is enabled'
       )
       .addToggle(toggle =>
-        toggle.setValue(get(settings).CtrlJK).onChange(async v => {
-          settings.update(s => {
-            s.CtrlJK = v
-            return s
-          })
+        toggle.setValue(settings.CtrlJK).onChange(async v => {
+          settings.CtrlJK = v
           await saveSettings(this.plugin)
         })
       )
@@ -244,11 +246,8 @@ export class SettingsTab extends PluginSettingTab {
         'Use [Ctrl/Cmd]+n/p to navigate up/down in the results, if Vim mode is enabled'
       )
       .addToggle(toggle =>
-        toggle.setValue(get(settings).CtrlNP).onChange(async v => {
-          settings.update(s => {
-            s.CtrlNP = v
-            return s
-          })
+        toggle.setValue(settings.CtrlNP).onChange(async v => {
+          settings.CtrlNP = v
           await saveSettings(this.plugin)
         })
       )
@@ -258,13 +257,10 @@ export class SettingsTab extends PluginSettingTab {
 
   weightSlider(cb: SliderComponent, key: keyof WeightingSettings): void {
     cb.setLimits(1, 3, 0.1)
-    cb.setValue(get(settings)[key])
+    cb.setValue(settings[key])
     cb.setDynamicTooltip()
     cb.onChange(v => {
-      settings.update(s => {
-        s[key] = v
-        return s
-      })
+      settings[key] = v
       saveSettings(this.plugin)
     })
   }
@@ -273,6 +269,7 @@ export class SettingsTab extends PluginSettingTab {
 export const DEFAULT_SETTINGS: OmnisearchSettings = {
   respectExcluded: true,
   ignoreDiacritics: true,
+  indexedFileTypes: [] as string[],
 
   showIndexingNotices: false,
   showShortName: false,
@@ -291,14 +288,13 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   storeIndexInFile: false,
 } as const
 
-export const settings = writable(
-  Object.assign({}, DEFAULT_SETTINGS) as OmnisearchSettings
-)
+export let settings = Object.assign({}, DEFAULT_SETTINGS) as OmnisearchSettings
 
 export async function loadSettings(plugin: Plugin): Promise<void> {
-  settings.set(Object.assign({}, DEFAULT_SETTINGS, await plugin.loadData()))
+  settings = Object.assign({}, DEFAULT_SETTINGS, await plugin.loadData())
+  showContext.set(settings.showContext)
 }
 
 export async function saveSettings(plugin: Plugin): Promise<void> {
-  await plugin.saveData(get(settings))
+  await plugin.saveData(settings)
 }

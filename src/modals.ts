@@ -3,7 +3,6 @@ import ModalVault from './components/ModalVault.svelte'
 import ModalInFile from './components/ModalInFile.svelte'
 import { eventBus, isInputComposition } from './globals'
 import { settings } from './settings'
-import { get } from 'svelte/store'
 
 abstract class OmnisearchModal extends Modal {
   protected constructor(app: App) {
@@ -38,7 +37,7 @@ abstract class OmnisearchModal extends Modal {
     ] as const) {
       for (const modifier of ['Ctrl', 'Meta'] as const) {
         this.scope.register([modifier], key.k, e => {
-          if (get(settings).CtrlJK && this.app.vault.getConfig('vimMode')) {
+          if (settings.CtrlJK && this.app.vault.getConfig('vimMode')) {
             e.preventDefault()
             eventBus.emit('arrow-' + key.dir)
           }
@@ -53,7 +52,7 @@ abstract class OmnisearchModal extends Modal {
     ] as const) {
       for (const modifier of ['Ctrl', 'Meta'] as const) {
         this.scope.register([modifier], key.k, e => {
-          if (get(settings).CtrlNP && this.app.vault.getConfig('vimMode')) {
+          if (settings.CtrlNP && this.app.vault.getConfig('vimMode')) {
             e.preventDefault()
             eventBus.emit('arrow-' + key.dir)
           }

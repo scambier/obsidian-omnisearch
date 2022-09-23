@@ -6,7 +6,7 @@
   import { eventBus, type ResultNote } from 'src/globals'
   import { createNote, openNote } from 'src/notes'
   import { getSuggestions, reindexNotes } from 'src/search'
-  import { getCtrlKeyLabel, loopIndex } from 'src/utils'
+  import { getCtrlKeyLabel, getExtension, loopIndex } from 'src/utils'
   import { OmnisearchInFileModal, type OmnisearchVaultModal } from 'src/modals'
   import ResultItemVault from './ResultItemVault.svelte'
   import { Query } from 'src/query'
@@ -20,7 +20,6 @@
   let resultNotes: ResultNote[] = []
   let query: Query
   $: selectedNote = resultNotes[selectedIndex]
-  // $: lastSearch = lastSearches[lastSearchIndex]
 
   $: if (searchQuery) {
     updateResults()
@@ -94,6 +93,10 @@
     openNote(note, newPane)
   }
 
+  async function onClickCreateNote(e: MouseEvent) {
+    await createNoteAndCloseModal()
+  }
+
   async function createNoteAndCloseModal(opt?: {
     newLeaf: boolean
   }): Promise<void> {
@@ -123,7 +126,7 @@
     if (file && active) {
       link = app.fileManager.generateMarkdownLink(file, active.path)
     } else {
-      link = `[[${selectedNote.basename}.md]]`
+      link = `[[${selectedNote.basename}.${getExtension(selectedNote.path)}]]`
     }
 
     // Inject link
@@ -172,8 +175,8 @@
   value="{searchQuery}"
   on:input="{e => (searchQuery = e.detail)}"
   placeholder="Omnisearch - Vault">
-  {#if $settings.showCreateButton}
-    <button on:click="{createNoteAndCloseModal}">Create note</button>
+  {#if settings.showCreateButton}
+    <button on:click="{onClickCreateNote}">Create note</button>
   {/if}
 </InputSearch>
 

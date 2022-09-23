@@ -9,6 +9,7 @@ import {
   regexYaml,
 } from './globals'
 import type { SearchMatch } from './globals'
+import { settings } from './settings'
 
 export function highlighter(str: string): string {
   return `<span class="${highlightClass}">${str}</span>`
@@ -169,4 +170,16 @@ export function removeDiacritics(str: string): string {
 
 export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
   return Platform.isMacOS ? '⌘' : 'ctrl'
+}
+
+export function isFileIndexable(path: string): boolean {
+  return (
+    path.endsWith('.md') ||
+    settings.indexedFileTypes.some(t => path.endsWith(`.${t}`))
+  )
+}
+
+export function getExtension(path: string): string {
+  const split = path.split('.')
+  return split[split.length - 1]
 }

@@ -6,20 +6,12 @@ import {
   removeFromIndex,
 } from './search'
 import { OmnisearchInFileModal, OmnisearchVaultModal } from './modals'
-import { loadSettings, settings, SettingsTab } from './settings'
+import { loadSettings, settings, SettingsTab, showContext } from './settings'
 import { eventBus } from './globals'
 import { registerAPI } from '@vanakat/plugin-api'
 import api from './api'
 import { loadSearchHistory } from './search-history'
-import { get } from 'svelte/store'
-
-// let mainWindow: { on: any; off: any } | null = null
-// try {
-//   mainWindow = require('electron').remote.getCurrentWindow()
-// }
-// catch (e) {
-//   console.log("Can't load electron, mobile platform")
-// }
+import { isFileIndexable } from './utils'
 
 function _registerAPI(plugin: OmnisearchPlugin): void {
   registerAPI('omnisearch', api, plugin as any)
@@ -31,12 +23,15 @@ function _registerAPI(plugin: OmnisearchPlugin): void {
 
 export default class OmnisearchPlugin extends Plugin {
   async onload(): Promise<void> {
+    // additional files to index by Omnisearch
+
     await loadSettings(this)
+    this.registerExtensions(settings.indexedFileTypes, 'markdown')
     await loadSearchHistory()
 
     _registerAPI(this)
 
-    if (get(settings).ribbonIcon) {
+    if (settings.ribbonIcon) {
       this.addRibbonButton()
     }
 
@@ -44,11 +39,7 @@ export default class OmnisearchPlugin extends Plugin {
     eventBus.disable('vault')
     eventBus.disable('infile')
     eventBus.on('global', 'toggle-context', () => {
-      settings.update(s => {
-        s.showContext = !s.showContext
-        return s
-      })
-      this.saveData(get(settings))
+      showContext.set(!settings.showContext)
     })
 
     // Commands to display Omnisearch modals
@@ -87,7 +78,7 @@ export default class OmnisearchPlugin extends Plugin {
       )
       this.registerEvent(
         this.app.vault.on('rename', async (file, oldPath) => {
-          if (file instanceof TFile && file.path.endsWith('.md')) {
+          if (file instanceof TFile && isFileIndexable(file.path)) {
             removeFromIndex(oldPath)
             await addToIndex(file)
           }
