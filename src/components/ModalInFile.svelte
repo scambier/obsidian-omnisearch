@@ -143,7 +143,7 @@
 <InputSearch
   value={searchQuery}
   on:input={e => (searchQuery = e.detail)}
-  label="Omnisearch - File" />
+  placeholder="Omnisearch - File" />
 
 <ModalContainer>
   {#if groupedOffsets.length && note}

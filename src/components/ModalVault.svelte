@@ -171,7 +171,7 @@
 <InputSearch
   value="{searchQuery}"
   on:input="{e => (searchQuery = e.detail)}"
-  label="Omnisearch - Vault">
+  placeholder="Omnisearch - Vault">
   {#if $settings.showCreateButton}
     <button on:click="{createNoteAndCloseModal}">Create note</button>
   {/if}

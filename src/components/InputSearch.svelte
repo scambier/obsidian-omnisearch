@@ -4,7 +4,7 @@
   import { createEventDispatcher, onMount, tick } from 'svelte'
 
   export let value = ''
-  export let label = ''
+  export let placeholder = ''
   const dispatch = createEventDispatcher()
 
   let elInput: HTMLInputElement
@@ -33,12 +33,8 @@
       on:compositionend="{_ => toggleInputComposition(false)}"
       type="text"
       class="prompt-input"
-      placeholder="Type to search through your notes"
+      {placeholder}
       spellcheck="false" />
-
-    <span class="omnisearch-input__context">
-      {label}
-    </span>
   </div>
   <slot></slot>
 </div>
