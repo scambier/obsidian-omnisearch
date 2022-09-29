@@ -27,7 +27,7 @@
 
   let groupedOffsets: number[] = []
   let selectedIndex = 0
-  let note: ResultNote | null = null
+  let note: ResultNote | undefined
   let query: Query
 
   onMount(() => {

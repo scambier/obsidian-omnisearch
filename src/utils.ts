@@ -174,7 +174,7 @@ export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
 
 export function isFileIndexable(path: string): boolean {
   return (
-    path.endsWith('.md') ||
+    path.endsWith('.md') || path.endsWith('.pdf') ||
     settings.indexedFileTypes.some(t => path.endsWith(`.${t}`))
   )
 }

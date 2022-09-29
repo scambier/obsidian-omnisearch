@@ -19,7 +19,7 @@ import {
   wait,
 } from './utils'
 import type { Query } from './query'
-import { settings  } from './settings'
+import { settings } from './settings'
 import {
   removeNoteFromCache,
   getNoteFromCache,
@@ -32,6 +32,7 @@ import {
   saveNotesCacheToFile,
   isCacheOutdated,
 } from './notes'
+import { getPdfText } from './pdf-parser'
 
 let minisearchInstance: MiniSearch<IndexedNote>
 let isIndexChanged: boolean
@@ -326,8 +327,13 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
       throw new Error(`${file.basename} is already indexed`)
     }
 
-    // Fetch content from the cache to index it as-is
-    const content = removeDiacritics(await app.vault.cachedRead(file))
+    let content
+    if (file.path.endsWith('.pdf')) {
+      content = removeDiacritics(await getPdfText(file as TFile))
+    } else {
+      // Fetch content from the cache to index it as-is
+      content = removeDiacritics(await app.vault.cachedRead(file))
+    }
 
     // Make the document and index it
     const note: IndexedNote = {

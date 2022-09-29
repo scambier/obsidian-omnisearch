@@ -37,6 +37,12 @@
   },
   "dependencies": {
     "@vanakat/plugin-api": "^0.1.0",
-    "minisearch": "^5.0.0"
+    "minisearch": "^5.0.0",
+    "pdfjs-dist": "^2.16.105"
+  },
+  "pnpm": {
+    "overrides": {
+      "moment@>=2.18.0 <2.29.4": ">=2.29.4"
+    }
   }
 }
