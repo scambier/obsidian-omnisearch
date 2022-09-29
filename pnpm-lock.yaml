@@ -15,9 +15,7 @@ specifiers:
   builtin-modules: ^3.3.0
   esbuild: 0.13.12
   esbuild-plugin-copy: ^1.3.0
-  esbuild-plugin-wasm: ^1.0.0
   esbuild-svelte: ^0.7.1
-  extract-pdf: C:\Dev\rust\extract-pdf\pkg
   jest: ^27.5.1
   minisearch: ^5.0.0
   obsidian: latest
@@ -32,7 +30,6 @@ specifiers:
 
 dependencies:
   '@vanakat/plugin-api': 0.1.0
-  extract-pdf: link:../../rust/extract-pdf/pkg
   minisearch: 5.0.0
   pdfjs-dist: 2.16.105
 
@@ -47,7 +44,6 @@ devDependencies:
   builtin-modules: 3.3.0
   esbuild: 0.13.12
   esbuild-plugin-copy: 1.3.0_esbuild@0.13.12
-  esbuild-plugin-wasm: 1.0.0
   esbuild-svelte: 0.7.1_esbuild@0.13.12+svelte@3.50.1
   jest: 27.5.1
   obsidian: 0.16.3
@@ -2582,11 +2578,6 @@ packages:
       esbuild: 0.13.12
       fs-extra: 10.1.0
       globby: 11.1.0
-    dev: true
-
-  /esbuild-plugin-wasm/1.0.0:
-    resolution: {integrity: sha512-iXIf3hwfqorExG66/eNr3U8JakIZuge70nMNQtinvxbzdljQ/RjvwaBiGPqF/DvuIumUApbe3zj2kqHLVyc7uQ==}
-    engines: {node: '>=0.10.0'}
     dev: true
 
   /esbuild-sunos-64/0.13.12:
