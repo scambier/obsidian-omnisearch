@@ -87,8 +87,12 @@
     modal.close()
   }
 
-  function openSearchResult(note: ResultNote, newPane = false) {
+  function saveCurrentQuery() {
     searchHistory.unshift(searchQuery)
+  }
+
+  function openSearchResult(note: ResultNote, newPane = false) {
+    saveCurrentQuery()
     saveSearchHistory()
     openNote(note, newPane)
   }
@@ -139,6 +143,7 @@
   }
 
   function switchToInFileModal(): void {
+    saveCurrentQuery()
     modal.close()
     if (selectedNote) {
       // Open in-file modal for selected search result

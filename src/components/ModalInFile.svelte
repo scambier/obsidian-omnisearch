@@ -19,6 +19,7 @@
   import ResultItemInFile from './ResultItemInFile.svelte'
   import { Query } from 'src/query'
   import { openNote } from 'src/notes'
+  import {saveSearchHistory} from "../search-history";
 
   export let modal: OmnisearchInFileModal
   export let parent: OmnisearchVaultModal | null = null
@@ -111,6 +112,7 @@
     evt?: MouseEvent | KeyboardEvent
   ): Promise<void> {
     if (note) {
+      await saveSearchHistory()
       modal.close()
       if (parent) parent.close()
 
