@@ -12,7 +12,7 @@
   import { Query } from 'src/query'
   import { saveSearchHistory, searchHistory } from 'src/search-history'
   import { settings } from '../settings'
-  import { reindexNotes } from '../notes-index'
+  import { refreshIndex } from '../notes-index'
 
   export let modal: OmnisearchVaultModal
   let selectedIndex = 0
@@ -29,7 +29,7 @@
   }
 
   onMount(async () => {
-    await reindexNotes()
+    await refreshIndex()
     searchQuery = searchHistory[historySearchIndex]
     eventBus.enable('vault')
     eventBus.on('vault', 'enter', openNoteAndCloseModal)

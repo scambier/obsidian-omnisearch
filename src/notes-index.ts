@@ -154,7 +154,7 @@ export function addNoteToReindex(note: TAbstractFile): void {
   notesToReindex.add(note)
 }
 
-export async function reindexNotes(): Promise<void> {
+export async function refreshIndex(): Promise<void> {
   if (settings.showIndexingNotices && notesToReindex.size > 0) {
     new Notice(`Omnisearch - Reindexing ${notesToReindex.size} notes`, 2000)
   }
