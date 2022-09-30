@@ -42,7 +42,7 @@ const tokenize = (text: string): string[] => {
  * Initializes the MiniSearch instance,
  * and adds all the notes to the index
  */
-export async function initGlobalSearchIndex(): Promise<void> {
+export async function initGlobalSearchIndex(force = false): Promise<void> {
   const options: Options<IndexedNote> = {
     tokenize,
     processTerm: (term: string) =>
@@ -76,7 +76,7 @@ export async function initGlobalSearchIndex(): Promise<void> {
     }
   }
 
-  if (!minisearchInstance) {
+  if (!minisearchInstance || force) {
     minisearchInstance = new MiniSearch(options)
     resetNotesCache()
   }

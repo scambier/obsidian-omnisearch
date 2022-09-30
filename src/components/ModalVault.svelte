@@ -144,6 +144,9 @@
   }
 
   function switchToInFileModal(): void {
+    if (selectedNote.path.endsWith('.pdf')) {
+      return
+    }
     saveCurrentQuery()
     modal.close()
     if (selectedNote) {

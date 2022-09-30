@@ -115,8 +115,8 @@ function mapAsync<T, U>(
 
 /**
  * https://stackoverflow.com/a/53508547
- * @param arr
- * @param callback
+ * @param array
+ * @param callbackfn
  * @returns
  */
 export async function filterAsync<T>(
@@ -174,7 +174,7 @@ export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
 
 export function isFileIndexable(path: string): boolean {
   return (
-    path.endsWith('.md') || path.endsWith('.pdf') ||
+    path.endsWith('.md') || (settings.indexPDFs && path.endsWith('.pdf')) ||
     settings.indexedFileTypes.some(t => path.endsWith(`.${t}`))
   )
 }

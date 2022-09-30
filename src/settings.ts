@@ -2,6 +2,7 @@ import { Plugin, PluginSettingTab, Setting, SliderComponent } from 'obsidian'
 import { writable } from 'svelte/store'
 import { notesCacheFilePath, searchIndexFilePath } from './globals'
 import type OmnisearchPlugin from './main'
+import { initGlobalSearchIndex } from './search'
 
 interface WeightingSettings {
   weightBasename: number
@@ -14,6 +15,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   respectExcluded: boolean
   ignoreDiacritics: boolean
   indexedFileTypes: string[]
+  indexPDFs: boolean
   storeIndexInFile: boolean
 
   showIndexingNotices: boolean
@@ -71,7 +73,7 @@ export class SettingsTab extends PluginSettingTab {
     const diacriticsDesc = new DocumentFragment()
     diacriticsDesc.createSpan({}, span => {
       span.innerHTML = `Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky".<br/>
-        <strong>Needs a restart to fully take effect.</strong>`
+        <strong>Changing this will trigger a full reindex.</strong>`
     })
     new Setting(containerEl)
       .setName('Ignore diacritics')
@@ -80,6 +82,7 @@ export class SettingsTab extends PluginSettingTab {
         toggle.setValue(settings.ignoreDiacritics).onChange(async v => {
           settings.ignoreDiacritics = v
           await saveSettings(this.plugin)
+          await initGlobalSearchIndex(true)
         })
       )
 
@@ -104,6 +107,23 @@ export class SettingsTab extends PluginSettingTab {
           })
       })
 
+    // Index PDFs
+    const indexPDFsDesc = new DocumentFragment()
+    indexPDFsDesc.createSpan({}, span => {
+      span.innerHTML = `Omnisearch will index your PDFs, and return them in search results.
+        This feature is currently a work-in-progress, please report slowdowns or issues that you might experience.<br>
+        <strong>Changing this will trigger a full reindex.</strong>`
+    })
+    new Setting(containerEl)
+      .setName('BETA - Index PDFs')
+      .setDesc(indexPDFsDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.indexPDFs).onChange(async v => {
+          settings.indexPDFs = v
+          await saveSettings(this.plugin)
+          await initGlobalSearchIndex(true)
+        })
+      )
     // Store index
     const serializedIndexDesc = new DocumentFragment()
     serializedIndexDesc.createSpan({}, span => {
@@ -111,11 +131,11 @@ export class SettingsTab extends PluginSettingTab {
         This results in faster loading times for bigger vaults and mobile devices.<br />
         <em>⚠️ Note: the index can become corrupted - if you notice any issue, disable and re-enable this option to clear the cache.</em><br/>
         <em>⚠️ Cache files in <code>.obsidian/plugins/omnisearch/</code> must not be synchronized.</em><br/>
-        <strong>Needs a restart to fully take effect.</strong>
+        <strong>Changing this will trigger a full reindex.</strong>
         `
     })
     new Setting(containerEl)
-      .setName('EXPERIMENTAL - Store index in file')
+      .setName('Store index in file')
       .setDesc(serializedIndexDesc)
       .addToggle(toggle =>
         toggle.setValue(settings.storeIndexInFile).onChange(async v => {
@@ -123,6 +143,7 @@ export class SettingsTab extends PluginSettingTab {
           await app.vault.adapter.remove(searchIndexFilePath)
           settings.storeIndexInFile = v
           await saveSettings(this.plugin)
+          await initGlobalSearchIndex(true)
         })
       )
 
@@ -270,6 +291,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   respectExcluded: true,
   ignoreDiacritics: true,
   indexedFileTypes: [] as string[],
+  indexPDFs: false,
 
   showIndexingNotices: false,
   showShortName: false,
