@@ -1,4 +1,5 @@
-import { Platform, type CachedMetadata } from 'obsidian'
+import { type CachedMetadata, Notice, Platform, Plugin } from 'obsidian'
+import type { SearchMatch } from './globals'
 import {
   excerptAfter,
   excerptBefore,
@@ -8,7 +9,6 @@ import {
   regexStripQuotes,
   regexYaml,
 } from './globals'
-import type { SearchMatch } from './globals'
 import { settings } from './settings'
 
 export function highlighter(str: string): string {
@@ -174,7 +174,8 @@ export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
 
 export function isFileIndexable(path: string): boolean {
   return (
-    path.endsWith('.md') || (settings.indexPDFs && path.endsWith('.pdf')) ||
+    path.endsWith('.md') ||
+    (settings.indexPDFs && path.endsWith('.pdf')) ||
     settings.indexedFileTypes.some(t => path.endsWith(`.${t}`))
   )
 }
@@ -182,4 +183,20 @@ export function isFileIndexable(path: string): boolean {
 export function getExtension(path: string): string {
   const split = path.split('.')
   return split[split.length - 1]
+}
+
+export function showWelcomeNotice(plugin: Plugin) {
+  const code = '1.6.0'
+  if (settings.welcomeMessage !== code) {
+    const welcome = new DocumentFragment()
+    welcome.createSpan({}, span => {
+      span.innerHTML = `<strong>Omnisearch has been updated</strong>
+New beta feature: PDF search 🔎📄
+<small>Toggle "<i>BETA - Index PDFs</i>" in Omnisearch settings page.</small>`
+    })
+    new Notice(welcome, 30000)
+  }
+  settings.welcomeMessage = code
+
+  plugin.saveData(settings)
 }

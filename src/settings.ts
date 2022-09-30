@@ -25,6 +25,8 @@ export interface OmnisearchSettings extends WeightingSettings {
   showCreateButton: boolean
   CtrlJK: boolean
   CtrlNP: boolean
+
+  welcomeMessage: string
 }
 
 /**
@@ -308,6 +310,8 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   CtrlNP: false,
 
   storeIndexInFile: false,
+
+  welcomeMessage: ''
 } as const
 
 export let settings = Object.assign({}, DEFAULT_SETTINGS) as OmnisearchSettings
