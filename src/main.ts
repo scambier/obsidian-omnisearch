@@ -1,10 +1,5 @@
 import { Plugin, TFile } from 'obsidian'
-import {
-  addNoteToReindex,
-  addToIndex,
-  initGlobalSearchIndex,
-  removeFromIndex,
-} from './search'
+import { initGlobalSearchIndex } from './search'
 import { OmnisearchInFileModal, OmnisearchVaultModal } from './modals'
 import { loadSettings, settings, SettingsTab, showContext } from './settings'
 import { eventBus } from './globals'
@@ -12,6 +7,7 @@ import { registerAPI } from '@vanakat/plugin-api'
 import api from './api'
 import { loadSearchHistory } from './search-history'
 import { isFileIndexable } from './utils'
+import { addNoteToReindex, addToIndex, removeFromIndex } from './notes-index'
 
 function _registerAPI(plugin: OmnisearchPlugin): void {
   registerAPI('omnisearch', api, plugin as any)

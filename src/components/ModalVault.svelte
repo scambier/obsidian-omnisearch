@@ -5,13 +5,14 @@
   import ModalContainer from './ModalContainer.svelte'
   import { eventBus, type ResultNote } from 'src/globals'
   import { createNote, openNote } from 'src/notes'
-  import { getSuggestions, reindexNotes } from 'src/search'
+  import { getSuggestions } from 'src/search'
   import { getCtrlKeyLabel, getExtension, loopIndex } from 'src/utils'
   import { OmnisearchInFileModal, type OmnisearchVaultModal } from 'src/modals'
   import ResultItemVault from './ResultItemVault.svelte'
   import { Query } from 'src/query'
   import { saveSearchHistory, searchHistory } from 'src/search-history'
   import { settings } from '../settings'
+  import { reindexNotes } from '../notes-index'
 
   export let modal: OmnisearchVaultModal
   let selectedIndex = 0

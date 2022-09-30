@@ -1,15 +1,10 @@
+import { type CachedMetadata, MarkdownView, TFile } from 'obsidian'
 import {
-  MarkdownView,
-  TFile,
-  WorkspaceLeaf,
-  type CachedMetadata,
-} from 'obsidian'
-import {
-  notesCacheFilePath,
   type IndexedNote,
+  notesCacheFilePath,
   type ResultNote,
 } from './globals'
-import { stringsToRegex, wait } from './utils'
+import { stringsToRegex } from './utils'
 import { settings } from './settings'
 
 /**
@@ -37,10 +32,7 @@ export async function loadNotesCache(): Promise<void> {
       console.error(e)
     }
   }
-
-  if (!notesCache) {
-    notesCache = {}
-  }
+  notesCache ||= {}
 }
 
 export function getNoteFromCache(key: string): IndexedNote | undefined {
