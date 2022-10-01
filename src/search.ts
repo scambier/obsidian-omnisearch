@@ -137,7 +137,6 @@ async function indexPDFs() {
         removeFromIndex(file.path)
       }
       await addToIndex(file)
-      console.log(file.path)
     }
     if (settings.showIndexingNotices) {
       new Notice(`Omnisearch - Indexed ${files.length} PDFs`)

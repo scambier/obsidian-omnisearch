@@ -20,7 +20,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   showIndexingNotices: boolean
   ribbonIcon: boolean
   showShortName: boolean
-  showContext: boolean
+  showExcerpt: boolean
   showCreateButton: boolean
   CtrlJK: boolean
   CtrlNP: boolean
@@ -29,9 +29,9 @@ export interface OmnisearchSettings extends WeightingSettings {
 }
 
 /**
- * A store to reactively toggle the `showContext` setting on the fly
+ * A store to reactively toggle the `showExcerpt` setting on the fly
  */
-export const showContext = writable(false)
+export const showExcerpt = writable(false)
 
 export class SettingsTab extends PluginSettingTab {
   plugin: OmnisearchPlugin
@@ -40,8 +40,8 @@ export class SettingsTab extends PluginSettingTab {
     super(app, plugin)
     this.plugin = plugin
 
-    showContext.subscribe(async v => {
-      settings.showContext = v
+    showExcerpt.subscribe(async v => {
+      settings.showExcerpt = v
       await saveSettings(this.plugin)
     })
   }
@@ -178,13 +178,13 @@ export class SettingsTab extends PluginSettingTab {
 
     // Show Context
     new Setting(containerEl)
-      .setName('Show context')
+      .setName('Show excerpt')
       .setDesc(
         'Shows the part of the note that matches the search. Disable this to only show filenames in results.'
       )
       .addToggle(toggle =>
-        toggle.setValue(settings.showContext).onChange(async v => {
-          showContext.set(v)
+        toggle.setValue(settings.showExcerpt).onChange(async v => {
+          showExcerpt.set(v)
         })
       )
 
@@ -303,7 +303,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   showIndexingNotices: false,
   showShortName: false,
   ribbonIcon: true,
-  showContext: true,
+  showExcerpt: true,
   showCreateButton: false,
 
   weightBasename: 2,
@@ -323,7 +323,7 @@ export let settings = Object.assign({}, DEFAULT_SETTINGS) as OmnisearchSettings
 
 export async function loadSettings(plugin: Plugin): Promise<void> {
   settings = Object.assign({}, DEFAULT_SETTINGS, await plugin.loadData())
-  showContext.set(settings.showContext)
+  showExcerpt.set(settings.showExcerpt)
 }
 
 export async function saveSettings(plugin: Plugin): Promise<void> {

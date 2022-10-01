@@ -1,8 +1,8 @@
 import { Plugin, TFile } from 'obsidian'
 import { initGlobalSearchIndex } from './search'
 import { OmnisearchInFileModal, OmnisearchVaultModal } from './modals'
-import { loadSettings, settings, SettingsTab, showContext } from './settings'
-import { eventBus } from './globals'
+import { loadSettings, settings, SettingsTab, showExcerpt } from './settings'
+import {eventBus, EventNames} from './globals'
 import { registerAPI } from '@vanakat/plugin-api'
 import api from './api'
 import { loadSearchHistory } from './search-history'
@@ -32,8 +32,8 @@ export default class OmnisearchPlugin extends Plugin {
     this.addSettingTab(new SettingsTab(this))
     eventBus.disable('vault')
     eventBus.disable('infile')
-    eventBus.on('global', 'toggle-context', () => {
-      showContext.set(!settings.showContext)
+    eventBus.on('global', EventNames.ToggleExcerpts, () => {
+      showExcerpt.set(!settings.showExcerpt)
     })
 
     // Commands to display Omnisearch modals

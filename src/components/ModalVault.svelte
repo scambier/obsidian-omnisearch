@@ -243,7 +243,7 @@
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">ctrl+h</span>
-    <span>to toggle context</span>
+    <span>to toggle excerpt</span>
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">esc</span><span>to close</span>

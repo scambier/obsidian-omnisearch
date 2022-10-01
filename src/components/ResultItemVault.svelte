@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getNoteFromCache } from 'src/notes'
-  import { settings, showContext } from 'src/settings'
+  import { settings, showExcerpt } from 'src/settings'
   import type { ResultNote } from '../globals'
   import { getMatches } from '../search'
   import { highlighter, makeExcerpt, stringsToRegex } from '../utils'
@@ -29,7 +29,7 @@
     {/if}
   </div>
 
-  {#if $showContext}
+  {#if $showExcerpt}
     <div class="omnisearch-result__body">
       {@html cleanedContent.replace(reg, highlighter)}
     </div>

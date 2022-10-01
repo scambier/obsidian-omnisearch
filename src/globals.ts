@@ -16,6 +16,10 @@ export const searchIndexFilePath = `${app.vault.configDir}/plugins/omnisearch/se
 export const notesCacheFilePath = `${app.vault.configDir}/plugins/omnisearch/notesCache.json`
 export const historyFilePath = `${app.vault.configDir}/plugins/omnisearch/historyCache.json`
 
+export const EventNames = {
+  ToggleExcerpts: 'toggle-excerpts',
+} as const
+
 export type IndexedNote = {
   path: string
   basename: string
@@ -50,9 +54,11 @@ export type ResultNote = {
 }
 
 let inComposition = false
+
 export function toggleInputComposition(toggle: boolean): void {
   inComposition = toggle
 }
+
 export function isInputComposition(): boolean {
   return inComposition
 }
