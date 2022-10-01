@@ -16,8 +16,9 @@ Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/mi
 
 - Automatic document scoring using the [BM25 algorithm](https://github.com/lucaong/minisearch/issues/129#issuecomment-1046257399)
   - The relevance of a document against a query depends on the number of times the query terms appear in the document, its filename, and its headings
-- Keyboard first: you never have to use your mouse
+- Can search other plaintext files and PDFs (configurable in settings)
 - Workflow similar to "Quick Switcher" plugins
+- Keyboard first: you never have to use your mouse
 - Resistance to typos
 - Switch between Vault and In-file search to quickly skim multiple results in a single note
 - Supports `"expressions in quotes"` and `-exclusions`
@@ -101,6 +102,8 @@ There are several CSS classes you can use to customize the appearance of Omnisea
 .omnisearch-result__counter
 .omnisearch-result__body
 .omnisearch-highlight
+.omnisearch-input-container
+.omnisearch-input-field
 ```
 
 For example, if you'd like the usual yellow highlight on search matches, you can add this code inside a CSS snippet file:
@@ -112,6 +115,7 @@ For example, if you'd like the usual yellow highlight on search matches, you can
 }
 ```
 
+See [styles.css](./assets/styles.css) for more information.
 
 ## LICENSE
 
