@@ -6,7 +6,7 @@ import { eventBus } from './globals'
 import { registerAPI } from '@vanakat/plugin-api'
 import api from './api'
 import { loadSearchHistory } from './search-history'
-import {isFileIndexable, showWelcomeNotice} from './utils'
+import {isFilePlaintext, showWelcomeNotice} from './utils'
 import { addNoteToReindex, addToIndex, removeFromIndex } from './notes-index'
 
 function _registerAPI(plugin: OmnisearchPlugin): void {
@@ -22,10 +22,7 @@ export default class OmnisearchPlugin extends Plugin {
     // additional files to index by Omnisearch
 
     await loadSettings(this)
-
-    this.registerExtensions(settings.indexedFileTypes, 'markdown')
     await loadSearchHistory()
-
     _registerAPI(this)
 
     if (settings.ribbonIcon) {
@@ -75,7 +72,7 @@ export default class OmnisearchPlugin extends Plugin {
       )
       this.registerEvent(
         this.app.vault.on('rename', async (file, oldPath) => {
-          if (file instanceof TFile && isFileIndexable(file.path)) {
+          if (file instanceof TFile && isFilePlaintext(file.path)) {
             removeFromIndex(oldPath)
             await addToIndex(file)
           }

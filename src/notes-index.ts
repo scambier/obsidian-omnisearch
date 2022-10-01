@@ -2,8 +2,8 @@ import { Notice, TAbstractFile, TFile } from 'obsidian'
 import {
   extractHeadingsFromCache,
   getAliasesFromMetadata,
-  getTagsFromMetadata,
-  isFileIndexable,
+  getTagsFromMetadata, isFileIndexable,
+  isFilePlaintext,
   removeDiacritics,
   wait,
 } from './utils'
@@ -129,7 +129,7 @@ export function addNonExistingToIndex(name: string, parent: string): void {
  * @param path
  */
 export function removeFromIndex(path: string): void {
-  if (!isFileIndexable(path)) {
+  if (!isFilePlaintext(path)) {
     console.info(`"${path}" is not an indexable file`)
     return
   }

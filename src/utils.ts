@@ -173,11 +173,15 @@ export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
 }
 
 export function isFileIndexable(path: string): boolean {
-  return (
-    path.endsWith('.md') ||
-    (settings.indexPDFs && path.endsWith('.pdf')) ||
-    settings.indexedFileTypes.some(t => path.endsWith(`.${t}`))
-  )
+  return (settings.indexPDFs && path.endsWith('.pdf')) || isFilePlaintext(path)
+}
+
+export function isFilePlaintext(path: string): boolean {
+  return getPlaintextExtensions().some(t => path.endsWith(`.${t}`))
+}
+
+export function getPlaintextExtensions(): string[] {
+  return [...settings.indexedFileTypes, 'md']
 }
 
 export function getExtension(path: string): string {

@@ -9,7 +9,7 @@ import {
   SPACE_OR_PUNCTUATION,
 } from './globals'
 import {
-  isFileIndexable,
+  isFilePlaintext,
   removeDiacritics,
   stringsToRegex,
   stripMarkdownCharacters,
@@ -42,7 +42,7 @@ const tokenize = (text: string): string[] => {
  * Initializes the MiniSearch instance,
  * and adds all the notes to the index
  */
-export async function initGlobalSearchIndex(force = false): Promise<void> {
+export async function initGlobalSearchIndex(): Promise<void> {
   const options: Options<IndexedNote> = {
     tokenize,
     processTerm: (term: string) =>
@@ -76,7 +76,7 @@ export async function initGlobalSearchIndex(force = false): Promise<void> {
     }
   }
 
-  if (!minisearchInstance || force) {
+  if (!minisearchInstance) {
     minisearchInstance = new MiniSearch(options)
     resetNotesCache()
   }
@@ -84,7 +84,7 @@ export async function initGlobalSearchIndex(force = false): Promise<void> {
   // Index files that are already present
   const start = new Date().getTime()
 
-  const allFiles = app.vault.getFiles().filter(f => isFileIndexable(f.path))
+  const allFiles = app.vault.getFiles().filter(f => isFilePlaintext(f.path))
 
   let files
   let notesSuffix
@@ -99,16 +99,14 @@ export async function initGlobalSearchIndex(force = false): Promise<void> {
   console.log(`Omnisearch - indexing ${files.length} ${notesSuffix}`)
 
   // This is basically the same behavior as MiniSearch's `addAllAsync()`.
-  // We index files by batches of 10
+  // We index markdown and plaintext files by batches of 10
   for (let i = 0; i < files.length; ++i) {
     if (i % 10 === 0) await wait(0)
     const file = files[i]
-    if (file) {
-      if (getNoteFromCache(file.path)) {
-        removeFromIndex(file.path)
-      }
-      await addToIndex(file)
+    if (getNoteFromCache(file.path)) {
+      removeFromIndex(file.path)
     }
+    await addToIndex(file)
   }
 
   if (files.length > 0) {
@@ -123,6 +121,27 @@ export async function initGlobalSearchIndex(force = false): Promise<void> {
     }
 
     await saveIndexToFile()
+
+    // PDFs are indexed later, since they're heavier
+    await indexPDFs()
+  }
+}
+
+async function indexPDFs() {
+  if (settings.indexPDFs) {
+    console.warn("Omnisearch - Warnings on pdf.worker.min are due to some issues while reading PDFs file.")
+    const files = app.vault.getFiles().filter(f => f.path.endsWith('.pdf'))
+    for (const file of files) {
+      await wait(0)
+      if (getNoteFromCache(file.path)) {
+        removeFromIndex(file.path)
+      }
+      await addToIndex(file)
+      console.log(file.path)
+    }
+    if (settings.showIndexingNotices) {
+      new Notice(`Omnisearch - Indexed ${files.length} PDFs`)
+    }
   }
 }
 
