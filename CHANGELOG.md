@@ -1,5 +1,22 @@
 # Omnisearch Changelog
 
+## 1.6.x
+
+### New
+
+- Omnisearch can now index other plaintext files and PDFs #58
+- Search history, navigable with <code>alt+up/down</code> #90 
+- Added a setting to toggle the visibility of the note excerpt in results #70
+
+### Improved
+
+- You can now create a new note in a new pane #87
+- Added a setting to show a "create note" button #96
+
+### Fixed
+
+- Fixed layout issues #97
+
 ## 1.5.x
 
 ### New
