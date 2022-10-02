@@ -100,14 +100,16 @@ export async function initGlobalSearchIndex(): Promise<void> {
 
   // This is basically the same behavior as MiniSearch's `addAllAsync()`.
   // We index markdown and plaintext files by batches of 10
+  const promises: Promise<void>[] = []
   for (let i = 0; i < files.length; ++i) {
     if (i % 10 === 0) await wait(0)
     const file = files[i]
     if (getNoteFromCache(file.path)) {
       removeFromIndex(file.path)
     }
-    await addToIndex(file)
+    promises.push(addToIndex(file))
   }
+  await Promise.all(promises)
 
   if (files.length > 0) {
     const message = `Omnisearch - Indexed ${files.length} ${notesSuffix} in ${
