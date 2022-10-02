@@ -4,18 +4,18 @@
 
 ### New
 
-- Omnisearch can now index other plaintext files and PDFs #58
-- Search history, navigable with <code>alt+up/down</code> #90 
-- Added a setting to toggle the visibility of the note excerpt in results #70
+- Omnisearch can now index other plaintext files and PDFs https://github.com/scambier/obsidian-omnisearch/issues/58
+- Search history, navigable with <code>alt+up/down</code> https://github.com/scambier/obsidian-omnisearch/issues/90 
+- Added a setting to toggle the visibility of the note excerpt in results https://github.com/scambier/obsidian-omnisearch/issues/70
 
 ### Improved
 
-- You can now create a new note in a new pane #87
-- Added a setting to show a "create note" button #96
+- You can now create a new note in a new pane https://github.com/scambier/obsidian-omnisearch/issues/87
+- Added a setting to show a "create note" button https://github.com/scambier/obsidian-omnisearch/issues/96
 
 ### Fixed
 
-- Fixed layout issues #97
+- Fixed layout issues https://github.com/scambier/obsidian-omnisearch/issues/97
 
 ## 1.5.x
 
