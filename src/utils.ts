@@ -172,8 +172,12 @@ export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
   return Platform.isMacOS ? '⌘' : 'ctrl'
 }
 
+export function canIndexPDFs(): boolean {
+  return false
+}
+
 export function isFileIndexable(path: string): boolean {
-  return (settings.indexPDFs && path.endsWith('.pdf')) || isFilePlaintext(path)
+  return (canIndexPDFs() && path.endsWith('.pdf')) || isFilePlaintext(path)
 }
 
 export function isFilePlaintext(path: string): boolean {

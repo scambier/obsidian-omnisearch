@@ -82,7 +82,7 @@ export default class OmnisearchPlugin extends Plugin {
       await initGlobalSearchIndex()
     })
 
-    showWelcomeNotice(this)
+    // showWelcomeNotice(this)
   }
 
   onunload(): void {}

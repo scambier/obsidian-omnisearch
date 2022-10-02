@@ -9,6 +9,7 @@ import {
   SPACE_OR_PUNCTUATION,
 } from './globals'
 import {
+  canIndexPDFs,
   isFilePlaintext,
   removeDiacritics,
   stringsToRegex,
@@ -100,14 +101,18 @@ export async function initGlobalSearchIndex(): Promise<void> {
 
   // This is basically the same behavior as MiniSearch's `addAllAsync()`.
   // We index markdown and plaintext files by batches of 10
-  const promises: Promise<void>[] = []
+  let promises: Promise<void>[] = []
   for (let i = 0; i < files.length; ++i) {
-    if (i % 10 === 0) await wait(0)
     const file = files[i]
     if (getNoteFromCache(file.path)) {
       removeFromIndex(file.path)
     }
     promises.push(addToIndex(file))
+    if (i % 10 === 0) {
+      await wait(1)
+      await Promise.all(promises)
+      promises = []
+    }
   }
   await Promise.all(promises)
 
@@ -130,20 +135,22 @@ export async function initGlobalSearchIndex(): Promise<void> {
 }
 
 async function indexPDFs() {
-  if (settings.indexPDFs) {
+  if (canIndexPDFs()) {
     const start = new Date().getTime()
     console.warn(
       "Omnisearch - Warnings on 'pdf.worker.min' are due to some issues while reading PDFs file and can usually be ignored."
     )
     const files = app.vault.getFiles().filter(f => f.path.endsWith('.pdf'))
-    const promises: Promise<void>[] = []
+    let promises: Promise<void>[] = []
     for (const [i, file] of files.entries()) {
       if (getNoteFromCache(file.path)) {
         removeFromIndex(file.path)
       }
       promises.push(addToIndex(file))
-      if (i % 10 == 0) {
-        promises.push(wait(10))
+      if (i % 10 === 0) {
+        await wait(1)
+        await Promise.all(promises)
+        promises = []
       }
     }
     await Promise.all(promises)
