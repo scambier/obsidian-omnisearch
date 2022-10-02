@@ -129,18 +129,31 @@ export async function initGlobalSearchIndex(): Promise<void> {
 
 async function indexPDFs() {
   if (settings.indexPDFs) {
-    console.warn("Omnisearch - Warnings on pdf.worker.min are due to some issues while reading PDFs file.")
+    const start = new Date().getTime()
+    console.warn(
+      "Omnisearch - Warnings on 'pdf.worker.min' are due to some issues while reading PDFs file and can usually be ignored."
+    )
     const files = app.vault.getFiles().filter(f => f.path.endsWith('.pdf'))
-    for (const file of files) {
-      await wait(0)
+    const promises: Promise<void>[] = []
+    for (const [i, file] of files.entries()) {
       if (getNoteFromCache(file.path)) {
         removeFromIndex(file.path)
       }
-      await addToIndex(file)
+      promises.push(addToIndex(file))
+      if (i % 10 == 0) {
+        promises.push(wait(10))
+      }
     }
+    await Promise.all(promises)
+
+    // Notice & log
+    const message = `Omnisearch - Indexed ${files.length} PDFs in ${
+      new Date().getTime() - start
+    }ms`
     if (settings.showIndexingNotices) {
-      new Notice(`Omnisearch - Indexed ${files.length} PDFs`)
+      new Notice(message)
     }
+    console.log(message)
   }
 }
 
