@@ -24,7 +24,7 @@ import {
   loadNotesCache,
   resetNotesCache,
 } from './notes'
-import { addToIndex, removeFromIndex, saveIndexToFile } from './notes-index'
+import {addToIndex, indexPDFs, removeFromIndex, saveIndexToFile} from './notes-index'
 
 export let minisearchInstance: MiniSearch<IndexedNote>
 
@@ -131,38 +131,6 @@ export async function initGlobalSearchIndex(): Promise<void> {
 
     // PDFs are indexed later, since they're heavier
     await indexPDFs()
-  }
-}
-
-async function indexPDFs() {
-  if (canIndexPDFs()) {
-    const start = new Date().getTime()
-    console.warn(
-      "Omnisearch - Warnings on 'pdf.worker.min' are due to some issues while reading PDFs file and can usually be ignored."
-    )
-    const files = app.vault.getFiles().filter(f => f.path.endsWith('.pdf'))
-    let promises: Promise<void>[] = []
-    for (const [i, file] of files.entries()) {
-      if (getNoteFromCache(file.path)) {
-        removeFromIndex(file.path)
-      }
-      promises.push(addToIndex(file))
-      if (i % 10 === 0) {
-        await wait(1)
-        await Promise.all(promises)
-        promises = []
-      }
-    }
-    await Promise.all(promises)
-
-    // Notice & log
-    const message = `Omnisearch - Indexed ${files.length} PDFs in ${
-      new Date().getTime() - start
-    }ms`
-    if (settings.showIndexingNotices) {
-      new Notice(message)
-    }
-    console.log(message)
   }
 }
 
