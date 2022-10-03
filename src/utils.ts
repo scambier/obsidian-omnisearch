@@ -173,7 +173,7 @@ export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
 }
 
 export function canIndexPDFs(): boolean {
-  return false
+  return settings.indexPDFs
 }
 
 export function isFileIndexable(path: string): boolean {

@@ -106,23 +106,23 @@ export class SettingsTab extends PluginSettingTab {
           })
       })
 
-    // // Index PDFs
-    // const indexPDFsDesc = new DocumentFragment()
-    // indexPDFsDesc.createSpan({}, span => {
-    //   span.innerHTML = `Omnisearch will index your PDFs, and return them in search results.
-    //     This feature is currently a work-in-progress, please report slowdowns or issues that you might experience.<br>
-    //     PDFs being quite slow to index, <strong style="color: var(--text-accent)">it is strongly recommended to also enable "Store index in file"</strong>.<br>
-    //     <strong>Needs a restart to fully take effect.</strong>`
-    // })
-    // new Setting(containerEl)
-    //   .setName('BETA - Index PDFs')
-    //   .setDesc(indexPDFsDesc)
-    //   .addToggle(toggle =>
-    //     toggle.setValue(settings.indexPDFs).onChange(async v => {
-    //       settings.indexPDFs = v
-    //       await saveSettings(this.plugin)
-    //     })
-    //   )
+    // Index PDFs
+    const indexPDFsDesc = new DocumentFragment()
+    indexPDFsDesc.createSpan({}, span => {
+      span.innerHTML = `Omnisearch will index your PDFs, and return them in search results.
+        This feature is currently a work-in-progress, please report slowdowns or issues that you might experience.<br>
+        PDFs being quite slow to index, <strong style="color: var(--text-accent)">it is strongly recommended to also enable "Store index in file"</strong>.<br>
+        <strong>Needs a restart to fully take effect.</strong>`
+    })
+    new Setting(containerEl)
+      .setName('BETA - Index PDFs')
+      .setDesc(indexPDFsDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.indexPDFs).onChange(async v => {
+          settings.indexPDFs = v
+          await saveSettings(this.plugin)
+        })
+      )
 
     // Store index
     const serializedIndexDesc = new DocumentFragment()

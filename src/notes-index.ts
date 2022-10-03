@@ -1,8 +1,10 @@
-import { Notice, TAbstractFile, TFile } from 'obsidian'
+import {Notice, TAbstractFile, TFile} from 'obsidian'
 import {
+  canIndexPDFs,
   extractHeadingsFromCache,
   getAliasesFromMetadata,
-  getTagsFromMetadata, isFileIndexable,
+  getTagsFromMetadata,
+  isFileIndexable,
   isFilePlaintext,
   removeDiacritics,
   wait,
@@ -16,11 +18,11 @@ import {
   removeNoteFromCache,
   saveNotesCacheToFile,
 } from './notes'
-import { getPdfText } from './pdf-parser'
-import type { IndexedNote } from './globals'
-import { searchIndexFilePath } from './globals'
-import { settings } from './settings'
-import { minisearchInstance } from './search'
+import {getPdfText} from './pdf-parser'
+import type {IndexedNote} from './globals'
+import {searchIndexFilePath} from './globals'
+import {settings} from './settings'
+import {minisearchInstance} from './search'
 
 let isIndexChanged: boolean
 
@@ -176,5 +178,33 @@ export async function saveIndexToFile(): Promise<void> {
 
     await saveNotesCacheToFile()
     isIndexChanged = false
+  }
+}
+
+export async function indexPDFs() {
+  if (canIndexPDFs()) {
+    const start = new Date().getTime()
+    const files = app.vault.getFiles().filter(f => f.path.endsWith('.pdf'))
+    if (files.length > 50) {
+      new Notice(`⚠️ Omnisearch is indexing ${files.length} PDFs. You can experience slowdowns while this work is in progress.`)
+    }
+
+    const promises: Promise<void>[] = []
+    for (const file of files) {
+      if (getNoteFromCache(file.path)) {
+        removeFromIndex(file.path)
+      }
+      promises.push(addToIndex(file))
+    }
+    await Promise.all(promises)
+
+    // Notice & log
+    const message = `Omnisearch - Indexed ${files.length} PDFs in ${
+      new Date().getTime() - start
+    }ms`
+    if (settings.showIndexingNotices) {
+      new Notice(message)
+    }
+    console.log(message)
   }
 }

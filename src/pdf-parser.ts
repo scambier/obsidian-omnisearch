@@ -1,11 +1,11 @@
 import type { TFile } from 'obsidian'
-import { loadPdfJs } from 'obsidian'
+import PDFJs from 'pdfjs-dist'
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.entry'
 
-let PDFJs: any = null
+PDFJs.GlobalWorkerOptions.workerSrc = pdfjsWorker
 
 // https://stackoverflow.com/a/59929946
 export async function getPdfText(file: TFile): Promise<string> {
-  PDFJs = PDFJs ?? (await loadPdfJs())
   const data = await app.vault.readBinary(file)
   const doc = await PDFJs.getDocument(data).promise
   const pageTexts = Array.from({ length: doc.numPages }, async (v, i) => {
