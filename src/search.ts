@@ -4,12 +4,12 @@ import {
   chsRegex,
   type IndexedNote,
   type ResultNote,
-  searchIndexFilePath,
+  minisearchCacheFilePath,
   type SearchMatch,
   SPACE_OR_PUNCTUATION,
 } from './globals'
 import {
-  canIndexPDFs,
+  isFileIndexable,
   isFilePlaintext,
   removeDiacritics,
   stringsToRegex,
@@ -18,13 +18,15 @@ import {
 } from './utils'
 import type { Query } from './query'
 import { settings } from './settings'
-import {
-  getNoteFromCache,
-  isCacheOutdated,
-  loadNotesCache,
-  resetNotesCache,
-} from './notes'
-import {addToIndex, indexPDFs, removeFromIndex, saveIndexToFile} from './notes-index'
+// import {
+//   getNoteFromCache,
+//   isCacheOutdated,
+//   loadNotesCache,
+//   resetNotesCache,
+// } from './notes'
+import * as NotesIndex from './notes-index'
+import PQueue from 'p-queue-compat'
+import { cacheManager } from './cache-manager'
 
 export let minisearchInstance: MiniSearch<IndexedNote>
 
@@ -60,15 +62,18 @@ export async function initGlobalSearchIndex(): Promise<void> {
     storeFields: ['tags'],
   }
 
-  if (
-    settings.storeIndexInFile &&
-    (await app.vault.adapter.exists(searchIndexFilePath))
-  ) {
+  // Default instance
+  minisearchInstance = new MiniSearch(options)
+
+  // Load Minisearch cache, if it exists
+  if (await app.vault.adapter.exists(minisearchCacheFilePath)) {
     try {
-      const json = await app.vault.adapter.read(searchIndexFilePath)
-      minisearchInstance = MiniSearch.loadJSON(json, options)
+      const json = await cacheManager.readMinisearchIndex()
+      if (json) {
+        // If we have cache data, reload it
+        minisearchInstance = MiniSearch.loadJSON(json, options)
+      }
       console.log('Omnisearch - MiniSearch index loaded from the file')
-      await loadNotesCache()
     } catch (e) {
       console.trace(
         'Omnisearch - Could not load MiniSearch index from the file'
@@ -77,10 +82,9 @@ export async function initGlobalSearchIndex(): Promise<void> {
     }
   }
 
-  if (!minisearchInstance) {
-    minisearchInstance = new MiniSearch(options)
-    resetNotesCache()
-  }
+  // if (!minisearchInstance) {
+  //   resetNotesCache()
+  // }
 
   // Index files that are already present
   const start = new Date().getTime()
@@ -89,32 +93,28 @@ export async function initGlobalSearchIndex(): Promise<void> {
 
   let files
   let notesSuffix
-  if (settings.storeIndexInFile) {
-    files = allFiles.filter(file => isCacheOutdated(file))
+  if (settings.persistCache) {
+    files = allFiles.filter(file => cacheManager.isCacheOutdated(file))
     notesSuffix = 'modified notes'
   } else {
     files = allFiles
     notesSuffix = 'notes'
   }
 
-  console.log(`Omnisearch - indexing ${files.length} ${notesSuffix}`)
-
-  // This is basically the same behavior as MiniSearch's `addAllAsync()`.
-  // We index markdown and plaintext files by batches of 10
-  let promises: Promise<void>[] = []
-  for (let i = 0; i < files.length; ++i) {
-    const file = files[i]
-    if (getNoteFromCache(file.path)) {
-      removeFromIndex(file.path)
-    }
-    promises.push(addToIndex(file))
-    if (i % 10 === 0) {
-      await wait(1)
-      await Promise.all(promises)
-      promises = []
-    }
+  if (files.length > 0) {
+    console.log(`Omnisearch - Indexing ${files.length} ${notesSuffix}`)
   }
-  await Promise.all(promises)
+
+  // Read and index all the files into the search engine
+  const queue = new PQueue({ concurrency: 10 })
+  for (const file of files) {
+    if (cacheManager.getNoteFromCache(file.path)) {
+      NotesIndex.removeFromIndex(file.path)
+    }
+    queue.add(() => NotesIndex.addToIndexAndCache(file))
+  }
+
+  await queue.onEmpty()
 
   if (files.length > 0) {
     const message = `Omnisearch - Indexed ${files.length} ${notesSuffix} in ${
@@ -127,10 +127,10 @@ export async function initGlobalSearchIndex(): Promise<void> {
       new Notice(message)
     }
 
-    await saveIndexToFile()
+    await cacheManager.writeMinisearchIndex(minisearchInstance)
 
     // PDFs are indexed later, since they're heavier
-    await indexPDFs()
+    await NotesIndex.indexPDFs()
   }
 }
 
@@ -172,9 +172,10 @@ async function search(query: Query): Promise<SearchResult[]> {
   const exactTerms = query.getExactTerms()
   if (exactTerms.length) {
     results = results.filter(r => {
-      const title = getNoteFromCache(r.id)?.path.toLowerCase() ?? ''
+      const title =
+        cacheManager.getNoteFromCache(r.id)?.path.toLowerCase() ?? ''
       const content = stripMarkdownCharacters(
-        getNoteFromCache(r.id)?.content ?? ''
+        cacheManager.getNoteFromCache(r.id)?.content ?? ''
       ).toLowerCase()
       return exactTerms.every(q => content.includes(q) || title.includes(q))
     })
@@ -185,7 +186,7 @@ async function search(query: Query): Promise<SearchResult[]> {
   if (exclusions.length) {
     results = results.filter(r => {
       const content = stripMarkdownCharacters(
-        getNoteFromCache(r.id)?.content ?? ''
+        cacheManager.getNoteFromCache(r.id)?.content ?? ''
       ).toLowerCase()
       return exclusions.every(q => !content.includes(q.value))
     })
@@ -253,7 +254,7 @@ export async function getSuggestions(
 
   // Map the raw results to get usable suggestions
   return results.map(result => {
-    const note = getNoteFromCache(result.id)
+    const note = cacheManager.getNoteFromCache(result.id)
     if (!note) {
       throw new Error(`Note "${result.id}" not indexed`)
     }

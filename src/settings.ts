@@ -1,6 +1,6 @@
 import { Plugin, PluginSettingTab, Setting, SliderComponent } from 'obsidian'
 import { writable } from 'svelte/store'
-import { notesCacheFilePath, searchIndexFilePath } from './globals'
+import { notesCacheFilePath, minisearchCacheFilePath } from './globals'
 import type OmnisearchPlugin from './main'
 
 interface WeightingSettings {
@@ -11,20 +11,33 @@ interface WeightingSettings {
 }
 
 export interface OmnisearchSettings extends WeightingSettings {
+  /** Respect the "excluded files" Obsidian setting by downranking results ignored files */
   respectExcluded: boolean
+  /** Ignore diacritics when indexing files */
   ignoreDiacritics: boolean
+  /** Extensions of plain text files to index, in addition to .md */
   indexedFileTypes: string[]
-  indexPDFs: boolean
-  storeIndexInFile: boolean
-
+  /** Enable PDF indexing */
+  PDFIndexing: boolean
+  /** Max number of spawned processes for background tasks, such as extracting text from PDFs */
+  backgroundProcesses: number
+  /** Write cache files on disk (unrelated to PDFs) */
+  persistCache: boolean
+  /** Display Omnisearch popup notices over Obsidian */
   showIndexingNotices: boolean
+  /** Activate the small 🔍 button on Obsidian's ribbon */
   ribbonIcon: boolean
+  /** Display short filenames in search results, instead of the full path */
   showShortName: boolean
+  /** Display the small contextual excerpt in search results */
   showExcerpt: boolean
+  /** Enable a "create note" button in the Vault Search modal */
   showCreateButton: boolean
+  /** Vim mode shortcuts */
   CtrlJK: boolean
+  /** Vim mode shortcuts */
   CtrlNP: boolean
-
+  /** Key for the welcome message when Obsidian is updated. A message is only shown once. */
   welcomeMessage: string
 }
 
@@ -74,7 +87,7 @@ export class SettingsTab extends PluginSettingTab {
     const diacriticsDesc = new DocumentFragment()
     diacriticsDesc.createSpan({}, span => {
       span.innerHTML = `Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky".<br/>
-        <strong>Needs a restart to fully take effect.</strong>`
+        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
     })
     new Setting(containerEl)
       .setName('Ignore diacritics')
@@ -91,7 +104,7 @@ export class SettingsTab extends PluginSettingTab {
     indexedFileTypesDesc.createSpan({}, span => {
       span.innerHTML = `In addition to standard <code>md</code> files, Omnisearch can also index other plain text files.<br/>
       Add extensions separated by a space. Example: <code>txt org</code>.<br />
-      <strong>Needs a restart to fully take effect.</strong>`
+      <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
     })
     new Setting(containerEl)
       .setName('Additional files to index')
@@ -106,50 +119,68 @@ export class SettingsTab extends PluginSettingTab {
           })
       })
 
-    // Index PDFs
-    const indexPDFsDesc = new DocumentFragment()
-    indexPDFsDesc.createSpan({}, span => {
-      span.innerHTML = `Omnisearch will index your PDFs, and return them in search results.
-        This feature is currently a work-in-progress, please report slowdowns or issues that you might experience.<br>
-        PDFs being quite slow to index, <strong style="color: var(--text-accent)">it is strongly recommended to also enable "Store index in file"</strong>.<br>
-        <strong>Needs a restart to fully take effect.</strong>`
-    })
-    new Setting(containerEl)
-      .setName('BETA - Index PDFs')
-      .setDesc(indexPDFsDesc)
-      .addToggle(toggle =>
-        toggle.setValue(settings.indexPDFs).onChange(async v => {
-          settings.indexPDFs = v
-          await saveSettings(this.plugin)
-        })
-      )
+    // // Background processes
+    // new Setting(containerEl)
+    //   .setName(
+    //     `Background processes (default: ${DEFAULT_SETTINGS.backgroundProcesses})`
+    //   )
+    //   .setDesc('The maximum number of processes for background work, like PDF indexing. This value should not be higher than your number of CPU cores.')
+    //   .addSlider(cb => {
+    //     cb.setLimits(1, 16, 1)
+    //       .setValue(settings.backgroundProcesses)
+    //       .setDynamicTooltip()
+    //       .onChange(v => {
+    //         settings.backgroundProcesses = v
+    //         saveSettings(this.plugin)
+    //       })
+    //   })
 
     // Store index
     const serializedIndexDesc = new DocumentFragment()
     serializedIndexDesc.createSpan({}, span => {
-      span.innerHTML = `The search index is stored on disk, instead of being rebuilt at every startup.
-        This results in faster loading times for bigger vaults and mobile devices.<br />
-        <em>⚠️ Note: the index can become corrupted - if you notice any issue, disable and re-enable this option to clear the cache.</em><br/>
-        <em>⚠️ Cache files in <code>.obsidian/plugins/omnisearch/</code> must not be synchronized.</em><br/>
-        <strong>Needs a restart to fully take effect.</strong>
+      span.innerHTML = `This will speedup startup times after the initial indexing. Do not activate it unless indexing is too slow on your device:
+        <ul>
+          <li>PDF indexing is not affected by this setting</li>
+          <li>⚠️ The index can become corrupted - if you notice any issue, disable and re-enable this option to clear the cache.</li>
+          <li>⚠️ Cache files in <code>.obsidian/plugins/omnisearch/*.data</code> must not be synchronized between your devices.</li>
+        </ul>
+        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>
         `
     })
     new Setting(containerEl)
-      .setName('Store index in file')
+      .setName('Persist cache on disk')
       .setDesc(serializedIndexDesc)
       .addToggle(toggle =>
-        toggle.setValue(settings.storeIndexInFile).onChange(async v => {
+        toggle.setValue(settings.persistCache).onChange(async v => {
           try {
             await app.vault.adapter.remove(notesCacheFilePath)
           } catch (e) {
             console.warn(e)
           }
           try {
-            await app.vault.adapter.remove(searchIndexFilePath)
+            await app.vault.adapter.remove(minisearchCacheFilePath)
           } catch (e) {
             console.warn(e)
           }
-          settings.storeIndexInFile = v
+          settings.persistCache = v
+          await saveSettings(this.plugin)
+        })
+      )
+
+    // PDF Indexing
+    const indexPDFsDesc = new DocumentFragment()
+    indexPDFsDesc.createSpan({}, span => {
+      span.innerHTML = `Omnisearch will include PDFs in search results.
+       This feature is currently a work-in-progress, please report slowdowns or issues that you might experience.<br>
+       Each PDF can take a few seconds to be indexed, so it may not appear immediately in search results.<br>
+       <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
+    })
+    new Setting(containerEl)
+      .setName('BETA - PDF Indexing')
+      .setDesc(indexPDFsDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.PDFIndexing).onChange(async v => {
+          settings.PDFIndexing = v
           await saveSettings(this.plugin)
         })
       )
@@ -285,12 +316,12 @@ export class SettingsTab extends PluginSettingTab {
 
   weightSlider(cb: SliderComponent, key: keyof WeightingSettings): void {
     cb.setLimits(1, 3, 0.1)
-    cb.setValue(settings[key])
-    cb.setDynamicTooltip()
-    cb.onChange(v => {
-      settings[key] = v
-      saveSettings(this.plugin)
-    })
+      .setValue(settings[key])
+      .setDynamicTooltip()
+      .onChange(v => {
+        settings[key] = v
+        saveSettings(this.plugin)
+      })
   }
 }
 
@@ -298,7 +329,8 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   respectExcluded: true,
   ignoreDiacritics: true,
   indexedFileTypes: [] as string[],
-  indexPDFs: false,
+  PDFIndexing: false,
+  backgroundProcesses: Math.max(1, Math.floor(require('os').cpus().length / 2)),
 
   showIndexingNotices: false,
   showShortName: false,
@@ -314,7 +346,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   CtrlJK: false,
   CtrlNP: false,
 
-  storeIndexInFile: false,
+  persistCache: false,
 
   welcomeMessage: '',
 } as const

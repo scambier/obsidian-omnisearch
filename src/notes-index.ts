@@ -1,6 +1,5 @@
-import {Notice, TAbstractFile, TFile} from 'obsidian'
+import { Notice, TAbstractFile, TFile } from 'obsidian'
 import {
-  canIndexPDFs,
   extractHeadingsFromCache,
   getAliasesFromMetadata,
   getTagsFromMetadata,
@@ -9,36 +8,33 @@ import {
   removeDiacritics,
   wait,
 } from './utils'
-import {
-  addNoteToCache,
-  getNonExistingNotes,
-  getNonExistingNotesFromCache,
-  getNoteFromCache,
-  removeAnchors,
-  removeNoteFromCache,
-  saveNotesCacheToFile,
-} from './notes'
-import {getPdfText} from './pdf-parser'
-import type {IndexedNote} from './globals'
-import {searchIndexFilePath} from './globals'
-import {settings} from './settings'
-import {minisearchInstance} from './search'
+import { getNonExistingNotes, removeAnchors } from './notes'
+import * as PDF from './pdf-manager'
+import type { IndexedNote } from './globals'
+import { settings } from './settings'
+import * as Search from './search'
+import PQueue from 'p-queue-compat'
+import { cacheManager } from './cache-manager'
 
 let isIndexChanged: boolean
+
+export const pdfQueue = new PQueue({
+  concurrency: settings.backgroundProcesses,
+})
 
 /**
  * Adds a file to the index
  * @param file
  * @returns
  */
-export async function addToIndex(file: TAbstractFile): Promise<void> {
+export async function addToIndexAndCache(file: TAbstractFile): Promise<void> {
   if (!(file instanceof TFile) || !isFileIndexable(file.path)) {
     return
   }
 
   // Check if the file was already indexed as non-existent,
   // and if so, remove it from the index (before adding it again)
-  if (getNoteFromCache(file.path)?.doesNotExist) {
+  if (cacheManager.getNoteFromCache(file.path)?.doesNotExist) {
     removeFromIndex(file.path)
   }
 
@@ -50,18 +46,20 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
     const metadata = app.metadataCache.getFileCache(file)
     if (metadata) {
       const nonExisting = getNonExistingNotes(file, metadata)
-      for (const name of nonExisting.filter(o => !getNoteFromCache(o))) {
+      for (const name of nonExisting.filter(
+        o => !cacheManager.getNoteFromCache(o)
+      )) {
         addNonExistingToIndex(name, file.path)
       }
     }
 
-    if (getNoteFromCache(file.path)) {
+    if (cacheManager.getNoteFromCache(file.path)) {
       throw new Error(`${file.basename} is already indexed`)
     }
 
     let content
     if (file.path.endsWith('.pdf')) {
-      content = removeDiacritics(await getPdfText(file as TFile))
+      content = removeDiacritics(await PDF.pdfManager.getPdfText(file as TFile))
     } else {
       // Fetch content from the cache to index it as-is
       content = removeDiacritics(await app.vault.cachedRead(file))
@@ -87,9 +85,9 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
         : '',
     }
 
-    minisearchInstance.add(note)
+    Search.minisearchInstance.add(note)
     isIndexChanged = true
-    addNoteToCache(note.path, note)
+    cacheManager.addNoteToCache(note.path, note)
   } catch (e) {
     console.trace('Error while indexing ' + file.basename)
     console.error(e)
@@ -105,7 +103,7 @@ export async function addToIndex(file: TAbstractFile): Promise<void> {
 export function addNonExistingToIndex(name: string, parent: string): void {
   name = removeAnchors(name)
   const filename = name + (name.endsWith('.md') ? '' : '.md')
-  if (getNoteFromCache(filename)) return
+  if (cacheManager.getNoteFromCache(filename)) return
 
   const note = {
     path: filename,
@@ -121,9 +119,9 @@ export function addNonExistingToIndex(name: string, parent: string): void {
     doesNotExist: true,
     parent,
   } as IndexedNote
-  minisearchInstance.add(note)
+  Search.minisearchInstance.add(note)
   isIndexChanged = true
-  addNoteToCache(filename, note)
+  cacheManager.addNoteToCache(filename, note)
 }
 
 /**
@@ -135,18 +133,19 @@ export function removeFromIndex(path: string): void {
     console.info(`"${path}" is not an indexable file`)
     return
   }
-  const note = getNoteFromCache(path)
+  const note = cacheManager.getNoteFromCache(path)
   if (note) {
-    minisearchInstance.remove(note)
+    Search.minisearchInstance.remove(note)
     isIndexChanged = true
-    removeNoteFromCache(path)
-    getNonExistingNotesFromCache()
+    cacheManager.removeNoteFromCache(path)
+    cacheManager
+      .getNonExistingNotesFromCache()
       .filter(n => n.parent === path)
       .forEach(n => {
         removeFromIndex(n.path)
       })
   } else {
-    console.warn(`not not found under path ${path}`)
+    console.warn(`Omnisearch - Note not found under path ${path}`)
   }
 }
 
@@ -157,54 +156,40 @@ export function addNoteToReindex(note: TAbstractFile): void {
 }
 
 export async function refreshIndex(): Promise<void> {
-  if (settings.showIndexingNotices && notesToReindex.size > 0) {
-    new Notice(`Omnisearch - Reindexing ${notesToReindex.size} notes`, 2000)
-  }
-  for (const note of notesToReindex) {
-    removeFromIndex(note.path)
-    await addToIndex(note)
-    await wait(0)
-  }
-  notesToReindex.clear()
-
-  await saveIndexToFile()
-}
-
-export async function saveIndexToFile(): Promise<void> {
-  if (settings.storeIndexInFile && minisearchInstance && isIndexChanged) {
-    const json = JSON.stringify(minisearchInstance)
-    await app.vault.adapter.write(searchIndexFilePath, json)
-    console.log('Omnisearch - Index saved on disk')
-
-    await saveNotesCacheToFile()
-    isIndexChanged = false
+  if (notesToReindex.size > 0) {
+    if (settings.showIndexingNotices) {
+      new Notice(`Omnisearch - Reindexing ${notesToReindex.size} notes`, 2000)
+    }
+    for (const note of notesToReindex) {
+      removeFromIndex(note.path)
+      await addToIndexAndCache(note)
+      await wait(0)
+    }
+    notesToReindex.clear()
+    await cacheManager.writeMinisearchIndex(Search.minisearchInstance)
   }
 }
 
 export async function indexPDFs() {
-  if (canIndexPDFs()) {
-    const start = new Date().getTime()
+  if (settings.PDFIndexing) {
     const files = app.vault.getFiles().filter(f => f.path.endsWith('.pdf'))
-    if (files.length > 50) {
-      new Notice(`⚠️ Omnisearch is indexing ${files.length} PDFs. You can experience slowdowns while this work is in progress.`)
-    }
-
-    const promises: Promise<void>[] = []
+    console.time('PDF Indexing')
+    console.log(`Omnisearch - Indexing ${files.length} PDFs`)
     for (const file of files) {
-      if (getNoteFromCache(file.path)) {
+      if (cacheManager.getNoteFromCache(file.path)) {
         removeFromIndex(file.path)
       }
-      promises.push(addToIndex(file))
+      pdfQueue.add(async () => {
+        await addToIndexAndCache(file)
+        await cacheManager.writeMinisearchIndex(Search.minisearchInstance)
+      })
     }
-    await Promise.all(promises)
 
-    // Notice & log
-    const message = `Omnisearch - Indexed ${files.length} PDFs in ${
-      new Date().getTime() - start
-    }ms`
+    await pdfQueue.onEmpty()
+    console.timeEnd('PDF Indexing')
+
     if (settings.showIndexingNotices) {
-      new Notice(message)
+      new Notice(`Omnisearch - Indexed ${files.length} PDFs`)
     }
-    console.log(message)
   }
 }

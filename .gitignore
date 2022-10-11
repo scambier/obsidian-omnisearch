@@ -20,3 +20,8 @@ data.json
 dist
 .pnpm-debug.log
 coverage
+
+
+# Added by cargo
+
+/target

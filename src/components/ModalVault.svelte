@@ -5,14 +5,14 @@
   import ModalContainer from './ModalContainer.svelte'
   import { eventBus, type ResultNote } from 'src/globals'
   import { createNote, openNote } from 'src/notes'
-  import { getSuggestions } from 'src/search'
+  import * as Search from 'src/search'
   import { getCtrlKeyLabel, getExtension, loopIndex } from 'src/utils'
   import { OmnisearchInFileModal, type OmnisearchVaultModal } from 'src/modals'
   import ResultItemVault from './ResultItemVault.svelte'
   import { Query } from 'src/query'
   import { saveSearchHistory, searchHistory } from 'src/search-history'
   import { settings } from '../settings'
-  import { refreshIndex } from '../notes-index'
+  import * as NotesIndex from '../notes-index'
 
   export let modal: OmnisearchVaultModal
   let selectedIndex = 0
@@ -29,7 +29,7 @@
   }
 
   onMount(async () => {
-    await refreshIndex()
+    await NotesIndex.refreshIndex()
     searchQuery = searchHistory[historySearchIndex]
     eventBus.enable('vault')
     eventBus.on('vault', 'enter', openNoteAndCloseModal)
@@ -63,7 +63,7 @@
 
   async function updateResults() {
     query = new Query(searchQuery)
-    resultNotes = (await getSuggestions(query)).sort(
+    resultNotes = (await Search.getSuggestions(query)).sort(
       (a, b) => b.score - a.score
     )
     selectedIndex = 0

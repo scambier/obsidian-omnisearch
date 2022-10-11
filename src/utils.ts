@@ -10,6 +10,7 @@ import {
   regexYaml,
 } from './globals'
 import { settings } from './settings'
+import { createHash, type BinaryLike } from 'crypto'
 
 export function highlighter(str: string): string {
   return `<span class="${highlightClass}">${str}</span>`
@@ -172,12 +173,10 @@ export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
   return Platform.isMacOS ? '⌘' : 'ctrl'
 }
 
-export function canIndexPDFs(): boolean {
-  return settings.indexPDFs
-}
-
 export function isFileIndexable(path: string): boolean {
-  return (canIndexPDFs() && path.endsWith('.pdf')) || isFilePlaintext(path)
+  return (
+    (settings.PDFIndexing && path.endsWith('.pdf')) || isFilePlaintext(path)
+  )
 }
 
 export function isFilePlaintext(path: string): boolean {
@@ -194,6 +193,7 @@ export function getExtension(path: string): string {
 }
 
 export function showWelcomeNotice(plugin: Plugin) {
+  return
   const code = '1.6.0'
   if (settings.welcomeMessage !== code) {
     const welcome = new DocumentFragment()
@@ -207,4 +207,8 @@ New beta feature: PDF search 🔎📄
   settings.welcomeMessage = code
 
   plugin.saveData(settings)
+}
+
+export function md5(data: BinaryLike): string {
+  return createHash('md5').update(data).digest('hex')
 }

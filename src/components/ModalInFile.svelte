@@ -13,13 +13,13 @@
   import { loopIndex } from 'src/utils'
   import { onDestroy, onMount, tick } from 'svelte'
   import { MarkdownView } from 'obsidian'
-  import { getSuggestions } from 'src/search'
+  import * as Search from 'src/search'
   import ModalContainer from './ModalContainer.svelte'
   import { OmnisearchInFileModal, OmnisearchVaultModal } from 'src/modals'
   import ResultItemInFile from './ResultItemInFile.svelte'
   import { Query } from 'src/query'
   import { openNote } from 'src/notes'
-  import {saveSearchHistory} from "../search-history";
+  import { saveSearchHistory } from '../search-history'
 
   export let modal: OmnisearchInFileModal
   export let parent: OmnisearchVaultModal | null = null
@@ -50,7 +50,7 @@
   $: (async () => {
     if (searchQuery) {
       query = new Query(searchQuery)
-      note = (await getSuggestions(query, { singleFilePath }))[0] ?? null
+      note = (await Search.getSuggestions(query, { singleFilePath }))[0] ?? null
       lastSearch = searchQuery
     }
     selectedIndex = 0
@@ -143,20 +143,20 @@
 </script>
 
 <InputSearch
-  value={searchQuery}
-  on:input={e => (searchQuery = e.detail)}
+  value="{searchQuery}"
+  on:input="{e => (searchQuery = e.detail)}"
   placeholder="Omnisearch - File" />
 
 <ModalContainer>
   {#if groupedOffsets.length && note}
     {#each groupedOffsets as offset, i}
       <ResultItemInFile
-        {offset}
-        {note}
-        index={i}
-        selected={i === selectedIndex}
-        on:mousemove={_e => (selectedIndex = i)}
-        on:click={openSelection} />
+        offset="{offset}"
+        note="{note}"
+        index="{i}"
+        selected="{i === selectedIndex}"
+        on:mousemove="{_e => (selectedIndex = i)}"
+        on:click="{openSelection}" />
     {/each}
   {:else}
     <div style="text-align: center;">

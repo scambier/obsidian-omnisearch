@@ -1,6 +1,6 @@
 import type { ResultNote, SearchMatch } from './globals'
 import { Query } from './query'
-import { getSuggestions } from './search'
+import * as Search from './search'
 
 type ResultNoteApi = {
   score: number
@@ -30,7 +30,7 @@ function mapResults(results: ResultNote[]): ResultNoteApi[] {
 
 async function search(q: string): Promise<ResultNoteApi[]> {
   const query = new Query(q)
-  const raw = await getSuggestions(query)
+  const raw = await Search.getSuggestions(query)
   return mapResults(raw)
 }
 
