@@ -32,7 +32,7 @@ class PDFManager {
     const worker = new PDFWorker({ name: 'PDF Text Extractor' })
     return new Promise(async (resolve, reject) => {
       // @ts-ignore
-      worker.postMessage({ data })
+      worker.postMessage({ data, name: file.basename })
       worker.onmessage = (evt: any) => {
         const txt = evt.data.text
         this.updatePDFCache(hash, txt)

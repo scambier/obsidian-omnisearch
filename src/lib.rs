@@ -2,16 +2,14 @@ use js_sys::Uint8Array;
 use pdf_extract::extract_text_from_mem;
 use wasm_bindgen::prelude::*;
 
-mod obsidian;
+// mod obsidian;
 
 #[wasm_bindgen]
-pub fn extract_pdf_text(arr: Uint8Array) -> String {
-    // FIXME: return a Result<> here, to throw in JS in case of an error
-    let txt = match extract_text_from_mem(&arr.to_vec()) {
-        Ok(txt) => txt,
-        Err(e) => e.to_string(),
+pub fn extract_pdf_text(arr: Uint8Array) -> Result<String, JsError> {
+    match extract_text_from_mem(&arr.to_vec()) {
+        Ok(txt) => return Ok(txt),
+        Err(e) => return Err(JsError::new(&e.to_string())),
     };
-    txt
 }
 
 // #[wasm_bindgen]
