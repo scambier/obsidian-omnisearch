@@ -192,23 +192,6 @@ export function getExtension(path: string): string {
   return split[split.length - 1]
 }
 
-export function showWelcomeNotice(plugin: Plugin) {
-  return
-  const code = '1.6.0'
-  if (settings.welcomeMessage !== code) {
-    const welcome = new DocumentFragment()
-    welcome.createSpan({}, span => {
-      span.innerHTML = `<strong>Omnisearch has been updated</strong>
-New beta feature: PDF search 🔎📄
-<small>Toggle "<i>BETA - Index PDFs</i>" in Omnisearch settings page.</small>`
-    })
-    new Notice(welcome, 30000)
-  }
-  settings.welcomeMessage = code
-
-  plugin.saveData(settings)
-}
-
 export function md5(data: BinaryLike): string {
   return createHash('md5').update(data).digest('hex')
 }

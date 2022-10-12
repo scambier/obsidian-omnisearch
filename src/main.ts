@@ -1,12 +1,17 @@
-import { Plugin, TFile } from 'obsidian'
+import { Notice, Plugin, TFile } from 'obsidian'
 import * as Search from './search'
 import { OmnisearchInFileModal, OmnisearchVaultModal } from './modals'
 import { loadSettings, settings, SettingsTab, showExcerpt } from './settings'
-import { eventBus, EventNames } from './globals'
+import {
+  eventBus,
+  EventNames,
+  oldNnotesCacheFilePath,
+  oldSearchIndexFilePath,
+} from './globals'
 import { registerAPI } from '@vanakat/plugin-api'
 import api from './api'
 import { loadSearchHistory } from './search-history'
-import { isFilePlaintext, showWelcomeNotice } from './utils'
+import { isFilePlaintext } from './utils'
 import * as NotesIndex from './notes-index'
 import { cacheManager } from './cache-manager'
 import { pdfManager } from './pdf-manager'
@@ -21,7 +26,7 @@ function _registerAPI(plugin: OmnisearchPlugin): void {
 
 export default class OmnisearchPlugin extends Plugin {
   async onload(): Promise<void> {
-
+    await cleanOldCacheFiles()
     await loadSettings(this)
     await loadSearchHistory()
     await cacheManager.loadNotesCache()
@@ -99,4 +104,34 @@ export default class OmnisearchPlugin extends Plugin {
       new OmnisearchVaultModal(app).open()
     })
   }
+}
+
+async function cleanOldCacheFiles() {
+  if (await app.vault.adapter.exists(oldSearchIndexFilePath)) {
+    try {
+      await app.vault.adapter.remove(oldSearchIndexFilePath)
+    } catch (e) {}
+  }
+  if (await app.vault.adapter.exists(oldNnotesCacheFilePath)) {
+    try {
+      await app.vault.adapter.remove(oldNnotesCacheFilePath)
+    } catch (e) {}
+  }
+}
+
+function showWelcomeNotice(plugin: Plugin) {
+  return
+  const code = '1.6.0'
+  if (settings.welcomeMessage !== code) {
+    const welcome = new DocumentFragment()
+    welcome.createSpan({}, span => {
+      span.innerHTML = `<strong>Omnisearch has been updated</strong>
+New beta feature: PDF search 🔎📄
+<small>Toggle "<i>BETA - Index PDFs</i>" in Omnisearch settings page.</small>`
+    })
+    new Notice(welcome, 30000)
+  }
+  settings.welcomeMessage = code
+
+  plugin.saveData(settings)
 }
