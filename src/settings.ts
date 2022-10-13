@@ -1,4 +1,10 @@
-import { Plugin, PluginSettingTab, Setting, SliderComponent } from 'obsidian'
+import {
+  Platform,
+  Plugin,
+  PluginSettingTab,
+  Setting,
+  SliderComponent,
+} from 'obsidian'
 import { writable } from 'svelte/store'
 import { notesCacheFilePath, minisearchCacheFilePath } from './globals'
 import type OmnisearchPlugin from './main'
@@ -167,24 +173,25 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
-    // PDF Indexing
-    const indexPDFsDesc = new DocumentFragment()
-    indexPDFsDesc.createSpan({}, span => {
-      span.innerHTML = `Omnisearch will include PDFs in search results.
+    // PDF Indexing - not available on mobile
+    if (!Platform.isMobileApp) {
+      const indexPDFsDesc = new DocumentFragment()
+      indexPDFsDesc.createSpan({}, span => {
+        span.innerHTML = `Omnisearch will include PDFs in search results.
        This feature is currently a work-in-progress, please report slowdowns or issues that you might experience.<br>
        Each PDF can take a few seconds to be indexed, so it may not appear immediately in search results.<br>
        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
-    })
-    new Setting(containerEl)
-      .setName('BETA - PDF Indexing')
-      .setDesc(indexPDFsDesc)
-      .addToggle(toggle =>
-        toggle.setValue(settings.PDFIndexing).onChange(async v => {
-          settings.PDFIndexing = v
-          await saveSettings(this.plugin)
-        })
-      )
-
+      })
+      new Setting(containerEl)
+        .setName('BETA - PDF Indexing')
+        .setDesc(indexPDFsDesc)
+        .addToggle(toggle =>
+          toggle.setValue(settings.PDFIndexing).onChange(async v => {
+            settings.PDFIndexing = v
+            await saveSettings(this.plugin)
+          })
+        )
+    }
     // #endregion Behavior
 
     // #region User Interface
@@ -330,7 +337,9 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   ignoreDiacritics: true,
   indexedFileTypes: [] as string[],
   PDFIndexing: false,
-  backgroundProcesses: Math.max(1, Math.floor(require('os').cpus().length / 2)),
+  backgroundProcesses: Platform.isMobileApp
+    ? 0
+    : Math.max(1, Math.floor(require('os').cpus().length / 2)),
 
   showIndexingNotices: false,
   showShortName: false,
