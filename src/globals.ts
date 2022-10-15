@@ -17,9 +17,6 @@ export const notesCacheFilePath = `${app.vault.configDir}/plugins/omnisearch/not
 export const pdfCacheFilePath = `${app.vault.configDir}/plugins/omnisearch/pdfCache.data`
 export const historyFilePath = `${app.vault.configDir}/plugins/omnisearch/historyCache.json`
 
-export const oldSearchIndexFilePath = `${app.vault.configDir}/plugins/omnisearch/searchIndex.json`
-export const oldNnotesCacheFilePath = `${app.vault.configDir}/plugins/omnisearch/notesCache.json`
-
 export const EventNames = {
   ToggleExcerpts: 'toggle-excerpts',
 } as const

@@ -2,12 +2,7 @@ import { Notice, Plugin, TFile } from 'obsidian'
 import * as Search from './search'
 import { OmnisearchInFileModal, OmnisearchVaultModal } from './modals'
 import { loadSettings, settings, SettingsTab, showExcerpt } from './settings'
-import {
-  eventBus,
-  EventNames,
-  oldNnotesCacheFilePath,
-  oldSearchIndexFilePath,
-} from './globals'
+import { eventBus, EventNames } from './globals'
 import { registerAPI } from '@vanakat/plugin-api'
 import api from './api'
 import { loadSearchHistory } from './search-history'
@@ -107,11 +102,13 @@ export default class OmnisearchPlugin extends Plugin {
 }
 
 async function cleanOldCacheFiles() {
+  const oldSearchIndexFilePath = `${app.vault.configDir}/plugins/omnisearch/searchIndex.json`
   if (await app.vault.adapter.exists(oldSearchIndexFilePath)) {
     try {
       await app.vault.adapter.remove(oldSearchIndexFilePath)
     } catch (e) {}
   }
+  const oldNnotesCacheFilePath = `${app.vault.configDir}/plugins/omnisearch/notesCache.json`
   if (await app.vault.adapter.exists(oldNnotesCacheFilePath)) {
     try {
       await app.vault.adapter.remove(oldNnotesCacheFilePath)

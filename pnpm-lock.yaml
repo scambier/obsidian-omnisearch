@@ -26,6 +26,7 @@ specifiers:
   pako: ^2.0.4
   prettier: ^2.7.1
   prettier-plugin-svelte: ^2.8.0
+  pure-md5: ^0.1.14
   rollup: ^2.79.1
   rollup-plugin-base64: ^1.0.1
   rollup-plugin-copy: ^3.4.0
@@ -44,6 +45,7 @@ dependencies:
   minisearch: 5.0.0
   p-queue-compat: 1.0.187
   pako: 2.0.4
+  pure-md5: 0.1.14
 
 devDependencies:
   '@babel/preset-env': 7.19.4
@@ -4065,6 +4067,10 @@ packages:
     resolution: {integrity: sha512-XRsRjdf+j5ml+y/6GKHPZbrF/8p2Yga0JPtdqTIY2Xe5ohJPD9saDJJLPvp9+NSBprVvevdXZybnj2cv8OEd0A==}
     engines: {node: '>=6'}
     dev: true
+
+  /pure-md5/0.1.14:
+    resolution: {integrity: sha512-tQ/inCmpbggbJRgJESzyhAj8weRANMMgYvBtVcqDHfTXR88fgU/Ff7YQHm8dGrcenCxkjas10SmbaFROcp2kZQ==}
+    dev: false
 
   /querystringify/2.2.0:
     resolution: {integrity: sha512-FIqgj2EUvTa7R50u0rGsyTftzjYmv/a3hO345bZNrqabNqjtgiDMgmo4mkUjd+nzU5oF3dClKqFIPUKybUyqoQ==}

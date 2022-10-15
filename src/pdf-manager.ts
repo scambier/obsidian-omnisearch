@@ -3,7 +3,7 @@ import PQueue from 'p-queue-compat'
 import PDFWorker from 'web-worker:./pdf-worker.ts'
 import { pdfCacheFilePath } from './globals'
 import { deflate, inflate } from 'pako'
-import { md5 } from './utils'
+import { makeMD5 } from './utils'
 
 class PDFManager {
   private cache: Map<string, { content: string }> = new Map()
@@ -24,7 +24,7 @@ class PDFManager {
 
   public async getPdfText(file: TFile): Promise<string> {
     const data = new Uint8Array(await app.vault.readBinary(file))
-    const hash = md5(data)
+    const hash = makeMD5(data)
     if (this.cache.has(hash)) {
       return this.cache.get(hash)!.content
     }

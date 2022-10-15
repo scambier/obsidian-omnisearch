@@ -11,6 +11,7 @@ import {
 } from './globals'
 import { settings } from './settings'
 import { createHash, type BinaryLike } from 'crypto'
+import { md5 } from 'pure-md5'
 
 export function highlighter(str: string): string {
   return `<span class="${highlightClass}">${str}</span>`
@@ -192,6 +193,11 @@ export function getExtension(path: string): string {
   return split[split.length - 1]
 }
 
-export function md5(data: BinaryLike): string {
+export function makeMD5(data: BinaryLike): string {
+  if (Platform.isMobileApp) {
+    // A node-less implementation, but since we're not hashing the same data
+    // (arrayBuffer vs stringified array) the hash will be different
+    return md5(data.toString())
+  }
   return createHash('md5').update(data).digest('hex')
 }

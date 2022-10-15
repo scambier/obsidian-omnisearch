@@ -174,24 +174,22 @@ export class SettingsTab extends PluginSettingTab {
       )
 
     // PDF Indexing - not available on mobile
-    if (!Platform.isMobileApp) {
-      const indexPDFsDesc = new DocumentFragment()
-      indexPDFsDesc.createSpan({}, span => {
-        span.innerHTML = `Omnisearch will include PDFs in search results.
+    const indexPDFsDesc = new DocumentFragment()
+    indexPDFsDesc.createSpan({}, span => {
+      span.innerHTML = `Omnisearch will include PDFs in search results.
        This feature is currently a work-in-progress, please report slowdowns or issues that you might experience.<br>
        Each PDF can take a few seconds to be indexed, so it may not appear immediately in search results.<br>
        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
-      })
-      new Setting(containerEl)
-        .setName('BETA - PDF Indexing')
-        .setDesc(indexPDFsDesc)
-        .addToggle(toggle =>
-          toggle.setValue(settings.PDFIndexing).onChange(async v => {
-            settings.PDFIndexing = v
-            await saveSettings(this.plugin)
-          })
-        )
-    }
+    })
+    new Setting(containerEl)
+      .setName('BETA - PDF Indexing')
+      .setDesc(indexPDFsDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.PDFIndexing).onChange(async v => {
+          settings.PDFIndexing = v
+          await saveSettings(this.plugin)
+        })
+      )
     // #endregion Behavior
 
     // #region User Interface

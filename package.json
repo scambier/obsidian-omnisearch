@@ -48,7 +48,8 @@
     "lodash-es": "4.17.21",
     "minisearch": "5.0.0",
     "p-queue-compat": "1.0.187",
-    "pako": "^2.0.4"
+    "pako": "^2.0.4",
+    "pure-md5": "^0.1.14"
   },
   "pnpm": {
     "overrides": {
