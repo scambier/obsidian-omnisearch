@@ -2,33 +2,25 @@ import { Notice } from 'obsidian'
 import MiniSearch, { type Options, type SearchResult } from 'minisearch'
 import {
   chsRegex,
-  type IndexedNote,
+  type IndexedDocument,
   type ResultNote,
   minisearchCacheFilePath,
   type SearchMatch,
   SPACE_OR_PUNCTUATION,
 } from './globals'
 import {
-  isFileIndexable,
   isFilePlaintext,
   removeDiacritics,
   stringsToRegex,
   stripMarkdownCharacters,
-  wait,
 } from './utils'
 import type { Query } from './query'
 import { settings } from './settings'
-// import {
-//   getNoteFromCache,
-//   isCacheOutdated,
-//   loadNotesCache,
-//   resetNotesCache,
-// } from './notes'
 import * as NotesIndex from './notes-index'
-import PQueue from 'p-queue-compat'
+import pLimit from 'p-limit'
 import { cacheManager } from './cache-manager'
 
-export let minisearchInstance: MiniSearch<IndexedNote>
+export let minisearchInstance: MiniSearch<IndexedDocument>
 
 const tokenize = (text: string): string[] => {
   const tokens = text.split(SPACE_OR_PUNCTUATION)
@@ -46,7 +38,7 @@ const tokenize = (text: string): string[] => {
  * and adds all the notes to the index
  */
 export async function initGlobalSearchIndex(): Promise<void> {
-  const options: Options<IndexedNote> = {
+  const options: Options<IndexedDocument> = {
     tokenize,
     processTerm: (term: string) =>
       (settings.ignoreDiacritics ? removeDiacritics(term) : term).toLowerCase(),
@@ -106,15 +98,16 @@ export async function initGlobalSearchIndex(): Promise<void> {
   }
 
   // Read and index all the files into the search engine
-  const queue = new PQueue({ concurrency: 10 })
+  const queue = pLimit(10)
+  const input = []
   for (const file of files) {
     if (cacheManager.getNoteFromCache(file.path)) {
       NotesIndex.removeFromIndex(file.path)
     }
-    queue.add(() => NotesIndex.addToIndexAndCache(file))
+    input.push(queue(() => NotesIndex.addToIndexAndCache(file)))
   }
 
-  await queue.onEmpty()
+  await Promise.all(input)
 
   if (files.length > 0) {
     const message = `Omnisearch - Indexed ${files.length} ${notesSuffix} in ${

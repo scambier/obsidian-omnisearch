@@ -16,7 +16,7 @@ Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/mi
 
 - Automatic document scoring using the [BM25 algorithm](https://github.com/lucaong/minisearch/issues/129#issuecomment-1046257399)
   - The relevance of a document against a query depends on the number of times the query terms appear in the document, its filename, and its headings
-- Can search other plaintext files (configurable in settings)
+- Can search other plaintext files and PDFs (configurable in settings)
 - Workflow similar to "Quick Switcher" plugins
 - Keyboard first: you never have to use your mouse
 - Resistance to typos
@@ -116,6 +116,37 @@ For example, if you'd like the usual yellow highlight on search matches, you can
 ```
 
 See [styles.css](./assets/styles.css) for more information.
+
+## Issues & Solutions
+
+**Omnisearch makes Obsidian sluggish at startup.**
+
+- You may have _big_ documents. Huge notes (like novels) can freeze the interface for a short time when being indexed. Enabling the setting "_Persist cache on disk_" may help you in this case.
+
+**I have thousands of notes, and at startup I have to wait a few seconds before making a query, or else Omnisearch does not return all the expected results.**
+
+- Enabling the setting "_Persist cache on disk_" may help you in this case.
+
+**Omnisearch gives inconsistent/invalid results, or there are errors in the developer console.**
+
+- Go in Omnisearch settings.
+- If applicable, disable and re-enable "*Persist cache on disk*".
+- Restart Obsidian to clear the cache and force a reindex.
+
+**A query should return a result that does not appear.**
+
+- If applicable, make sure that "*Ignore diacritics*" is enabled.
+- If you have modified them, reset weightings to their original values.
+- Rewrite your query and avoid numbers and common words.
+
+**How do I highlight matches in search results?**
+
+See [here](https://github.com/scambier/obsidian-omnisearch#css-customization).
+
+**I'm still having an issue**
+
+You can write your issue [here](https://github.com/scambier/obsidian-omnisearch/issues) with as much details as possible.
+
 
 ## LICENSE
 

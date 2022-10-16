@@ -5,12 +5,12 @@ import { deflate, inflate } from 'pako'
 import {
   notesCacheFilePath,
   minisearchCacheFilePath,
-  type IndexedNote,
+  type IndexedDocument,
 } from './globals'
 import { settings } from './settings'
 
 class CacheManager {
-  notesCache: Record<string, IndexedNote> = {}
+  notesCache: Record<string, IndexedDocument> = {}
   compress = true
   writeInterval = 5_000 // In milliseconds
 
@@ -94,7 +94,7 @@ class CacheManager {
     console.log('Omnisearch - Notes cache saved on disk')
   }
 
-  public addNoteToCache(path: string, note: IndexedNote) {
+  public addNoteToCache(path: string, note: IndexedDocument) {
     this.notesCache[path] = note
     this.saveNotesCache()
   }
@@ -103,11 +103,11 @@ class CacheManager {
     delete this.notesCache[key]
   }
 
-  public getNoteFromCache(key: string): IndexedNote | undefined {
+  public getNoteFromCache(key: string): IndexedDocument | undefined {
     return this.notesCache[key]
   }
 
-  public getNonExistingNotesFromCache(): IndexedNote[] {
+  public getNonExistingNotesFromCache(): IndexedDocument[] {
     return Object.values(this.notesCache).filter(note => note.doesNotExist)
   }
 

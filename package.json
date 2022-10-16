@@ -45,9 +45,10 @@
   },
   "dependencies": {
     "@vanakat/plugin-api": "0.1.0",
+    "dexie": "^3.2.2",
     "lodash-es": "4.17.21",
     "minisearch": "5.0.0",
-    "p-queue-compat": "1.0.187",
+    "p-limit": "^4.0.0",
     "pako": "^2.0.4",
     "pure-md5": "^0.1.14"
   },

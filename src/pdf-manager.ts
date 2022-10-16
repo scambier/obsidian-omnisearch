@@ -1,51 +1,58 @@
 import type { TFile } from 'obsidian'
-import PQueue from 'p-queue-compat'
 import PDFWorker from 'web-worker:./pdf-worker.ts'
-import { pdfCacheFilePath } from './globals'
-import { deflate, inflate } from 'pako'
 import { makeMD5 } from './utils'
+import { database } from './database'
 
 class PDFManager {
-  private cache: Map<string, { content: string }> = new Map()
-  private serializeQueue = new PQueue({ concurrency: 1 })
-
-  public async loadPDFCache(): Promise<void> {
-    if (await app.vault.adapter.exists(pdfCacheFilePath)) {
-      try {
-        const data = await app.vault.adapter.readBinary(pdfCacheFilePath)
-        const json = new TextDecoder('utf8').decode(inflate(data))
-        this.cache = new Map(JSON.parse(json))
-      } catch (e) {
-        console.error(e)
-        this.cache = new Map()
-      }
-    }
-  }
-
   public async getPdfText(file: TFile): Promise<string> {
+    // 1) Check if we can find by path & size
+    const docByPath = await database.pdf.get({
+      path: file.path,
+      size: file.stat.size,
+    })
+
+    if (docByPath) {
+      return docByPath.text
+    }
+
+    // 2) Check by hash
     const data = new Uint8Array(await app.vault.readBinary(file))
     const hash = makeMD5(data)
-    if (this.cache.has(hash)) {
-      return this.cache.get(hash)!.content
+    const docByHash = await database.pdf.get(hash)
+    if (docByHash) {
+      return docByHash.text
     }
 
+    // 3) The PDF is not cached, extract it
     const worker = new PDFWorker({ name: 'PDF Text Extractor' })
     return new Promise(async (resolve, reject) => {
       // @ts-ignore
+      file.stat.size
       worker.postMessage({ data, name: file.basename })
       worker.onmessage = (evt: any) => {
-        const txt = evt.data.text
-        this.updatePDFCache(hash, txt)
-        resolve(txt)
+        const text = (evt.data.text as string)
+          // Replace \n with spaces
+          .replace(/\n/g, ' ')
+          // Trim multiple spaces
+          .replace(/ +/g, ' ')
+          .trim()
+        database.pdf
+          .add({ hash, text, path: file.path, size: file.stat.size })
+          .then(() => {
+            resolve(text)
+          })
       }
     })
   }
 
-  private async updatePDFCache(hash: string, content: string): Promise<void> {
-    this.serializeQueue.add(() => {
-      this.cache.set(hash, { content })
-      const data = deflate(JSON.stringify(Array.from(this.cache), null, 1))
-      app.vault.adapter.writeBinary(pdfCacheFilePath, data as any)
+  /**
+   * Removes the outdated cache entries
+   */
+  public async cleanCache(): Promise<void> {
+    database.pdf.each(async item => {
+      if (!(await app.vault.adapter.exists(item.path))) {
+        console.log(item.path + ' does not exist')
+      }
     })
   }
 }

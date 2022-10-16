@@ -19,6 +19,10 @@ declare module 'obsidian' {
   interface Vault {
     getConfig(string): unknown
   }
+
+  interface App {
+    appId: string
+  }
 }
 
 

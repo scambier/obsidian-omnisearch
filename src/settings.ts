@@ -173,12 +173,15 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
-    // PDF Indexing - not available on mobile
+    // PDF Indexing
     const indexPDFsDesc = new DocumentFragment()
     indexPDFsDesc.createSpan({}, span => {
       span.innerHTML = `Omnisearch will include PDFs in search results.
-       This feature is currently a work-in-progress, please report slowdowns or issues that you might experience.<br>
-       Each PDF can take a few seconds to be indexed, so it may not appear immediately in search results.<br>
+      <ul>
+        <li>⚠️ Texts extracted from PDFs may contain errors such as missing spaces, or spaces in the middle of words.</li>
+        <li>This feature is currently a work-in-progress, please report issues that you might experience.</li>
+        <li>Each PDF can take a few seconds to be indexed, so it may not appear immediately in search results.</li>
+      </ul>
        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
     })
     new Setting(containerEl)

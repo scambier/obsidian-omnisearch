@@ -9,7 +9,6 @@ import { loadSearchHistory } from './search-history'
 import { isFilePlaintext } from './utils'
 import * as NotesIndex from './notes-index'
 import { cacheManager } from './cache-manager'
-import { pdfManager } from './pdf-manager'
 
 function _registerAPI(plugin: OmnisearchPlugin): void {
   registerAPI('omnisearch', api, plugin as any)
@@ -25,7 +24,6 @@ export default class OmnisearchPlugin extends Plugin {
     await loadSettings(this)
     await loadSearchHistory()
     await cacheManager.loadNotesCache()
-    await pdfManager.loadPDFCache()
 
     _registerAPI(this)
 
@@ -91,7 +89,7 @@ export default class OmnisearchPlugin extends Plugin {
 
   onunload(): void {
     console.log('Omnisearch - Interrupting PDF indexing')
-    NotesIndex.pdfQueue.pause()
+    NotesIndex.pdfQueue.clearQueue()
   }
 
   addRibbonButton(): void {
@@ -102,17 +100,17 @@ export default class OmnisearchPlugin extends Plugin {
 }
 
 async function cleanOldCacheFiles() {
-  const oldSearchIndexFilePath = `${app.vault.configDir}/plugins/omnisearch/searchIndex.json`
-  if (await app.vault.adapter.exists(oldSearchIndexFilePath)) {
-    try {
-      await app.vault.adapter.remove(oldSearchIndexFilePath)
-    } catch (e) {}
-  }
-  const oldNnotesCacheFilePath = `${app.vault.configDir}/plugins/omnisearch/notesCache.json`
-  if (await app.vault.adapter.exists(oldNnotesCacheFilePath)) {
-    try {
-      await app.vault.adapter.remove(oldNnotesCacheFilePath)
-    } catch (e) {}
+  const toDelete = [
+    `${app.vault.configDir}/plugins/omnisearch/searchIndex.json`,
+    `${app.vault.configDir}/plugins/omnisearch/notesCache.json`,
+    `${app.vault.configDir}/plugins/omnisearch/pdfCache.data`
+  ]
+  for (const item of toDelete) {
+    if (await app.vault.adapter.exists(item)) {
+      try {
+        await app.vault.adapter.remove(item)
+      } catch (e) {}
+    }
   }
 }
 

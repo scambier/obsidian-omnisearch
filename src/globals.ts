@@ -14,14 +14,13 @@ export const eventBus = new EventBus()
 
 export const minisearchCacheFilePath = `${app.vault.configDir}/plugins/omnisearch/searchIndex.data`
 export const notesCacheFilePath = `${app.vault.configDir}/plugins/omnisearch/notesCache.data`
-export const pdfCacheFilePath = `${app.vault.configDir}/plugins/omnisearch/pdfCache.data`
 export const historyFilePath = `${app.vault.configDir}/plugins/omnisearch/historyCache.json`
 
 export const EventNames = {
   ToggleExcerpts: 'toggle-excerpts',
 } as const
 
-export type IndexedNote = {
+export type IndexedDocument = {
   path: string
   basename: string
   mtime: number

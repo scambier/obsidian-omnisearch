@@ -20,7 +20,7 @@
 
   const debouncedOnInput = debounce(() => {
     dispatch('input', value)
-  }, 100)
+  }, 250)
 </script>
 
 <div class="omnisearch-input-container">

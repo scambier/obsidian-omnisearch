@@ -4,23 +4,19 @@ import {
   getAliasesFromMetadata,
   getTagsFromMetadata,
   isFileIndexable,
-  isFilePlaintext,
   removeDiacritics,
   wait,
 } from './utils'
 import { getNonExistingNotes, removeAnchors } from './notes'
-import * as PDF from './pdf-manager'
-import type { IndexedNote } from './globals'
+import { pdfManager } from './pdf-manager'
+import type { IndexedDocument } from './globals'
 import { settings } from './settings'
 import * as Search from './search'
-import PQueue from 'p-queue-compat'
+// import PQueue from 'p-queue-compat'
+import pLimit from 'p-limit'
 import { cacheManager } from './cache-manager'
 
-let isIndexChanged: boolean
-
-export const pdfQueue = new PQueue({
-  concurrency: settings.backgroundProcesses,
-})
+export const pdfQueue = pLimit(settings.backgroundProcesses)
 
 /**
  * Adds a file to the index
@@ -59,14 +55,14 @@ export async function addToIndexAndCache(file: TAbstractFile): Promise<void> {
 
     let content
     if (file.path.endsWith('.pdf')) {
-      content = removeDiacritics(await PDF.pdfManager.getPdfText(file as TFile))
+      content = removeDiacritics(await pdfManager.getPdfText(file as TFile))
     } else {
       // Fetch content from the cache to index it as-is
       content = removeDiacritics(await app.vault.cachedRead(file))
     }
 
     // Make the document and index it
-    const note: IndexedNote = {
+    const note: IndexedDocument = {
       basename: removeDiacritics(file.basename),
       content,
       path: file.path,
@@ -86,7 +82,6 @@ export async function addToIndexAndCache(file: TAbstractFile): Promise<void> {
     }
 
     Search.minisearchInstance.add(note)
-    isIndexChanged = true
     cacheManager.addNoteToCache(note.path, note)
   } catch (e) {
     console.trace('Error while indexing ' + file.basename)
@@ -105,12 +100,13 @@ export function addNonExistingToIndex(name: string, parent: string): void {
   const filename = name + (name.endsWith('.md') ? '' : '.md')
   if (cacheManager.getNoteFromCache(filename)) return
 
-  const note = {
+  const note: IndexedDocument = {
     path: filename,
     basename: name,
     mtime: 0,
 
     content: '',
+    tags: [],
     aliases: '',
     headings1: '',
     headings2: '',
@@ -118,9 +114,8 @@ export function addNonExistingToIndex(name: string, parent: string): void {
 
     doesNotExist: true,
     parent,
-  } as IndexedNote
+  }
   Search.minisearchInstance.add(note)
-  isIndexChanged = true
   cacheManager.addNoteToCache(filename, note)
 }
 
@@ -129,14 +124,13 @@ export function addNonExistingToIndex(name: string, parent: string): void {
  * @param path
  */
 export function removeFromIndex(path: string): void {
-  if (!isFilePlaintext(path)) {
+  if (!isFileIndexable(path)) {
     console.info(`"${path}" is not an indexable file`)
     return
   }
   const note = cacheManager.getNoteFromCache(path)
   if (note) {
     Search.minisearchInstance.remove(note)
-    isIndexChanged = true
     cacheManager.removeNoteFromCache(path)
     cacheManager
       .getNonExistingNotesFromCache()
@@ -175,21 +169,30 @@ export async function indexPDFs() {
     const files = app.vault.getFiles().filter(f => f.path.endsWith('.pdf'))
     console.time('PDF Indexing')
     console.log(`Omnisearch - Indexing ${files.length} PDFs`)
+    const input = []
     for (const file of files) {
       if (cacheManager.getNoteFromCache(file.path)) {
         removeFromIndex(file.path)
       }
-      pdfQueue.add(async () => {
-        await addToIndexAndCache(file)
-        await cacheManager.writeMinisearchIndex(Search.minisearchInstance)
-      })
+      input.push(
+        pdfQueue(async () => {
+          await addToIndexAndCache(file)
+          await cacheManager.writeMinisearchIndex(Search.minisearchInstance)
+        })
+      )
+      // pdfQueue.add(async () => {
+      //   await addToIndexAndCache(file)
+      //   await cacheManager.writeMinisearchIndex(Search.minisearchInstance)
+      // })
     }
-
-    await pdfQueue.onEmpty()
+    await Promise.all(input)
+    // await pdfQueue.onEmpty()
     console.timeEnd('PDF Indexing')
 
     if (settings.showIndexingNotices) {
       new Notice(`Omnisearch - Indexed ${files.length} PDFs`)
     }
+
+    await pdfManager.cleanCache()
   }
 }
