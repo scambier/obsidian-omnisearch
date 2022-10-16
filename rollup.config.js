@@ -36,8 +36,9 @@ export default {
     base64({ include: '**/*.wasm' }),
     copy({
       targets: [
-        { src: 'assets/styles.css', dest: 'dist' },
         { src: 'manifest.json', dest: 'dist' },
+        { src: 'assets/styles.css', dest: 'dist' },
+        { src: 'assets/.gitignore', dest: 'dist' },
       ],
     }),
     webWorkerLoader({ inline: true, forceInline: true, targetPlatform: "browser" }),

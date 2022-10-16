@@ -1,0 +1,4 @@
+# Exclude index and cache files on user side by default
+*Cache.json
+*Index.json
+*.data
