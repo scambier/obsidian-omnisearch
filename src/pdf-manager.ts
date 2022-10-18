@@ -1,10 +1,46 @@
 import type { TFile } from 'obsidian'
-import PDFWorker from 'web-worker:./pdf-worker.ts'
+import WebWorker from 'web-worker:./pdf-worker.ts'
 import { makeMD5 } from './utils'
 import { database } from './database'
-import { settings } from './settings'
 
 const workerTimeout = 120_000
+
+class PDFWorker {
+  private static pool: PDFWorker[] = []
+  static getWorker(): PDFWorker {
+    const free = PDFWorker.pool.find(w => !w.running)
+    if (free) {
+      return free
+    }
+    const worker = new PDFWorker(new WebWorker({ name: 'PDF Text Extractor' }))
+    PDFWorker.pool.push(worker)
+    return worker
+  }
+
+  private running = false
+
+  private constructor(private worker: Worker) {}
+
+  public async run(msg: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.running = true
+
+      const timeout = setTimeout(() => {
+        this.worker.terminate()
+        console.warn('Omnisearch - Worker timeout')
+        reject('timeout')
+        this.running = false
+      }, workerTimeout)
+
+      this.worker.postMessage(msg)
+      this.worker.onmessage = evt => {
+        clearTimeout(timeout)
+        resolve(evt)
+        this.running = false
+      }
+    })
+  }
+}
 
 class PDFManager {
   public async getPdfText(file: TFile): Promise<string> {
@@ -27,34 +63,31 @@ class PDFManager {
     }
 
     // 3) The PDF is not cached, extract it
-    const worker = new PDFWorker({ name: 'PDF Text Extractor' })
+    const worker = PDFWorker.getWorker() // new PDFWorker({ name: 'PDF Text Extractor' })
     return new Promise(async (resolve, reject) => {
-      // @ts-ignore
-      file.stat.size
-
-      // In case of a timeout, we just return an empty line.
-      // If we don't, it will try to reindex at each restart.
-      const timeout = setTimeout(() => {
-        worker.terminate()
-        console.warn('Omnisearch - Worker timeout to extract text from ' + file.basename)
-        resolve('')
-      }, workerTimeout)
-
-      worker.postMessage({ data, name: file.basename })
-      worker.onmessage = (evt: any) => {
-        const text = (evt.data.text as string)
+      try {
+        const res = await worker.run({ data, name: file.basename })
+        const text = (res.data.text as string)
           // Replace \n with spaces
           .replace(/\n/g, ' ')
           // Trim multiple spaces
           .replace(/ +/g, ' ')
           .trim()
+
+        // Add it to the cache
         database.pdf
           .add({ hash, text, path: file.path, size: file.stat.size })
           .then(() => {
-            clearTimeout(timeout)
             resolve(text)
           })
-        worker.terminate()
+      } catch (e) {
+        // In case of error (unreadable PDF or timeout) just add
+        // an empty string to the cache
+        database.pdf
+          .add({ hash, text: '', path: file.path, size: file.stat.size })
+          .then(() => {
+            resolve('')
+          })
       }
     })
   }

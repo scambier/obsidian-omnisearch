@@ -178,9 +178,10 @@ export class SettingsTab extends PluginSettingTab {
     indexPDFsDesc.createSpan({}, span => {
       span.innerHTML = `Omnisearch will include PDFs in search results.
       <ul>
+        <li>⚠️ Depending on their size, PDFs can take anywhere from a few seconds to 2 minutes to be processed.</li>
         <li>⚠️ Texts extracted from PDFs may contain errors such as missing spaces, or spaces in the middle of words.</li>
+        <li>⚠️ Some PDFs can't be processed correctly and will return an empty text.</li>
         <li>This feature is currently a work-in-progress, please report issues that you might experience.</li>
-        <li>Each PDF can take a few seconds to be indexed, so it may not appear immediately in search results.</li>
       </ul>
        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
     })
@@ -340,7 +341,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   PDFIndexing: false,
   backgroundProcesses: Platform.isMobileApp
     ? 1
-    : Math.max(1, Math.floor(require('os').cpus().length / 2)),
+    : Math.max(1, Math.floor(require('os').cpus().length - 2)),
 
   showIndexingNotices: false,
   showShortName: false,

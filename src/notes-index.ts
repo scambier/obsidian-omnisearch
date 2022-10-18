@@ -180,10 +180,6 @@ export async function indexPDFs() {
           await cacheManager.writeMinisearchIndex(Search.minisearchInstance)
         })
       )
-      // pdfQueue.add(async () => {
-      //   await addToIndexAndCache(file)
-      //   await cacheManager.writeMinisearchIndex(Search.minisearchInstance)
-      // })
     }
     await Promise.all(input)
     // await pdfQueue.onEmpty()
