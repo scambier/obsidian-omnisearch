@@ -2,6 +2,9 @@ import type { TFile } from 'obsidian'
 import PDFWorker from 'web-worker:./pdf-worker.ts'
 import { makeMD5 } from './utils'
 import { database } from './database'
+import { settings } from './settings'
+
+const workerTimeout = 120_000
 
 class PDFManager {
   public async getPdfText(file: TFile): Promise<string> {
@@ -28,6 +31,15 @@ class PDFManager {
     return new Promise(async (resolve, reject) => {
       // @ts-ignore
       file.stat.size
+
+      // In case of a timeout, we just return an empty line.
+      // If we don't, it will try to reindex at each restart.
+      const timeout = setTimeout(() => {
+        worker.terminate()
+        console.warn('Omnisearch - Worker timeout to extract text from ' + file.basename)
+        resolve('')
+      }, workerTimeout)
+
       worker.postMessage({ data, name: file.basename })
       worker.onmessage = (evt: any) => {
         const text = (evt.data.text as string)
@@ -39,8 +51,10 @@ class PDFManager {
         database.pdf
           .add({ hash, text, path: file.path, size: file.stat.size })
           .then(() => {
+            clearTimeout(timeout)
             resolve(text)
           })
+        worker.terminate()
       }
     })
   }

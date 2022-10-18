@@ -84,7 +84,7 @@ export async function addToIndexAndCache(file: TAbstractFile): Promise<void> {
     Search.minisearchInstance.add(note)
     cacheManager.addNoteToCache(note.path, note)
   } catch (e) {
-    console.trace('Error while indexing ' + file.basename)
+    // console.trace('Error while indexing ' + file.basename)
     console.error(e)
   }
 }
