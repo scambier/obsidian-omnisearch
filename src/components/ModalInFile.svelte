@@ -122,7 +122,9 @@
       // Move cursor to the match
       const view = app.workspace.getActiveViewOfType(MarkdownView)
       if (!view) {
-        throw new Error('OmniSearch - No active MarkdownView')
+        // Not an editable document, so no cursor to place
+        return
+        // throw new Error('OmniSearch - No active MarkdownView')
       }
 
       const offset = groupedOffsets[selectedIndex] ?? 0

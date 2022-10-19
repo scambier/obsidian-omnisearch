@@ -86,7 +86,7 @@ export async function initGlobalSearchIndex(): Promise<void> {
   let files
   let notesSuffix
   if (settings.persistCache) {
-    files = allFiles.filter(file => cacheManager.isCacheOutdated(file))
+    files = allFiles.filter(file => cacheManager.isNoteInMemCacheOutdated(file))
     notesSuffix = 'modified notes'
   } else {
     files = allFiles
@@ -101,7 +101,7 @@ export async function initGlobalSearchIndex(): Promise<void> {
   const queue = pLimit(10)
   const input = []
   for (const file of files) {
-    if (cacheManager.getNoteFromCache(file.path)) {
+    if (cacheManager.getNoteFromMemCache(file.path)) {
       NotesIndex.removeFromIndex(file.path)
     }
     input.push(queue(() => NotesIndex.addToIndexAndCache(file)))
@@ -136,6 +136,7 @@ export async function initGlobalSearchIndex(): Promise<void> {
 async function search(query: Query): Promise<SearchResult[]> {
   if (!query.segmentsToStr()) return []
 
+  console.time('Omnisearch - searching')
   let results = minisearchInstance.search(query.segmentsToStr(), {
     prefix: true,
     fuzzy: term => (term.length > 4 ? 0.2 : false),
@@ -148,7 +149,8 @@ async function search(query: Query): Promise<SearchResult[]> {
       headings3: settings.weightH3,
     },
   })
-
+  console.timeEnd('Omnisearch - searching')
+  
   // Downrank files that are in Obsidian's excluded list
   if (settings.respectExcluded) {
     results.forEach(result => {
@@ -166,9 +168,9 @@ async function search(query: Query): Promise<SearchResult[]> {
   if (exactTerms.length) {
     results = results.filter(r => {
       const title =
-        cacheManager.getNoteFromCache(r.id)?.path.toLowerCase() ?? ''
+        cacheManager.getNoteFromMemCache(r.id)?.path.toLowerCase() ?? ''
       const content = stripMarkdownCharacters(
-        cacheManager.getNoteFromCache(r.id)?.content ?? ''
+        cacheManager.getNoteFromMemCache(r.id)?.content ?? ''
       ).toLowerCase()
       return exactTerms.every(q => content.includes(q) || title.includes(q))
     })
@@ -179,7 +181,7 @@ async function search(query: Query): Promise<SearchResult[]> {
   if (exclusions.length) {
     results = results.filter(r => {
       const content = stripMarkdownCharacters(
-        cacheManager.getNoteFromCache(r.id)?.content ?? ''
+        cacheManager.getNoteFromMemCache(r.id)?.content ?? ''
       ).toLowerCase()
       return exclusions.every(q => !content.includes(q.value))
     })
@@ -218,7 +220,9 @@ export async function getSuggestions(
   options?: Partial<{ singleFilePath: string | null }>
 ): Promise<ResultNote[]> {
   // Get the raw results
+  console.time('search')
   let results = await search(query)
+  console.timeEnd('search')
   if (!results.length) return []
 
   // Extract tags from the query
@@ -247,7 +251,7 @@ export async function getSuggestions(
 
   // Map the raw results to get usable suggestions
   return results.map(result => {
-    const note = cacheManager.getNoteFromCache(result.id)
+    const note = cacheManager.getNoteFromMemCache(result.id)
     if (!note) {
       throw new Error(`Note "${result.id}" not indexed`)
     }

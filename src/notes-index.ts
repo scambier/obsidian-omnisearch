@@ -19,7 +19,7 @@ import { cacheManager } from './cache-manager'
 export const pdfQueue = pLimit(settings.backgroundProcesses)
 
 /**
- * Adds a file to the index
+ * Adds a file to the search index
  * @param file
  * @returns
  */
@@ -30,26 +30,24 @@ export async function addToIndexAndCache(file: TAbstractFile): Promise<void> {
 
   // Check if the file was already indexed as non-existent,
   // and if so, remove it from the index (before adding it again)
-  if (cacheManager.getNoteFromCache(file.path)?.doesNotExist) {
+  if (cacheManager.getNoteFromMemCache(file.path)?.doesNotExist) {
     removeFromIndex(file.path)
   }
 
   try {
-    // console.log(`Omnisearch - adding ${file.path} to index`)
-
     // Look for links that lead to non-existing files,
     // and index them as well
     const metadata = app.metadataCache.getFileCache(file)
     if (metadata) {
       const nonExisting = getNonExistingNotes(file, metadata)
       for (const name of nonExisting.filter(
-        o => !cacheManager.getNoteFromCache(o)
+        o => !cacheManager.getNoteFromMemCache(o)
       )) {
         addNonExistingToIndex(name, file.path)
       }
     }
 
-    if (cacheManager.getNoteFromCache(file.path)) {
+    if (cacheManager.getNoteFromMemCache(file.path)) {
       throw new Error(`${file.basename} is already indexed`)
     }
 
@@ -82,7 +80,7 @@ export async function addToIndexAndCache(file: TAbstractFile): Promise<void> {
     }
 
     Search.minisearchInstance.add(note)
-    cacheManager.addNoteToCache(note.path, note)
+    cacheManager.addNoteToMemCache(note.path, note)
   } catch (e) {
     // console.trace('Error while indexing ' + file.basename)
     console.error(e)
@@ -98,7 +96,7 @@ export async function addToIndexAndCache(file: TAbstractFile): Promise<void> {
 export function addNonExistingToIndex(name: string, parent: string): void {
   name = removeAnchors(name)
   const filename = name + (name.endsWith('.md') ? '' : '.md')
-  if (cacheManager.getNoteFromCache(filename)) return
+  if (cacheManager.getNoteFromMemCache(filename)) return
 
   const note: IndexedDocument = {
     path: filename,
@@ -116,7 +114,7 @@ export function addNonExistingToIndex(name: string, parent: string): void {
     parent,
   }
   Search.minisearchInstance.add(note)
-  cacheManager.addNoteToCache(filename, note)
+  cacheManager.addNoteToMemCache(filename, note)
 }
 
 /**
@@ -128,12 +126,12 @@ export function removeFromIndex(path: string): void {
     console.info(`"${path}" is not an indexable file`)
     return
   }
-  const note = cacheManager.getNoteFromCache(path)
+  const note = cacheManager.getNoteFromMemCache(path)
   if (note) {
     Search.minisearchInstance.remove(note)
-    cacheManager.removeNoteFromCache(path)
+    cacheManager.removeNoteFromMemCache(path)
     cacheManager
-      .getNonExistingNotesFromCache()
+      .getNonExistingNotesFromMemCache()
       .filter(n => n.parent === path)
       .forEach(n => {
         removeFromIndex(n.path)
@@ -171,7 +169,7 @@ export async function indexPDFs() {
     console.log(`Omnisearch - Indexing ${files.length} PDFs`)
     const input = []
     for (const file of files) {
-      if (cacheManager.getNoteFromCache(file.path)) {
+      if (cacheManager.getNoteFromMemCache(file.path)) {
         removeFromIndex(file.path)
       }
       input.push(

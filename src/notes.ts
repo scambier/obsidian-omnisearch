@@ -33,7 +33,9 @@ export async function openNote(
 
   const view = app.workspace.getActiveViewOfType(MarkdownView)
   if (!view) {
-    throw new Error('OmniSearch - No active MarkdownView')
+    // Not an editable document, so no cursor to place
+    // throw new Error('OmniSearch - No active MarkdownView')
+    return
   }
   const pos = view.editor.offsetToPos(offset)
   pos.ch = 0

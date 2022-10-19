@@ -12,7 +12,7 @@
   $: reg = stringsToRegex(note.foundWords)
   $: matches = Search.getMatches(note.content, reg)
   $: cleanedContent = makeExcerpt(note.content, note.matches[0]?.offset ?? -1)
-  $: glyph = cacheManager.getNoteFromCache(note.path)?.doesNotExist
+  $: glyph = cacheManager.getNoteFromMemCache(note.path)?.doesNotExist
   $: title = settings.showShortName ? note.basename : note.path
 </script>
 

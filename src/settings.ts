@@ -341,7 +341,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   PDFIndexing: false,
   backgroundProcesses: Platform.isMobileApp
     ? 1
-    : Math.max(1, Math.floor(require('os').cpus().length - 2)),
+    : Math.max(1, Math.floor(require('os').cpus().length * 0.75)),
 
   showIndexingNotices: false,
   showShortName: false,

@@ -94,25 +94,25 @@ class CacheManager {
     console.log('Omnisearch - Notes cache saved on disk')
   }
 
-  public addNoteToCache(path: string, note: IndexedDocument) {
+  public addNoteToMemCache(path: string, note: IndexedDocument) {
     this.notesCache[path] = note
     this.saveNotesCache()
   }
 
-  public removeNoteFromCache(key: string): void {
+  public removeNoteFromMemCache(key: string): void {
     delete this.notesCache[key]
   }
 
-  public getNoteFromCache(key: string): IndexedDocument | undefined {
+  public getNoteFromMemCache(key: string): IndexedDocument | undefined {
     return this.notesCache[key]
   }
 
-  public getNonExistingNotesFromCache(): IndexedDocument[] {
+  public getNonExistingNotesFromMemCache(): IndexedDocument[] {
     return Object.values(this.notesCache).filter(note => note.doesNotExist)
   }
 
-  public isCacheOutdated(file: TFile): boolean {
-    const indexedNote = this.getNoteFromCache(file.path)
+  public isNoteInMemCacheOutdated(file: TFile): boolean {
+    const indexedNote = this.getNoteFromMemCache(file.path)
     return !indexedNote || indexedNote.mtime !== file.stat.mtime
   }
 }
