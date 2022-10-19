@@ -334,14 +334,20 @@ export class SettingsTab extends PluginSettingTab {
   }
 }
 
+// Determining the maximum concurrent processes/workers/promises for heavy work,
+// without hogging all the resources.
+const cpuCount = Platform.isMobileApp ? 1 : require('os').cpus().length
+let backgroundProcesses = Math.max(1, Math.floor(cpuCount * 0.75))
+if (backgroundProcesses == cpuCount) {
+  backgroundProcesses = 1
+}
+
 export const DEFAULT_SETTINGS: OmnisearchSettings = {
   respectExcluded: true,
   ignoreDiacritics: true,
   indexedFileTypes: [] as string[],
   PDFIndexing: false,
-  backgroundProcesses: Platform.isMobileApp
-    ? 1
-    : Math.max(1, Math.floor(require('os').cpus().length * 0.75)),
+  backgroundProcesses,
 
   showIndexingNotices: false,
   showShortName: false,

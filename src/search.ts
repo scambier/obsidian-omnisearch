@@ -98,7 +98,7 @@ export async function initGlobalSearchIndex(): Promise<void> {
   }
 
   // Read and index all the files into the search engine
-  const queue = pLimit(10)
+  const queue = pLimit(settings.backgroundProcesses)
   const input = []
   for (const file of files) {
     if (cacheManager.getNoteFromMemCache(file.path)) {
@@ -136,7 +136,6 @@ export async function initGlobalSearchIndex(): Promise<void> {
 async function search(query: Query): Promise<SearchResult[]> {
   if (!query.segmentsToStr()) return []
 
-  console.time('Omnisearch - searching')
   let results = minisearchInstance.search(query.segmentsToStr(), {
     prefix: true,
     fuzzy: term => (term.length > 4 ? 0.2 : false),
@@ -149,7 +148,6 @@ async function search(query: Query): Promise<SearchResult[]> {
       headings3: settings.weightH3,
     },
   })
-  console.timeEnd('Omnisearch - searching')
   
   // Downrank files that are in Obsidian's excluded list
   if (settings.respectExcluded) {
