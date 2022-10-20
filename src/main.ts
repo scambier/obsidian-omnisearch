@@ -59,7 +59,7 @@ export default class OmnisearchPlugin extends Plugin {
       // Listeners to keep the search index up-to-date
       this.registerEvent(
         this.app.vault.on('create', file => {
-          NotesIndex.addToIndexAndCache(file)
+          NotesIndex.addToIndexAndMemCache(file)
         })
       )
       this.registerEvent(
@@ -76,7 +76,7 @@ export default class OmnisearchPlugin extends Plugin {
         this.app.vault.on('rename', async (file, oldPath) => {
           if (file instanceof TFile && isFilePlaintext(file.path)) {
             NotesIndex.removeFromIndex(oldPath)
-            await NotesIndex.addToIndexAndCache(file)
+            await NotesIndex.addToIndexAndMemCache(file)
           }
         })
       )
@@ -89,7 +89,7 @@ export default class OmnisearchPlugin extends Plugin {
 
   onunload(): void {
     console.log('Omnisearch - Interrupting PDF indexing')
-    NotesIndex.pdfQueue.clearQueue()
+    NotesIndex.processQueue.clearQueue()
   }
 
   addRibbonButton(): void {

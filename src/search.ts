@@ -17,7 +17,6 @@ import {
 import type { Query } from './query'
 import { settings } from './settings'
 import * as NotesIndex from './notes-index'
-import pLimit from 'p-limit'
 import { cacheManager } from './cache-manager'
 
 export let minisearchInstance: MiniSearch<IndexedDocument>
@@ -98,13 +97,14 @@ export async function initGlobalSearchIndex(): Promise<void> {
   }
 
   // Read and index all the files into the search engine
-  const queue = pLimit(settings.backgroundProcesses)
   const input = []
   for (const file of files) {
     if (cacheManager.getNoteFromMemCache(file.path)) {
       NotesIndex.removeFromIndex(file.path)
     }
-    input.push(queue(() => NotesIndex.addToIndexAndCache(file)))
+    input.push(
+      NotesIndex.processQueue(() => NotesIndex.addToIndexAndMemCache(file))
+    )
   }
 
   await Promise.all(input)
@@ -148,7 +148,7 @@ async function search(query: Query): Promise<SearchResult[]> {
       headings3: settings.weightH3,
     },
   })
-  
+
   // Downrank files that are in Obsidian's excluded list
   if (settings.respectExcluded) {
     results.forEach(result => {
@@ -218,9 +218,7 @@ export async function getSuggestions(
   options?: Partial<{ singleFilePath: string | null }>
 ): Promise<ResultNote[]> {
   // Get the raw results
-  console.time('search')
   let results = await search(query)
-  console.timeEnd('search')
   if (!results.length) return []
 
   // Extract tags from the query

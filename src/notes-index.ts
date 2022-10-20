@@ -9,21 +9,26 @@ import {
 } from './utils'
 import { getNonExistingNotes, removeAnchors } from './notes'
 import { pdfManager } from './pdf-manager'
-import type { IndexedDocument } from './globals'
 import { settings } from './settings'
 import * as Search from './search'
 // import PQueue from 'p-queue-compat'
-import pLimit from 'p-limit'
 import { cacheManager } from './cache-manager'
+import pLimit from 'p-limit'
+import type { IndexedDocument } from './globals'
 
-export const pdfQueue = pLimit(settings.backgroundProcesses)
+/**
+ * Use this processing queue to handle all heavy work
+ */
+export const processQueue = pLimit(settings.backgroundProcesses)
 
 /**
  * Adds a file to the search index
  * @param file
  * @returns
  */
-export async function addToIndexAndCache(file: TAbstractFile): Promise<void> {
+export async function addToIndexAndMemCache(
+  file: TAbstractFile
+): Promise<void> {
   if (!(file instanceof TFile) || !isFileIndexable(file.path)) {
     return
   }
@@ -154,7 +159,7 @@ export async function refreshIndex(): Promise<void> {
     }
     for (const note of notesToReindex) {
       removeFromIndex(note.path)
-      await addToIndexAndCache(note)
+      await addToIndexAndMemCache(note)
       await wait(0)
     }
     notesToReindex.clear()
@@ -173,8 +178,8 @@ export async function indexPDFs() {
         removeFromIndex(file.path)
       }
       input.push(
-        pdfQueue(async () => {
-          await addToIndexAndCache(file)
+        processQueue(async () => {
+          await addToIndexAndMemCache(file)
           await cacheManager.writeMinisearchIndex(Search.minisearchInstance)
         })
       )

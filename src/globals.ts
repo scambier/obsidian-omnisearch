@@ -1,4 +1,6 @@
+import pLimit from 'p-limit'
 import { EventBus } from './event-bus'
+import { settings } from './settings'
 
 export const regexLineSplit = /\r?\n|\r|((\.|\?|!)( |\r?\n|\r))/g
 export const regexYaml = /^---\s*\n(.*?)\n?^---\s?/ms
