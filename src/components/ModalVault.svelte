@@ -1,6 +1,6 @@
 <script lang="ts">
   import { MarkdownView, Notice, TFile } from 'obsidian'
-  import { onMount, onDestroy, tick } from 'svelte'
+  import { onDestroy, onMount, tick } from 'svelte'
   import InputSearch from './InputSearch.svelte'
   import ModalContainer from './ModalContainer.svelte'
   import { eventBus, type ResultNote } from 'src/globals'
@@ -10,9 +10,9 @@
   import { OmnisearchInFileModal, type OmnisearchVaultModal } from 'src/components/modals'
   import ResultItemVault from './ResultItemVault.svelte'
   import { Query } from 'src/search/query'
-  import { saveSearchHistory, searchHistory } from 'src/search/search-history'
   import { settings } from '../settings'
   import * as NotesIndex from '../notes-index'
+  import { cacheManager } from "../cache-manager"
 
   export let modal: OmnisearchVaultModal
   let selectedIndex = 0
@@ -21,8 +21,9 @@
   let previousQuery: string
   let resultNotes: ResultNote[] = []
   let query: Query
-  $: selectedNote = resultNotes[selectedIndex]
 
+  $: selectedNote = resultNotes[selectedIndex]
+  $: searchQuery = previousQuery
   $: if (searchQuery) {
     updateResults()
   } else {
@@ -31,8 +32,7 @@
 
   onMount(async () => {
     await NotesIndex.refreshIndex()
-    previousQuery = searchHistory[historySearchIndex]
-    searchQuery = previousQuery
+    previousQuery = (await cacheManager.getSearchHistory())[historySearchIndex]
     eventBus.enable('vault')
     eventBus.on('vault', 'enter', openNoteAndCloseModal)
     eventBus.on('vault', 'create-note', createNoteAndCloseModal)
@@ -49,18 +49,21 @@
     eventBus.disable('vault')
   })
 
-  function prevSearchHistory() {
-    if (++historySearchIndex >= searchHistory.length) {
+  async function prevSearchHistory() {
+    // Filter out the empty string, if it's there
+    const history = (await cacheManager.getSearchHistory()).filter(s => s)
+    if (++historySearchIndex >= history.length) {
       historySearchIndex = 0
     }
-    searchQuery = searchHistory[historySearchIndex]
+    previousQuery = history[historySearchIndex]
   }
 
-  function nextSearchHistory() {
+  async function nextSearchHistory() {
+    const history = (await cacheManager.getSearchHistory()).filter(s => s)
     if (--historySearchIndex < 0) {
-      historySearchIndex = searchHistory.length ? searchHistory.length - 1 : 0
+      historySearchIndex = history.length ? history.length - 1 : 0
     }
-    searchQuery = searchHistory[historySearchIndex]
+    previousQuery = history[historySearchIndex]
   }
 
   async function updateResults() {
@@ -91,12 +94,11 @@
   }
 
   function saveCurrentQuery() {
-    searchHistory.unshift(searchQuery)
+    cacheManager.addToSearchHistory(searchQuery)
   }
 
   function openSearchResult(note: ResultNote, newPane = false) {
     saveCurrentQuery()
-    saveSearchHistory()
     openNote(note, newPane)
   }
 
@@ -177,7 +179,7 @@
       const elem = document.querySelector(
         `[data-result-id="${selectedNote.path}"]`
       )
-      elem?.scrollIntoView({ behavior: 'auto', block: 'nearest' })
+      elem?.scrollIntoView({behavior: 'auto', block: 'nearest'})
     }
   }
 </script>
@@ -197,7 +199,7 @@
       selected="{i === selectedIndex}"
       note="{result}"
       on:mousemove="{_ => (selectedIndex = i)}"
-      on:click="{onClick}" />
+      on:click="{onClick}"/>
   {/each}
   {#if !resultNotes.length && searchQuery}
     <div style="text-align: center;">
@@ -222,7 +224,7 @@
     <span>to switch to In-File Search</span>
   </div>
 
-  <br />
+  <br/>
 
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">{getCtrlKeyLabel()} ↵</span>
@@ -237,7 +239,7 @@
     <span>to create in a new pane</span>
   </div>
 
-  <br />
+  <br/>
 
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">alt ↵</span>

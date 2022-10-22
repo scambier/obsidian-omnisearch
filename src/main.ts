@@ -8,7 +8,6 @@ import { loadSettings, settings, SettingsTab, showExcerpt } from './settings'
 import { eventBus, EventNames } from './globals'
 import { registerAPI } from '@vanakat/plugin-api'
 import api from './tools/api'
-import { loadSearchHistory } from './search/search-history'
 import { isFilePlaintext } from './tools/utils'
 import * as NotesIndex from './notes-index'
 import * as FileLoader from './file-loader'
@@ -17,7 +16,6 @@ export default class OmnisearchPlugin extends Plugin {
   async onload(): Promise<void> {
     await cleanOldCacheFiles()
     await loadSettings(this)
-    await loadSearchHistory()
 
     // Initialize minisearch
     await Search.initSearchEngine()
@@ -125,6 +123,7 @@ async function cleanOldCacheFiles() {
     `${app.vault.configDir}/plugins/omnisearch/notesCache.json`,
     `${app.vault.configDir}/plugins/omnisearch/notesCache.data`,
     `${app.vault.configDir}/plugins/omnisearch/searchIndex.data`,
+    `${app.vault.configDir}/plugins/omnisearch/historyCache.json`,
     `${app.vault.configDir}/plugins/omnisearch/pdfCache.data`,
   ]
   for (const item of toDelete) {

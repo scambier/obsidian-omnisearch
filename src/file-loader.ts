@@ -39,7 +39,7 @@ export async function getPDFFiles(): Promise<IndexedDocument[]> {
     input.push(
       NotesIndex.processQueue(async () => {
         const doc = await fileToIndexedDocument(file)
-        cacheManager.updateDocument(file.path, doc)
+        await cacheManager.updateDocument(file.path, doc)
         data.push(doc)
       })
     )

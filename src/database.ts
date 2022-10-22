@@ -6,18 +6,13 @@ class OmnisearchCache extends Dexie {
     { path: string; hash: string; size: number; text: string },
     string
   >
-  documents!: Dexie.Table<
-    { document: IndexedDocument; path: string; mtime: number },
-    string
-  >
-  minisearch!: Dexie.Table<string>
+  searchHistory!: Dexie.Table<{ id?: number; query: string }, number>
 
   constructor() {
     super(app.appId + '_omnisearch')
-    this.version(2).stores({
+    this.version(3).stores({
       pdf: 'path, hash, size, text',
-      documents: 'path, mtime, document',
-      minisearch: 'data',
+      searchHistory: '++id, query',
     })
   }
 }

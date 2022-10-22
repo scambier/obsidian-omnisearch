@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script context="module" lang="ts">
   let lastSearch = ''
 </script>
 
@@ -19,7 +19,6 @@
   import ResultItemInFile from './ResultItemInFile.svelte'
   import { Query } from 'src/search/query'
   import { openNote } from 'src/tools/notes'
-  import { saveSearchHistory } from '../search/search-history'
 
   export let modal: OmnisearchInFileModal
   export let parent: OmnisearchVaultModal | null = null
@@ -50,11 +49,11 @@
   $: (async () => {
     if (searchQuery) {
       query = new Query(searchQuery)
-      note = (await Search.getSuggestions(query, { singleFilePath }))[0] ?? null
+      note = (await Search.getSuggestions(query, {singleFilePath}))[0] ?? null
       lastSearch = searchQuery
     }
     selectedIndex = 0
-    scrollIntoView()
+    await scrollIntoView()
   })()
 
   $: {
@@ -105,14 +104,13 @@
   async function scrollIntoView(): Promise<void> {
     await tick()
     const elem = document.querySelector(`[data-result-id="${selectedIndex}"]`)
-    elem?.scrollIntoView({ behavior: 'auto', block: 'nearest' })
+    elem?.scrollIntoView({behavior: 'auto', block: 'nearest'})
   }
 
   async function openSelection(
     evt?: MouseEvent | KeyboardEvent
   ): Promise<void> {
     if (note) {
-      await saveSearchHistory()
       modal.close()
       if (parent) parent.close()
 
@@ -132,8 +130,8 @@
       pos.ch = 0
       view.editor.setCursor(pos)
       view.editor.scrollIntoView({
-        from: { line: pos.line - 10, ch: 0 },
-        to: { line: pos.line + 10, ch: 0 },
+        from: {line: pos.line - 10, ch: 0},
+        to: {line: pos.line + 10, ch: 0},
       })
     }
   }
@@ -145,9 +143,9 @@
 </script>
 
 <InputSearch
-  value="{searchQuery}"
   on:input="{e => (searchQuery = e.detail)}"
-  placeholder="Omnisearch - File" />
+  placeholder="Omnisearch - File"
+  value="{searchQuery}"/>
 
 <ModalContainer>
   {#if groupedOffsets.length && note}
@@ -158,7 +156,7 @@
         index="{i}"
         selected="{i === selectedIndex}"
         on:mousemove="{_e => (selectedIndex = i)}"
-        on:click="{openSelection}" />
+        on:click="{openSelection}"/>
     {/each}
   {:else}
     <div style="text-align: center;">

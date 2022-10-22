@@ -12,8 +12,6 @@ export const highlightClass = 'suggestion-highlight omnisearch-highlight'
 
 export const eventBus = new EventBus()
 
-export const historyFilePath = `${app.vault.configDir}/plugins/omnisearch/historyCache.json`
-
 export const EventNames = {
   ToggleExcerpts: 'toggle-excerpts',
 } as const

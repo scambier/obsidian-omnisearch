@@ -1,9 +1,39 @@
 import type { TFile } from 'obsidian'
 import type { IndexedDocument } from './globals'
+import { database } from './database'
 
 class CacheManager {
   private documentsCache: Map<string, IndexedDocument> = new Map()
-  private writeInterval = 10_000 // In milliseconds
+  /**
+   * Show an empty input field next time the user opens Omnisearch modal
+   */
+  private nextQueryIsEmpty = true
+
+  public async addToSearchHistory(query: string): Promise<void> {
+    if (!query) {
+      this.nextQueryIsEmpty = true
+      return
+    }
+    this.nextQueryIsEmpty = false
+    let history = await database.searchHistory.toArray()
+    history = history.filter(s => s.query !== query).reverse()
+    history.unshift({ query })
+    history = history.slice(0, 10)
+    await database.searchHistory.clear()
+    await database.searchHistory.bulkAdd(history)
+  }
+
+  public async getSearchHistory(): Promise<ReadonlyArray<string>> {
+    const data = (await database.searchHistory.toArray())
+      .reverse()
+      .map(o => o.query)
+    console.log(this.nextQueryIsEmpty)
+    if (this.nextQueryIsEmpty) {
+      data.unshift('')
+    }
+    console.log(data)
+    return data
+  }
 
   public async updateDocument(path: string, note: IndexedDocument) {
     this.documentsCache.set(path, note)
