@@ -5,11 +5,6 @@ declare module 'obsidian' {
     isUserIgnored?(path: string): boolean
   }
 
-  interface FrontMatterCache {
-    aliases?: string[] | string
-    tags?: string[] | string
-  }
-
   interface ViewState {
     state?: {
       file?: string

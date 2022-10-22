@@ -19,7 +19,7 @@ describe('Utils', () => {
       // Arrange
       const metadata = {
         frontmatter: { aliases: ['foo', 'bar'] },
-      } as CachedMetadata
+      } as unknown as CachedMetadata
       // Act
       const actual = getAliasesFromMetadata(metadata)
       // Assert
@@ -29,7 +29,7 @@ describe('Utils', () => {
       // Arrange
       const metadata = {
         frontmatter: { aliases: 'foo, bar' },
-      } as CachedMetadata
+      } as unknown as CachedMetadata
       // Act
       const actual = getAliasesFromMetadata(metadata)
       // Assert
@@ -39,7 +39,7 @@ describe('Utils', () => {
       // Arrange
       const metadata = {
         frontmatter: { aliases: '' },
-      } as CachedMetadata
+      } as unknown as CachedMetadata
       // Act
       const actual = getAliasesFromMetadata(metadata)
       // Assert

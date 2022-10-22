@@ -1,4 +1,10 @@
-import { type CachedMetadata, Notice, Platform } from 'obsidian'
+import {
+  type CachedMetadata,
+  Notice,
+  Platform,
+  getAllTags,
+  parseFrontMatterAliases,
+} from 'obsidian'
 import type { SearchMatch } from '../globals'
 import {
   excerptAfter,
@@ -150,46 +156,13 @@ export function stripMarkdownCharacters(text: string): string {
 export function getAliasesFromMetadata(
   metadata: CachedMetadata | null
 ): string[] {
-  const arrOrString = metadata?.frontmatter?.aliases ?? []
-  try {
-    return (
-      Array.isArray(arrOrString)
-        ? arrOrString
-        : arrOrString.toString().split(',')
-    )
-      .map(s => (s ? s.trim() : s))
-      .filter(s => !!s)
-  } catch (e) {
-    new Notice(
-      'Omnisearch - Error while getting aliases from file, see developer console'
-    )
-    console.error(`Omnisearch - Error while getting aliases from file`)
-    console.error(e)
-    return []
-  }
+  return metadata?.frontmatter
+    ? parseFrontMatterAliases(metadata.frontmatter) ?? []
+    : []
 }
 
 export function getTagsFromMetadata(metadata: CachedMetadata | null): string[] {
-  try {
-    const arrOrString = metadata?.frontmatter?.tags ?? []
-    const fromFrontMatter = (
-      Array.isArray(arrOrString) ? arrOrString : arrOrString.split(',')
-    )
-      .map(s => (s ? s.trim() : s))
-      .filter(s => !!s)
-    const fromBody = (metadata?.tags ?? []).map(t => t.tag)
-
-    return [...fromFrontMatter, ...fromBody].map(t =>
-      t[0] !== '#' ? '#' + t : t
-    )
-  } catch (e) {
-    new Notice(
-      'Omnisearch - Error while getting tags from file, see developer console'
-    )
-    console.error(`Omnisearch - Error while getting tags from file`)
-    console.error(e)
-    return []
-  }
+  return metadata ? getAllTags(metadata) ?? [] : []
 }
 
 /**
