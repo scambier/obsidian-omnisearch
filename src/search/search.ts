@@ -1,25 +1,25 @@
-import { Notice } from 'obsidian'
-import MiniSearch, { type Options, type SearchResult } from 'minisearch'
+import MiniSearch, {
+  type AsPlainObject,
+  type Options,
+  type SearchResult,
+} from 'minisearch'
 import {
   chsRegex,
   type IndexedDocument,
   type ResultNote,
-  minisearchCacheFilePath,
   type SearchMatch,
   SPACE_OR_PUNCTUATION,
-} from './globals'
+} from '../globals'
 import {
-  isFilePlaintext,
   removeDiacritics,
   stringsToRegex,
   stripMarkdownCharacters,
-} from './utils'
+} from '../tools/utils'
 import type { Query } from './query'
-import { settings } from './settings'
-import * as NotesIndex from './notes-index'
-import { cacheManager } from './cache-manager'
+import { settings } from '../settings'
+import { cacheManager } from '../cache-manager'
 
-export let minisearchInstance: MiniSearch<IndexedDocument>
+let minisearchInstance: MiniSearch<IndexedDocument>
 
 const tokenize = (text: string): string[] => {
   const tokens = text.split(SPACE_OR_PUNCTUATION)
@@ -32,98 +32,38 @@ const tokenize = (text: string): string[] => {
   } else return tokens
 }
 
+const minisearchOptions: Options<IndexedDocument> = {
+  tokenize,
+  processTerm: (term: string) =>
+    (settings.ignoreDiacritics ? removeDiacritics(term) : term).toLowerCase(),
+  idField: 'path',
+  fields: [
+    'basename',
+    'aliases',
+    'content',
+    'headings1',
+    'headings2',
+    'headings3',
+  ],
+  storeFields: ['tags'],
+}
+
 /**
  * Initializes the MiniSearch instance,
  * and adds all the notes to the index
  */
-export async function initGlobalSearchIndex(): Promise<void> {
-  const options: Options<IndexedDocument> = {
-    tokenize,
-    processTerm: (term: string) =>
-      (settings.ignoreDiacritics ? removeDiacritics(term) : term).toLowerCase(),
-    idField: 'path',
-    fields: [
-      'basename',
-      'aliases',
-      'content',
-      'headings1',
-      'headings2',
-      'headings3',
-    ],
-    storeFields: ['tags'],
-  }
-
+export async function initSearchEngine(): Promise<void> {
   // Default instance
-  minisearchInstance = new MiniSearch(options)
+  minisearchInstance = new MiniSearch(minisearchOptions)
+}
 
-  // Load Minisearch cache, if it exists
-  if (await app.vault.adapter.exists(minisearchCacheFilePath)) {
-    try {
-      const json = await cacheManager.readMinisearchIndex()
-      if (json) {
-        // If we have cache data, reload it
-        minisearchInstance = MiniSearch.loadJSON(json, options)
-      }
-      console.log('Omnisearch - MiniSearch index loaded from the file')
-    } catch (e) {
-      console.trace(
-        'Omnisearch - Could not load MiniSearch index from the file'
-      )
-      console.error(e)
-    }
-  }
-
-  // if (!minisearchInstance) {
-  //   resetNotesCache()
-  // }
-
-  // Index files that are already present
-  const start = new Date().getTime()
-
-  const allFiles = app.vault.getFiles().filter(f => isFilePlaintext(f.path))
-
-  let files
-  let notesSuffix
-  if (settings.persistCache) {
-    files = allFiles.filter(file => cacheManager.isNoteInMemCacheOutdated(file))
-    notesSuffix = 'modified notes'
-  } else {
-    files = allFiles
-    notesSuffix = 'notes'
-  }
-
-  if (files.length > 0) {
-    console.log(`Omnisearch - Indexing ${files.length} ${notesSuffix}`)
-  }
-
-  // Read and index all the files into the search engine
-  const input = []
-  for (const file of files) {
-    if (cacheManager.getNoteFromMemCache(file.path)) {
-      NotesIndex.removeFromIndex(file.path)
-    }
-    input.push(
-      NotesIndex.processQueue(() => NotesIndex.addToIndexAndMemCache(file))
-    )
-  }
-
-  await Promise.all(input)
-
-  if (files.length > 0) {
-    const message = `Omnisearch - Indexed ${files.length} ${notesSuffix} in ${
-      new Date().getTime() - start
-    }ms`
-
-    console.log(message)
-
-    if (settings.showIndexingNotices) {
-      new Notice(message)
-    }
-
-    await cacheManager.writeMinisearchIndex(minisearchInstance)
-
-    // PDFs are indexed later, since they're heavier
-    await NotesIndex.indexPDFs()
+export async function initSearchEngineFromData(json: string): Promise<void> {
+  try {
+    minisearchInstance = MiniSearch.loadJSON(json, minisearchOptions)
+    console.log('Omnisearch - MiniSearch index loaded from the file')
+  } catch (e) {
+    console.error('Omnisearch - Could not load MiniSearch index from json')
+    console.error(e)
   }
 }
 
@@ -165,10 +105,9 @@ async function search(query: Query): Promise<SearchResult[]> {
   const exactTerms = query.getExactTerms()
   if (exactTerms.length) {
     results = results.filter(r => {
-      const title =
-        cacheManager.getNoteFromMemCache(r.id)?.path.toLowerCase() ?? ''
+      const title = cacheManager.getDocument(r.id)?.path.toLowerCase() ?? ''
       const content = stripMarkdownCharacters(
-        cacheManager.getNoteFromMemCache(r.id)?.content ?? ''
+        cacheManager.getDocument(r.id)?.content ?? ''
       ).toLowerCase()
       return exactTerms.every(q => content.includes(q) || title.includes(q))
     })
@@ -179,7 +118,7 @@ async function search(query: Query): Promise<SearchResult[]> {
   if (exclusions.length) {
     results = results.filter(r => {
       const content = stripMarkdownCharacters(
-        cacheManager.getNoteFromMemCache(r.id)?.content ?? ''
+        cacheManager.getDocument(r.id)?.content ?? ''
       ).toLowerCase()
       return exclusions.every(q => !content.includes(q.value))
     })
@@ -247,7 +186,7 @@ export async function getSuggestions(
 
   // Map the raw results to get usable suggestions
   return results.map(result => {
-    const note = cacheManager.getNoteFromMemCache(result.id)
+    const note = cacheManager.getDocument(result.id)
     if (!note) {
       throw new Error(`Note "${result.id}" not indexed`)
     }
@@ -286,3 +225,25 @@ export async function getSuggestions(
     return resultNote
   })
 }
+
+// #region Read/write minisearch index
+
+export function getMinisearchIndexJSON(): AsPlainObject {
+  return minisearchInstance.toJSON()
+}
+
+export async function addAllToMinisearch(
+  documents: IndexedDocument[]
+): Promise<void> {
+  await minisearchInstance.addAllAsync(documents)
+}
+
+export function addSingleToMinisearch(document: IndexedDocument): void {
+  minisearchInstance.add(document)
+}
+
+export function removeFromMinisearch(document: IndexedDocument): void {
+  minisearchInstance.remove(document)
+}
+
+// #endregion

@@ -1,29 +1,26 @@
 import { Notice, Plugin, TFile } from 'obsidian'
-import * as Search from './search'
-import { OmnisearchInFileModal, OmnisearchVaultModal } from './modals'
+import * as Search from './search/search'
+import {
+  OmnisearchInFileModal,
+  OmnisearchVaultModal,
+} from './components/modals'
 import { loadSettings, settings, SettingsTab, showExcerpt } from './settings'
 import { eventBus, EventNames } from './globals'
 import { registerAPI } from '@vanakat/plugin-api'
-import api from './api'
-import { loadSearchHistory } from './search-history'
-import { isFilePlaintext } from './utils'
+import api from './tools/api'
+import { loadSearchHistory } from './search/search-history'
+import { isFilePlaintext } from './tools/utils'
 import * as NotesIndex from './notes-index'
-import { cacheManager } from './cache-manager'
-
-function _registerAPI(plugin: OmnisearchPlugin): void {
-  registerAPI('omnisearch', api, plugin as any)
-  ;(app as any).plugins.plugins.omnisearch.api = api
-  plugin.register(() => {
-    delete (app as any).plugins.plugins.omnisearch.api
-  })
-}
+import * as FileLoader from './file-loader'
 
 export default class OmnisearchPlugin extends Plugin {
   async onload(): Promise<void> {
     await cleanOldCacheFiles()
     await loadSettings(this)
     await loadSearchHistory()
-    await cacheManager.loadNotesCache()
+
+    // Initialize minisearch
+    await Search.initSearchEngine()
 
     _registerAPI(this)
 
@@ -69,7 +66,7 @@ export default class OmnisearchPlugin extends Plugin {
       )
       this.registerEvent(
         this.app.vault.on('modify', async file => {
-          NotesIndex.addNoteToReindex(file)
+          NotesIndex.markNoteForReindex(file)
         })
       )
       this.registerEvent(
@@ -81,7 +78,7 @@ export default class OmnisearchPlugin extends Plugin {
         })
       )
 
-      await Search.initGlobalSearchIndex()
+      await populateIndex()
     })
 
     // showWelcomeNotice(this)
@@ -99,11 +96,36 @@ export default class OmnisearchPlugin extends Plugin {
   }
 }
 
+/**
+ * Read the files and feed them to Minisearch
+ */
+async function populateIndex(): Promise<void> {
+  // Load plain text files
+  console.time('Omnisearch - Timing')
+  const files = await FileLoader.getPlainTextFiles()
+  // Index them
+  await Search.addAllToMinisearch(files)
+  console.log(`Omnisearch - Indexed ${files.length} notes`)
+  console.timeEnd('Omnisearch - Timing')
+
+  // Load PDFs
+  if (settings.PDFIndexing) {
+    console.time('Omnisearch - Timing')
+    const pdfs = await FileLoader.getPDFFiles()
+    // Index them
+    await Search.addAllToMinisearch(pdfs)
+    console.log(`Omnisearch - Indexed ${pdfs.length} PDFs`)
+    console.timeEnd('Omnisearch - Timing')
+  }
+}
+
 async function cleanOldCacheFiles() {
   const toDelete = [
     `${app.vault.configDir}/plugins/omnisearch/searchIndex.json`,
     `${app.vault.configDir}/plugins/omnisearch/notesCache.json`,
-    `${app.vault.configDir}/plugins/omnisearch/pdfCache.data`
+    `${app.vault.configDir}/plugins/omnisearch/notesCache.data`,
+    `${app.vault.configDir}/plugins/omnisearch/searchIndex.data`,
+    `${app.vault.configDir}/plugins/omnisearch/pdfCache.data`,
   ]
   for (const item of toDelete) {
     if (await app.vault.adapter.exists(item)) {
@@ -129,4 +151,12 @@ New beta feature: PDF search 🔎📄
   settings.welcomeMessage = code
 
   plugin.saveData(settings)
+}
+
+function _registerAPI(plugin: OmnisearchPlugin): void {
+  registerAPI('omnisearch', api, plugin as any)
+  ;(app as any).plugins.plugins.omnisearch.api = api
+  plugin.register(() => {
+    delete (app as any).plugins.plugins.omnisearch.api
+  })
 }

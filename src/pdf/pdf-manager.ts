@@ -1,7 +1,7 @@
 import type { TFile } from 'obsidian'
 import WebWorker from 'web-worker:./pdf-worker.ts'
-import { makeMD5 } from './utils'
-import { database } from './database'
+import { makeMD5 } from '../tools/utils'
+import { database } from '../database'
 
 const workerTimeout = 120_000
 

@@ -1,8 +1,8 @@
 import { App, Modal, TFile } from 'obsidian'
-import ModalVault from './components/ModalVault.svelte'
-import ModalInFile from './components/ModalInFile.svelte'
-import {eventBus, EventNames, isInputComposition} from './globals'
-import { settings } from './settings'
+import ModalVault from './ModalVault.svelte'
+import ModalInFile from './ModalInFile.svelte'
+import {eventBus, EventNames, isInputComposition} from '../globals'
+import { settings } from '../settings'
 
 abstract class OmnisearchModal extends Modal {
   protected constructor(app: App) {

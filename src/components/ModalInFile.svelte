@@ -10,16 +10,16 @@
     type ResultNote,
     type SearchMatch,
   } from 'src/globals'
-  import { loopIndex } from 'src/utils'
+  import { loopIndex } from 'src/tools/utils'
   import { onDestroy, onMount, tick } from 'svelte'
   import { MarkdownView } from 'obsidian'
-  import * as Search from 'src/search'
+  import * as Search from 'src/search/search'
   import ModalContainer from './ModalContainer.svelte'
-  import { OmnisearchInFileModal, OmnisearchVaultModal } from 'src/modals'
+  import { OmnisearchInFileModal, OmnisearchVaultModal } from 'src/components/modals'
   import ResultItemInFile from './ResultItemInFile.svelte'
-  import { Query } from 'src/query'
-  import { openNote } from 'src/notes'
-  import { saveSearchHistory } from '../search-history'
+  import { Query } from 'src/search/query'
+  import { openNote } from 'src/tools/notes'
+  import { saveSearchHistory } from '../search/search-history'
 
   export let modal: OmnisearchInFileModal
   export let parent: OmnisearchVaultModal | null = null

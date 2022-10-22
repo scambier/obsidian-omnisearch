@@ -1,6 +1,4 @@
-import pLimit from 'p-limit'
-import { EventBus } from './event-bus'
-import { settings } from './settings'
+import { EventBus } from './tools/event-bus'
 
 export const regexLineSplit = /\r?\n|\r|((\.|\?|!)( |\r?\n|\r))/g
 export const regexYaml = /^---\s*\n(.*?)\n?^---\s?/ms
@@ -14,8 +12,6 @@ export const highlightClass = 'suggestion-highlight omnisearch-highlight'
 
 export const eventBus = new EventBus()
 
-export const minisearchCacheFilePath = `${app.vault.configDir}/plugins/omnisearch/searchIndex.data`
-export const notesCacheFilePath = `${app.vault.configDir}/plugins/omnisearch/notesCache.data`
 export const historyFilePath = `${app.vault.configDir}/plugins/omnisearch/historyCache.json`
 
 export const EventNames = {

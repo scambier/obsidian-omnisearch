@@ -1,6 +1,6 @@
 import { type CachedMetadata, MarkdownView, TFile } from 'obsidian'
 import { stringsToRegex } from './utils'
-import type { ResultNote } from './globals'
+import type { ResultNote } from '../globals'
 
 export async function openNote(
   item: ResultNote,

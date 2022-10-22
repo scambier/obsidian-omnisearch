@@ -1,6 +1,6 @@
-import { settings } from './settings'
-import { removeDiacritics, stripSurroundingQuotes } from './utils'
-import { parseQuery } from './vendor/parse-query'
+import { settings } from '../settings'
+import { removeDiacritics, stripSurroundingQuotes } from '../tools/utils'
+import { parseQuery } from '../vendor/parse-query'
 
 type QueryToken = {
   /**

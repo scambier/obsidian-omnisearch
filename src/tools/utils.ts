@@ -1,5 +1,5 @@
-import { type CachedMetadata, Notice, Platform, Plugin } from 'obsidian'
-import type { SearchMatch } from './globals'
+import { type CachedMetadata, Platform } from 'obsidian'
+import type { SearchMatch } from '../globals'
 import {
   excerptAfter,
   excerptBefore,
@@ -8,9 +8,9 @@ import {
   regexLineSplit,
   regexStripQuotes,
   regexYaml,
-} from './globals'
-import { settings } from './settings'
-import { createHash, type BinaryLike } from 'crypto'
+} from '../globals'
+import { settings } from '../settings'
+import { type BinaryLike, createHash } from 'crypto'
 import { md5 } from 'pure-md5'
 
 export function highlighter(str: string): string {

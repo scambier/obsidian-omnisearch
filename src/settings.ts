@@ -6,7 +6,6 @@ import {
   SliderComponent,
 } from 'obsidian'
 import { writable } from 'svelte/store'
-import { notesCacheFilePath, minisearchCacheFilePath } from './globals'
 import type OmnisearchPlugin from './main'
 
 interface WeightingSettings {
@@ -28,7 +27,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   /** Max number of spawned processes for background tasks, such as extracting text from PDFs */
   backgroundProcesses: number
   /** Write cache files on disk (unrelated to PDFs) */
-  persistCache: boolean
+  // persistCache: boolean
   /** Display Omnisearch popup notices over Obsidian */
   showIndexingNotices: boolean
   /** Activate the small 🔍 button on Obsidian's ribbon */
@@ -141,37 +140,27 @@ export class SettingsTab extends PluginSettingTab {
     //       })
     //   })
 
-    // Store index
-    const serializedIndexDesc = new DocumentFragment()
-    serializedIndexDesc.createSpan({}, span => {
-      span.innerHTML = `This will speedup startup times after the initial indexing. Do not activate it unless indexing is too slow on your device:
-        <ul>
-          <li>PDF indexing is not affected by this setting</li>
-          <li>⚠️ The index can become corrupted - if you notice any issue, disable and re-enable this option to clear the cache.</li>
-          <li>⚠️ Cache files in <code>.obsidian/plugins/omnisearch/*.data</code> must not be synchronized between your devices.</li>
-        </ul>
-        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>
-        `
-    })
-    new Setting(containerEl)
-      .setName('Persist cache on disk')
-      .setDesc(serializedIndexDesc)
-      .addToggle(toggle =>
-        toggle.setValue(settings.persistCache).onChange(async v => {
-          try {
-            await app.vault.adapter.remove(notesCacheFilePath)
-          } catch (e) {
-            console.warn(e)
-          }
-          try {
-            await app.vault.adapter.remove(minisearchCacheFilePath)
-          } catch (e) {
-            console.warn(e)
-          }
-          settings.persistCache = v
-          await saveSettings(this.plugin)
-        })
-      )
+    // // Store index
+    // const serializedIndexDesc = new DocumentFragment()
+    // serializedIndexDesc.createSpan({}, span => {
+    //   span.innerHTML = `This will speedup startup times after the initial indexing. Do not activate it unless indexing is too slow on your device:
+    //     <ul>
+    //       <li>PDF indexing is not affected by this setting</li>
+    //       <li>⚠️ The index can become corrupted - if you notice any issue, disable and re-enable this option to clear the cache.</li>
+    //       <li>⚠️ Cache files in <code>.obsidian/plugins/omnisearch/*.data</code> must not be synchronized between your devices.</li>
+    //     </ul>
+    //     <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>
+    //     `
+    // })
+    // new Setting(containerEl)
+    //   .setName('Persist cache on disk')
+    //   .setDesc(serializedIndexDesc)
+    //   .addToggle(toggle =>
+    //     toggle.setValue(settings.persistCache).onChange(async v => {
+    //       settings.persistCache = v
+    //       await saveSettings(this.plugin)
+    //     })
+    //   )
 
     // PDF Indexing
     const indexPDFsDesc = new DocumentFragment()
@@ -363,7 +352,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   CtrlJK: false,
   CtrlNP: false,
 
-  persistCache: false,
+  // persistCache: false,
 
   welcomeMessage: '',
 } as const

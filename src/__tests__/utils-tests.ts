@@ -1,5 +1,5 @@
 import type { CachedMetadata } from 'obsidian'
-import { getAliasesFromMetadata } from '../utils'
+import { getAliasesFromMetadata } from '../tools/utils'
 
 describe('Utils', () => {
   describe('getAliasesFromMetadata', () => {

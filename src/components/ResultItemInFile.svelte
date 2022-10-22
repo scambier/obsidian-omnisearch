@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ResultNote } from '../globals'
-  import { highlighter, makeExcerpt, stringsToRegex } from '../utils'
+  import { highlighter, makeExcerpt, stringsToRegex } from '../tools/utils'
   import ResultItemContainer from './ResultItemContainer.svelte'
 
   export let offset: number

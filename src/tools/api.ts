@@ -1,6 +1,6 @@
-import type { ResultNote, SearchMatch } from './globals'
-import { Query } from './query'
-import * as Search from './search'
+import type { ResultNote, SearchMatch } from '../globals'
+import { Query } from '../search/query'
+import * as Search from '../search/search'
 
 type ResultNoteApi = {
   score: number

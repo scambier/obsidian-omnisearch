@@ -1,4 +1,4 @@
-import { EventBus } from '../event-bus'
+import { EventBus } from '../tools/event-bus'
 
 describe('EventBus', () => {
   it('should refuse the registering of invalid ctx/event names', () => {

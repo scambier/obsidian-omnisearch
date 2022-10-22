@@ -1,4 +1,4 @@
-import { historyFilePath } from './globals'
+import { historyFilePath } from '../globals'
 
 export let searchHistory: string[] = []
 

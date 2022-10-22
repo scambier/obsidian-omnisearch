@@ -1,4 +1,4 @@
-import { Query } from '../query'
+import { Query } from '../search/query'
 
 describe('The Query class', () => {
   const stringQuery =

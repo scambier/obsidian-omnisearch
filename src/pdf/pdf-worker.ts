@@ -1,5 +1,5 @@
-import rustPlugin from '../pkg/obsidian_search_bg.wasm'
-import * as plugin from '../pkg/obsidian_search'
+import rustPlugin from '../../pkg/obsidian_search_bg.wasm'
+import * as plugin from '../../pkg'
 
 const decodedPlugin = decodeBase64(rustPlugin as any)
 
