@@ -27,11 +27,9 @@ class CacheManager {
     const data = (await database.searchHistory.toArray())
       .reverse()
       .map(o => o.query)
-    console.log(this.nextQueryIsEmpty)
     if (this.nextQueryIsEmpty) {
       data.unshift('')
     }
-    console.log(data)
     return data
   }
 
