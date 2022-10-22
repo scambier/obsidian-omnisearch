@@ -18,6 +18,7 @@
   let selectedIndex = 0
   let historySearchIndex = 0
   let searchQuery: string
+  let previousQuery: string
   let resultNotes: ResultNote[] = []
   let query: Query
   $: selectedNote = resultNotes[selectedIndex]
@@ -30,7 +31,8 @@
 
   onMount(async () => {
     await NotesIndex.refreshIndex()
-    searchQuery = searchHistory[historySearchIndex]
+    previousQuery = searchHistory[historySearchIndex]
+    searchQuery = previousQuery
     eventBus.enable('vault')
     eventBus.on('vault', 'enter', openNoteAndCloseModal)
     eventBus.on('vault', 'create-note', createNoteAndCloseModal)
@@ -181,7 +183,7 @@
 </script>
 
 <InputSearch
-  value="{searchQuery}"
+  initialValue="{previousQuery}"
   on:input="{e => (searchQuery = e.detail)}"
   placeholder="Omnisearch - Vault">
   {#if settings.showCreateButton}

@@ -1,22 +1,27 @@
 <script lang="ts">
   import { debounce } from 'obsidian'
   import { toggleInputComposition } from 'src/globals'
-  import { createEventDispatcher, onMount, tick } from 'svelte'
+  import { createEventDispatcher, tick } from 'svelte'
 
-  export let value = ''
+  export let initialValue = ''
   export let placeholder = ''
+  let value = ''
+  let elInput: HTMLInputElement
   const dispatch = createEventDispatcher()
 
-  let elInput: HTMLInputElement
+  $: {
+    if (initialValue) {
+      value = initialValue
+      selectInput()
+    }
+  }
 
-  onMount(async () => {
-    await tick()
+  async function selectInput() {
     elInput.focus()
-    setTimeout(() => {
-      // tick() is not working here?
-      elInput.select()
-    }, 0)
-  })
+    await tick()
+    elInput.select()
+    await tick()
+  }
 
   const debouncedOnInput = debounce(() => {
     dispatch('input', value)
@@ -34,7 +39,7 @@
       type="text"
       class="prompt-input"
       {placeholder}
-      spellcheck="false" />
+      spellcheck="false"/>
   </div>
   <slot></slot>
 </div>
