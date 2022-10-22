@@ -1,4 +1,4 @@
-import { type CachedMetadata, Platform } from 'obsidian'
+import { type CachedMetadata, Notice, Platform } from 'obsidian'
 import type { SearchMatch } from '../globals'
 import {
   excerptAfter,
@@ -78,16 +78,25 @@ export function loopIndex(index: number, nbItems: number): number {
 }
 
 export function makeExcerpt(content: string, offset: number): string {
-  const pos = offset ?? -1
-  if (pos > -1) {
-    const from = Math.max(0, pos - excerptBefore)
-    const to = Math.min(content.length, pos + excerptAfter)
-    content =
-      (from > 0 ? '…' : '') +
-      content.slice(from, to).trim() +
-      (to < content.length - 1 ? '…' : '')
+  try {
+    const pos = offset ?? -1
+    if (pos > -1) {
+      const from = Math.max(0, pos - excerptBefore)
+      const to = Math.min(content.length, pos + excerptAfter)
+      content =
+        (from > 0 ? '…' : '') +
+        content.slice(from, to).trim() +
+        (to < content.length - 1 ? '…' : '')
+    }
+    return escapeHTML(content)
+  } catch (e) {
+    new Notice(
+      'Omnisearch - Error while creating excerpt, see developer console'
+    )
+    console.error(`Omnisearch - Error while creating excerpt`)
+    console.error(e)
+    return ''
   }
-  return escapeHTML(content)
 }
 
 /**
@@ -142,25 +151,45 @@ export function getAliasesFromMetadata(
   metadata: CachedMetadata | null
 ): string[] {
   const arrOrString = metadata?.frontmatter?.aliases ?? []
-  return (
-    Array.isArray(arrOrString) ? arrOrString : arrOrString.toString().split(',')
-  )
-    .map(s => (s ? s.trim() : s))
-    .filter(s => !!s)
+  try {
+    return (
+      Array.isArray(arrOrString)
+        ? arrOrString
+        : arrOrString.toString().split(',')
+    )
+      .map(s => (s ? s.trim() : s))
+      .filter(s => !!s)
+  } catch (e) {
+    new Notice(
+      'Omnisearch - Error while getting aliases from file, see developer console'
+    )
+    console.error(`Omnisearch - Error while getting aliases from file`)
+    console.error(e)
+    return []
+  }
 }
 
 export function getTagsFromMetadata(metadata: CachedMetadata | null): string[] {
-  const arrOrString = metadata?.frontmatter?.tags ?? []
-  const fromFrontMatter = (
-    Array.isArray(arrOrString) ? arrOrString : arrOrString.split(',')
-  )
-    .map(s => (s ? s.trim() : s))
-    .filter(s => !!s)
-  const fromBody = (metadata?.tags ?? []).map(t => t.tag)
+  try {
+    const arrOrString = metadata?.frontmatter?.tags ?? []
+    const fromFrontMatter = (
+      Array.isArray(arrOrString) ? arrOrString : arrOrString.split(',')
+    )
+      .map(s => (s ? s.trim() : s))
+      .filter(s => !!s)
+    const fromBody = (metadata?.tags ?? []).map(t => t.tag)
 
-  return [...fromFrontMatter, ...fromBody].map(t =>
-    t[0] !== '#' ? '#' + t : t
-  )
+    return [...fromFrontMatter, ...fromBody].map(t =>
+      t[0] !== '#' ? '#' + t : t
+    )
+  } catch (e) {
+    new Notice(
+      'Omnisearch - Error while getting tags from file, see developer console'
+    )
+    console.error(`Omnisearch - Error while getting tags from file`)
+    console.error(e)
+    return []
+  }
 }
 
 /**

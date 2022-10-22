@@ -54,25 +54,6 @@ class CacheManager {
     return !indexedNote || indexedNote.mtime !== file.stat.mtime
   }
 
-  // private async _writeMinisearchIndex(minisearch: MiniSearch): Promise<void> {
-  //   if (!settings.persistCache) {
-  //     return
-  //   }
-  //   const json = JSON.stringify(minisearch)
-  //   const data = deflate(json)
-  //   await app.vault.adapter.writeBinary(minisearchCacheFilePath, data as any)
-  //   console.log('Omnisearch - Minisearch index saved on disk')
-  // }
-  //
-  // private async _saveNotesCache() {
-  //   if (!settings.persistCache) {
-  //     return
-  //   }
-  //   const json = JSON.stringify(Array.from(this.documentsCache.entries()))
-  //   const data = deflate(json)
-  //   await app.vault.adapter.writeBinary(notesCacheFilePath, data as any)
-  //   console.log('Omnisearch - Notes cache saved on disk')
-  // }
 }
 
 export const cacheManager = new CacheManager()
