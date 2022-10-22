@@ -1,10 +1,31 @@
 # Omnisearch Changelog
 
+## 1.7.x
+
+### New
+
+- PDF Indexing https://github.com/scambier/obsidian-omnisearch/issues/58
+
+### Improved
+
+- Code refactor to better scale and handle PDFs as smoothly as possible
+
+### Fixed
+
+- Search history https://github.com/scambier/obsidian-omnisearch/issues/104
+- Text in search input was not always correctly selected https://github.com/scambier/obsidian-omnisearch/issues/105
+- Padding issue https://github.com/scambier/obsidian-omnisearch/issues/113
+
+### Removed
+
+- Caching data https://github.com/scambier/obsidian-omnisearch/issues/92#issuecomment-1287647725
+
+
 ## 1.6.x
 
 ### New
 
-- Omnisearch can now index other plaintext files and PDFs https://github.com/scambier/obsidian-omnisearch/issues/58
+- Omnisearch can now index other plaintext files ~~and PDFs~~ https://github.com/scambier/obsidian-omnisearch/issues/58
 - Search history, navigable with <code>alt+up/down</code> https://github.com/scambier/obsidian-omnisearch/issues/90 
 - Added a setting to toggle the visibility of the note excerpt in results https://github.com/scambier/obsidian-omnisearch/issues/70
 
