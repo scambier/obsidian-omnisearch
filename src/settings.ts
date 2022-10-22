@@ -71,6 +71,13 @@ export class SettingsTab extends PluginSettingTab {
     // Settings main title
     containerEl.createEl('h2', { text: 'Omnisearch settings' })
 
+    // Sponsor link - Thank you!
+    const divSponsor = containerEl.createDiv()
+    divSponsor.innerHTML = `
+        <iframe src="https://github.com/sponsors/scambier/button" title="Sponsor scambier" height="35" width="116" style="border: 0;"></iframe>
+        <a href='https://ko-fi.com/B0B6LQ2C' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://cdn.ko-fi.com/cdn/kofi2.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a> 
+    `
+
     // #region Behavior
 
     new Setting(containerEl).setName('Behavior').setHeading()
