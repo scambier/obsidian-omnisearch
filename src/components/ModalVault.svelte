@@ -77,7 +77,11 @@
 
   function onClick(evt?: MouseEvent | KeyboardEvent) {
     if (!selectedNote) return
-    openNote(selectedNote, evt?.ctrlKey) // Keep ctrl pressed to open in a new pane
+    if (evt?.ctrlKey) {
+      openNoteInNewPane()
+    } else {
+      openNoteAndCloseModal()
+    }
     modal.close()
   }
 
