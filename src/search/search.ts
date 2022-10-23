@@ -70,15 +70,17 @@ export async function initSearchEngineFromData(json: string): Promise<void> {
 /**
  * Searches the index for the given query,
  * and returns an array of raw results
- * @param query
- * @returns
  */
-async function search(query: Query): Promise<SearchResult[]> {
+async function search(
+  query: Query,
+  options = { fuzzy: 0.1 }
+): Promise<SearchResult[]> {
   if (!query.segmentsToStr()) return []
 
   let results = minisearchInstance.search(query.segmentsToStr(), {
     prefix: true,
-    fuzzy: term => (term.length > 4 ? 0.2 : false),
+    // fuzzy: term => (term.length > 4 ? 0.2 : false),
+    fuzzy: options.fuzzy,
     combineWith: 'AND',
     boost: {
       basename: settings.weightBasename,
@@ -158,6 +160,9 @@ export async function getSuggestions(
 ): Promise<ResultNote[]> {
   // Get the raw results
   let results = await search(query)
+  if (results.length == 0) {
+    results = await search(query, { fuzzy: 0.2 })
+  }
   if (!results.length) return []
 
   // Extract tags from the query
