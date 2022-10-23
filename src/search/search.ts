@@ -98,7 +98,7 @@ async function search(
         app.metadataCache.isUserIgnored &&
         app.metadataCache.isUserIgnored(result.id)
       ) {
-        result.score /= 3 // TODO: make this value configurable or toggleable?
+        result.score /= 10 // TODO: make this value configurable or toggleable?
       }
     })
   }
@@ -130,19 +130,30 @@ async function search(
 
 /**
  * Parses a text against a regex, and returns the { string, offset } matches
- * @param text
- * @param reg
- * @returns
  */
-export function getMatches(text: string, reg: RegExp): SearchMatch[] {
+export function getMatches(
+  text: string,
+  reg: RegExp,
+  query: Query
+): SearchMatch[] {
   let match: RegExpExecArray | null = null
   const matches: SearchMatch[] = []
-  let count = 0 // TODO: FIXME: this is a hack to avoid infinite loops
+  let count = 0
   while ((match = reg.exec(text)) !== null) {
-    if (++count > 100) break
+    if (++count > 100) break // Avoid infinite loops, stop looking after 100 matches
     const m = match[0]
     if (m) matches.push({ match: m, offset: match.index })
   }
+
+  // If the query can be found "as is" in the text, put this match first
+  const best = text.toLowerCase().indexOf(query.segmentsToStr())
+  if (best > -1) {
+    matches.unshift({
+      offset: best,
+      match: query.segmentsToStr(),
+    })
+  }
+
   return matches
 }
 
@@ -193,7 +204,7 @@ export async function getSuggestions(
   return results.map(result => {
     const note = cacheManager.getDocument(result.id)
     if (!note) {
-      throw new Error(`Note "${result.id}" not indexed`)
+      throw new Error(`Omnisearch - Note "${result.id}" not indexed`)
     }
 
     // Remove '#' from tags, for highlighting
@@ -220,7 +231,7 @@ export async function getSuggestions(
       ...tags,
     ]
 
-    const matches = getMatches(note.content, stringsToRegex(foundWords))
+    const matches = getMatches(note.content, stringsToRegex(foundWords), query)
     const resultNote: ResultNote = {
       score: result.score,
       foundWords,

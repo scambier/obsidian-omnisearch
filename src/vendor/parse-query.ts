@@ -49,7 +49,7 @@ export function parseQuery(
   if (!options) {
     options = { offsets: true, tokenize: true }
   } else {
-    // If options offsets was't passed, set it to true
+    // If options.offsets wasn't passed, set it to true
     options.offsets =
       typeof options.offsets === 'undefined' ? true : options.offsets
   }
