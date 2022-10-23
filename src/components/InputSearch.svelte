@@ -18,6 +18,7 @@
   }
 
   async function selectInput() {
+    await tick()
     elInput.focus()
     await tick()
     elInput.select()

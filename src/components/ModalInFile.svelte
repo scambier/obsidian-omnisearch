@@ -62,8 +62,6 @@
       groupedOffsets = groups.map(group =>
         Math.round((group.first()!.offset + group.last()!.offset) / 2)
       )
-      // console.log(groups)
-      // console.log(groupedOffsets)
     }
   }
 
@@ -145,7 +143,7 @@
 <InputSearch
   on:input="{e => (searchQuery = e.detail)}"
   placeholder="Omnisearch - File"
-  value="{searchQuery}"/>
+  initialValue="{searchQuery}"/>
 
 <ModalContainer>
   {#if groupedOffsets.length && note}

@@ -12,7 +12,7 @@
   import { Query } from 'src/search/query'
   import { settings } from '../settings'
   import * as NotesIndex from '../notes-index'
-  import { cacheManager } from "../cache-manager"
+  import { cacheManager } from '../cache-manager'
 
   export let modal: OmnisearchVaultModal
   let selectedIndex = 0
@@ -31,8 +31,6 @@
   }
 
   onMount(async () => {
-    await NotesIndex.refreshIndex()
-    previousQuery = (await cacheManager.getSearchHistory())[historySearchIndex]
     eventBus.enable('vault')
     eventBus.on('vault', 'enter', openNoteAndCloseModal)
     eventBus.on('vault', 'create-note', createNoteAndCloseModal)
@@ -43,6 +41,8 @@
     eventBus.on('vault', 'arrow-down', () => moveIndex(1))
     eventBus.on('vault', 'prev-search-history', prevSearchHistory)
     eventBus.on('vault', 'next-search-history', nextSearchHistory)
+    await NotesIndex.refreshIndex()
+    previousQuery = (await cacheManager.getSearchHistory())[0]
   })
 
   onDestroy(() => {
