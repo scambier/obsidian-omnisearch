@@ -192,7 +192,7 @@ export function getPlaintextExtensions(): string[] {
 
 export function getExtension(path: string): string {
   const split = path.split('.')
-  return split[split.length - 1]
+  return split[split.length - 1] ?? ''
 }
 
 export function makeMD5(data: BinaryLike): string {

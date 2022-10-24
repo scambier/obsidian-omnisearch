@@ -17,8 +17,8 @@
   export let modal: OmnisearchVaultModal
   let selectedIndex = 0
   let historySearchIndex = 0
-  let searchQuery: string
-  let previousQuery: string
+  let searchQuery: string | undefined
+  let previousQuery: string | undefined
   let resultNotes: ResultNote[] = []
   let query: Query
 
@@ -100,7 +100,9 @@
   }
 
   function saveCurrentQuery() {
-    cacheManager.addToSearchHistory(searchQuery)
+    if (searchQuery) {
+      cacheManager.addToSearchHistory(searchQuery)
+    }
   }
 
   function openSearchResult(note: ResultNote, newPane = false) {
@@ -115,13 +117,15 @@
   async function createNoteAndCloseModal(opt?: {
     newLeaf: boolean
   }): Promise<void> {
-    try {
-      await createNote(searchQuery, opt?.newLeaf)
-    } catch (e) {
-      new Notice((e as Error).message)
-      return
+    if (searchQuery) {
+      try {
+        await createNote(searchQuery, opt?.newLeaf)
+      } catch (e) {
+        new Notice((e as Error).message)
+        return
+      }
+      modal.close()
     }
-    modal.close()
   }
 
   function insertLink(): void {
@@ -154,11 +158,14 @@
   }
 
   function switchToInFileModal(): void {
-    if (selectedNote.path.endsWith('.pdf')) {
+    // Do nothing if the selectedNote is a PDF
+    if (selectedNote?.path.endsWith('.pdf')) {
       return
     }
+
     saveCurrentQuery()
     modal.close()
+
     if (selectedNote) {
       // Open in-file modal for selected search result
       const file = app.vault.getAbstractFileByPath(selectedNote.path)
