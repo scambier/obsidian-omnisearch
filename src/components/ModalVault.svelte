@@ -42,7 +42,9 @@
     eventBus.on('vault', 'prev-search-history', prevSearchHistory)
     eventBus.on('vault', 'next-search-history', nextSearchHistory)
     await NotesIndex.refreshIndex()
-    previousQuery = (await cacheManager.getSearchHistory())[0]
+    if (settings.showPreviousQueryResults) {
+      previousQuery = (await cacheManager.getSearchHistory())[0]
+    }
   })
 
   onDestroy(() => {

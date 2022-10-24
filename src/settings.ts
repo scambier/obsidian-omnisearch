@@ -38,6 +38,8 @@ export interface OmnisearchSettings extends WeightingSettings {
   showExcerpt: boolean
   /** Enable a "create note" button in the Vault Search modal */
   showCreateButton: boolean
+  /** Re-execute the last query when opening Omnisearch */
+  showPreviousQueryResults: boolean
   /** Vim mode shortcuts */
   CtrlJK: boolean
   /** Vim mode shortcuts */
@@ -214,7 +216,7 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
-    // Show Context
+    // Show context excerpt
     new Setting(containerEl)
       .setName('Show excerpt')
       .setDesc(
@@ -223,6 +225,19 @@ export class SettingsTab extends PluginSettingTab {
       .addToggle(toggle =>
         toggle.setValue(settings.showExcerpt).onChange(async v => {
           showExcerpt.set(v)
+        })
+      )
+
+    // Show context excerpt
+    new Setting(containerEl)
+      .setName('Show previous query results')
+      .setDesc(
+        'Re-executes the previous query when opening Omnisearch'
+      )
+      .addToggle(toggle =>
+        toggle.setValue(settings.showPreviousQueryResults).onChange(async v => {
+          settings.showPreviousQueryResults = v
+          await saveSettings(this.plugin)
         })
       )
 
@@ -352,6 +367,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   ribbonIcon: true,
   showExcerpt: true,
   showCreateButton: false,
+  showPreviousQueryResults: true,
 
   weightBasename: 2,
   weightH1: 1.5,
