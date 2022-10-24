@@ -200,7 +200,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Show ribbon button')
       .setDesc(
-        'Add a button on the sidebar to open the Vault search modal. Needs a restart to remove the button.'
+        'Add a button on the sidebar to open the Vault search modal.'
       )
       .addToggle(toggle =>
         toggle.setValue(settings.ribbonIcon).onChange(async v => {
@@ -208,6 +208,8 @@ export class SettingsTab extends PluginSettingTab {
           await saveSettings(this.plugin)
           if (v) {
             this.plugin.addRibbonButton()
+          } else {
+            this.plugin.removeRibbonButton()
           }
         })
       )

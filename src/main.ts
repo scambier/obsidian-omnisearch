@@ -13,6 +13,8 @@ import * as NotesIndex from './notes-index'
 import * as FileLoader from './file-loader'
 
 export default class OmnisearchPlugin extends Plugin {
+  private ribbonButton?: HTMLElement
+
   async onload(): Promise<void> {
     await cleanOldCacheFiles()
     await loadSettings(this)
@@ -88,9 +90,15 @@ export default class OmnisearchPlugin extends Plugin {
   }
 
   addRibbonButton(): void {
-    this.addRibbonIcon('search', 'Omnisearch', _evt => {
+    this.ribbonButton = this.addRibbonIcon('search', 'Omnisearch', _evt => {
       new OmnisearchVaultModal(app).open()
     })
+  }
+
+  removeRibbonButton(): void {
+    if (this.ribbonButton) {
+      this.ribbonButton.parentNode?.removeChild(this.ribbonButton)
+    }
   }
 }
 
