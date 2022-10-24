@@ -27,7 +27,13 @@ export class Query {
     this.exclusions = tokens.exclude.text
       .map(this.formatToken)
       .filter(o => !!o.value)
-    this.segments = tokens.text.map(this.formatToken)
+    this.segments = tokens.text.reduce<QueryToken[]>((prev, curr) => {
+      const formatted = this.formatToken(curr)
+      if (formatted.value) {
+        prev.push(formatted)
+      }
+      return prev
+    }, [])
   }
 
   public segmentsToStr(): string {
