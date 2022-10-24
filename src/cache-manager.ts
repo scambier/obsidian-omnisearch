@@ -7,7 +7,7 @@ class CacheManager {
   /**
    * Show an empty input field next time the user opens Omnisearch modal
    */
-  private nextQueryIsEmpty = true
+  private nextQueryIsEmpty = false
 
   public async addToSearchHistory(query: string): Promise<void> {
     if (!query) {
