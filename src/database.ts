@@ -1,5 +1,4 @@
 import Dexie from 'dexie'
-import type { IndexedDocument } from './globals'
 
 class OmnisearchCache extends Dexie {
   pdf!: Dexie.Table<

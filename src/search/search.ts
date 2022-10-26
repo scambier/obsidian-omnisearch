@@ -140,7 +140,7 @@ export function getMatches(
   const matches: SearchMatch[] = []
   let count = 0
   while ((match = reg.exec(text)) !== null) {
-    if (++count > 100) break // Avoid infinite loops, stop looking after 100 matches
+    if (++count >= 100) break // Avoid infinite loops, stop looking after 100 matches
     const m = match[0]
     if (m) matches.push({ match: m, offset: match.index })
   }
@@ -218,19 +218,14 @@ export async function getSuggestions(
       // do not necessarily match the query
       ...Object.keys(result.match),
 
-      // // Matching terms from the query,
-      // // but only if they stem from the result's matches
-      // ...Object.keys(result.match).filter(w =>
-      //   query.segments.some(s => w.startsWith(s.value)),
-      // ),
-
       // Quoted expressions
       ...query.segments.filter(s => s.exact).map(s => s.value),
 
       // Tags, starting with #
       ...tags,
-    ]
+    ].filter(w => w.length > 1)
 
+    // console.log(foundWords)
     const matches = getMatches(note.content, stringsToRegex(foundWords), query)
     const resultNote: ResultNote = {
       score: result.score,

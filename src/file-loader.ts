@@ -68,6 +68,15 @@ export async function fileToIndexedDocument(
   content = removeDiacritics(content)
   const metadata = app.metadataCache.getFileCache(file)
 
+  // EXCALIDRAW
+  // Remove the json code
+  if (metadata?.frontmatter?.['excalidraw-plugin']) {
+    const comments = metadata.sections?.filter(s => s.type === 'comment') ?? []
+    for (const { start, end } of comments.map(c => c.position)) {
+      content = content.substring(0, start.offset-1) + content.substring(end.offset)
+    }
+  }
+
   // Look for links that lead to non-existing files,
   // and add them to the index.
   if (metadata) {
