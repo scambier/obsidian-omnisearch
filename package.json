@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "wasm-pack build --target web && rollup -c -w",
     "build": "wasm-pack build --target web && rollup -c",
-    "check": "tsc -noEmit -skipLibCheck",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
     "version": "node version-bump.mjs && git add manifest.json versions.json package.json",
     "test": "jest"
   },
@@ -38,6 +38,7 @@
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-web-worker-loader": "^1.6.1",
     "svelte": "^3.51.0",
+    "svelte-check": "^2.9.2",
     "svelte-jester": "^2.3.2",
     "svelte-preprocess": "^4.10.7",
     "tslib": "2.3.1",
