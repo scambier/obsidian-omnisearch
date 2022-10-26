@@ -1,5 +1,5 @@
 import { Notice, Plugin, TFile } from 'obsidian'
-import * as Search from './search/search'
+import {SearchEngine} from './search/search-engine'
 import {
   OmnisearchInFileModal,
   OmnisearchVaultModal,
@@ -8,7 +8,7 @@ import { loadSettings, settings, SettingsTab, showExcerpt } from './settings'
 import { eventBus, EventNames } from './globals'
 import { registerAPI } from '@vanakat/plugin-api'
 import api from './tools/api'
-import { isFilePlaintext } from './tools/utils'
+import { isFilePlaintext, wait } from './tools/utils'
 import * as NotesIndex from './notes-index'
 import * as FileLoader from './file-loader'
 
@@ -20,7 +20,7 @@ export default class OmnisearchPlugin extends Plugin {
     await loadSettings(this)
 
     // Initialize minisearch
-    await Search.initSearchEngine()
+    await SearchEngine.initFromCache()
 
     _registerAPI(this)
 
@@ -106,11 +106,13 @@ export default class OmnisearchPlugin extends Plugin {
  * Read the files and feed them to Minisearch
  */
 async function populateIndex(): Promise<void> {
+  const tmpEngine = SearchEngine.getTmpEngine()
+
   // Load plain text files
   console.time('Omnisearch - Timing')
   const files = await FileLoader.getPlainTextFiles()
   // Index them
-  await Search.addAllToMinisearch(files)
+  await tmpEngine.addAllToMinisearch(files)
   console.log(`Omnisearch - Indexed ${files.length} notes`)
   console.timeEnd('Omnisearch - Timing')
 
@@ -119,10 +121,15 @@ async function populateIndex(): Promise<void> {
     console.time('Omnisearch - Timing')
     const pdfs = await FileLoader.getPDFFiles()
     // Index them
-    await Search.addAllToMinisearch(pdfs)
+    await tmpEngine.addAllToMinisearch(pdfs)
     console.log(`Omnisearch - Indexed ${pdfs.length} PDFs`)
     console.timeEnd('Omnisearch - Timing')
   }
+
+  await tmpEngine.writeToCache()
+  SearchEngine.swapEngines()
+
+  // Save minisearch
 }
 
 async function cleanOldCacheFiles() {

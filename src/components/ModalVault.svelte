@@ -5,9 +5,12 @@
   import ModalContainer from './ModalContainer.svelte'
   import { eventBus, type ResultNote } from 'src/globals'
   import { createNote, openNote } from 'src/tools/notes'
-  import * as Search from 'src/search/search'
+  import { SearchEngine } from 'src/search/search-engine'
   import { getCtrlKeyLabel, getExtension, loopIndex } from 'src/tools/utils'
-  import { OmnisearchInFileModal, type OmnisearchVaultModal } from 'src/components/modals'
+  import {
+    OmnisearchInFileModal,
+    type OmnisearchVaultModal,
+  } from 'src/components/modals'
   import ResultItemVault from './ResultItemVault.svelte'
   import { Query } from 'src/search/query'
   import { settings } from '../settings'
@@ -70,7 +73,7 @@
 
   async function updateResults() {
     query = new Query(searchQuery)
-    resultNotes = (await Search.getSuggestions(query)).sort(
+    resultNotes = (await SearchEngine.getEngine().getSuggestions(query)).sort(
       (a, b) => b.score - a.score
     )
     selectedIndex = 0
@@ -158,8 +161,9 @@
   }
 
   function switchToInFileModal(): void {
-    // Do nothing if the selectedNote is a PDF
-    if (selectedNote?.path.endsWith('.pdf')) {
+    // Do nothing if the selectedNote is a PDF,
+    // or if there is 0 match (e.g indexing in progress)
+    if (selectedNote?.path.endsWith('.pdf') || !selectedNote.matches.length) {
       return
     }
 
@@ -192,7 +196,7 @@
       const elem = document.querySelector(
         `[data-result-id="${selectedNote.path}"]`
       )
-      elem?.scrollIntoView({behavior: 'auto', block: 'nearest'})
+      elem?.scrollIntoView({ behavior: 'auto', block: 'nearest' })
     }
   }
 </script>
@@ -206,13 +210,19 @@
   {/if}
 </InputSearch>
 
+{#if SearchEngine.isIndexing}
+  <div style="text-align: center; color: var(--text-accent); margin-top: 10px">
+    ⏳ Omnisearch indexing is currently in progress
+  </div>
+{/if}
+
 <ModalContainer>
   {#each resultNotes as result, i}
     <ResultItemVault
       selected="{i === selectedIndex}"
       note="{result}"
       on:mousemove="{_ => (selectedIndex = i)}"
-      on:click="{onClick}"/>
+      on:click="{onClick}" />
   {/each}
   {#if !resultNotes.length && searchQuery}
     <div style="text-align: center;">
@@ -237,7 +247,7 @@
     <span>to switch to In-File Search</span>
   </div>
 
-  <br/>
+  <br />
 
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">{getCtrlKeyLabel()} ↵</span>
@@ -252,7 +262,7 @@
     <span>to create in a new pane</span>
   </div>
 
-  <br/>
+  <br />
 
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">alt ↵</span>

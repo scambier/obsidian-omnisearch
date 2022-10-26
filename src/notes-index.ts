@@ -2,7 +2,7 @@ import { Notice, TAbstractFile, TFile } from 'obsidian'
 import { isFileIndexable, wait } from './tools/utils'
 import { removeAnchors } from './tools/notes'
 import { settings } from './settings'
-import * as Search from './search/search'
+import { SearchEngine } from './search/search-engine'
 import { cacheManager } from './cache-manager'
 import pLimit from 'p-limit'
 import type { IndexedDocument } from './globals'
@@ -38,7 +38,7 @@ export async function addToIndexAndMemCache(
 
     // Make the document and index it
     const note = await fileToIndexedDocument(file)
-    Search.addSingleToMinisearch(note)
+    SearchEngine.getEngine().addSingleToMinisearch(note)
     await cacheManager.updateDocument(note.path, note)
   } catch (e) {
     // console.trace('Error while indexing ' + file.basename)
@@ -72,7 +72,7 @@ export function addNonExistingToIndex(name: string, parent: string): void {
     doesNotExist: true,
     parent,
   }
-  Search.addSingleToMinisearch(note)
+  SearchEngine.getEngine().addSingleToMinisearch(note)
   cacheManager.updateDocument(filename, note)
 }
 
@@ -86,7 +86,7 @@ export function removeFromIndex(path: string): void {
   }
   const note = cacheManager.getDocument(path)
   if (note) {
-    Search.removeFromMinisearch(note)
+    SearchEngine.getEngine().removeFromMinisearch(note)
     cacheManager.deleteDocument(path)
 
     // FIXME: only remove non-existing notes if they don't have another parent

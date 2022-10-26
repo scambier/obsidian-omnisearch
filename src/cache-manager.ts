@@ -1,6 +1,9 @@
 import type { TFile } from 'obsidian'
 import type { IndexedDocument } from './globals'
 import { database } from './database'
+import MiniSearch from 'minisearch'
+import { minisearchOptions } from './search/search-engine'
+import { fileToIndexedDocument } from './file-loader'
 
 class CacheManager {
   private documentsCache: Map<string, IndexedDocument> = new Map()
@@ -54,6 +57,32 @@ class CacheManager {
     return !indexedNote || indexedNote.mtime !== file.stat.mtime
   }
 
+  //#region Minisearch
+
+  public async getMinisearchCache(): Promise<MiniSearch | null> {
+    const cache = (await database.minisearch.toArray())[0]
+    if (!cache) {
+      return null
+    }
+    try {
+      return MiniSearch.loadJSON(cache.data, minisearchOptions)
+    } catch (e) {
+      console.error('Omnisearch - Error while loading Minisearch cache')
+      console.error(e)
+      return null
+    }
+  }
+
+  public async writeMinisearchCache(minisearch: MiniSearch): Promise<void> {
+    await database.minisearch.clear()
+    await database.minisearch.add({
+      date: new Date().toISOString(),
+      data: JSON.stringify(minisearch.toJSON()),
+    })
+    console.log('Omnisearch - Search cache written')
+  }
+
+  //#endregion Minisearch
 }
 
 export const cacheManager = new CacheManager()
