@@ -18,15 +18,15 @@
   import { cacheManager } from '../cache-manager'
 
   export let modal: OmnisearchVaultModal
+  export let previousQuery: string | undefined
   let selectedIndex = 0
   let historySearchIndex = 0
   let searchQuery: string | undefined
-  let previousQuery: string | undefined
   let resultNotes: ResultNote[] = []
   let query: Query
 
   $: selectedNote = resultNotes[selectedIndex]
-  $: searchQuery = previousQuery
+  $: searchQuery = searchQuery ?? previousQuery
   $: if (searchQuery) {
     updateResults()
   } else {
@@ -163,7 +163,7 @@
   function switchToInFileModal(): void {
     // Do nothing if the selectedNote is a PDF,
     // or if there is 0 match (e.g indexing in progress)
-    if (selectedNote?.path.endsWith('.pdf') || !selectedNote.matches.length) {
+    if (selectedNote?.path.endsWith('.pdf') || !selectedNote?.matches.length) {
       return
     }
 

@@ -117,12 +117,13 @@ abstract class OmnisearchModal extends Modal {
 }
 
 export class OmnisearchVaultModal extends OmnisearchModal {
-  constructor(app: App) {
+  constructor(app: App, query?: string) {
     super(app)
     const cmp = new ModalVault({
       target: this.modalEl,
       props: {
         modal: this,
+        previousQuery: query
       },
     })
 
@@ -149,7 +150,7 @@ export class OmnisearchInFileModal extends OmnisearchModal {
         modal: this,
         singleFilePath: file.path,
         parent: parent,
-        searchQuery,
+        previousQuery: searchQuery,
       },
     })
 

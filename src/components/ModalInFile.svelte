@@ -1,7 +1,3 @@
-<script context="module" lang="ts">
-  let lastSearch = ''
-</script>
-
 <script lang="ts">
   import InputSearch from './InputSearch.svelte'
   import {
@@ -26,17 +22,17 @@
   export let modal: OmnisearchInFileModal
   export let parent: OmnisearchVaultModal | null = null
   export let singleFilePath = ''
-  export let searchQuery: string
+  export let previousQuery: string | undefined
 
+  let searchQuery: string
   let groupedOffsets: number[] = []
   let selectedIndex = 0
   let note: ResultNote | undefined
   let query: Query
 
+  $: searchQuery = previousQuery ?? ''
+
   onMount(() => {
-    if (lastSearch && !searchQuery) {
-      searchQuery = lastSearch
-    }
     eventBus.enable('infile')
 
     eventBus.on('infile', 'enter', openSelection)
@@ -52,8 +48,12 @@
   $: (async () => {
     if (searchQuery) {
       query = new Query(searchQuery)
-      note = (await SearchEngine.getEngine().getSuggestions(query, { singleFilePath }))[0] ?? null
-      lastSearch = searchQuery
+      note =
+        (
+          await SearchEngine.getEngine().getSuggestions(query, {
+            singleFilePath,
+          })
+        )[0] ?? null
     }
     selectedIndex = 0
     await scrollIntoView()
@@ -138,7 +138,7 @@
   }
 
   function switchToVaultModal(): void {
-    new OmnisearchVaultModal(app).open()
+    new OmnisearchVaultModal(app, previousQuery).open()
     modal.close()
   }
 </script>
@@ -146,7 +146,7 @@
 <InputSearch
   on:input="{e => (searchQuery = e.detail)}"
   placeholder="Omnisearch - File"
-  initialValue="{searchQuery}" />
+  initialValue="{previousQuery}" />
 
 <ModalContainer>
   {#if groupedOffsets.length && note}
