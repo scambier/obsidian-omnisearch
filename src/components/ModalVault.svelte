@@ -24,6 +24,7 @@
   let searchQuery: string | undefined
   let resultNotes: ResultNote[] = []
   let query: Query
+  let { isIndexing } = SearchEngine
 
   $: selectedNote = resultNotes[selectedIndex]
   $: searchQuery = searchQuery ?? previousQuery
@@ -210,7 +211,7 @@
   {/if}
 </InputSearch>
 
-{#if SearchEngine.isIndexing}
+{#if $isIndexing}
   <div style="text-align: center; color: var(--text-accent); margin-top: 10px">
     ⏳ Omnisearch indexing is currently in progress
   </div>

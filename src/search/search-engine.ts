@@ -18,6 +18,7 @@ import {
 import type { Query } from './query'
 import { settings } from '../settings'
 import { cacheManager } from '../cache-manager'
+import { writable } from 'svelte/store'
 
 const tokenize = (text: string): string[] => {
   const tokens = text.split(SPACE_OR_PUNCTUATION)
@@ -49,7 +50,7 @@ export const minisearchOptions: Options<IndexedDocument> = {
 export class SearchEngine {
   private static engine: SearchEngine
   private static tmpEngine: SearchEngine
-  public static isIndexing = true
+  public static isIndexing = writable(true)
 
   /**
    * The main singleton SearchEngine instance.
@@ -93,7 +94,7 @@ export class SearchEngine {
    */
   public static swapEngines(): void {
     ;[this.engine, this.tmpEngine] = [this.tmpEngine, this.engine]
-    this.isIndexing = false
+    this.isIndexing.set(false)
   }
 
   private minisearch: MiniSearch
