@@ -81,7 +81,7 @@ export default class OmnisearchPlugin extends Plugin {
       await populateIndex()
     })
 
-    // showWelcomeNotice(this)
+    showWelcomeNotice(this)
   }
 
   onunload(): void {
@@ -151,8 +151,7 @@ async function cleanOldCacheFiles() {
 }
 
 function showWelcomeNotice(plugin: Plugin) {
-  return
-  const code = '1.6.0'
+  const code = '1.7.6'
   if (settings.welcomeMessage !== code) {
     const welcome = new DocumentFragment()
     welcome.createSpan({}, span => {
