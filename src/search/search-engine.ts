@@ -93,10 +93,10 @@ export class SearchEngine {
    */
   public static loadTmpDataIntoMain(): void {
     const tmpData = this.tmpEngine.minisearch.toJSON()
-    this.engine.minisearch = MiniSearch.loadJS(tmpData, minisearchOptions);
+    this.engine.minisearch = MiniSearch.loadJS(tmpData, minisearchOptions)
   }
 
-  public static clearTmp():void {
+  public static clearTmp(): void {
     this.tmpEngine.minisearch = new MiniSearch(minisearchOptions)
   }
 
@@ -117,7 +117,7 @@ export class SearchEngine {
     if (!query.segmentsToStr()) return []
 
     let results = this.minisearch.search(query.segmentsToStr(), {
-      prefix: true,
+      prefix: false,
       // fuzzy: term => (term.length > 4 ? 0.2 : false),
       fuzzy: options.fuzzy,
       combineWith: 'AND',
