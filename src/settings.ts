@@ -26,8 +26,6 @@ export interface OmnisearchSettings extends WeightingSettings {
   PDFIndexing: boolean
   /** Max number of spawned processes for background tasks, such as extracting text from PDFs */
   backgroundProcesses: number
-  /** Write cache files on disk (unrelated to PDFs) */
-  // persistCache: boolean
   /** Display Omnisearch popup notices over Obsidian */
   showIndexingNotices: boolean
   /** Activate the small 🔍 button on Obsidian's ribbon */
@@ -46,6 +44,8 @@ export interface OmnisearchSettings extends WeightingSettings {
   CtrlNP: boolean
   /** Key for the welcome message when Obsidian is updated. A message is only shown once. */
   welcomeMessage: string
+  /** If a query returns 0 result, try again with more relax conditions */
+  retryWhenZeroResult: boolean
 }
 
 /**
@@ -71,7 +71,7 @@ export class SettingsTab extends PluginSettingTab {
     containerEl.empty()
 
     // Settings main title
-    containerEl.createEl('h2', { text: 'Omnisearch settings' })
+    containerEl.createEl('h2', { text: 'Omnisearch' })
 
     // Sponsor link - Thank you!
     const divSponsor = containerEl.createDiv()
@@ -101,7 +101,8 @@ export class SettingsTab extends PluginSettingTab {
     const diacriticsDesc = new DocumentFragment()
     diacriticsDesc.createSpan({}, span => {
       span.innerHTML = `Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky".<br/>
-        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
+        <strong style="color: var(--text-accent)">You probably shouldn't disable this. Needs a restart to fully take effect.</strong>
+        `
     })
     new Setting(containerEl)
       .setName('Ignore diacritics')
@@ -117,7 +118,7 @@ export class SettingsTab extends PluginSettingTab {
     const indexedFileTypesDesc = new DocumentFragment()
     indexedFileTypesDesc.createSpan({}, span => {
       span.innerHTML = `In addition to standard <code>md</code> files, Omnisearch can also index other plain text files.<br/>
-      Add extensions separated by a space. Example: <code>txt org</code>.<br />
+      Add extensions separated by a space, without the dot. Example: "<code>txt org</code>".<br />
       <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
     })
     new Setting(containerEl)
@@ -133,43 +134,18 @@ export class SettingsTab extends PluginSettingTab {
           })
       })
 
-    // // Background processes
-    // new Setting(containerEl)
-    //   .setName(
-    //     `Background processes (default: ${DEFAULT_SETTINGS.backgroundProcesses})`
-    //   )
-    //   .setDesc('The maximum number of processes for background work, like PDF indexing. This value should not be higher than your number of CPU cores.')
-    //   .addSlider(cb => {
-    //     cb.setLimits(1, 16, 1)
-    //       .setValue(settings.backgroundProcesses)
-    //       .setDynamicTooltip()
-    //       .onChange(v => {
-    //         settings.backgroundProcesses = v
-    //         saveSettings(this.plugin)
-    //       })
-    //   })
-
-    // // Store index
-    // const serializedIndexDesc = new DocumentFragment()
-    // serializedIndexDesc.createSpan({}, span => {
-    //   span.innerHTML = `This will speedup startup times after the initial indexing. Do not activate it unless indexing is too slow on your device:
-    //     <ul>
-    //       <li>PDF indexing is not affected by this setting</li>
-    //       <li>⚠️ The index can become corrupted - if you notice any issue, disable and re-enable this option to clear the cache.</li>
-    //       <li>⚠️ Cache files in <code>.obsidian/plugins/omnisearch/*.data</code> must not be synchronized between your devices.</li>
-    //     </ul>
-    //     <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>
-    //     `
-    // })
-    // new Setting(containerEl)
-    //   .setName('Persist cache on disk')
-    //   .setDesc(serializedIndexDesc)
-    //   .addToggle(toggle =>
-    //     toggle.setValue(settings.persistCache).onChange(async v => {
-    //       settings.persistCache = v
-    //       await saveSettings(this.plugin)
-    //     })
-    //   )
+    // Ignore diacritics
+    new Setting(containerEl)
+      .setName('Retry queries that return zero result')
+      .setDesc(
+        `When a query returns zero result, Omnisearch will try again (but harder). Enabling this may incur some freezes.`
+      )
+      .addToggle(toggle =>
+        toggle.setValue(settings.retryWhenZeroResult).onChange(async v => {
+          settings.retryWhenZeroResult = v
+          await saveSettings(this.plugin)
+        })
+      )
 
     // PDF Indexing
     const indexPDFsDesc = new DocumentFragment()
@@ -201,9 +177,7 @@ export class SettingsTab extends PluginSettingTab {
     // Show Ribbon Icon
     new Setting(containerEl)
       .setName('Show ribbon button')
-      .setDesc(
-        'Add a button on the sidebar to open the Vault search modal.'
-      )
+      .setDesc('Add a button on the sidebar to open the Vault search modal.')
       .addToggle(toggle =>
         toggle.setValue(settings.ribbonIcon).onChange(async v => {
           settings.ribbonIcon = v
@@ -231,9 +205,7 @@ export class SettingsTab extends PluginSettingTab {
     // Show context excerpt
     new Setting(containerEl)
       .setName('Show previous query results')
-      .setDesc(
-        'Re-executes the previous query when opening Omnisearch'
-      )
+      .setDesc('Re-executes the previous query when opening Omnisearch')
       .addToggle(toggle =>
         toggle.setValue(settings.showPreviousQueryResults).onChange(async v => {
           settings.showPreviousQueryResults = v
@@ -311,27 +283,29 @@ export class SettingsTab extends PluginSettingTab {
 
     new Setting(containerEl).setName('Shortcuts').setHeading()
 
-    new Setting(containerEl)
-      .setName(
-        'Use [Ctrl/Cmd]+j/k to navigate up/down in the results, if Vim mode is enabled'
-      )
-      .addToggle(toggle =>
-        toggle.setValue(settings.CtrlJK).onChange(async v => {
-          settings.CtrlJK = v
-          await saveSettings(this.plugin)
-        })
-      )
+    const ctrljk = new DocumentFragment()
+    ctrljk.createSpan({}, span => {
+      span.innerHTML =
+        'Use <code>[Ctrl/Cmd]+j/k</code> to navigate up/down in the results, if Vim mode is enabled'
+    })
+    new Setting(containerEl).setName(ctrljk).addToggle(toggle =>
+      toggle.setValue(settings.CtrlJK).onChange(async v => {
+        settings.CtrlJK = v
+        await saveSettings(this.plugin)
+      })
+    )
 
-    new Setting(containerEl)
-      .setName(
-        'Use [Ctrl/Cmd]+n/p to navigate up/down in the results, if Vim mode is enabled'
-      )
-      .addToggle(toggle =>
-        toggle.setValue(settings.CtrlNP).onChange(async v => {
-          settings.CtrlNP = v
-          await saveSettings(this.plugin)
-        })
-      )
+    const ctrlnp = new DocumentFragment()
+    ctrlnp.createSpan({}, span => {
+      span.innerHTML =
+        'Use <code>[Ctrl/Cmd]+j/k</code> to navigate up/down in the results, if Vim mode is enabled'
+    })
+    new Setting(containerEl).setName(ctrlnp).addToggle(toggle =>
+      toggle.setValue(settings.CtrlNP).onChange(async v => {
+        settings.CtrlNP = v
+        await saveSettings(this.plugin)
+      })
+    )
 
     // #endregion Shortcuts
   }
@@ -368,14 +342,15 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   showExcerpt: true,
   showCreateButton: false,
   showPreviousQueryResults: true,
+  retryWhenZeroResult: false,
 
   weightBasename: 2,
   weightH1: 1.5,
   weightH2: 1.3,
   weightH3: 1.1,
 
-  CtrlJK: false,
-  CtrlNP: false,
+  CtrlJK: true,
+  CtrlNP: true,
 
   // persistCache: false,
 

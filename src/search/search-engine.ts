@@ -112,13 +112,14 @@ export class SearchEngine {
    */
   public async search(
     query: Query,
-    options = { fuzzy: 0.1 }
+    options = { fuzzy: 0.1, prefix: false }
   ): Promise<SearchResult[]> {
     if (!query.segmentsToStr()) return []
 
     let results = this.minisearch.search(query.segmentsToStr(), {
-      prefix: false,
-      // fuzzy: term => (term.length > 4 ? 0.2 : false),
+      prefix: term => {
+        return options.prefix || term.length > 4
+      },
       fuzzy: options.fuzzy,
       combineWith: 'AND',
       boost: {
@@ -207,7 +208,9 @@ export class SearchEngine {
     // Get the raw results
     let results = await this.search(query)
     if (results.length == 0) {
-      results = await this.search(query, { fuzzy: 0.2 })
+      if (settings.retryWhenZeroResult) {
+        results = await this.search(query, { fuzzy: 0.2, prefix: true })
+      }
     }
     if (!results.length) return []
 
