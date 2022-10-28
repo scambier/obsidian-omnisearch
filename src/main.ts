@@ -85,7 +85,6 @@ export default class OmnisearchPlugin extends Plugin {
   }
 
   onunload(): void {
-    console.log('Omnisearch - Interrupting PDF indexing')
     NotesIndex.processQueue.clearQueue()
   }
 
@@ -131,6 +130,7 @@ async function populateIndex(): Promise<void> {
 
   // Load PDFs into the main search engine, and write cache
   SearchEngine.loadTmpDataIntoMain()
+  SearchEngine.isIndexing.set(false)
   await tmpEngine.writeToCache()
 
   // Clear memory

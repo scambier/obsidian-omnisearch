@@ -14,7 +14,7 @@ if you want to view the source visit the plugins github repository
 */
 `
 
-const production = false//!process.env.ROLLUP_WATCH
+const production = !process.env.ROLLUP_WATCH
 
 export default {
   input: './src/main.ts',
