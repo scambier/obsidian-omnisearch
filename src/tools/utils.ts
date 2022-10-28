@@ -65,9 +65,15 @@ export function getAllIndices(text: string, regex: RegExp): SearchMatch[] {
     .filter(isSearchMatch)
 }
 
+/**
+ * Used to find excerpts in a note body, or select which words to highlight
+ */
 export function stringsToRegex(strings: string[]): RegExp {
   if (!strings.length) return /^$/g
-  return new RegExp(strings.map(s => `(${escapeRegex(s)})`).join('|'), 'gi')
+  const joined = strings.map(s => escapeRegex(s)).join('|')
+  const reg = new RegExp(`(${joined})`, 'gi')
+  // console.log(reg)
+  return reg
 }
 
 export function extractHeadingsFromCache(
