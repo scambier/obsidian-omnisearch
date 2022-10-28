@@ -1,7 +1,7 @@
 import { App, Modal, TFile } from 'obsidian'
 import ModalVault from './ModalVault.svelte'
 import ModalInFile from './ModalInFile.svelte'
-import {eventBus, EventNames, isInputComposition} from '../globals'
+import { eventBus, EventNames, isInputComposition } from '../globals'
 import { settings } from '../settings'
 
 abstract class OmnisearchModal extends Modal {
@@ -32,13 +32,13 @@ abstract class OmnisearchModal extends Modal {
 
     // Ctrl+j/k
     for (const key of [
-      { k: 'j', dir: 'down' },
-      { k: 'k', dir: 'up' },
+      { k: 'J', dir: 'down' },
+      { k: 'K', dir: 'up' },
     ] as const) {
-      for (const modifier of ['Ctrl', 'Meta'] as const) {
+      for (const modifier of ['Ctrl', 'Mod'] as const) {
         this.scope.register([modifier], key.k, e => {
-          if (settings.CtrlJK && this.app.vault.getConfig('vimMode')) {
-            e.preventDefault()
+          if (this.app.vault.getConfig('vimMode')) {
+            // e.preventDefault()
             eventBus.emit('arrow-' + key.dir)
           }
         })
@@ -47,13 +47,13 @@ abstract class OmnisearchModal extends Modal {
 
     // Ctrl+n/p
     for (const key of [
-      { k: 'n', dir: 'down' },
-      { k: 'p', dir: 'up' },
+      { k: 'N', dir: 'down' },
+      { k: 'P', dir: 'up' },
     ] as const) {
-      for (const modifier of ['Ctrl', 'Meta'] as const) {
+      for (const modifier of ['Ctrl', 'Mod'] as const) {
         this.scope.register([modifier], key.k, e => {
-          if (settings.CtrlNP && this.app.vault.getConfig('vimMode')) {
-            e.preventDefault()
+          if (this.app.vault.getConfig('vimMode')) {
+            // e.preventDefault()
             eventBus.emit('arrow-' + key.dir)
           }
         })
@@ -123,7 +123,7 @@ export class OmnisearchVaultModal extends OmnisearchModal {
       target: this.modalEl,
       props: {
         modal: this,
-        previousQuery: query
+        previousQuery: query,
       },
     })
 

@@ -38,10 +38,6 @@ export interface OmnisearchSettings extends WeightingSettings {
   showCreateButton: boolean
   /** Re-execute the last query when opening Omnisearch */
   showPreviousQueryResults: boolean
-  /** Vim mode shortcuts */
-  CtrlJK: boolean
-  /** Vim mode shortcuts */
-  CtrlNP: boolean
   /** Key for the welcome message when Obsidian is updated. A message is only shown once. */
   welcomeMessage: string
   /** If a query returns 0 result, try again with more relax conditions */
@@ -277,37 +273,7 @@ export class SettingsTab extends PluginSettingTab {
       .setName(`Headings level 3 (default: ${DEFAULT_SETTINGS.weightH3})`)
       .addSlider(cb => this.weightSlider(cb, 'weightH3'))
 
-    // #endregion Results Weighting
-
-    // #region Shortcuts
-
-    new Setting(containerEl).setName('Shortcuts').setHeading()
-
-    const ctrljk = new DocumentFragment()
-    ctrljk.createSpan({}, span => {
-      span.innerHTML =
-        'Use <code>[Ctrl/Cmd]+j/k</code> to navigate up/down in the results, if Vim mode is enabled'
-    })
-    new Setting(containerEl).setName(ctrljk).addToggle(toggle =>
-      toggle.setValue(settings.CtrlJK).onChange(async v => {
-        settings.CtrlJK = v
-        await saveSettings(this.plugin)
-      })
-    )
-
-    const ctrlnp = new DocumentFragment()
-    ctrlnp.createSpan({}, span => {
-      span.innerHTML =
-        'Use <code>[Ctrl/Cmd]+j/k</code> to navigate up/down in the results, if Vim mode is enabled'
-    })
-    new Setting(containerEl).setName(ctrlnp).addToggle(toggle =>
-      toggle.setValue(settings.CtrlNP).onChange(async v => {
-        settings.CtrlNP = v
-        await saveSettings(this.plugin)
-      })
-    )
-
-    // #endregion Shortcuts
+    // #endregion Results Weighting   
   }
 
   weightSlider(cb: SliderComponent, key: keyof WeightingSettings): void {
@@ -348,9 +314,6 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   weightH1: 1.5,
   weightH2: 1.3,
   weightH3: 1.1,
-
-  CtrlJK: true,
-  CtrlNP: true,
 
   // persistCache: false,
 
