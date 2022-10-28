@@ -116,6 +116,9 @@ async function populateIndex(): Promise<void> {
   console.log(`Omnisearch - Indexed ${files.length} notes`)
   console.timeEnd('Omnisearch - Timing')
 
+  // Load normal notes into the main search engine
+  SearchEngine.loadTmpDataIntoMain()
+
   // Load PDFs
   if (settings.PDFIndexing) {
     console.time('Omnisearch - Timing')
@@ -126,10 +129,12 @@ async function populateIndex(): Promise<void> {
     console.timeEnd('Omnisearch - Timing')
   }
 
+  // Load PDFs into the main search engine, and write cache
+  SearchEngine.loadTmpDataIntoMain()
   await tmpEngine.writeToCache()
-  SearchEngine.swapEngines()
 
-  // Save minisearch
+  // Clear memory
+  SearchEngine.clearTmp()
 }
 
 async function cleanOldCacheFiles() {

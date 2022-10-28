@@ -3,7 +3,6 @@ import type { IndexedDocument } from './globals'
 import { database } from './database'
 import MiniSearch from 'minisearch'
 import { minisearchOptions } from './search/search-engine'
-import { fileToIndexedDocument } from './file-loader'
 
 class CacheManager {
   private documentsCache: Map<string, IndexedDocument> = new Map()
