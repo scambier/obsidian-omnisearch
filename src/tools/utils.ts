@@ -70,7 +70,7 @@ export function getAllIndices(text: string, regex: RegExp): SearchMatch[] {
  */
 export function stringsToRegex(strings: string[]): RegExp {
   if (!strings.length) return /^$/g
-  const joined = strings.map(s => escapeRegex(s)).join('|')
+  const joined = strings.map(s => '\\b' + escapeRegex(s)).join('|')
   const reg = new RegExp(`(${joined})`, 'gi')
   // console.log(reg)
   return reg
