@@ -9,8 +9,8 @@ import {
 import * as NotesIndex from './notes-index'
 import type { TFile } from 'obsidian'
 import type { IndexedDocument } from './globals'
-import { pdfManager } from './pdf/pdf-manager'
 import { getNonExistingNotes } from './tools/notes'
+import { getPdfText } from 'obsidian-text-extract'
 
 /**
  * Return all plaintext files as IndexedDocuments
@@ -60,7 +60,7 @@ export async function fileToIndexedDocument(
   if (isFilePlaintext(file.path)) {
     content = removeDiacritics(await app.vault.cachedRead(file))
   } else if (file.path.endsWith('.pdf')) {
-    content = removeDiacritics(await pdfManager.getPdfText(file))
+    content = removeDiacritics(await getPdfText(file))
   } else {
     throw new Error('Invalid file: ' + file.path)
   }
@@ -73,7 +73,8 @@ export async function fileToIndexedDocument(
   if (metadata?.frontmatter?.['excalidraw-plugin']) {
     const comments = metadata.sections?.filter(s => s.type === 'comment') ?? []
     for (const { start, end } of comments.map(c => c.position)) {
-      content = content.substring(0, start.offset-1) + content.substring(end.offset)
+      content =
+        content.substring(0, start.offset - 1) + content.substring(end.offset)
     }
   }
 

@@ -4,8 +4,8 @@
   "description": "A search engine for Obsidian",
   "main": "dist/main.js",
   "scripts": {
-    "dev": "wasm-pack build --target web && rollup -c -w",
-    "build": "wasm-pack build --target web && rollup -c",
+    "dev": "rollup -c -w",
+    "build": "rollup -c",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "version": "node version-bump.mjs && git add manifest.json versions.json package.json",
     "test": "jest"
@@ -29,6 +29,7 @@
     "builtin-modules": "^3.3.0",
     "jest": "^27.5.1",
     "obsidian": "latest",
+    "obsidian-text-extract": "link:C:/Dev/Obsidian/obsidian-text-extract/dist",
     "prettier": "^2.7.1",
     "prettier-plugin-svelte": "^2.8.0",
     "rollup": "^2.79.1",

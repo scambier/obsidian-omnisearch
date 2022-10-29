@@ -23,6 +23,7 @@ specifiers:
   lodash-es: 4.17.21
   minisearch: 5.0.0
   obsidian: latest
+  obsidian-text-extract: link:C:/Dev/Obsidian/obsidian-text-extract/dist
   p-limit: ^4.0.0
   pako: ^2.0.4
   prettier: ^2.7.1
@@ -66,6 +67,7 @@ devDependencies:
   builtin-modules: 3.3.0
   jest: 27.5.1
   obsidian: 0.16.3
+  obsidian-text-extract: link:../obsidian-text-extract/dist
   prettier: 2.7.1
   prettier-plugin-svelte: 2.8.0_ibge6ami6vq2q2j5g4rcvk62hq
   rollup: 2.79.1
