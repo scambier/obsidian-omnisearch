@@ -188,6 +188,12 @@ export function isFileIndexable(path: string): boolean {
   )
 }
 
+export function isFileImage(path: string): boolean {
+  return (
+    path.endsWith('.png') || path.endsWith('.jpg') || path.endsWith('.jpeg')
+  )
+}
+
 export function isFilePlaintext(path: string): boolean {
   return getPlaintextExtensions().some(t => path.endsWith(`.${t}`))
 }

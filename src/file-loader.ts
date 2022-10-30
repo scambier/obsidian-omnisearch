@@ -3,6 +3,7 @@ import {
   extractHeadingsFromCache,
   getAliasesFromMetadata,
   getTagsFromMetadata,
+  isFileImage,
   isFilePlaintext,
   removeDiacritics,
 } from './tools/utils'
@@ -10,7 +11,7 @@ import * as NotesIndex from './notes-index'
 import type { TFile } from 'obsidian'
 import type { IndexedDocument } from './globals'
 import { getNonExistingNotes } from './tools/notes'
-import { getPdfText } from 'obsidian-text-extract'
+import { getImageText, getPdfText } from 'obsidian-text-extract'
 
 /**
  * Return all plaintext files as IndexedDocuments
@@ -49,6 +50,35 @@ export async function getPDFFiles(): Promise<IndexedDocument[]> {
 }
 
 /**
+ * Return all Image files as IndexedDocuments.
+ * If a PDF isn't cached, it will be read from the disk and added to the IndexedDB
+ */
+export async function getImageFiles(): Promise<IndexedDocument[]> {
+  const allFiles = app.vault
+    .getFiles()
+    .filter(
+      f =>
+        f.path.endsWith('.png') ||
+        f.path.endsWith('.jpg') ||
+        f.path.endsWith('.jpeg')
+    )
+  const data: IndexedDocument[] = []
+
+  const input = []
+  for (const file of allFiles) {
+    input.push(
+      NotesIndex.processQueue(async () => {
+        const doc = await fileToIndexedDocument(file)
+        await cacheManager.updateDocument(file.path, doc)
+        data.push(doc)
+      })
+    )
+  }
+  await Promise.all(input)
+  return data
+}
+
+/**
  * Convert a file into an IndexedDocument.
  * Will use the cache if possible.
  * @param file
@@ -61,6 +91,8 @@ export async function fileToIndexedDocument(
     content = removeDiacritics(await app.vault.cachedRead(file))
   } else if (file.path.endsWith('.pdf')) {
     content = removeDiacritics(await getPdfText(file))
+  } else if (isFileImage(file.path)) {
+    content = removeDiacritics(await getImageText(file))
   } else {
     throw new Error('Invalid file: ' + file.path)
   }
