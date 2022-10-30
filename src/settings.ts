@@ -134,7 +134,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Retry queries that return zero result')
       .setDesc(
-        `When a query returns zero result, Omnisearch will try again (but harder). Enabling this may incur some freezes.`
+        `When a query returns zero result, Omnisearch will try again (but harder). Disabling this can improve search reactivity.`
       )
       .addToggle(toggle =>
         toggle.setValue(settings.retryWhenZeroResult).onChange(async v => {
@@ -273,7 +273,7 @@ export class SettingsTab extends PluginSettingTab {
       .setName(`Headings level 3 (default: ${DEFAULT_SETTINGS.weightH3})`)
       .addSlider(cb => this.weightSlider(cb, 'weightH3'))
 
-    // #endregion Results Weighting   
+    // #endregion Results Weighting
   }
 
   weightSlider(cb: SliderComponent, key: keyof WeightingSettings): void {
@@ -308,7 +308,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   showExcerpt: true,
   showCreateButton: false,
   showPreviousQueryResults: true,
-  retryWhenZeroResult: false,
+  retryWhenZeroResult: true,
 
   weightBasename: 2,
   weightH1: 1.5,
