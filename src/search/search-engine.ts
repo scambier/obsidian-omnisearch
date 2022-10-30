@@ -48,8 +48,8 @@ export const minisearchOptions: Options<IndexedDocument> = {
 }
 
 export class SearchEngine {
-  private static engine: SearchEngine
-  private static tmpEngine: SearchEngine
+  private static engine?: SearchEngine
+  private static tmpEngine?: SearchEngine
   public static isIndexing = writable(true)
 
   /**
@@ -92,12 +92,12 @@ export class SearchEngine {
    * Loads the freshest indexed data into the main instance.
    */
   public static loadTmpDataIntoMain(): void {
-    const tmpData = this.tmpEngine.minisearch.toJSON()
-    this.engine.minisearch = MiniSearch.loadJS(tmpData, minisearchOptions)
+    const tmpData = this.getTmpEngine().minisearch.toJSON()
+    this.getEngine().minisearch = MiniSearch.loadJS(tmpData, minisearchOptions)
   }
 
   public static clearTmp(): void {
-    this.tmpEngine.minisearch = new MiniSearch(minisearchOptions)
+    this.getTmpEngine().minisearch = new MiniSearch(minisearchOptions)
   }
 
   private minisearch: MiniSearch
