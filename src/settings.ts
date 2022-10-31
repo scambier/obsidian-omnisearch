@@ -134,7 +134,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Retry queries that return zero result')
       .setDesc(
-        `When a query returns zero result, Omnisearch will try again (but harder). Enabling this may incur some freezes.`
+        `When a query returns zero result, Omnisearch will try again (but harder). Disabling this can improve search reactivity.`
       )
       .addToggle(toggle =>
         toggle.setValue(settings.retryWhenZeroResult).onChange(async v => {
@@ -143,27 +143,29 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
-    // PDF Indexing
-    const indexPDFsDesc = new DocumentFragment()
-    indexPDFsDesc.createSpan({}, span => {
-      span.innerHTML = `Omnisearch will include PDFs in search results.
-      <ul>
-        <li>⚠️ Depending on their size, PDFs can take anywhere from a few seconds to 2 minutes to be processed.</li>
-        <li>⚠️ Texts extracted from PDFs may contain errors such as missing spaces, or spaces in the middle of words.</li>
-        <li>⚠️ Some PDFs can't be processed correctly and will return an empty text.</li>
-        <li>This feature is currently a work-in-progress, please report issues that you might experience.</li>
-      </ul>
-       <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
-    })
-    new Setting(containerEl)
-      .setName('BETA - PDF Indexing')
-      .setDesc(indexPDFsDesc)
-      .addToggle(toggle =>
-        toggle.setValue(settings.PDFIndexing).onChange(async v => {
-          settings.PDFIndexing = v
-          await saveSettings(this.plugin)
-        })
-      )
+    // PDF Indexing - disabled on iOS
+    if (!Platform.isIosApp) {
+      const indexPDFsDesc = new DocumentFragment()
+      indexPDFsDesc.createSpan({}, span => {
+        span.innerHTML = `Omnisearch will include PDFs in search results.
+        <ul>
+          <li>⚠️ Depending on their size, PDFs can take anywhere from a few seconds to 2 minutes to be processed.</li>
+          <li>⚠️ Texts extracted from PDFs may contain errors such as missing spaces, or spaces in the middle of words.</li>
+          <li>⚠️ Some PDFs can't be processed correctly and will return an empty text.</li>
+          <li>This feature is currently a work-in-progress, please report issues that you might experience.</li>
+        </ul>
+        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
+      })
+      new Setting(containerEl)
+        .setName('BETA - PDF Indexing')
+        .setDesc(indexPDFsDesc)
+        .addToggle(toggle =>
+          toggle.setValue(settings.PDFIndexing).onChange(async v => {
+            settings.PDFIndexing = v
+            await saveSettings(this.plugin)
+          })
+        )
+    }
     // #endregion Behavior
 
     // #region User Interface
@@ -273,7 +275,7 @@ export class SettingsTab extends PluginSettingTab {
       .setName(`Headings level 3 (default: ${DEFAULT_SETTINGS.weightH3})`)
       .addSlider(cb => this.weightSlider(cb, 'weightH3'))
 
-    // #endregion Results Weighting   
+    // #endregion Results Weighting
   }
 
   weightSlider(cb: SliderComponent, key: keyof WeightingSettings): void {
@@ -308,7 +310,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   showExcerpt: true,
   showCreateButton: false,
   showPreviousQueryResults: true,
-  retryWhenZeroResult: false,
+  retryWhenZeroResult: true,
 
   weightBasename: 2,
   weightH1: 1.5,
@@ -324,6 +326,12 @@ export let settings = Object.assign({}, DEFAULT_SETTINGS) as OmnisearchSettings
 
 export async function loadSettings(plugin: Plugin): Promise<void> {
   settings = Object.assign({}, DEFAULT_SETTINGS, await plugin.loadData())
+
+  // Make sure that PDF indexing is disabled on iOS
+  if (Platform.isIosApp) {
+    settings.PDFIndexing = false
+  }
+
   showExcerpt.set(settings.showExcerpt)
 }
 
