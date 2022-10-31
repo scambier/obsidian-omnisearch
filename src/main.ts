@@ -1,5 +1,5 @@
 import { Notice, Plugin, TFile } from 'obsidian'
-import {SearchEngine} from './search/search-engine'
+import { SearchEngine } from './search/search-engine'
 import {
   OmnisearchInFileModal,
   OmnisearchVaultModal,
@@ -126,10 +126,11 @@ async function populateIndex(): Promise<void> {
     await tmpEngine.addAllToMinisearch(pdfs)
     console.log(`Omnisearch - Indexed ${pdfs.length} PDFs`)
     console.timeEnd('Omnisearch - Timing')
-  }
 
-  // Load PDFs into the main search engine, and write cache
-  SearchEngine.loadTmpDataIntoMain()
+    // Load PDFs into the main search engine, and write cache
+    SearchEngine.loadTmpDataIntoMain()
+  }
+  
   SearchEngine.isIndexing.set(false)
   await tmpEngine.writeToCache()
 
