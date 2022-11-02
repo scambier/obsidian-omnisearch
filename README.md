@@ -14,17 +14,20 @@ Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/mi
 
 ## Features
 
+- Find your notes faster than ever
+    - Workflow similar to the "Quick Switcher" core plugin
 - Automatic document scoring using the [BM25 algorithm](https://github.com/lucaong/minisearch/issues/129#issuecomment-1046257399)
   - The relevance of a document against a query depends on the number of times the query terms appear in the document, its filename, and its headings
-- Can search other plaintext files and PDFs (configurable in settings)
-- Workflow similar to "Quick Switcher" plugins
+- Can search other plaintext files and PDFs
+    - Opt-in in settings
+    - PDF indexing is disabled on iOS
 - Keyboard first: you never have to use your mouse
 - Resistance to typos
 - Switch between Vault and In-file search to quickly skim multiple results in a single note
 - Supports `"expressions in quotes"` and `-exclusions`
 - Directly Insert a `[[link]]` from the search results
 - Respects Obsidian's "Excluded Files" list - results are downranked, not hidden
-- Optional support for Vim navigation keys (ctrl + j, k, n, p)
+- Supports Vim navigation keys (ctrl + j, k, n, p)
 
 **Note:** support of Chinese, Japanese, Korean, etc. depends on [this additional plugin](https://github.com/aidenlx/cm-chs-patch). Please read its documentation for more information.
 
@@ -121,17 +124,15 @@ See [styles.css](./assets/styles.css) for more information.
 
 **Omnisearch makes Obsidian sluggish at startup.**
 
-- You may have _big_ documents. Huge notes (like novels) can freeze the interface for a short time when being indexed. Enabling the setting "_Persist cache on disk_" may help you in this case.
+- You may have _big_ documents. Huge notes (like novels) can freeze the interface for a short time when being indexed. While Omnisearch uses a cache between sessions, it's still rebuilt at startup to keep it up-to-date.
 
-**I have thousands of notes, and at startup I have to wait a few seconds before making a query, or else Omnisearch does not return all the expected results.**
+**I have thousands of notes, and at startup I have to wait a few seconds before Omnisearch gives me the context of a result.**
 
-- Enabling the setting "_Persist cache on disk_" may help you in this case.
+- Omnisearch refreshes its index at startup. During this time, you can still find notes, but Omnisearch is not able to show you the excerpts.
 
 **Omnisearch gives inconsistent/invalid results, or there are errors in the developer console.**
 
-- Go in Omnisearch settings.
-- If applicable, disable and re-enable "*Persist cache on disk*".
-- Restart Obsidian to clear the cache and force a reindex.
+- Restart Obsidian to force a reindex of Omnisearch
 
 **A query should return a result that does not appear.**
 

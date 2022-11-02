@@ -11,12 +11,14 @@ import api from './tools/api'
 import { isFilePlaintext, wait } from './tools/utils'
 import * as NotesIndex from './notes-index'
 import * as FileLoader from './file-loader'
+import { OmnisearchCache } from './database'
 
 export default class OmnisearchPlugin extends Plugin {
   private ribbonButton?: HTMLElement
 
   async onload(): Promise<void> {
     await cleanOldCacheFiles()
+    await OmnisearchCache.clearOldDatabases()
     await loadSettings(this)
 
     // Initialize minisearch
@@ -105,6 +107,14 @@ export default class OmnisearchPlugin extends Plugin {
  * Read the files and feed them to Minisearch
  */
 async function populateIndex(): Promise<void> {
+  // We use a tmp minisearch instance to leave the main instance mostly untouched.
+  // Otherwise, we'd have to clear the main instance, and (asynchronously) load the notes.
+  // That would cause a "downtime" in Omnisearch while the index is being gradually rebuilt.
+  //
+  // With the tmp method, we still have access to the cache data while all the
+  // fresh indexing is done in the background.
+  // Once all notes are loaded in tmp, we (synchronously) export tmp and import it into main.
+  // That can cause a small freeze, but no downtime.
   const tmpEngine = SearchEngine.getTmpEngine()
 
   // Load plain text files
@@ -123,7 +133,7 @@ async function populateIndex(): Promise<void> {
     console.time('Omnisearch - Timing')
     const pdfs = await FileLoader.getPDFFiles()
     // Index them
-    await tmpEngine.addAllToMinisearch(pdfs)
+    await SearchEngine.getEngine().addAllToMinisearch(pdfs)
     console.log(`Omnisearch - Indexed ${pdfs.length} PDFs`)
     console.timeEnd('Omnisearch - Timing')
   }
@@ -141,7 +151,7 @@ async function populateIndex(): Promise<void> {
   // Load PDFs into the main search engine, and write cache
   SearchEngine.loadTmpDataIntoMain()
   SearchEngine.isIndexing.set(false)
-  await tmpEngine.writeToCache()
+  await SearchEngine.getEngine().writeToCache()
 
   // Clear memory
   SearchEngine.clearTmp()
