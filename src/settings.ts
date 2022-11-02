@@ -317,8 +317,6 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   weightH2: 1.3,
   weightH3: 1.1,
 
-  // persistCache: false,
-
   welcomeMessage: '',
 } as const
 
