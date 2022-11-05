@@ -1,8 +1,4 @@
-import MiniSearch, {
-  type AsPlainObject,
-  type Options,
-  type SearchResult,
-} from 'minisearch'
+import MiniSearch, { type Options, type SearchResult } from 'minisearch'
 import {
   chsRegex,
   type IndexedDocument,
@@ -19,6 +15,7 @@ import type { Query } from './query'
 import { settings } from '../settings'
 import { cacheManager } from '../cache-manager'
 import { writable } from 'svelte/store'
+import { Notice } from 'obsidian'
 
 const tokenize = (text: string): string[] => {
   const tokens = text.split(SPACE_OR_PUNCTUATION)
@@ -45,11 +42,15 @@ export const minisearchOptions: Options<IndexedDocument> = {
     'headings3',
   ],
   storeFields: ['tags'],
+  callbackWhenDesync() {
+    new Notice(
+      'Omnisearch - Your index cache may be incorrect or corrupted. If this message keeps appearing, go to Settings to clear the cache.'
+    )
+  },
 }
 
 export class SearchEngine {
   private static engine?: SearchEngine
-  private static tmpEngine?: SearchEngine
   public static isIndexing = writable(true)
 
   /**
@@ -64,40 +65,22 @@ export class SearchEngine {
   }
 
   /**
-   * The secondary instance. This one is indexed in the background,
-   * while the main instance is quickly filled with cache data
-   */
-  public static getTmpEngine(): SearchEngine {
-    if (!this.tmpEngine) {
-      this.tmpEngine = new SearchEngine()
-    }
-    return this.tmpEngine
-  }
-
-  /**
    * Instantiates the main instance with cache data (if it exists)
    */
-  public static async initFromCache(): Promise<void> {
+  public static async initFromCache(): Promise<SearchEngine> {
     try {
       const cache = await cacheManager.getMinisearchCache()
       if (cache) {
         this.getEngine().minisearch = cache
       }
     } catch (e) {
+      new Notice(
+        'Omnisearch - Cache missing or invalid. Some freezes may occur while Omnisearch indexes your vault.'
+      )
+      console.error('Omnisearch - Could not init engine from cache')
       console.error(e)
     }
-  }
-
-  /**
-   * Loads the freshest indexed data into the main instance.
-   */
-  public static loadTmpDataIntoMain(): void {
-    const tmpData = this.getTmpEngine().minisearch.toJSON()
-    this.getEngine().minisearch = MiniSearch.loadJS(tmpData, minisearchOptions)
-  }
-
-  public static clearTmp(): void {
-    this.getTmpEngine().minisearch = new MiniSearch(minisearchOptions)
+    return this.getEngine()
   }
 
   private minisearch: MiniSearch
@@ -147,9 +130,10 @@ export class SearchEngine {
     const exactTerms = query.getExactTerms()
     if (exactTerms.length) {
       results = results.filter(r => {
-        const title = cacheManager.getDocument(r.id)?.path.toLowerCase() ?? ''
+        const title =
+          cacheManager.getLiveDocument(r.id)?.path.toLowerCase() ?? ''
         const content = stripMarkdownCharacters(
-          cacheManager.getDocument(r.id)?.content ?? ''
+          cacheManager.getLiveDocument(r.id)?.content ?? ''
         ).toLowerCase()
         return exactTerms.every(q => content.includes(q) || title.includes(q))
       })
@@ -160,7 +144,7 @@ export class SearchEngine {
     if (exclusions.length) {
       results = results.filter(r => {
         const content = stripMarkdownCharacters(
-          cacheManager.getDocument(r.id)?.content ?? ''
+          cacheManager.getLiveDocument(r.id)?.content ?? ''
         ).toLowerCase()
         return exclusions.every(q => !content.includes(q.value))
       })
@@ -240,9 +224,10 @@ export class SearchEngine {
 
     // Map the raw results to get usable suggestions
     return results.map(result => {
-      let note = cacheManager.getDocument(result.id)
+      let note = cacheManager.getLiveDocument(result.id)
       if (!note) {
         // throw new Error(`Omnisearch - Note "${result.id}" not indexed`)
+        console.warn(`Omnisearch - Note "${result.id}" not in the live cache`)
         note = {
           content: '',
           basename: result.id,
@@ -286,8 +271,11 @@ export class SearchEngine {
 
   // #region Read/write minisearch index
 
-  public async addAllToMinisearch(documents: IndexedDocument[]): Promise<void> {
-    await this.minisearch.addAllAsync(documents)
+  public async addAllToMinisearch(
+    documents: IndexedDocument[],
+    chunkSize = 10
+  ): Promise<void> {
+    await this.minisearch.addAllAsync(documents, { chunkSize })
   }
 
   public addSingleToMinisearch(document: IndexedDocument): void {
@@ -300,7 +288,7 @@ export class SearchEngine {
 
   // #endregion
 
-  public async writeToCache(): Promise<void> {
-    await cacheManager.writeMinisearchCache(this.minisearch)
+  public async writeToCache(documents: IndexedDocument[]): Promise<void> {
+    await cacheManager.writeMinisearchCache(this.minisearch, documents)
   }
 }

@@ -28,7 +28,7 @@
   }
   $: reg = stringsToRegex(note.foundWords)
   $: cleanedContent = makeExcerpt(note.content, note.matches[0]?.offset ?? -1)
-  $: glyph = cacheManager.getDocument(note.path)?.doesNotExist
+  $: glyph = cacheManager.getLiveDocument(note.path)?.doesNotExist
   $: title = settings.showShortName ? note.basename : note.path
 </script>
 

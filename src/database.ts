@@ -1,7 +1,9 @@
 import Dexie from 'dexie'
+import type { AsPlainObject } from 'minisearch'
+import type { IndexedDocument } from './globals'
 
 export class OmnisearchCache extends Dexie {
-  public static readonly dbVersion = 6
+  public static readonly dbVersion = 7
   public static readonly dbPrefix = 'omnisearch/cache/'
   public static readonly dbName = OmnisearchCache.dbPrefix + app.appId
 
@@ -30,12 +32,16 @@ export class OmnisearchCache extends Dexie {
 
   //#region Table declarations
 
-  pdf!: Dexie.Table<
-    { path: string; hash: string; size: number; text: string },
+  pdf!: Dexie.Table<{ path: string; hash: string; text: string }, string>
+  documents!: Dexie.Table<
+    { path: string; mtime: number; document: IndexedDocument },
     string
   >
   searchHistory!: Dexie.Table<{ id?: number; query: string }, number>
-  minisearch!: Dexie.Table<{ date: string; data: string }, string>
+  minisearch!: Dexie.Table<
+    { date: string; checksum: string; data: AsPlainObject },
+    string
+  >
 
   //#endregion Table declarations
 
@@ -52,8 +58,14 @@ export class OmnisearchCache extends Dexie {
     this.version(OmnisearchCache.dbVersion).stores({
       pdf: 'path, hash, size',
       searchHistory: '++id',
+      documents: 'path',
       minisearch: 'date',
     })
+  }
+
+  public async clearCache() {
+    await this.minisearch.clear()
+    await this.documents.clear()
   }
 }
 
