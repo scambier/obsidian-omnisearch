@@ -27,19 +27,19 @@ export async function addToIndexAndMemCache(
 
   // Check if the file was already indexed as non-existent.
   // If so, remove it from the index, and add it again as a real note.
-  if (cacheManager.getDocument(file.path)?.doesNotExist) {
+  if (cacheManager.getLiveDocument(file.path)?.doesNotExist) {
     removeFromIndex(file.path)
   }
 
   try {
-    if (cacheManager.getDocument(file.path)) {
+    if (cacheManager.getLiveDocument(file.path)) {
       throw new Error(`${file.basename} is already indexed`)
     }
 
     // Make the document and index it
     const note = await fileToIndexedDocument(file)
     SearchEngine.getEngine().addSingleToMinisearch(note)
-    await cacheManager.updateDocument(note.path, note)
+    await cacheManager.updateLiveDocument(note.path, note)
   } catch (e) {
     // console.trace('Error while indexing ' + file.basename)
     console.error(e)
@@ -55,7 +55,7 @@ export async function addToIndexAndMemCache(
 export function addNonExistingToIndex(name: string, parent: string): void {
   name = removeAnchors(name)
   const filename = name + (name.endsWith('.md') ? '' : '.md')
-  if (cacheManager.getDocument(filename)) return
+  if (cacheManager.getLiveDocument(filename)) return
 
   const note: IndexedDocument = {
     path: filename,
@@ -73,7 +73,7 @@ export function addNonExistingToIndex(name: string, parent: string): void {
     parent,
   }
   SearchEngine.getEngine().addSingleToMinisearch(note)
-  cacheManager.updateDocument(filename, note)
+  cacheManager.updateLiveDocument(filename, note)
 }
 
 /**
@@ -84,10 +84,10 @@ export function removeFromIndex(path: string): void {
     console.info(`"${path}" is not an indexable file`)
     return
   }
-  const note = cacheManager.getDocument(path)
+  const note = cacheManager.getLiveDocument(path)
   if (note) {
     SearchEngine.getEngine().removeFromMinisearch(note)
-    cacheManager.deleteDocument(path)
+    cacheManager.deleteLiveDocument(path)
 
     // FIXME: only remove non-existing notes if they don't have another parent
     // cacheManager

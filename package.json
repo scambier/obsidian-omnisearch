@@ -48,7 +48,7 @@
     "@vanakat/plugin-api": "0.1.0",
     "dexie": "^3.2.2",
     "lodash-es": "4.17.21",
-    "minisearch": "5.0.0",
+    "minisearch": "github:scambier/minisearch#callback_desync",
     "p-limit": "^4.0.0",
     "pako": "^2.0.4",
     "pure-md5": "^0.1.14"

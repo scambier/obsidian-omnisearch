@@ -76,7 +76,7 @@ class PDFManager {
 
         // Add it to the cache
         database.pdf
-          .add({ hash, text, path: file.path, size: file.stat.size })
+          .add({ hash, text, path: file.path })
           .then(() => {
             resolve(text)
           })
@@ -84,7 +84,7 @@ class PDFManager {
         // In case of error (unreadable PDF or timeout) just add
         // an empty string to the cache
         database.pdf
-          .add({ hash, text: '', path: file.path, size: file.stat.size })
+          .add({ hash, text: '', path: file.path })
           .then(() => {
             resolve('')
           })

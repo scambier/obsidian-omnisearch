@@ -1,4 +1,4 @@
-import { Notice, Plugin, TFile } from 'obsidian'
+import { Notice, Platform, Plugin, TFile } from 'obsidian'
 import { SearchEngine } from './search/search-engine'
 import {
   OmnisearchInFileModal,
@@ -11,16 +11,16 @@ import api from './tools/api'
 import { isFilePlaintext, wait } from './tools/utils'
 import * as NotesIndex from './notes-index'
 import * as FileLoader from './file-loader'
+import { OmnisearchCache } from './database'
+import { cacheManager } from './cache-manager'
 
 export default class OmnisearchPlugin extends Plugin {
   private ribbonButton?: HTMLElement
 
   async onload(): Promise<void> {
     await cleanOldCacheFiles()
+    await OmnisearchCache.clearOldDatabases()
     await loadSettings(this)
-
-    // Initialize minisearch
-    await SearchEngine.initFromCache()
 
     _registerAPI(this)
 
@@ -105,37 +105,68 @@ export default class OmnisearchPlugin extends Plugin {
  * Read the files and feed them to Minisearch
  */
 async function populateIndex(): Promise<void> {
-  const tmpEngine = SearchEngine.getTmpEngine()
+  console.time('Omnisearch - Indexing duration')
 
-  // Load plain text files
-  console.time('Omnisearch - Timing')
-  const files = await FileLoader.getPlainTextFiles()
-  // Index them
-  await tmpEngine.addAllToMinisearch(files)
-  console.log(`Omnisearch - Indexed ${files.length} notes`)
-  console.timeEnd('Omnisearch - Timing')
+  // Initialize minisearch
+  let engine = SearchEngine.getEngine()
 
-  // Load normal notes into the main search engine
-  SearchEngine.loadTmpDataIntoMain()
+  // No cache for iOS
+  if (!Platform.isIosApp) {
+    engine = await SearchEngine.initFromCache()
+  }
+
+  // Load plaintext files
+  const plainTextFiles = await FileLoader.getPlainTextFiles()
+  let allFiles = [...plainTextFiles]
+  // iOS: since there's no cache, directly index the documents
+  if (Platform.isIosApp) {
+    await wait(1000)
+    await engine.addAllToMinisearch(plainTextFiles)
+  }
 
   // Load PDFs
   if (settings.PDFIndexing) {
-    console.time('Omnisearch - Timing')
     const pdfs = await FileLoader.getPDFFiles()
-    // Index them
-    await tmpEngine.addAllToMinisearch(pdfs)
-    console.log(`Omnisearch - Indexed ${pdfs.length} PDFs`)
-    console.timeEnd('Omnisearch - Timing')
-
-    // Load PDFs into the main search engine, and write cache
-    SearchEngine.loadTmpDataIntoMain()
+    // iOS: since there's no cache, just index the documents
+    if (Platform.isIosApp) {
+      await wait(1000)
+      await engine.addAllToMinisearch(pdfs)
+    }
+    // Add PDFs to the files list
+    allFiles = [...allFiles, ...pdfs]
   }
-  
-  SearchEngine.isIndexing.set(false)
-  await tmpEngine.writeToCache()
 
-  // Clear memory
-  SearchEngine.clearTmp()
+  // Other platforms: make a diff of what's to add/update/delete
+  if (!Platform.isIosApp) {
+    // Check which documents need to be removed/added/updated
+    const diffDocs = await cacheManager.getDiffDocuments(allFiles)
+    // Add
+    await engine.addAllToMinisearch(diffDocs.toAdd)
+    diffDocs.toAdd.forEach(doc =>
+      cacheManager.updateLiveDocument(doc.path, doc)
+    )
+
+    // Delete
+    diffDocs.toDelete.forEach(d => engine.removeFromMinisearch(d))
+    diffDocs.toDelete.forEach(doc => cacheManager.deleteLiveDocument(doc.path))
+
+    // Update (delete + add)
+    diffDocs.toUpdate
+      .map(d => d.old)
+      .forEach(d => {
+        engine.removeFromMinisearch(d)
+        cacheManager.updateLiveDocument(d.path, d)
+      })
+    await engine.addAllToMinisearch(diffDocs.toUpdate.map(d => d.new))
+  }
+  // Load PDFs into the main search engine, and write cache
+  // SearchEngine.loadTmpDataIntoMain()
+  SearchEngine.isIndexing.set(false)
+  if (!Platform.isIosApp) {
+    await SearchEngine.getEngine().writeToCache(allFiles)
+  }
+
+  console.timeEnd('Omnisearch - Indexing duration')
 }
 
 async function cleanOldCacheFiles() {

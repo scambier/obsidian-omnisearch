@@ -1,4 +1,5 @@
 import {
+  Notice,
   Platform,
   Plugin,
   PluginSettingTab,
@@ -6,6 +7,7 @@ import {
   SliderComponent,
 } from 'obsidian'
 import { writable } from 'svelte/store'
+import { database } from './database'
 import type OmnisearchPlugin from './main'
 
 interface WeightingSettings {
@@ -143,11 +145,10 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
-    // PDF Indexing - disabled on iOS
-    if (!Platform.isIosApp) {
-      const indexPDFsDesc = new DocumentFragment()
-      indexPDFsDesc.createSpan({}, span => {
-        span.innerHTML = `Omnisearch will include PDFs in search results.
+    // PDF Indexing
+    const indexPDFsDesc = new DocumentFragment()
+    indexPDFsDesc.createSpan({}, span => {
+      span.innerHTML = `Omnisearch will include PDFs in search results.
         <ul>
           <li>⚠️ Depending on their size, PDFs can take anywhere from a few seconds to 2 minutes to be processed.</li>
           <li>⚠️ Texts extracted from PDFs may contain errors such as missing spaces, or spaces in the middle of words.</li>
@@ -155,17 +156,17 @@ export class SettingsTab extends PluginSettingTab {
           <li>This feature is currently a work-in-progress, please report issues that you might experience.</li>
         </ul>
         <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
-      })
-      new Setting(containerEl)
-        .setName('BETA - PDF Indexing')
-        .setDesc(indexPDFsDesc)
-        .addToggle(toggle =>
-          toggle.setValue(settings.PDFIndexing).onChange(async v => {
-            settings.PDFIndexing = v
-            await saveSettings(this.plugin)
-          })
-        )
-    }
+    })
+    new Setting(containerEl)
+      .setName('BETA - PDF Indexing')
+      .setDesc(indexPDFsDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.PDFIndexing).onChange(async v => {
+          settings.PDFIndexing = v
+          await saveSettings(this.plugin)
+        })
+      )
+
     // #endregion Behavior
 
     // #region User Interface
@@ -276,6 +277,29 @@ export class SettingsTab extends PluginSettingTab {
       .addSlider(cb => this.weightSlider(cb, 'weightH3'))
 
     // #endregion Results Weighting
+
+    // #region Danger Zone
+
+    new Setting(containerEl).setName('Danger Zone').setHeading()
+
+    const resetCacheDesc = new DocumentFragment()
+    resetCacheDesc.createSpan({}, span => {
+      span.innerHTML = `Erase all Omnisearch cache data.
+      Use this if Omnisearch results are inconsistent, missing, or appear outdated.<br>
+      <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
+    })
+    new Setting(containerEl)
+      .setName('Clear cache data')
+      .setDesc(resetCacheDesc)
+      .addButton(cb => {
+        cb.setButtonText('Clear cache')
+        cb.onClick(async () => {
+          await database.clearCache()
+          new Notice('Omnisearch - Cache cleared. Please restart Obsidian.')
+        })
+      })
+
+    //#endregion Danger Zone
   }
 
   weightSlider(cb: SliderComponent, key: keyof WeightingSettings): void {
@@ -317,8 +341,6 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   weightH2: 1.3,
   weightH3: 1.1,
 
-  // persistCache: false,
-
   welcomeMessage: '',
 } as const
 
@@ -326,11 +348,6 @@ export let settings = Object.assign({}, DEFAULT_SETTINGS) as OmnisearchSettings
 
 export async function loadSettings(plugin: Plugin): Promise<void> {
   settings = Object.assign({}, DEFAULT_SETTINGS, await plugin.loadData())
-
-  // Make sure that PDF indexing is disabled on iOS
-  if (Platform.isIosApp) {
-    settings.PDFIndexing = false
-  }
 
   showExcerpt.set(settings.showExcerpt)
 }

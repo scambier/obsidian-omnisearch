@@ -11,6 +11,7 @@ import type { TFile } from 'obsidian'
 import type { IndexedDocument } from './globals'
 import { pdfManager } from './pdf/pdf-manager'
 import { getNonExistingNotes } from './tools/notes'
+import { database } from './database'
 
 /**
  * Return all plaintext files as IndexedDocuments
@@ -21,7 +22,7 @@ export async function getPlainTextFiles(): Promise<IndexedDocument[]> {
   for (const file of allFiles) {
     const doc = await fileToIndexedDocument(file)
     data.push(doc)
-    await cacheManager.updateDocument(file.path, doc)
+    await cacheManager.updateLiveDocument(file.path, doc)
   }
   return data
 }
@@ -31,15 +32,19 @@ export async function getPlainTextFiles(): Promise<IndexedDocument[]> {
  * If a PDF isn't cached, it will be read from the disk and added to the IndexedDB
  */
 export async function getPDFFiles(): Promise<IndexedDocument[]> {
-  const allFiles = app.vault.getFiles().filter(f => f.path.endsWith('.pdf'))
-  const data: IndexedDocument[] = []
+  const fromDisk = app.vault.getFiles().filter(f => f.path.endsWith('.pdf'))
+  const fromDb = await database.pdf.toArray()
 
+  const data: IndexedDocument[] = []
   const input = []
-  for (const file of allFiles) {
+  for (const file of fromDisk) {
     input.push(
       NotesIndex.processQueue(async () => {
-        const doc = await fileToIndexedDocument(file)
-        await cacheManager.updateDocument(file.path, doc)
+        const doc = await fileToIndexedDocument(
+          file,
+          fromDb.find(o => o.path === file.path)?.text
+        )
+        await cacheManager.updateLiveDocument(file.path, doc)
         data.push(doc)
       })
     )
@@ -52,37 +57,44 @@ export async function getPDFFiles(): Promise<IndexedDocument[]> {
  * Convert a file into an IndexedDocument.
  * Will use the cache if possible.
  * @param file
+ * @param content If we give a text content, will skip the fetching part
  */
 export async function fileToIndexedDocument(
-  file: TFile
+  file: TFile,
+  content?: string
 ): Promise<IndexedDocument> {
-  let content: string
-  if (isFilePlaintext(file.path)) {
-    content = removeDiacritics(await app.vault.cachedRead(file))
-  } else if (file.path.endsWith('.pdf')) {
-    content = removeDiacritics(await pdfManager.getPdfText(file))
-  } else {
-    throw new Error('Invalid file: ' + file.path)
+  if (!content) {
+    if (isFilePlaintext(file.path)) {
+      content = await app.vault.cachedRead(file)
+    } else if (file.path.endsWith('.pdf')) {
+      content = await pdfManager.getPdfText(file)
+    } else {
+      throw new Error('Invalid file: ' + file.path)
+    }
   }
 
   content = removeDiacritics(content)
   const metadata = app.metadataCache.getFileCache(file)
 
-  // EXCALIDRAW
-  // Remove the json code
-  if (metadata?.frontmatter?.['excalidraw-plugin']) {
-    const comments = metadata.sections?.filter(s => s.type === 'comment') ?? []
-    for (const { start, end } of comments.map(c => c.position)) {
-      content = content.substring(0, start.offset-1) + content.substring(end.offset)
-    }
-  }
-
   // Look for links that lead to non-existing files,
   // and add them to the index.
   if (metadata) {
     const nonExisting = getNonExistingNotes(file, metadata)
-    for (const name of nonExisting.filter(o => !cacheManager.getDocument(o))) {
+    for (const name of nonExisting.filter(
+      o => !cacheManager.getLiveDocument(o)
+    )) {
       NotesIndex.addNonExistingToIndex(name, file.path)
+    }
+
+    // EXCALIDRAW
+    // Remove the json code
+    if (metadata.frontmatter?.['excalidraw-plugin']) {
+      const comments =
+        metadata.sections?.filter(s => s.type === 'comment') ?? []
+      for (const { start, end } of comments.map(c => c.position)) {
+        content =
+          content.substring(0, start.offset - 1) + content.substring(end.offset)
+      }
     }
   }
 

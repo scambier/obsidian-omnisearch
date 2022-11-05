@@ -21,7 +21,7 @@ specifiers:
   dexie: ^3.2.2
   jest: ^27.5.1
   lodash-es: 4.17.21
-  minisearch: 5.0.0
+  minisearch: github:scambier/minisearch#callback_desync
   obsidian: latest
   p-limit: ^4.0.0
   pako: ^2.0.4
@@ -45,7 +45,7 @@ dependencies:
   '@vanakat/plugin-api': 0.1.0
   dexie: 3.2.2
   lodash-es: 4.17.21
-  minisearch: 5.0.0
+  minisearch: github.com/scambier/minisearch/adf11cab46d851220a41c9ad95ed986b630f0f3c
   p-limit: 4.0.0
   pako: 2.0.4
   pure-md5: 0.1.14
@@ -3866,10 +3866,6 @@ packages:
     resolution: {integrity: sha512-Jsjnk4bw3YJqYzbdyBiNsPWHPfO++UGG749Cxs6peCu5Xg4nrena6OVxOYxrQTqww0Jmwt+Ref8rggumkTLz9Q==}
     dev: true
 
-  /minisearch/5.0.0:
-    resolution: {integrity: sha512-VEwBhl8aFtc2UG2XmP7a4XaZxVfNhe7GvB2W/ZRGbLL3P3LbBhkoOezBWsMqG8Mr5VonqXAMRWth79XXKja1bQ==}
-    dev: false
-
   /mkdirp/0.5.6:
     resolution: {integrity: sha512-FP+p8RB8OWpF3YZBCrP5gtADmtXApB5AMLn+vdyA+PyxCjrCs00mjyUozssO33cwDeT3wNGdLxJ5M//YqtHAJw==}
     hasBin: true
@@ -4950,4 +4946,10 @@ packages:
   /yocto-queue/1.0.0:
     resolution: {integrity: sha512-9bnSc/HEW2uRy67wc+T8UwauLuPJVn28jb+GtJY16iiKWyvmYJRXVT4UamsAEGQfPohgr2q4Tq0sQbQlxTfi1g==}
     engines: {node: '>=12.20'}
+    dev: false
+
+  github.com/scambier/minisearch/adf11cab46d851220a41c9ad95ed986b630f0f3c:
+    resolution: {tarball: https://codeload.github.com/scambier/minisearch/tar.gz/adf11cab46d851220a41c9ad95ed986b630f0f3c}
+    name: minisearch
+    version: 5.0.0
     dev: false
