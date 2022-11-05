@@ -32,22 +32,16 @@ export async function getPlainTextFiles(): Promise<IndexedDocument[]> {
  * If a PDF isn't cached, it will be read from the disk and added to the IndexedDB
  */
 export async function getPDFFiles(): Promise<IndexedDocument[]> {
-  const fromDisk = app.vault.getFiles().filter(f => f.path.endsWith('.pdf'))
-  const fromDb = await database.pdf.toArray()
-
+  const files = app.vault.getFiles().filter(f => f.path.endsWith('.pdf'))
   const data: IndexedDocument[] = []
   const input = []
-  for (const file of fromDisk) {
-    input.push(
-      NotesIndex.processQueue(async () => {
-        const doc = await fileToIndexedDocument(
-          file,
-          fromDb.find(o => o.path === file.path)?.text
-        )
-        await cacheManager.updateLiveDocument(file.path, doc)
-        data.push(doc)
-      })
-    )
+  for (const file of files) {
+    input.push(new Promise(async (resolve, reject) => {
+      const doc = await fileToIndexedDocument(file)
+      await cacheManager.updateLiveDocument(file.path, doc)
+      data.push(doc)
+      return resolve(null)
+    }))
   }
   await Promise.all(input)
   return data
@@ -56,21 +50,17 @@ export async function getPDFFiles(): Promise<IndexedDocument[]> {
 /**
  * Convert a file into an IndexedDocument.
  * Will use the cache if possible.
- * @param file
- * @param content If we give a text content, will skip the fetching part
  */
 export async function fileToIndexedDocument(
   file: TFile,
-  content?: string
 ): Promise<IndexedDocument> {
-  if (!content) {
-    if (isFilePlaintext(file.path)) {
-      content = await app.vault.cachedRead(file)
-    } else if (file.path.endsWith('.pdf')) {
-      content = await getPdfText(file)
-    } else {
-      throw new Error('Invalid file: ' + file.path)
-    }
+  let content: string
+  if (isFilePlaintext(file.path)) {
+    content = await app.vault.cachedRead(file)
+  } else if (file.path.endsWith('.pdf')) {
+    content = await getPdfText(file)
+  } else {
+    throw new Error('Invalid file: ' + file.path)
   }
 
   content = removeDiacritics(content)

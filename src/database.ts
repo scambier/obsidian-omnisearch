@@ -32,7 +32,6 @@ export class OmnisearchCache extends Dexie {
 
   //#region Table declarations
 
-  pdf!: Dexie.Table<{ path: string; hash: string; text: string }, string>
   documents!: Dexie.Table<
     { path: string; mtime: number; document: IndexedDocument },
     string
@@ -56,7 +55,6 @@ export class OmnisearchCache extends Dexie {
     super(OmnisearchCache.dbName)
     // Database structure
     this.version(OmnisearchCache.dbVersion).stores({
-      pdf: 'path, hash, size',
       searchHistory: '++id',
       documents: 'path',
       minisearch: 'date',

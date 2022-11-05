@@ -105,7 +105,7 @@ export default class OmnisearchPlugin extends Plugin {
  * Read the files and feed them to Minisearch
  */
 async function populateIndex(): Promise<void> {
-  console.time('Omnisearch - Indexing duration')
+  console.time('Omnisearch - Indexing total time')
 
   // Initialize minisearch
   let engine = SearchEngine.getEngine()
@@ -116,6 +116,7 @@ async function populateIndex(): Promise<void> {
   }
 
   // Load plaintext files
+  console.log('Omnisearch - Fetching notes')
   const plainTextFiles = await FileLoader.getPlainTextFiles()
   let allFiles = [...plainTextFiles]
   // iOS: since there's no cache, directly index the documents
@@ -126,6 +127,7 @@ async function populateIndex(): Promise<void> {
 
   // Load PDFs
   if (settings.PDFIndexing) {
+    console.log('Omnisearch - Fetching PDFs')
     const pdfs = await FileLoader.getPDFFiles()
     // iOS: since there's no cache, just index the documents
     if (Platform.isIosApp) {
@@ -136,37 +138,52 @@ async function populateIndex(): Promise<void> {
     allFiles = [...allFiles, ...pdfs]
   }
 
+  console.log('Omnisearch - Total number of files: ' + allFiles.length)
+  let needToUpdateCache = false
+
   // Other platforms: make a diff of what's to add/update/delete
   if (!Platform.isIosApp) {
+    console.log('Omnisearch - Checking index cache diff...')
     // Check which documents need to be removed/added/updated
     const diffDocs = await cacheManager.getDiffDocuments(allFiles)
+    needToUpdateCache = !!(
+      diffDocs.toAdd.length ||
+      diffDocs.toDelete.length ||
+      diffDocs.toUpdate.length
+    )
+
     // Add
     await engine.addAllToMinisearch(diffDocs.toAdd)
+    console.log(`Omnisearch - ${diffDocs.toAdd.length} files to add`)
     diffDocs.toAdd.forEach(doc =>
       cacheManager.updateLiveDocument(doc.path, doc)
     )
 
     // Delete
+    console.log(`Omnisearch - ${diffDocs.toDelete.length} files to remove`)
     diffDocs.toDelete.forEach(d => engine.removeFromMinisearch(d))
     diffDocs.toDelete.forEach(doc => cacheManager.deleteLiveDocument(doc.path))
 
     // Update (delete + add)
+    console.log(`Omnisearch - ${diffDocs.toUpdate.length} files to update`)
     diffDocs.toUpdate
-      .map(d => d.old)
-      .forEach(d => {
-        engine.removeFromMinisearch(d)
-        cacheManager.updateLiveDocument(d.path, d)
+      .forEach(({ oldDoc, newDoc }) => {
+        engine.removeFromMinisearch(oldDoc)
+        cacheManager.updateLiveDocument(oldDoc.path, newDoc)
       })
-    await engine.addAllToMinisearch(diffDocs.toUpdate.map(d => d.new))
+    await engine.addAllToMinisearch(diffDocs.toUpdate.map(d => d.newDoc))
   }
+
   // Load PDFs into the main search engine, and write cache
   // SearchEngine.loadTmpDataIntoMain()
   SearchEngine.isIndexing.set(false)
-  if (!Platform.isIosApp) {
+
+  if (!Platform.isIosApp && needToUpdateCache) {
+    console.log('Omnisearch - Writing cache...')
     await SearchEngine.getEngine().writeToCache(allFiles)
   }
 
-  console.timeEnd('Omnisearch - Indexing duration')
+  console.timeEnd('Omnisearch - Indexing total time')
 }
 
 async function cleanOldCacheFiles() {

@@ -3,7 +3,7 @@ import type { IndexedDocument } from './globals'
 import { database } from './database'
 import MiniSearch from 'minisearch'
 import { minisearchOptions } from './search/search-engine'
-import { makeMD5, wait } from './tools/utils'
+import { makeMD5 } from './tools/utils'
 import { settings } from './settings'
 
 class CacheManager {
@@ -121,28 +121,34 @@ class CacheManager {
   public async getDiffDocuments(documents: IndexedDocument[]): Promise<{
     toDelete: IndexedDocument[]
     toAdd: IndexedDocument[]
-    toUpdate: { old: IndexedDocument; new: IndexedDocument }[]
+    toUpdate: { oldDoc: IndexedDocument; newDoc: IndexedDocument }[]
   }> {
     let cachedDocs = await database.documents.toArray()
+    // present in `documents` but not in `cachedDocs`
     const toAdd = documents.filter(
       d => !cachedDocs.find(c => c.path === d.path)
     )
+    // present in `cachedDocs` but not in `documents`
     const toDelete = cachedDocs
       .filter(c => !documents.find(d => d.path === c.path))
       .map(d => d.document)
 
+    // toUpdate: same path, but different mtime
     const toUpdate = cachedDocs
-      .filter(c =>
-        documents.find(d => d.path === c.path && d.mtime !== c.mtime)
+      .filter(({ mtime: cMtime, path: cPath }) =>
+        documents.some(
+          ({ mtime: dMtime, path: dPath }) =>
+            cPath === dPath && dMtime !== cMtime
+        )
       )
       .map(c => ({
-        old: c.document,
-        new: documents.find(d => d.path === c.path)!,
+        oldDoc: c.document,
+        newDoc: documents.find(d => d.path === c.path)!,
       }))
 
     return {
-      toDelete,
       toAdd,
+      toDelete,
       toUpdate,
     }
   }
@@ -167,9 +173,9 @@ class CacheManager {
     // console.log(`Omnisearch - Cache - Will update ${toUpdate.length} documents`)
     await database.documents.bulkPut(
       toUpdate.map(o => ({
-        document: o.new,
-        mtime: o.new.mtime,
-        path: o.new.path,
+        document: o.newDoc,
+        mtime: o.newDoc.mtime,
+        path: o.newDoc.path,
       }))
     )
 
