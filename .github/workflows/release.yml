@@ -104,13 +104,3 @@ jobs:
           asset_name: styles.css
           asset_content_type: text/css
 
-      - name: Upload .gitignore
-        id: upload-gitignore
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ env.DIST_FOLDER }}/.gitignore
-          asset_name: .gitignore
-          asset_content_type: text/plain
