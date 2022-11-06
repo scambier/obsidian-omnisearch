@@ -23,7 +23,7 @@ specifiers:
   lodash-es: 4.17.21
   minisearch: github:scambier/minisearch#callback_desync
   obsidian: latest
-  obsidian-text-extract: 1.0.1
+  obsidian-text-extract: 1.0.2
   prettier: ^2.7.1
   prettier-plugin-svelte: ^2.8.0
   pure-md5: ^0.1.14
@@ -40,7 +40,7 @@ dependencies:
   dexie: 3.2.2
   lodash-es: 4.17.21
   minisearch: github.com/scambier/minisearch/adf11cab46d851220a41c9ad95ed986b630f0f3c
-  obsidian-text-extract: 1.0.1
+  obsidian-text-extract: 1.0.2
   pure-md5: 0.1.14
 
 devDependencies:
@@ -4326,8 +4326,8 @@ packages:
       object-keys: 1.1.1
     dev: true
 
-  /obsidian-text-extract/1.0.1:
-    resolution: {integrity: sha512-IJlxbZi/WxzWKwnyruFP/7KUTed6MZW+74OGI5ovZVfikkWx7lfBe1rn23La2kq/BrwETIAugO5Ke4ppvp53gA==}
+  /obsidian-text-extract/1.0.2:
+    resolution: {integrity: sha512-OOnV1B0kTED46vxPRLOHdHeev6CqcXs6A39DE3IJaEV9PNZKPF3/f6d3t7/zFLgOVMNiVD9Uj+YziAhXeKt4lw==}
     dependencies:
       dexie: 3.2.2
       p-limit: 4.0.0

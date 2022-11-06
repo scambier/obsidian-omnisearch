@@ -184,7 +184,9 @@ export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
 
 export function isFileIndexable(path: string): boolean {
   return (
-    (settings.PDFIndexing && path.endsWith('.pdf')) || isFilePlaintext(path)
+    (settings.PDFIndexing && path.endsWith('.pdf')) ||
+    isFilePlaintext(path) ||
+    (settings.imagesIndexing && isFileImage(path))
   )
 }
 

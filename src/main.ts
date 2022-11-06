@@ -84,9 +84,7 @@ export default class OmnisearchPlugin extends Plugin {
     showWelcomeNotice(this)
   }
 
-  onunload(): void {
-
-  }
+  onunload(): void {}
 
   addRibbonButton(): void {
     this.ribbonButton = this.addRibbonIcon('search', 'Omnisearch', _evt => {
@@ -110,13 +108,13 @@ async function populateIndex(): Promise<void> {
   // Initialize minisearch
   let engine = SearchEngine.getEngine()
 
-  // No cache for iOS
+  // if not iOS, load data from cache
   if (!Platform.isIosApp) {
     engine = await SearchEngine.initFromCache()
   }
 
   // Load plaintext files
-  console.log('Omnisearch - Fetching notes')
+  console.log('Omnisearch - Reading notes')
   const plainTextFiles = await FileLoader.getPlainTextFiles()
   let allFiles = [...plainTextFiles]
   // iOS: since there's no cache, directly index the documents
@@ -127,15 +125,28 @@ async function populateIndex(): Promise<void> {
 
   // Load PDFs
   if (settings.PDFIndexing) {
-    console.log('Omnisearch - Fetching PDFs')
-    const pdfs = await FileLoader.getPDFFiles()
+    console.log('Omnisearch - Reading PDFs')
+    const pdfDocuments = await FileLoader.getPDFAsDocuments()
     // iOS: since there's no cache, just index the documents
     if (Platform.isIosApp) {
       await wait(1000)
-      await engine.addAllToMinisearch(pdfs)
+      await engine.addAllToMinisearch(pdfDocuments)
     }
     // Add PDFs to the files list
-    allFiles = [...allFiles, ...pdfs]
+    allFiles = [...allFiles, ...pdfDocuments]
+  }
+
+  // Load Images
+  if (settings.imagesIndexing) {
+    console.log('Omnisearch - Reading Images')
+    const imagesDocuments = await FileLoader.getImagesAsDocuments()
+    // iOS: since there's no cache, just index the documents
+    if (Platform.isIosApp) {
+      await wait(1000)
+      await engine.addAllToMinisearch(imagesDocuments)
+    }
+    // Add Images to the files list
+    allFiles = [...allFiles, ...imagesDocuments]
   }
 
   console.log('Omnisearch - Total number of files: ' + allFiles.length)
@@ -146,6 +157,7 @@ async function populateIndex(): Promise<void> {
     console.log('Omnisearch - Checking index cache diff...')
     // Check which documents need to be removed/added/updated
     const diffDocs = await cacheManager.getDiffDocuments(allFiles)
+    console.log(`Omnisearch - Files to add/remove/update: ${diffDocs.toAdd.length}/${diffDocs.toDelete.length}/${diffDocs.toUpdate.length}`)
     needToUpdateCache = !!(
       diffDocs.toAdd.length ||
       diffDocs.toDelete.length ||
@@ -154,23 +166,19 @@ async function populateIndex(): Promise<void> {
 
     // Add
     await engine.addAllToMinisearch(diffDocs.toAdd)
-    console.log(`Omnisearch - ${diffDocs.toAdd.length} files to add`)
     diffDocs.toAdd.forEach(doc =>
       cacheManager.updateLiveDocument(doc.path, doc)
     )
 
     // Delete
-    console.log(`Omnisearch - ${diffDocs.toDelete.length} files to remove`)
     diffDocs.toDelete.forEach(d => engine.removeFromMinisearch(d))
     diffDocs.toDelete.forEach(doc => cacheManager.deleteLiveDocument(doc.path))
 
     // Update (delete + add)
-    console.log(`Omnisearch - ${diffDocs.toUpdate.length} files to update`)
-    diffDocs.toUpdate
-      .forEach(({ oldDoc, newDoc }) => {
-        engine.removeFromMinisearch(oldDoc)
-        cacheManager.updateLiveDocument(oldDoc.path, newDoc)
-      })
+    diffDocs.toUpdate.forEach(({ oldDoc, newDoc }) => {
+      engine.removeFromMinisearch(oldDoc)
+      cacheManager.updateLiveDocument(oldDoc.path, newDoc)
+    })
     await engine.addAllToMinisearch(diffDocs.toUpdate.map(d => d.newDoc))
   }
 
@@ -205,13 +213,13 @@ async function cleanOldCacheFiles() {
 }
 
 function showWelcomeNotice(plugin: Plugin) {
-  const code = '1.7.6'
+  const code = '1.8.0-beta.3'
   if (settings.welcomeMessage !== code) {
     const welcome = new DocumentFragment()
     welcome.createSpan({}, span => {
-      span.innerHTML = `<strong>Omnisearch has been updated</strong>
-New beta feature: PDF search 🔎📄
-<small>Toggle "<i>BETA - Index PDFs</i>" in Omnisearch settings page.</small>`
+      span.innerHTML = `<strong>Omnisearch BETA has been updated</strong>
+You can now enable "Images Indexing" to use Optical Character Recognition on your scanned documents
+🔎🖼`
     })
     new Notice(welcome, 30000)
   }

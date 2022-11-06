@@ -3,6 +3,7 @@ import {
   extractHeadingsFromCache,
   getAliasesFromMetadata,
   getTagsFromMetadata,
+  isFileImage,
   isFilePlaintext,
   removeDiacritics,
 } from './tools/utils'
@@ -10,7 +11,7 @@ import * as NotesIndex from './notes-index'
 import type { TFile } from 'obsidian'
 import type { IndexedDocument } from './globals'
 import { getNonExistingNotes } from './tools/notes'
-import { getPdfText } from 'obsidian-text-extract'
+import { getPdfText, getImageText } from 'obsidian-text-extract'
 
 /**
  * Return all plaintext files as IndexedDocuments
@@ -27,20 +28,33 @@ export async function getPlainTextFiles(): Promise<IndexedDocument[]> {
 }
 
 /**
- * Return all PDF files as IndexedDocuments.
- * If a PDF isn't cached, it will be read from the disk and added to the IndexedDB
+ * Return all PDFs as IndexedDocuments.
  */
-export async function getPDFFiles(): Promise<IndexedDocument[]> {
+export async function getPDFAsDocuments(): Promise<IndexedDocument[]> {
   const files = app.vault.getFiles().filter(f => f.path.endsWith('.pdf'))
+  return await getBinaryFiles(files)
+}
+
+/**
+ * Return all imageas as IndexedDocuments.
+ */
+export async function getImagesAsDocuments(): Promise<IndexedDocument[]> {
+  const files = app.vault.getFiles().filter(f => isFileImage(f.path))
+  return await getBinaryFiles(files)
+}
+
+async function getBinaryFiles(files: TFile[]): Promise<IndexedDocument[]> {
   const data: IndexedDocument[] = []
   const input = []
   for (const file of files) {
-    input.push(new Promise(async (resolve, reject) => {
-      const doc = await fileToIndexedDocument(file)
-      await cacheManager.updateLiveDocument(file.path, doc)
-      data.push(doc)
-      return resolve(null)
-    }))
+    input.push(
+      new Promise(async (resolve, reject) => {
+        const doc = await fileToIndexedDocument(file)
+        await cacheManager.updateLiveDocument(file.path, doc)
+        data.push(doc)
+        return resolve(null)
+      })
+    )
   }
   await Promise.all(input)
   return data
@@ -51,13 +65,15 @@ export async function getPDFFiles(): Promise<IndexedDocument[]> {
  * Will use the cache if possible.
  */
 export async function fileToIndexedDocument(
-  file: TFile,
+  file: TFile
 ): Promise<IndexedDocument> {
   let content: string
   if (isFilePlaintext(file.path)) {
     content = await app.vault.cachedRead(file)
   } else if (file.path.endsWith('.pdf')) {
     content = await getPdfText(file)
+  } else if (isFileImage(file.path)) {
+    content = await getImageText(file)
   } else {
     throw new Error('Invalid file: ' + file.path)
   }

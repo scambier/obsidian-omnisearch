@@ -124,15 +124,12 @@ See [styles.css](./assets/styles.css) for more information.
 
 **Omnisearch makes Obsidian sluggish at startup.**
 
-- You may have _big_ documents. Huge notes (like novels) can freeze the interface for a short time when being indexed. While Omnisearch uses a cache between sessions, it's still rebuilt at startup to keep it up-to-date.
+- While Omnisearch does its best to work smoothly in the background, bigger vaults can cause some hiccups at startup because of the search index size.
 
-**I have thousands of notes, and at startup I have to wait a few seconds before Omnisearch gives me the context of a result.**
+**Omnisearch gives inconsistent/invalid results, there are errors in the developer console**
 
-- Omnisearch refreshes its index at startup. During this time, you can still find notes, but Omnisearch is not able to show you the excerpts.
-
-**Omnisearch gives inconsistent/invalid results, or there are errors in the developer console.**
-
-- Restart Obsidian to force a reindex of Omnisearch
+- Restart Obsidian to force a reindex of Omnisearch.
+- The cache can be corrupted; you can clear it at the bottom of the settings page, then restart Obsidian.
 
 **A query should return a result that does not appear.**
 
@@ -153,6 +150,8 @@ You can write your issue [here](https://github.com/scambier/obsidian-omnisearch/
 
 Omnisearch is licensed under [GPL-3](https://tldrlegal.com/license/gnu-general-public-license-v3-(gpl-3)).
 
-## Sponsors
+## Thanks
+
+To all people who donate through [Ko-Fi](https://ko-fi.com/scambier) or [Github Sponsors](https://github.com/sponsors/scambier) ❤
 
 ![JetBrains Logo (Main) logo](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)

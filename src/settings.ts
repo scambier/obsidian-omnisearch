@@ -25,6 +25,8 @@ export interface OmnisearchSettings extends WeightingSettings {
   indexedFileTypes: string[]
   /** Enable PDF indexing */
   PDFIndexing: boolean
+  /** Enable PDF indexing */
+  imagesIndexing: boolean
   /** Display Omnisearch popup notices over Obsidian */
   showIndexingNotices: boolean
   /** Activate the small 🔍 button on Obsidian's ribbon */
@@ -147,7 +149,7 @@ export class SettingsTab extends PluginSettingTab {
     indexPDFsDesc.createSpan({}, span => {
       span.innerHTML = `Omnisearch will include PDFs in search results.
         <ul>
-          <li>⚠️ Depending on their size, PDFs can take anywhere from a few seconds to 2 minutes to be processed.</li>
+          <li>⚠️ Each PDF can take anywhere from a few seconds to 2 minutes to be processed.</li>
           <li>⚠️ Texts extracted from PDFs may contain errors such as missing spaces, or spaces in the middle of words.</li>
           <li>⚠️ Some PDFs can't be processed correctly and will return an empty text.</li>
           <li>This feature is currently a work-in-progress, please report issues that you might experience.</li>
@@ -160,6 +162,26 @@ export class SettingsTab extends PluginSettingTab {
       .addToggle(toggle =>
         toggle.setValue(settings.PDFIndexing).onChange(async v => {
           settings.PDFIndexing = v
+          await saveSettings(this.plugin)
+        })
+      )
+
+    // PDF Indexing
+    const indexImagesDesc = new DocumentFragment()
+    indexImagesDesc.createSpan({}, span => {
+      span.innerHTML = `Omnisearch will use <a href="https://en.wikipedia.org/wiki/Tesseract_(software)">Tesseract</a> to index images from their text.
+        <ul>
+          <li>Only English is supported at the moment.</li>
+          <li>Not all images can be correctly read by the OCR, this feature works best with scanned documents.</li>
+        </ul>      
+        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
+    })
+    new Setting(containerEl)
+      .setName('BETA - Images Indexing')
+      .setDesc(indexImagesDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.imagesIndexing).onChange(async v => {
+          settings.imagesIndexing = v
           await saveSettings(this.plugin)
         })
       )
@@ -315,6 +337,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   ignoreDiacritics: true,
   indexedFileTypes: [] as string[],
   PDFIndexing: false,
+  imagesIndexing: false,
 
   showIndexingNotices: false,
   showShortName: false,
