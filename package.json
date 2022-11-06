@@ -45,7 +45,6 @@
     "lodash-es": "4.17.21",
     "minisearch": "github:scambier/minisearch#callback_desync",
     "obsidian-text-extract": "1.0.1",
-    "p-limit": "^4.0.0",
     "pure-md5": "^0.1.14"
   },
   "pnpm": {

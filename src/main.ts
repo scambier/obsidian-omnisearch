@@ -85,7 +85,7 @@ export default class OmnisearchPlugin extends Plugin {
   }
 
   onunload(): void {
-    NotesIndex.processQueue.clearQueue()
+
   }
 
   addRibbonButton(): void {

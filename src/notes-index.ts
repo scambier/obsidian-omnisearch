@@ -4,14 +4,8 @@ import { removeAnchors } from './tools/notes'
 import { settings } from './settings'
 import { SearchEngine } from './search/search-engine'
 import { cacheManager } from './cache-manager'
-import pLimit from 'p-limit'
 import type { IndexedDocument } from './globals'
 import { fileToIndexedDocument } from './file-loader'
-
-/**
- * Use this processing queue to handle all heavy work
- */
-export const processQueue = pLimit(settings.backgroundProcesses)
 
 /**
  * Adds a file to the search index

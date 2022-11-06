@@ -10,8 +10,7 @@ import * as NotesIndex from './notes-index'
 import type { TFile } from 'obsidian'
 import type { IndexedDocument } from './globals'
 import { getNonExistingNotes } from './tools/notes'
-import { database } from './database'
-import { getImageText, getPdfText } from 'obsidian-text-extract'
+import { getPdfText } from 'obsidian-text-extract'
 
 /**
  * Return all plaintext files as IndexedDocuments

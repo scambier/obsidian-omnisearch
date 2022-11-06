@@ -4,8 +4,7 @@ import type { IndexedDocument } from './globals'
 
 export class OmnisearchCache extends Dexie {
   public static readonly dbVersion = 7
-  public static readonly dbPrefix = 'omnisearch/cache/'
-  public static readonly dbName = OmnisearchCache.dbPrefix + app.appId
+  public static readonly dbName = 'omnisearch/cache/' + app.appId
 
   private static instance: OmnisearchCache
 
@@ -15,7 +14,7 @@ export class OmnisearchCache extends Dexie {
   public static async clearOldDatabases(): Promise<void> {
     const toDelete = (await indexedDB.databases()).filter(
       db =>
-        db.name?.startsWith(OmnisearchCache.dbPrefix) &&
+        db.name === OmnisearchCache.dbName &&
         // version multiplied by 10 https://github.com/dexie/Dexie.js/issues/59
         db.version !== OmnisearchCache.dbVersion * 10
     )

@@ -1,6 +1,5 @@
 import {
   Notice,
-  Platform,
   Plugin,
   PluginSettingTab,
   Setting,
@@ -26,8 +25,6 @@ export interface OmnisearchSettings extends WeightingSettings {
   indexedFileTypes: string[]
   /** Enable PDF indexing */
   PDFIndexing: boolean
-  /** Max number of spawned processes for background tasks, such as extracting text from PDFs */
-  backgroundProcesses: number
   /** Display Omnisearch popup notices over Obsidian */
   showIndexingNotices: boolean
   /** Activate the small 🔍 button on Obsidian's ribbon */
@@ -313,20 +310,11 @@ export class SettingsTab extends PluginSettingTab {
   }
 }
 
-// Determining the maximum concurrent processes/workers/promises for heavy work,
-// without hogging all the resources.
-const cpuCount = Platform.isMobileApp ? 1 : require('os').cpus().length
-let backgroundProcesses = Math.max(1, Math.floor(cpuCount * 0.75))
-if (backgroundProcesses == cpuCount) {
-  backgroundProcesses = 1
-}
-
 export const DEFAULT_SETTINGS: OmnisearchSettings = {
   respectExcluded: true,
   ignoreDiacritics: true,
   indexedFileTypes: [] as string[],
   PDFIndexing: false,
-  backgroundProcesses,
 
   showIndexingNotices: false,
   showShortName: false,
