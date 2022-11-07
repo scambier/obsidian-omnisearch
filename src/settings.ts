@@ -42,7 +42,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   /** Key for the welcome message when Obsidian is updated. A message is only shown once. */
   welcomeMessage: string
   /** If a query returns 0 result, try again with more relax conditions */
-  retryWhenZeroResult: boolean
+  simpleSearch: boolean
 }
 
 /**
@@ -98,7 +98,8 @@ export class SettingsTab extends PluginSettingTab {
     const diacriticsDesc = new DocumentFragment()
     diacriticsDesc.createSpan({}, span => {
       span.innerHTML = `Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky".<br/>
-        <strong style="color: var(--text-accent)">You probably shouldn't disable this. Needs a restart to fully take effect.</strong>
+        <strong style="color: var(--text-accent)"><em>You probably shouldn't disable this</em>.<br>
+        Needs a restart to fully take effect.</strong>
         `
     })
     new Setting(containerEl)
@@ -133,13 +134,14 @@ export class SettingsTab extends PluginSettingTab {
 
     // Ignore diacritics
     new Setting(containerEl)
-      .setName('Retry queries that return zero result')
+      .setName('Simpler search')
       .setDesc(
-        `When a query returns zero result, Omnisearch will try again (but harder). Disabling this can improve search reactivity.`
+        `When enabled, Omnisearch is a bit more restrictive when using your query terms as prefixes.
+        May return less results, but will be quicker. You should enable this if Omnisearch makes Obsidian freeze while searching.`
       )
       .addToggle(toggle =>
-        toggle.setValue(settings.retryWhenZeroResult).onChange(async v => {
-          settings.retryWhenZeroResult = v
+        toggle.setValue(settings.simpleSearch).onChange(async v => {
+          settings.simpleSearch = v
           await saveSettings(this.plugin)
         })
       )
@@ -345,7 +347,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   showExcerpt: true,
   showCreateButton: false,
   showPreviousQueryResults: true,
-  retryWhenZeroResult: true,
+  simpleSearch: false,
 
   weightBasename: 2,
   weightH1: 1.5,

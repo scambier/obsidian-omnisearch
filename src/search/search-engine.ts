@@ -17,6 +17,8 @@ import { cacheManager } from '../cache-manager'
 import { writable } from 'svelte/store'
 import { Notice } from 'obsidian'
 
+let previousResults: ResultNote[] = []
+
 const tokenize = (text: string): string[] => {
   const tokens = text.split(SPACE_OR_PUNCTUATION)
   const chsSegmenter = (app as any).plugins.plugins['cm-chs-patch']
@@ -95,15 +97,13 @@ export class SearchEngine {
    */
   public async search(
     query: Query,
-    options = { fuzzy: 0.1, prefix: false }
+    options = { prefix: true }
   ): Promise<SearchResult[]> {
     if (!query.segmentsToStr()) return []
 
     let results = this.minisearch.search(query.segmentsToStr(), {
-      prefix: term => {
-        return options.prefix || term.length > 4
-      },
-      fuzzy: options.fuzzy,
+      prefix: term => options.prefix || term.length > 3,
+      fuzzy: 0.2,
       combineWith: 'AND',
       boost: {
         basename: settings.weightBasename,
@@ -190,13 +190,13 @@ export class SearchEngine {
     options?: Partial<{ singleFilePath: string | null }>
   ): Promise<ResultNote[]> {
     // Get the raw results
-    let results = await this.search(query)
-    if (results.length == 0) {
-      if (settings.retryWhenZeroResult) {
-        results = await this.search(query, { fuzzy: 0.2, prefix: true })
-      }
+    let results: SearchResult[]
+    if (settings.simpleSearch) {
+      results = await this.search(query)
+    } else {
+      results = await this.search(query, { prefix: true })
     }
-    if (!results.length) return []
+    if (!results.length) return previousResults
 
     // Extract tags from the query
     const tags = query.segments
@@ -223,7 +223,7 @@ export class SearchEngine {
     }
 
     // Map the raw results to get usable suggestions
-    return results.map(result => {
+    const resultNotes = results.map(result => {
       let note = cacheManager.getLiveDocument(result.id)
       if (!note) {
         // throw new Error(`Omnisearch - Note "${result.id}" not indexed`)
@@ -267,6 +267,8 @@ export class SearchEngine {
       }
       return resultNote
     })
+    previousResults = resultNotes
+    return resultNotes
   }
 
   // #region Read/write minisearch index
