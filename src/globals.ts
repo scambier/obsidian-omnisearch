@@ -16,6 +16,15 @@ export const EventNames = {
   ToggleExcerpts: 'toggle-excerpts',
 } as const
 
+export const enum IndexingStep {
+  Done,
+  LoadingCache,
+  ReadingNotes,
+  ReadingPDFs,
+  ReadingImages,
+  UpdatingCache,
+}
+
 export type IndexedDocument = {
   path: string
   basename: string

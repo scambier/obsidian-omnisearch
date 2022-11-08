@@ -5,7 +5,7 @@ import {
   OmnisearchVaultModal,
 } from './components/modals'
 import { loadSettings, settings, SettingsTab, showExcerpt } from './settings'
-import { eventBus, EventNames } from './globals'
+import { eventBus, EventNames, IndexingStep } from './globals'
 import { registerAPI } from '@vanakat/plugin-api'
 import api from './tools/api'
 import { isFilePlaintext, wait } from './tools/utils'
@@ -114,6 +114,7 @@ async function populateIndex(): Promise<void> {
   }
 
   // Load plaintext files
+  SearchEngine.indexingStep.set(IndexingStep.ReadingNotes)
   console.log('Omnisearch - Reading notes')
   const plainTextFiles = await FileLoader.getPlainTextFiles()
   let allFiles = [...plainTextFiles]
@@ -125,6 +126,7 @@ async function populateIndex(): Promise<void> {
 
   // Load PDFs
   if (settings.PDFIndexing) {
+    SearchEngine.indexingStep.set(IndexingStep.ReadingPDFs)
     console.log('Omnisearch - Reading PDFs')
     const pdfDocuments = await FileLoader.getPDFAsDocuments()
     // iOS: since there's no cache, just index the documents
@@ -138,6 +140,7 @@ async function populateIndex(): Promise<void> {
 
   // Load Images
   if (settings.imagesIndexing) {
+    SearchEngine.indexingStep.set(IndexingStep.ReadingImages)
     console.log('Omnisearch - Reading Images')
     const imagesDocuments = await FileLoader.getImagesAsDocuments()
     // iOS: since there's no cache, just index the documents
@@ -154,6 +157,7 @@ async function populateIndex(): Promise<void> {
 
   // Other platforms: make a diff of what's to add/update/delete
   if (!Platform.isIosApp) {
+    SearchEngine.indexingStep.set(IndexingStep.UpdatingCache)
     console.log('Omnisearch - Checking index cache diff...')
     // Check which documents need to be removed/added/updated
     const diffDocs = await cacheManager.getDiffDocuments(allFiles)
@@ -184,7 +188,7 @@ async function populateIndex(): Promise<void> {
 
   // Load PDFs into the main search engine, and write cache
   // SearchEngine.loadTmpDataIntoMain()
-  SearchEngine.isIndexing.set(false)
+  SearchEngine.indexingStep.set(IndexingStep.Done)
 
   if (!Platform.isIosApp && needToUpdateCache) {
     console.log('Omnisearch - Writing cache...')

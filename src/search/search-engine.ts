@@ -5,6 +5,7 @@ import {
   type ResultNote,
   type SearchMatch,
   SPACE_OR_PUNCTUATION,
+  IndexingStep,
 } from '../globals'
 import {
   removeDiacritics,
@@ -53,7 +54,7 @@ export const minisearchOptions: Options<IndexedDocument> = {
 
 export class SearchEngine {
   private static engine?: SearchEngine
-  public static isIndexing = writable(true)
+  public static indexingStep = writable(IndexingStep.LoadingCache)
 
   /**
    * The main singleton SearchEngine instance.

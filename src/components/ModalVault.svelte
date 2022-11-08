@@ -3,7 +3,7 @@
   import { onDestroy, onMount, tick } from 'svelte'
   import InputSearch from './InputSearch.svelte'
   import ModalContainer from './ModalContainer.svelte'
-  import { eventBus, type ResultNote } from 'src/globals'
+  import { eventBus, IndexingStep, type ResultNote } from 'src/globals'
   import { createNote, openNote } from 'src/tools/notes'
   import { SearchEngine } from 'src/search/search-engine'
   import { getCtrlKeyLabel, getExtension, loopIndex } from 'src/tools/utils'
@@ -24,7 +24,8 @@
   let searchQuery: string | undefined
   let resultNotes: ResultNote[] = []
   let query: Query
-  let { isIndexing } = SearchEngine
+  let { indexingStep } = SearchEngine
+  let indexingStepDesc = ''
 
   $: selectedNote = resultNotes[selectedIndex]
   $: searchQuery = searchQuery ?? previousQuery
@@ -32,6 +33,30 @@
     updateResults()
   } else {
     resultNotes = []
+  }
+  $: {
+    switch ($indexingStep) {
+      case IndexingStep.LoadingCache:
+        indexingStepDesc = 'Loading cache...'
+        break
+      case IndexingStep.ReadingNotes:
+        updateResults()
+        indexingStepDesc = 'Reading notes...'
+        break
+      case IndexingStep.ReadingPDFs:
+        indexingStepDesc = 'Reading PDFs...'
+        break
+      case IndexingStep.ReadingImages:
+        indexingStepDesc = 'Reading images...'
+        break
+      case IndexingStep.UpdatingCache:
+        indexingStepDesc = 'Updating cache...'
+        break
+      default:
+        updateResults()
+        indexingStepDesc = ''
+        break
+    }
   }
 
   onMount(async () => {
@@ -211,9 +236,9 @@
   {/if}
 </InputSearch>
 
-{#if $isIndexing}
+{#if indexingStepDesc}
   <div style="text-align: center; color: var(--text-accent); margin-top: 10px">
-    ⏳ Omnisearch indexing is currently in progress
+    ⏳ Work in progress: {indexingStepDesc}
   </div>
 {/if}
 
