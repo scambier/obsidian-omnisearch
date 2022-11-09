@@ -296,7 +296,7 @@
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">ctrl+h</span>
-    <span>to toggle excerpt</span>
+    <span>to toggle excerpts</span>
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">esc</span><span>to close</span>

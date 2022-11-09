@@ -6,7 +6,7 @@ export const regexStripQuotes = /^"|"$|^'|'$/g
 export const chsRegex = /[\u4e00-\u9fa5]/
 
 export const excerptBefore = 100
-export const excerptAfter = 180
+export const excerptAfter = 300
 
 export const highlightClass = 'suggestion-highlight omnisearch-highlight'
 

@@ -92,15 +92,38 @@ export function loopIndex(index: number, nbItems: number): number {
 export function makeExcerpt(content: string, offset: number): string {
   try {
     const pos = offset ?? -1
+    const from = Math.max(0, pos - excerptBefore)
+    const to = Math.min(content.length, pos + excerptAfter)
     if (pos > -1) {
-      const from = Math.max(0, pos - excerptBefore)
-      const to = Math.min(content.length, pos + excerptAfter)
       content =
         (from > 0 ? '…' : '') +
         content.slice(from, to).trim() +
         (to < content.length - 1 ? '…' : '')
+    } else {
+      content = content.slice(0, excerptAfter)
     }
-    return escapeHTML(content)
+    if (settings.renderLineReturnInExcerpts) {
+      const lineReturn = new RegExp(/(?:\r\n|\r|\n)/g)
+      // Remove multiple line returns
+      content = content
+        .split(lineReturn)
+        .filter(l => l)
+        .join('\n')
+
+      const last = content.lastIndexOf('\n', pos - from)
+
+      if (last > 0) {
+        content = content.slice(last)
+      }
+    }
+
+    content = escapeHTML(content)
+
+    if (settings.renderLineReturnInExcerpts) {
+      content = content.trim().replaceAll('\n', '<br>')
+    }
+
+    return content
   } catch (e) {
     new Notice(
       'Omnisearch - Error while creating excerpt, see developer console'

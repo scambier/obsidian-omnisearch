@@ -107,9 +107,7 @@ export function markNoteForReindex(note: TAbstractFile): void {
 
 export async function refreshIndex(): Promise<void> {
   if (notesToReindex.size > 0) {
-    if (settings.showIndexingNotices) {
-      new Notice(`Omnisearch - Reindexing ${notesToReindex.size} notes`, 2000)
-    }
+    console.info(`Omnisearch - Reindexing ${notesToReindex.size} notes`)
     for (const note of notesToReindex) {
       removeFromIndex(note.path)
       await addToIndexAndMemCache(note)

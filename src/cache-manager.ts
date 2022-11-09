@@ -103,11 +103,9 @@ class CacheManager {
     try {
       return MiniSearch.loadJS(cachedIndex.data, minisearchOptions)
     } catch (e) {
-      if (settings.showIndexingNotices) {
-        new Notice(
-          'Omnisearch - Cache missing or invalid. Some freezes may occur while Omnisearch indexes your vault.'
-        )
-      }
+      new Notice(
+        'Omnisearch - Cache missing or invalid. Some freezes may occur while Omnisearch indexes your vault.'
+      )
       console.error('Omnisearch - Error while loading Minisearch cache')
       console.error(e)
       return null

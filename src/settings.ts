@@ -27,14 +27,14 @@ export interface OmnisearchSettings extends WeightingSettings {
   PDFIndexing: boolean
   /** Enable PDF indexing */
   imagesIndexing: boolean
-  /** Display Omnisearch popup notices over Obsidian */
-  showIndexingNotices: boolean
   /** Activate the small 🔍 button on Obsidian's ribbon */
   ribbonIcon: boolean
   /** Display short filenames in search results, instead of the full path */
   showShortName: boolean
   /** Display the small contextual excerpt in search results */
   showExcerpt: boolean
+  /** Render line returns with <br> in excerpts */
+  renderLineReturnInExcerpts: boolean
   /** Enable a "create note" button in the Vault Search modal */
   showCreateButton: boolean
   /** Re-execute the last query when opening Omnisearch */
@@ -77,6 +77,74 @@ export class SettingsTab extends PluginSettingTab {
         <a href='https://ko-fi.com/B0B6LQ2C' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://cdn.ko-fi.com/cdn/kofi2.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a> 
     `
 
+    //#region Indexing
+
+    new Setting(containerEl).setName('Indexing').setHeading()
+
+    // PDF Indexing
+    const indexPDFsDesc = new DocumentFragment()
+    indexPDFsDesc.createSpan({}, span => {
+      span.innerHTML = `Omnisearch will include PDFs in search results.
+        <ul>
+          <li>⚠️ Each PDF can take anywhere from a few seconds to 2 minutes to be processed.</li>
+          <li>⚠️ Texts extracted from PDFs may contain errors such as missing spaces, or spaces in the middle of words.</li>
+          <li>⚠️ Some PDFs can't be processed correctly and will return an empty text.</li>
+          <li>This feature is currently a work-in-progress, please report issues that you might experience.</li>
+        </ul>
+        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
+    })
+    new Setting(containerEl)
+      .setName('BETA - PDF Indexing')
+      .setDesc(indexPDFsDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.PDFIndexing).onChange(async v => {
+          settings.PDFIndexing = v
+          await saveSettings(this.plugin)
+        })
+      )
+
+    // Images Indexing
+    const indexImagesDesc = new DocumentFragment()
+    indexImagesDesc.createSpan({}, span => {
+      span.innerHTML = `Omnisearch will use <a href="https://en.wikipedia.org/wiki/Tesseract_(software)">Tesseract</a> to index images from their text.
+        <ul>
+          <li>Only English is supported at the moment.</li>
+          <li>Not all images can be correctly read by the OCR, this feature works best with scanned documents.</li>
+        </ul>      
+        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
+    })
+    new Setting(containerEl)
+      .setName('BETA - Images Indexing')
+      .setDesc(indexImagesDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.imagesIndexing).onChange(async v => {
+          settings.imagesIndexing = v
+          await saveSettings(this.plugin)
+        })
+      )
+
+    // Additional files to index
+    const indexedFileTypesDesc = new DocumentFragment()
+    indexedFileTypesDesc.createSpan({}, span => {
+      span.innerHTML = `In addition to standard <code>md</code> files, Omnisearch can also index other plain text files.<br/>
+      Add extensions separated by a space, without the dot. Example: "<code>txt org</code>".<br />
+      <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
+    })
+    new Setting(containerEl)
+      .setName('Additional files to index')
+      .setDesc(indexedFileTypesDesc)
+      .addText(component => {
+        component
+          .setValue(settings.indexedFileTypes.join(' '))
+          .setPlaceholder('Example: txt org')
+          .onChange(async v => {
+            settings.indexedFileTypes = v.split(' ')
+            await saveSettings(this.plugin)
+          })
+      })
+
+    //#endregion Indexing
+
     // #region Behavior
 
     new Setting(containerEl).setName('Behavior').setHeading()
@@ -112,27 +180,7 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
-    // Additional files to index
-    const indexedFileTypesDesc = new DocumentFragment()
-    indexedFileTypesDesc.createSpan({}, span => {
-      span.innerHTML = `In addition to standard <code>md</code> files, Omnisearch can also index other plain text files.<br/>
-      Add extensions separated by a space, without the dot. Example: "<code>txt org</code>".<br />
-      <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
-    })
-    new Setting(containerEl)
-      .setName('Additional files to index')
-      .setDesc(indexedFileTypesDesc)
-      .addText(component => {
-        component
-          .setValue(settings.indexedFileTypes.join(' '))
-          .setPlaceholder('Example: txt org')
-          .onChange(async v => {
-            settings.indexedFileTypes = v.split(' ')
-            await saveSettings(this.plugin)
-          })
-      })
-
-    // Ignore diacritics
+    // Simpler search
     new Setting(containerEl)
       .setName('Simpler search')
       .setDesc(
@@ -142,48 +190,6 @@ export class SettingsTab extends PluginSettingTab {
       .addToggle(toggle =>
         toggle.setValue(settings.simpleSearch).onChange(async v => {
           settings.simpleSearch = v
-          await saveSettings(this.plugin)
-        })
-      )
-
-    // PDF Indexing
-    const indexPDFsDesc = new DocumentFragment()
-    indexPDFsDesc.createSpan({}, span => {
-      span.innerHTML = `Omnisearch will include PDFs in search results.
-        <ul>
-          <li>⚠️ Each PDF can take anywhere from a few seconds to 2 minutes to be processed.</li>
-          <li>⚠️ Texts extracted from PDFs may contain errors such as missing spaces, or spaces in the middle of words.</li>
-          <li>⚠️ Some PDFs can't be processed correctly and will return an empty text.</li>
-          <li>This feature is currently a work-in-progress, please report issues that you might experience.</li>
-        </ul>
-        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
-    })
-    new Setting(containerEl)
-      .setName('BETA - PDF Indexing')
-      .setDesc(indexPDFsDesc)
-      .addToggle(toggle =>
-        toggle.setValue(settings.PDFIndexing).onChange(async v => {
-          settings.PDFIndexing = v
-          await saveSettings(this.plugin)
-        })
-      )
-
-    // PDF Indexing
-    const indexImagesDesc = new DocumentFragment()
-    indexImagesDesc.createSpan({}, span => {
-      span.innerHTML = `Omnisearch will use <a href="https://en.wikipedia.org/wiki/Tesseract_(software)">Tesseract</a> to index images from their text.
-        <ul>
-          <li>Only English is supported at the moment.</li>
-          <li>Not all images can be correctly read by the OCR, this feature works best with scanned documents.</li>
-        </ul>      
-        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
-    })
-    new Setting(containerEl)
-      .setName('BETA - Images Indexing')
-      .setDesc(indexImagesDesc)
-      .addToggle(toggle =>
-        toggle.setValue(settings.imagesIndexing).onChange(async v => {
-          settings.imagesIndexing = v
           await saveSettings(this.plugin)
         })
       )
@@ -212,9 +218,9 @@ export class SettingsTab extends PluginSettingTab {
 
     // Show context excerpt
     new Setting(containerEl)
-      .setName('Show excerpt')
+      .setName('Show excerpts')
       .setDesc(
-        'Shows the part of the note that matches the search. Disable this to only show filenames in results.'
+        'Shows the contextual part of the note that matches the search. Disable this to only show filenames in results.'
       )
       .addToggle(toggle =>
         toggle.setValue(settings.showExcerpt).onChange(async v => {
@@ -222,10 +228,23 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
-    // Show context excerpt
+    // Keep line returns in excerpts
+    new Setting(containerEl)
+      .setName('Render line return in excerpts')
+      .setDesc('Activate this option render line returns in result excerpts.')
+      .addToggle(toggle =>
+        toggle
+          .setValue(settings.renderLineReturnInExcerpts)
+          .onChange(async v => {
+            settings.renderLineReturnInExcerpts = v
+            await saveSettings(this.plugin)
+          })
+      )
+
+    // Show previous query results
     new Setting(containerEl)
       .setName('Show previous query results')
-      .setDesc('Re-executes the previous query when opening Omnisearch')
+      .setDesc('Re-executes the previous query when opening Omnisearch.')
       .addToggle(toggle =>
         toggle.setValue(settings.showPreviousQueryResults).onChange(async v => {
           settings.showPreviousQueryResults = v
@@ -245,17 +264,6 @@ export class SettingsTab extends PluginSettingTab {
       .addToggle(toggle =>
         toggle.setValue(settings.showCreateButton).onChange(async v => {
           settings.showCreateButton = v
-          await saveSettings(this.plugin)
-        })
-      )
-
-    // Show notices
-    new Setting(containerEl)
-      .setName('Show indexing notices')
-      .setDesc('Shows a notice when indexing is done, usually at startup.')
-      .addToggle(toggle =>
-        toggle.setValue(settings.showIndexingNotices).onChange(async v => {
-          settings.showIndexingNotices = v
           await saveSettings(this.plugin)
         })
       )
@@ -341,10 +349,10 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   PDFIndexing: false,
   imagesIndexing: false,
 
-  showIndexingNotices: false,
   showShortName: false,
   ribbonIcon: true,
   showExcerpt: true,
+  renderLineReturnInExcerpts: true,
   showCreateButton: false,
   showPreviousQueryResults: true,
   simpleSearch: false,
