@@ -1,4 +1,4 @@
-import type { ResultNote, SearchMatch } from '../globals'
+import type { ResultNote } from '../globals'
 import { Query } from '../search/query'
 import { SearchEngine } from '../search/search-engine'
 
@@ -7,7 +7,12 @@ type ResultNoteApi = {
   path: string
   basename: string
   foundWords: string[]
-  matches: SearchMatch[]
+  matches: SearchMatchApi[]
+}
+
+export type SearchMatchApi = {
+  match: string
+  offset: number
 }
 
 function mapResults(results: ResultNote[]): ResultNoteApi[] {

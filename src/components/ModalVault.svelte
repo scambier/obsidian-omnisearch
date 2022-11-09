@@ -228,7 +228,7 @@
 </script>
 
 <InputSearch
-  initialValue="{previousQuery}"
+  initialValue="{searchQuery}"
   on:input="{e => (searchQuery = e.detail)}"
   placeholder="Omnisearch - Vault">
   {#if settings.showCreateButton}

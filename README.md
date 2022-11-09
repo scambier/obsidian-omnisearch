@@ -53,19 +53,21 @@ If you want to list all the search matches of a single note, you can do so by us
 Also accessible through the Command Palette "**_Omnisearch: In-file search_**". This modal searches through the active note's content and lists the matching results. Just press enter to automatically scroll to the right place.
 
 
-## Public API
+## URL Scheme & Public API
+
+You can open Omnisearch with the following scheme: `obsidian://omnisearch?query=foo bar`
+
+----
+
+For plugin developers and Dataview users, Omnisearch is also accessible through the global object `omnisearch` (`window.omnisearch`)
 
 > This API is an experimental feature, the `ResultNote` interface may change in the future. The `search()` function returns at most 50 results.
-
-If you're a plugin developer, you can use [this "plugin-api" package](https://github.com/vanakat/plugin-api), and get the api through `pluginApi('omnisearch')`.
-
-Otherwise, you can access it with `app.plugins.plugins.omnisearch.api`.
 
 ```ts
 // API:
 {
   // Returns a promise that will contain the same results as the Vault modal
-  search: (query: string) => Promise<ResultNote[]>
+  search: (query: string) => Promise<ResultNoteApi[]>
 }
 
 type ResultNoteApi = {
@@ -73,10 +75,10 @@ type ResultNoteApi = {
   path: string
   basename: string
   foundWords: string[]
-  matches: SearchMatch[]
+  matches: SearchMatchApi[]
 }
 
-type SearchMatch = {
+type SearchMatchApi = {
   match: string
   offset: number
 }
@@ -88,7 +90,7 @@ You can use the Omnisearch API directly within the [Dataview](https://blacksmith
 
 ~~~js
 ```dataviewjs
-const results = await app.plugins.plugins.omnisearch.api.search('your query')
+const results = await omnisearch.search('your query')
 const arr = dv.array(results).sort(r => r.score, 'desc')
 dv.table(['File', 'Score'], arr.map(o => [dv.fileLink(o.path), Math.round(o.score)]))
 ```

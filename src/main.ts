@@ -6,7 +6,6 @@ import {
 } from './components/modals'
 import { loadSettings, settings, SettingsTab, showExcerpt } from './settings'
 import { eventBus, EventNames, IndexingStep } from './globals'
-import { registerAPI } from '@vanakat/plugin-api'
 import api from './tools/api'
 import { isFilePlaintext, wait } from './tools/utils'
 import * as NotesIndex from './notes-index'
@@ -22,7 +21,7 @@ export default class OmnisearchPlugin extends Plugin {
     await OmnisearchCache.clearOldDatabases()
     await loadSettings(this)
 
-    _registerAPI(this)
+    registerAPI(this)
 
     if (settings.ribbonIcon) {
       this.addRibbonButton()
@@ -84,7 +83,10 @@ export default class OmnisearchPlugin extends Plugin {
     showWelcomeNotice(this)
   }
 
-  onunload(): void {}
+  onunload(): void {
+    // @ts-ignore
+    delete globalThis['omnisearch']
+  }
 
   addRibbonButton(): void {
     this.ribbonButton = this.addRibbonIcon('search', 'Omnisearch', _evt => {
@@ -161,7 +163,9 @@ async function populateIndex(): Promise<void> {
     console.log('Omnisearch - Checking index cache diff...')
     // Check which documents need to be removed/added/updated
     const diffDocs = await cacheManager.getDiffDocuments(allFiles)
-    console.log(`Omnisearch - Files to add/remove/update: ${diffDocs.toAdd.length}/${diffDocs.toDelete.length}/${diffDocs.toUpdate.length}`)
+    console.log(
+      `Omnisearch - Files to add/remove/update: ${diffDocs.toAdd.length}/${diffDocs.toDelete.length}/${diffDocs.toUpdate.length}`
+    )
     needToUpdateCache = !!(
       diffDocs.toAdd.length ||
       diffDocs.toDelete.length ||
@@ -232,10 +236,15 @@ You can now enable "Images Indexing" to use Optical Character Recognition on you
   plugin.saveData(settings)
 }
 
-function _registerAPI(plugin: OmnisearchPlugin): void {
-  registerAPI('omnisearch', api, plugin as any)
-  ;(app as any).plugins.plugins.omnisearch.api = api
-  plugin.register(() => {
-    delete (app as any).plugins.plugins.omnisearch.api
+function registerAPI(plugin: OmnisearchPlugin): void {
+  // Url scheme for obsidian://omnisearch?query=foobar
+  plugin.registerObsidianProtocolHandler('omnisearch', params => {
+    new OmnisearchVaultModal(app, params.query).open()
   })
+
+  // Public api
+  // @ts-ignore
+  globalThis['omnisearch'] = api
+  // Deprecated
+  ;(app as any).plugins.plugins.omnisearch.api = api
 }

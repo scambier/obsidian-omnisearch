@@ -2,16 +2,18 @@
   import { debounce } from 'obsidian'
   import { toggleInputComposition } from 'src/globals'
   import { createEventDispatcher, tick } from 'svelte'
-  import { cacheManager } from "../cache-manager"
+  import { cacheManager } from '../cache-manager'
 
   export let initialValue = ''
+  let initialSet = false
   export let placeholder = ''
   let value = ''
   let elInput: HTMLInputElement
   const dispatch = createEventDispatcher()
 
   $: {
-    if (initialValue) {
+    if (initialValue && !initialSet) {
+      initialSet = true
       value = initialValue
       selectInput()
     }
@@ -42,9 +44,9 @@
       on:compositionend="{_ => toggleInputComposition(false)}"
       on:compositionstart="{_ => toggleInputComposition(true)}"
       on:input="{debouncedOnInput}"
-      {placeholder}
+      placeholder="{placeholder}"
       spellcheck="false"
-      type="text"/>
+      type="text" />
   </div>
-  <slot></slot>
+  <slot />
 </div>
