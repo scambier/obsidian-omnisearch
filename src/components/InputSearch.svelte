@@ -12,7 +12,7 @@
   const dispatch = createEventDispatcher()
 
   $: {
-    if (initialValue && !initialSet) {
+    if (initialValue && !initialSet && !value) {
       initialSet = true
       value = initialValue
       selectInput()
