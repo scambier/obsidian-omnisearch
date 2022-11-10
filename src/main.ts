@@ -166,6 +166,18 @@ async function populateIndex(): Promise<void> {
     console.log(
       `Omnisearch - Files to add/remove/update: ${diffDocs.toAdd.length}/${diffDocs.toDelete.length}/${diffDocs.toUpdate.length}`
     )
+
+    if (
+      diffDocs.toAdd.length +
+        diffDocs.toDelete.length +
+        diffDocs.toUpdate.length >
+      100
+    ) {
+      new Notice(
+        `Omnisearch - A great number of files need to be added/updated/cleaned. This process may make cause slowdowns.`
+      )
+    }
+
     needToUpdateCache = !!(
       diffDocs.toAdd.length ||
       diffDocs.toDelete.length ||
@@ -179,8 +191,14 @@ async function populateIndex(): Promise<void> {
     )
 
     // Delete
-    diffDocs.toDelete.forEach(d => engine.removeFromMinisearch(d))
-    diffDocs.toDelete.forEach(doc => cacheManager.deleteLiveDocument(doc.path))
+    for (const [i, doc] of diffDocs.toDelete.entries()) {
+      await wait(0)
+      console.log(`${i} - ${doc.basename}`)
+      if (i % 10 === 0) {
+      }
+      engine.removeFromMinisearch(doc)
+      cacheManager.deleteLiveDocument(doc.path)
+    }
 
     // Update (delete + add)
     diffDocs.toUpdate.forEach(({ oldDoc, newDoc }) => {
