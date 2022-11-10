@@ -190,6 +190,10 @@ export class SearchEngine {
     query: Query,
     options?: Partial<{ singleFilePath: string | null }>
   ): Promise<ResultNote[]> {
+    if (query.isEmpty()) {
+      previousResults = []
+      return []
+    }
     // Get the raw results
     let results: SearchResult[]
     if (settings.simpleSearch) {

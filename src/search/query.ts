@@ -36,6 +36,10 @@ export class Query {
     }, [])
   }
 
+  public isEmpty(): boolean {
+    return this.segments.length === 0
+  }
+
   public segmentsToStr(): string {
     return this.segments.map(({ value }) => value).join(' ')
   }
