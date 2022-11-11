@@ -21,9 +21,15 @@ export async function getPlainTextFiles(): Promise<IndexedDocument[]> {
   const data: IndexedDocument[] = []
   for (const file of allFiles) {
     const doc = await fileToIndexedDocument(file)
+    // check if file is ignored, respected to Files & Links Exclude Settings
+    if (app.metadataCache.isUserIgnored && app.metadataCache.isUserIgnored(file.path)) {
+        continue;
+    }
+
     data.push(doc)
     await cacheManager.updateLiveDocument(file.path, doc)
   }
+
   return data
 }
 

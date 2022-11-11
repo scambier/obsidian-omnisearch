@@ -55,6 +55,12 @@ export default class OmnisearchPlugin extends Plugin {
       // Listeners to keep the search index up-to-date
       this.registerEvent(
         this.app.vault.on('create', file => {
+
+          // check if file is ignored, respected to Files & Links Exclude Settings
+          if (app.metadataCache.isUserIgnored && app.metadataCache.isUserIgnored(file.path)) {
+            return;
+          }
+
           NotesIndex.addToIndexAndMemCache(file)
         })
       )
@@ -65,12 +71,24 @@ export default class OmnisearchPlugin extends Plugin {
       )
       this.registerEvent(
         this.app.vault.on('modify', async file => {
+
+          // check if file is ignored, respected to Files & Links Exclude Settings
+          if (app.metadataCache.isUserIgnored && app.metadataCache.isUserIgnored(file.path)) {
+            return;
+          }
+
           NotesIndex.markNoteForReindex(file)
         })
       )
       this.registerEvent(
         this.app.vault.on('rename', async (file, oldPath) => {
           if (file instanceof TFile && isFilePlaintext(file.path)) {
+
+            // check if file is ignored, respected to Files & Links Exclude Settings
+            if (app.metadataCache.isUserIgnored && app.metadataCache.isUserIgnored(file.path)) {
+              return;
+            }
+
             NotesIndex.removeFromIndex(oldPath)
             await NotesIndex.addToIndexAndMemCache(file)
           }
@@ -169,8 +187,8 @@ async function populateIndex(): Promise<void> {
 
     if (
       diffDocs.toAdd.length +
-        diffDocs.toDelete.length +
-        diffDocs.toUpdate.length >
+      diffDocs.toDelete.length +
+      diffDocs.toUpdate.length >
       100
     ) {
       new Notice(
@@ -233,7 +251,7 @@ async function cleanOldCacheFiles() {
     if (await app.vault.adapter.exists(item)) {
       try {
         await app.vault.adapter.remove(item)
-      } catch (e) {}
+      } catch (e) { }
     }
   }
 }
@@ -263,6 +281,6 @@ function registerAPI(plugin: OmnisearchPlugin): void {
   // Public api
   // @ts-ignore
   globalThis['omnisearch'] = api
-  // Deprecated
-  ;(app as any).plugins.plugins.omnisearch.api = api
+    // Deprecated
+    ; (app as any).plugins.plugins.omnisearch.api = api
 }
