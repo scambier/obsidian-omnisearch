@@ -1,7 +1,6 @@
 import { Notice, TAbstractFile, TFile } from 'obsidian'
 import { isFileIndexable, wait } from './tools/utils'
 import { removeAnchors } from './tools/notes'
-import { settings } from './settings'
 import { SearchEngine } from './search/search-engine'
 import { cacheManager } from './cache-manager'
 import type { IndexedDocument } from './globals'

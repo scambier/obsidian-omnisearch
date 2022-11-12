@@ -150,7 +150,11 @@ export class SearchEngine {
         return exclusions.every(q => !content.includes(q.value))
       })
     }
-    return results
+    // FIXME:
+    // Dedupe results - clutch for https://github.com/scambier/obsidian-omnisearch/issues/129
+    return results.filter(
+      (result, index, arr) => arr.findIndex(t => t.id === result.id) === index
+    )
   }
 
   /**

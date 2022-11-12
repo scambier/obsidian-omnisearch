@@ -84,6 +84,7 @@ export async function fileToIndexedDocument(
   // Look for links that lead to non-existing files,
   // and add them to the index.
   if (metadata) {
+    // FIXME: https://github.com/scambier/obsidian-omnisearch/issues/129
     const nonExisting = getNonExistingNotes(file, metadata)
     for (const name of nonExisting.filter(
       o => !cacheManager.getLiveDocument(o)

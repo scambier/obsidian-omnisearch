@@ -4,7 +4,6 @@ import { database } from './database'
 import MiniSearch from 'minisearch'
 import { minisearchOptions } from './search/search-engine'
 import { makeMD5 } from './tools/utils'
-import { settings } from './settings'
 
 class CacheManager {
   private liveDocuments: Map<string, IndexedDocument> = new Map()
