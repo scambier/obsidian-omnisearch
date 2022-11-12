@@ -98,12 +98,12 @@ export class SearchEngine {
    */
   public async search(
     query: Query,
-    options = { prefix: true }
+    options: { prefixLength: number }
   ): Promise<SearchResult[]> {
     if (!query.segmentsToStr()) return []
 
     let results = this.minisearch.search(query.segmentsToStr(), {
-      prefix: term => options.prefix || term.length > 3,
+      prefix: term => term.length >= options.prefixLength,
       fuzzy: 0.2,
       combineWith: 'AND',
       boost: {
@@ -197,9 +197,9 @@ export class SearchEngine {
     // Get the raw results
     let results: SearchResult[]
     if (settings.simpleSearch) {
-      results = await this.search(query)
+      results = await this.search(query, { prefixLength: 1 })
     } else {
-      results = await this.search(query, { prefix: true })
+      results = await this.search(query, { prefixLength: 3 })
     }
     if (!results.length) return previousResults
 
