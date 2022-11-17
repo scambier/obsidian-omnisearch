@@ -243,7 +243,7 @@ function showWelcomeNotice(plugin: Plugin) {
   if (settings.welcomeMessage !== code) {
     const welcome = new DocumentFragment()
     welcome.createSpan({}, span => {
-      span.innerHTML = `<strong>Omnisearch BETA has been updated</strong>
+      span.innerHTML = `<strong>Omnisearch has been updated</strong>
 You can now enable "Images Indexing" to use Optical Character Recognition on your scanned documents
 🔎🖼`
     })

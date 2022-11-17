@@ -94,7 +94,7 @@ export class SettingsTab extends PluginSettingTab {
         <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
     })
     new Setting(containerEl)
-      .setName('BETA - PDF Indexing')
+      .setName('PDF Indexing')
       .setDesc(indexPDFsDesc)
       .addToggle(toggle =>
         toggle.setValue(settings.PDFIndexing).onChange(async v => {
