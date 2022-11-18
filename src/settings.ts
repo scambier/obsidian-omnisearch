@@ -1,5 +1,6 @@
 import {
   Notice,
+  Platform,
   Plugin,
   PluginSettingTab,
   Setting,
@@ -82,9 +83,10 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl).setName('Indexing').setHeading()
 
     // PDF Indexing
-    const indexPDFsDesc = new DocumentFragment()
-    indexPDFsDesc.createSpan({}, span => {
-      span.innerHTML = `Omnisearch will include PDFs in search results.
+    if (!Platform.isMobileApp) {
+      const indexPDFsDesc = new DocumentFragment()
+      indexPDFsDesc.createSpan({}, span => {
+        span.innerHTML = `Omnisearch will include PDFs in search results.
         <ul>
           <li>⚠️ Each PDF can take anywhere from a few seconds to 2 minutes to be processed.</li>
           <li>⚠️ Texts extracted from PDFs may contain errors such as missing spaces, or spaces in the middle of words.</li>
@@ -92,37 +94,39 @@ export class SettingsTab extends PluginSettingTab {
           <li>This feature is currently a work-in-progress, please report issues that you might experience.</li>
         </ul>
         <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
-    })
-    new Setting(containerEl)
-      .setName('PDF Indexing')
-      .setDesc(indexPDFsDesc)
-      .addToggle(toggle =>
-        toggle.setValue(settings.PDFIndexing).onChange(async v => {
-          settings.PDFIndexing = v
-          await saveSettings(this.plugin)
-        })
-      )
+      })
+      new Setting(containerEl)
+        .setName('PDF Indexing')
+        .setDesc(indexPDFsDesc)
+        .addToggle(toggle =>
+          toggle.setValue(settings.PDFIndexing).onChange(async v => {
+            settings.PDFIndexing = v
+            await saveSettings(this.plugin)
+          })
+        )
+    }
 
     // Images Indexing
-    const indexImagesDesc = new DocumentFragment()
-    indexImagesDesc.createSpan({}, span => {
-      span.innerHTML = `Omnisearch will use <a href="https://en.wikipedia.org/wiki/Tesseract_(software)">Tesseract</a> to index images from their text.
+    if (!Platform.isMobileApp) {
+      const indexImagesDesc = new DocumentFragment()
+      indexImagesDesc.createSpan({}, span => {
+        span.innerHTML = `Omnisearch will use <a href="https://en.wikipedia.org/wiki/Tesseract_(software)">Tesseract</a> to index images from their text.
         <ul>
           <li>Only English is supported at the moment.</li>
           <li>Not all images can be correctly read by the OCR, this feature works best with scanned documents.</li>
         </ul>      
         <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
-    })
-    new Setting(containerEl)
-      .setName('BETA - Images Indexing')
-      .setDesc(indexImagesDesc)
-      .addToggle(toggle =>
-        toggle.setValue(settings.imagesIndexing).onChange(async v => {
-          settings.imagesIndexing = v
-          await saveSettings(this.plugin)
-        })
-      )
-
+      })
+      new Setting(containerEl)
+        .setName('BETA - Images Indexing')
+        .setDesc(indexImagesDesc)
+        .addToggle(toggle =>
+          toggle.setValue(settings.imagesIndexing).onChange(async v => {
+            settings.imagesIndexing = v
+            await saveSettings(this.plugin)
+          })
+        )
+    }
     // Additional files to index
     const indexedFileTypesDesc = new DocumentFragment()
     indexedFileTypesDesc.createSpan({}, span => {
@@ -369,6 +373,11 @@ export let settings = Object.assign({}, DEFAULT_SETTINGS) as OmnisearchSettings
 
 export async function loadSettings(plugin: Plugin): Promise<void> {
   settings = Object.assign({}, DEFAULT_SETTINGS, await plugin.loadData())
+
+  if (Platform.isMobileApp) {
+    settings.PDFIndexing = false
+    settings.imagesIndexing = false
+  }
 
   showExcerpt.set(settings.showExcerpt)
 }
