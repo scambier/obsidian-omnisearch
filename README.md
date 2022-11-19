@@ -6,7 +6,7 @@
 ![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/scambier/obsidian-omnisearch)
 ![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/scambier/obsidian-omnisearch?include_prereleases&label=BRAT%20beta)
 
-**Omnisearch** is a search engine that "_just works_". It always instantly shows you the most relevant results, thanks to its smart weighting algorithm.
+> **Omnisearch** is a search engine that "_just works_". It always instantly shows you the most relevant results, thanks to its smart weighting algorithm.
 
 Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/minisearch) library.
 
@@ -14,27 +14,26 @@ Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/mi
 
 ## Features
 
-- Find your notes faster than ever
-    - Workflow similar to the "Quick Switcher" core plugin
+> Omnisearch's first goal is to _locate_ files instantly. You can see it as a _Quick Switcher_ on steroids.
+
+- Find your **📝notes, 📄PDFs, and 🖼images** faster than ever
+    - _Images OCR and PDF indexing are only available on desktop_
 - Automatic document scoring using the [BM25 algorithm](https://github.com/lucaong/minisearch/issues/129#issuecomment-1046257399)
   - The relevance of a document against a query depends on the number of times the query terms appear in the document, its filename, and its headings
-- Can search other plaintext files and PDFs
-    - Opt-in in settings
-    - PDF indexing is disabled on iOS
 - Keyboard first: you never have to use your mouse
+- Workflow similar to the "Quick Switcher" core plugin
 - Resistance to typos
 - Switch between Vault and In-file search to quickly skim multiple results in a single note
 - Supports `"expressions in quotes"` and `-exclusions`
 - Directly Insert a `[[link]]` from the search results
-- Respects Obsidian's "Excluded Files" list - results are downranked, not hidden
-- Supports Vim navigation keys (ctrl + j, k, n, p)
+- Supports Vim navigation keys
 
 **Note:** support of Chinese, Japanese, Korean, etc. depends on [this additional plugin](https://github.com/aidenlx/cm-chs-patch). Please read its documentation for more information.
 
 ## Installation
 
 - Omnisearch is available on [the official Community Plugins repository](https://obsidian.md/plugins?search=Omnisearch).
-- Beta releases can be installed through [BRAT](https://github.com/TfTHacker/obsidian42-brat). **Be advised that those versions can be buggy.**
+- Beta releases can be installed through [BRAT](https://github.com/TfTHacker/obsidian42-brat). **Be advised that those versions can be buggy and break things.**
 
 You can check the [CHANGELOG](./CHANGELOG.md) for more information on the different versions.
 

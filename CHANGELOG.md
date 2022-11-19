@@ -1,5 +1,12 @@
 # Omnisearch Changelog
 
+## 1.8.x
+
+- Added OCR for images
+- OCR and PDF indexing are now restricted to desktop. They either don't work or consume too much resources during indexing of big vaults. Too many headaches.
+- Notes caching is deactivated on iOS because of crashes: memory usage too high during (de)serializing.
+- Added an URL scheme for integration with external tools: `obsidian://omnisearch?query=foo bar`
+
 ## 1.7.x
 
 ### New
