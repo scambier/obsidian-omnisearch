@@ -193,9 +193,6 @@ async function populateIndex(): Promise<void> {
     // Delete
     for (const [i, doc] of diffDocs.toDelete.entries()) {
       await wait(0)
-      console.log(`${i} - ${doc.basename}`)
-      if (i % 10 === 0) {
-      }
       engine.removeFromMinisearch(doc)
       cacheManager.deleteLiveDocument(doc.path)
     }
