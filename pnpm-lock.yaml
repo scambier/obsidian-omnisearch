@@ -20,7 +20,7 @@ specifiers:
   esbuild-svelte: 0.7.1
   jest: ^27.5.1
   lodash-es: 4.17.21
-  minisearch: github:scambier/minisearch#callback_desync
+  minisearch: v6.0.0-beta.1
   obsidian: latest
   obsidian-text-extract: 1.0.3
   prettier: ^2.7.1
@@ -37,7 +37,7 @@ specifiers:
 dependencies:
   dexie: 3.2.2
   lodash-es: 4.17.21
-  minisearch: github.com/scambier/minisearch/adf11cab46d851220a41c9ad95ed986b630f0f3c
+  minisearch: 6.0.0-beta.1
   obsidian-text-extract: 1.0.3
   pure-md5: 0.1.14
 
@@ -4039,6 +4039,10 @@ packages:
     resolution: {integrity: sha512-bzfL1YUZsP41gmu/qjrEk0Q6i2ix/cVeAhbCbqH9u3zYutS1cLg00qhrD0M2MVdCcx4Sc0UpP2eBWo9rotpq6g==}
     dev: true
 
+  /minisearch/6.0.0-beta.1:
+    resolution: {integrity: sha512-/qHyE4qBbBtli/zgR8H/Dus3cOxQdTciglY/QEyU6FDGCd4lRtYWwkhJ/yDXZvblFXoWwYILu3qCFqsTtF53+g==}
+    dev: false
+
   /mkdirp/0.5.6:
     resolution: {integrity: sha512-FP+p8RB8OWpF3YZBCrP5gtADmtXApB5AMLn+vdyA+PyxCjrCs00mjyUozssO33cwDeT3wNGdLxJ5M//YqtHAJw==}
     hasBin: true
@@ -5180,10 +5184,4 @@ packages:
 
   /zlibjs/0.3.1:
     resolution: {integrity: sha512-+J9RrgTKOmlxFSDHo0pI1xM6BLVUv+o0ZT9ANtCxGkjIVCCUdx9alUF8Gm+dGLKbkkkidWIHFDZHDMpfITt4+w==}
-    dev: false
-
-  github.com/scambier/minisearch/adf11cab46d851220a41c9ad95ed986b630f0f3c:
-    resolution: {tarball: https://codeload.github.com/scambier/minisearch/tar.gz/adf11cab46d851220a41c9ad95ed986b630f0f3c}
-    name: minisearch
-    version: 5.0.0
     dev: false

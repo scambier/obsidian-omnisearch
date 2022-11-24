@@ -45,10 +45,12 @@ export const minisearchOptions: Options<IndexedDocument> = {
     'headings3',
   ],
   storeFields: ['tags'],
-  callbackWhenDesync() {
-    new Notice(
-      'Omnisearch - Your index cache may be incorrect or corrupted. If this message keeps appearing, go to Settings to clear the cache.'
-    )
+  logger(level, message, code) {
+    if (code === 'version_conflict') {
+      new Notice(
+        'Omnisearch - Your index cache may be incorrect or corrupted. If this message keeps appearing, go to Settings to clear the cache.'
+      )
+    }
   },
 }
 

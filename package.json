@@ -42,7 +42,7 @@
   "dependencies": {
     "dexie": "^3.2.2",
     "lodash-es": "4.17.21",
-    "minisearch": "github:scambier/minisearch#callback_desync",
+    "minisearch": "v6.0.0-beta.1",
     "obsidian-text-extract": "1.0.3",
     "pure-md5": "^0.1.14"
   },
