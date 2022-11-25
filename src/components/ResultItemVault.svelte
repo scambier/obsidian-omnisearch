@@ -21,6 +21,7 @@
       // @ts-ignore
       const file = app.vault.getFiles().find(f => f.path === note.path)
       if (file) {
+      // @ts-ignore
         imagePath = app.vault.getResourcePath(file)
       }
     }

@@ -4,7 +4,9 @@ import { removeAnchors } from './tools/notes'
 import { SearchEngine } from './search/search-engine'
 import { cacheManager } from './cache-manager'
 import type { IndexedDocument } from './globals'
-import { fileToIndexedDocument } from './file-loader'
+import { getIndexedDocument } from "./file-loader";
+
+const indexedList: Set<string> = new Set()
 
 /**
  * Adds a file to the search index
@@ -18,21 +20,14 @@ export async function addToIndexAndMemCache(
     return
   }
 
-  // Check if the file was already indexed as non-existent.
-  // If so, remove it from the index, and add it again as a real note.
-  if (cacheManager.getLiveDocument(file.path)?.doesNotExist) {
-    removeFromIndex(file.path)
-  }
-
   try {
-    if (cacheManager.getLiveDocument(file.path)) {
+    if (indexedList.has(file.path)) {
       throw new Error(`${file.basename} is already indexed`)
     }
 
     // Make the document and index it
-    const note = await fileToIndexedDocument(file)
-    SearchEngine.getEngine().addSingleToMinisearch(note)
-    await cacheManager.updateLiveDocument(note.path, note)
+    SearchEngine.getEngine().addSingleToMinisearch(file.path)
+    indexedList.add(file.path)
   } catch (e) {
     // console.trace('Error while indexing ' + file.basename)
     console.error(e)
@@ -65,8 +60,7 @@ export function addNonExistingToIndex(name: string, parent: string): void {
     doesNotExist: true,
     parent,
   }
-  SearchEngine.getEngine().addSingleToMinisearch(note)
-  cacheManager.updateLiveDocument(filename, note)
+  SearchEngine.getEngine().addSingleToMinisearch(note.path)
 }
 
 /**
@@ -77,10 +71,8 @@ export function removeFromIndex(path: string): void {
     console.info(`"${path}" is not an indexable file`)
     return
   }
-  const note = cacheManager.getLiveDocument(path)
-  if (note) {
-    SearchEngine.getEngine().removeFromMinisearch(note)
-    cacheManager.deleteLiveDocument(path)
+  if (indexedList.has(path)) {
+    SearchEngine.getEngine().removeFromMinisearch(path)
 
     // FIXME: only remove non-existing notes if they don't have another parent
     // cacheManager

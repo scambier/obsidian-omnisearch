@@ -37,6 +37,7 @@ export type IndexedDocument = {
   headings2: string
   headings3: string
 
+  // TODO: reimplement this
   doesNotExist?: boolean
   parent?: string
 }

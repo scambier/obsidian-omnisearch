@@ -32,12 +32,26 @@ export class OmnisearchCache extends Dexie {
   //#region Table declarations
 
   documents!: Dexie.Table<
-    { path: string; mtime: number; document: IndexedDocument },
+    {
+      path: string
+      mtime: number
+      /**
+       * @deprecated
+       */
+      document: IndexedDocument
+    },
     string
   >
   searchHistory!: Dexie.Table<{ id?: number; query: string }, number>
   minisearch!: Dexie.Table<
-    { date: string; checksum: string; data: AsPlainObject },
+    {
+      date: string
+      /**
+       * @deprecated
+       */
+      checksum: string
+      data: AsPlainObject
+    },
     string
   >
 

@@ -6,6 +6,10 @@ import { minisearchOptions } from './search/search-engine'
 import { makeMD5 } from './tools/utils'
 
 class CacheManager {
+  /**
+   * @deprecated
+   * @private
+   */
   private liveDocuments: Map<string, IndexedDocument> = new Map()
   /**
    * Show an empty input field next time the user opens Omnisearch modal
@@ -39,6 +43,7 @@ class CacheManager {
   /**
    * Important: keep this method async for the day it _really_ becomes async.
    * This will avoid a refactor.
+   * @deprecated
    * @param path
    * @param note
    */
@@ -49,17 +54,20 @@ class CacheManager {
     this.liveDocuments.set(path, note)
   }
 
+  /**
+   * @deprecated
+   * @param key
+   */
   public deleteLiveDocument(key: string): void {
     this.liveDocuments.delete(key)
   }
 
+  /**
+   * @deprecated
+   * @param key
+   */
   public getLiveDocument(key: string): IndexedDocument | undefined {
     return this.liveDocuments.get(key)
-  }
-
-  public isDocumentOutdated(file: TFile): boolean {
-    const indexedNote = this.getLiveDocument(file.path)
-    return !indexedNote || indexedNote.mtime !== file.stat.mtime
   }
 
   //#region Minisearch
@@ -82,7 +90,6 @@ class CacheManager {
   public async getMinisearchCache(): Promise<MiniSearch | null> {
     // Retrieve documents and make their checksum
     const cachedDocs = await database.documents.toArray()
-    const checksum = this.getDocumentsChecksum(cachedDocs.map(d => d.document))
 
     // Add those documents in the live cache
     cachedDocs.forEach(doc =>
@@ -91,13 +98,6 @@ class CacheManager {
 
     // Retrieve the search cache, and verify the checksum
     const cachedIndex = (await database.minisearch.toArray())[0]
-    if (cachedIndex?.checksum !== checksum) {
-      console.warn("Omnisearch - Cache - Checksums don't match, clearing cache")
-      // Invalid (or null) cache, clear everything
-      await database.minisearch.clear()
-      await database.documents.clear()
-      return null
-    }
 
     try {
       return MiniSearch.loadJS(cachedIndex.data, minisearchOptions)
@@ -116,7 +116,7 @@ class CacheManager {
    * @param documents
    */
   public async getDiffDocuments(documents: IndexedDocument[]): Promise<{
-    toDelete: IndexedDocument[]
+    toDelete: string[]
     toAdd: IndexedDocument[]
     toUpdate: { oldDoc: IndexedDocument; newDoc: IndexedDocument }[]
   }> {
@@ -128,7 +128,7 @@ class CacheManager {
     // present in `cachedDocs` but not in `documents`
     const toDelete = cachedDocs
       .filter(c => !documents.find(d => d.path === c.path))
-      .map(d => d.document)
+      .map(d => d.path)
 
     // toUpdate: same path, but different mtime
     const toUpdate = cachedDocs
@@ -158,7 +158,7 @@ class CacheManager {
 
     // Delete
     // console.log(`Omnisearch - Cache - Will delete ${toDelete.length} documents`)
-    await database.documents.bulkDelete(toDelete.map(o => o.path))
+    await database.documents.bulkDelete(toDelete)
 
     // Add
     // console.log(`Omnisearch - Cache - Will add ${toAdd.length} documents`)

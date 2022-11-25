@@ -6,7 +6,7 @@
   import { eventBus, IndexingStep, type ResultNote } from 'src/globals'
   import { createNote, openNote } from 'src/tools/notes'
   import { SearchEngine } from 'src/search/search-engine'
-  import { getCtrlKeyLabel, getExtension, loopIndex } from 'src/tools/utils'
+  import { getCtrlKeyLabel, getExtension, isFilePDF, loopIndex } from 'src/tools/utils'
   import {
     OmnisearchInFileModal,
     type OmnisearchVaultModal,
@@ -189,7 +189,7 @@
   function switchToInFileModal(): void {
     // Do nothing if the selectedNote is a PDF,
     // or if there is 0 match (e.g indexing in progress)
-    if (selectedNote?.path.endsWith('.pdf') || !selectedNote?.matches.length) {
+    if (isFilePDF(selectedNote?.path) || !selectedNote?.matches.length) {
       return
     }
 

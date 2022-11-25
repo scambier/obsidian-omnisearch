@@ -8,10 +8,11 @@ import { loadSettings, settings, SettingsTab, showExcerpt } from './settings'
 import { eventBus, EventNames, IndexingStep } from './globals'
 import api from './tools/api'
 import { isFilePlaintext, wait } from './tools/utils'
-import * as NotesIndex from './notes-index'
 import * as FileLoader from './file-loader'
 import { OmnisearchCache } from './database'
 import { cacheManager } from './cache-manager'
+import * as NotesIndex from './notes-index'
+import { addToIndexAndMemCache } from "./notes-index";
 
 export default class OmnisearchPlugin extends Plugin {
   private ribbonButton?: HTMLElement
@@ -186,21 +187,15 @@ async function populateIndex(): Promise<void> {
 
     // Add
     await engine.addAllToMinisearch(diffDocs.toAdd)
-    diffDocs.toAdd.forEach(doc =>
-      cacheManager.updateLiveDocument(doc.path, doc)
-    )
 
     // Delete
-    for (const [i, doc] of diffDocs.toDelete.entries()) {
-      await wait(0)
-      engine.removeFromMinisearch(doc)
-      cacheManager.deleteLiveDocument(doc.path)
+    for (const pathToDel of diffDocs.toDelete) {
+      NotesIndex.removeFromIndex(pathToDel)
     }
 
     // Update (delete + add)
     diffDocs.toUpdate.forEach(({ oldDoc, newDoc }) => {
-      engine.removeFromMinisearch(oldDoc)
-      cacheManager.updateLiveDocument(oldDoc.path, newDoc)
+      NotesIndex.removeFromIndex(oldDoc.path)
     })
     await engine.addAllToMinisearch(diffDocs.toUpdate.map(d => d.newDoc))
   }

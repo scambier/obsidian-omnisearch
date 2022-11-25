@@ -1,9 +1,9 @@
 import {
   type CachedMetadata,
-  Notice,
-  Platform,
   getAllTags,
+  Notice,
   parseFrontMatterAliases,
+  Platform,
 } from 'obsidian'
 import type { SearchMatch } from '../globals'
 import {
@@ -207,8 +207,8 @@ export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
 
 export function isFileIndexable(path: string): boolean {
   return (
-    (settings.PDFIndexing && path.endsWith('.pdf')) ||
     isFilePlaintext(path) ||
+    (settings.PDFIndexing && isFilePDF(path)) ||
     (settings.imagesIndexing && isFileImage(path))
   )
 }
@@ -217,6 +217,10 @@ export function isFileImage(path: string): boolean {
   return (
     path.endsWith('.png') || path.endsWith('.jpg') || path.endsWith('.jpeg')
   )
+}
+
+export function isFilePDF(path: string): boolean {
+  return path.endsWith('.pdf')
 }
 
 export function isFilePlaintext(path: string): boolean {

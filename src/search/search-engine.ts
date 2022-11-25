@@ -2,10 +2,10 @@ import MiniSearch, { type Options, type SearchResult } from 'minisearch'
 import {
   chsRegex,
   type IndexedDocument,
+  IndexingStep,
   type ResultNote,
   type SearchMatch,
   SPACE_OR_PUNCTUATION,
-  IndexingStep,
 } from '../globals'
 import {
   removeDiacritics,
@@ -17,8 +17,9 @@ import { settings } from '../settings'
 import { cacheManager } from '../cache-manager'
 import { writable } from 'svelte/store'
 import { Notice } from 'obsidian'
+import { getIndexedDocument } from '../file-loader'
 
-let previousResults: ResultNote[] = []
+let previousResults: SearchResult[] = []
 
 const tokenize = (text: string): string[] => {
   const tokens = text.split(SPACE_OR_PUNCTUATION)
@@ -102,7 +103,10 @@ export class SearchEngine {
     query: Query,
     options: { prefixLength: number }
   ): Promise<SearchResult[]> {
-    if (!query.segmentsToStr()) return []
+    if (query.isEmpty()) {
+      previousResults = []
+      return []
+    }
 
     let results = this.minisearch.search(query.segmentsToStr(), {
       prefix: term => term.length >= options.prefixLength,
@@ -116,6 +120,7 @@ export class SearchEngine {
         headings3: settings.weightH3,
       },
     })
+    if (!results.length) return previousResults
 
     // Downrank files that are in Obsidian's excluded list
     if (settings.respectExcluded) {
@@ -124,19 +129,23 @@ export class SearchEngine {
           app.metadataCache.isUserIgnored &&
           app.metadataCache.isUserIgnored(result.id)
         ) {
-          result.score /= 10 // TODO: make this value configurable or toggleable?
+          result.score /= 10
         }
       })
     }
+
+    const documents = await Promise.all(
+      results.map(async result => await getIndexedDocument(result.id))
+    )
 
     // If the search query contains quotes, filter out results that don't have the exact match
     const exactTerms = query.getExactTerms()
     if (exactTerms.length) {
       results = results.filter(r => {
-        const title =
-          cacheManager.getLiveDocument(r.id)?.path.toLowerCase() ?? ''
+        const document = documents.find(d => d.path === r.id)
+        const title = document?.path.toLowerCase() ?? ''
         const content = stripMarkdownCharacters(
-          cacheManager.getLiveDocument(r.id)?.content ?? ''
+          document?.content ?? ''
         ).toLowerCase()
         return exactTerms.every(q => content.includes(q) || title.includes(q))
       })
@@ -147,16 +156,22 @@ export class SearchEngine {
     if (exclusions.length) {
       results = results.filter(r => {
         const content = stripMarkdownCharacters(
-          cacheManager.getLiveDocument(r.id)?.content ?? ''
+          documents.find(d => d.path === r.id)?.content ?? ''
         ).toLowerCase()
         return exclusions.every(q => !content.includes(q.value))
       })
     }
     // FIXME:
     // Dedupe results - clutch for https://github.com/scambier/obsidian-omnisearch/issues/129
-    return results.filter(
-      (result, index, arr) => arr.findIndex(t => t.id === result.id) === index
-    )
+    results = results
+      .filter(
+        (result, index, arr) => arr.findIndex(t => t.id === result.id) === index
+      )
+      .slice(0, 50)
+
+    previousResults = results
+
+    return results
   }
 
   /**
@@ -196,10 +211,6 @@ export class SearchEngine {
     query: Query,
     options?: Partial<{ singleFilePath: string | null }>
   ): Promise<ResultNote[]> {
-    if (query.isEmpty()) {
-      previousResults = []
-      return []
-    }
     // Get the raw results
     let results: SearchResult[]
     if (settings.simpleSearch) {
@@ -207,7 +218,6 @@ export class SearchEngine {
     } else {
       results = await this.search(query, { prefixLength: 3 })
     }
-    if (!results.length) return previousResults
 
     // Extract tags from the query
     const tags = query.segments
@@ -233,9 +243,14 @@ export class SearchEngine {
       }
     }
 
+    // TODO: this already called in search(), pass each document in its SearchResult instead?
+    const documents = await Promise.all(
+      results.map(async result => await getIndexedDocument(result.id))
+    )
+
     // Map the raw results to get usable suggestions
     const resultNotes = results.map(result => {
-      let note = cacheManager.getLiveDocument(result.id)
+      let note = documents.find(d => d.path === result.id)
       if (!note) {
         // throw new Error(`Omnisearch - Note "${result.id}" not indexed`)
         console.warn(`Omnisearch - Note "${result.id}" not in the live cache`)
@@ -278,7 +293,6 @@ export class SearchEngine {
       }
       return resultNote
     })
-    previousResults = resultNotes
     return resultNotes
   }
 
@@ -291,12 +305,12 @@ export class SearchEngine {
     await this.minisearch.addAllAsync(documents, { chunkSize })
   }
 
-  public addSingleToMinisearch(document: IndexedDocument): void {
-    this.minisearch.add(document)
+  public addSingleToMinisearch(path: string): void {
+    getIndexedDocument(path).then(doc => this.minisearch.add(doc))
   }
 
-  public removeFromMinisearch(document: IndexedDocument): void {
-    this.minisearch.remove(document)
+  public removeFromMinisearch(path: string): void {
+    this.minisearch.discard(path)
   }
 
   // #endregion
