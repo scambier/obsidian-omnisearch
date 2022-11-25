@@ -9,7 +9,6 @@
   import { loopIndex } from 'src/tools/utils'
   import { onDestroy, onMount, tick } from 'svelte'
   import { MarkdownView } from 'obsidian'
-  import { SearchEngine } from 'src/search/search-engine'
   import ModalContainer from './ModalContainer.svelte'
   import {
     OmnisearchInFileModal,
@@ -18,6 +17,7 @@
   import ResultItemInFile from './ResultItemInFile.svelte'
   import { Query } from 'src/search/query'
   import { openNote } from 'src/tools/notes'
+  import { searchEngine } from 'src/search/omnisearch'
 
   export let modal: OmnisearchInFileModal
   export let parent: OmnisearchVaultModal | null = null
@@ -50,7 +50,7 @@
       query = new Query(searchQuery)
       note =
         (
-          await SearchEngine.getEngine().getSuggestions(query, {
+          await searchEngine.getSuggestions(query, {
             singleFilePath,
           })
         )[0] ?? null

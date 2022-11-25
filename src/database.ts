@@ -3,10 +3,46 @@ import type { AsPlainObject } from 'minisearch'
 import type { IndexedDocument } from './globals'
 
 export class OmnisearchCache extends Dexie {
-  public static readonly dbVersion = 7
+  public static readonly dbVersion = 8
   public static readonly dbName = 'omnisearch/cache/' + app.appId
 
   private static instance: OmnisearchCache
+
+  //#region Table declarations
+
+  /**
+   * @deprecated
+   */
+  documents!: Dexie.Table<
+    {
+      path: string
+      mtime: number
+      document: IndexedDocument
+    },
+    string
+  >
+
+  searchHistory!: Dexie.Table<{ id?: number; query: string }, number>
+  minisearch!: Dexie.Table<
+    {
+      date: string
+      paths: Array<{ path: string; mtime: number }>
+      data: AsPlainObject
+    },
+    string
+  >
+
+  private constructor() {
+    super(OmnisearchCache.dbName)
+    // Database structure
+    this.version(OmnisearchCache.dbVersion).stores({
+      searchHistory: '++id',
+      documents: 'path',
+      minisearch: 'date',
+    })
+  }
+
+  //#endregion Table declarations
 
   /**
    * Deletes Omnisearch databases that have an older version than the current one
@@ -29,34 +65,6 @@ export class OmnisearchCache extends Dexie {
     }
   }
 
-  //#region Table declarations
-
-  documents!: Dexie.Table<
-    {
-      path: string
-      mtime: number
-      /**
-       * @deprecated
-       */
-      document: IndexedDocument
-    },
-    string
-  >
-  searchHistory!: Dexie.Table<{ id?: number; query: string }, number>
-  minisearch!: Dexie.Table<
-    {
-      date: string
-      /**
-       * @deprecated
-       */
-      checksum: string
-      data: AsPlainObject
-    },
-    string
-  >
-
-  //#endregion Table declarations
-
   public static getInstance() {
     if (!OmnisearchCache.instance) {
       OmnisearchCache.instance = new OmnisearchCache()
@@ -64,19 +72,8 @@ export class OmnisearchCache extends Dexie {
     return OmnisearchCache.instance
   }
 
-  private constructor() {
-    super(OmnisearchCache.dbName)
-    // Database structure
-    this.version(OmnisearchCache.dbVersion).stores({
-      searchHistory: '++id',
-      documents: 'path',
-      minisearch: 'date',
-    })
-  }
-
   public async clearCache() {
     await this.minisearch.clear()
-    await this.documents.clear()
   }
 }
 

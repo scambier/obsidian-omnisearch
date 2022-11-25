@@ -1,18 +1,15 @@
 import { Notice, Platform, Plugin, TFile } from 'obsidian'
-import { SearchEngine } from './search/search-engine'
 import {
   OmnisearchInFileModal,
   OmnisearchVaultModal,
 } from './components/modals'
 import { loadSettings, settings, SettingsTab, showExcerpt } from './settings'
-import { eventBus, EventNames, IndexingStep } from './globals'
+import { eventBus, EventNames, indexingStep, IndexingStepType } from './globals'
 import api from './tools/api'
-import { isFilePlaintext, wait } from './tools/utils'
-import * as FileLoader from './file-loader'
+import { isFileImage, isFilePDF, isFilePlaintext } from './tools/utils'
 import { OmnisearchCache } from './database'
-import { cacheManager } from './cache-manager'
 import * as NotesIndex from './notes-index'
-import { addToIndexAndMemCache } from "./notes-index";
+import { searchEngine } from './search/omnisearch'
 
 export default class OmnisearchPlugin extends Plugin {
   private ribbonButton?: HTMLElement
@@ -56,12 +53,12 @@ export default class OmnisearchPlugin extends Plugin {
       // Listeners to keep the search index up-to-date
       this.registerEvent(
         this.app.vault.on('create', file => {
-          NotesIndex.addToIndexAndMemCache(file)
+          searchEngine.addFromPaths([file.path])
         })
       )
       this.registerEvent(
         this.app.vault.on('delete', file => {
-          NotesIndex.removeFromIndex(file.path)
+          searchEngine.removeFromPaths([file.path])
         })
       )
       this.registerEvent(
@@ -72,8 +69,8 @@ export default class OmnisearchPlugin extends Plugin {
       this.registerEvent(
         this.app.vault.on('rename', async (file, oldPath) => {
           if (file instanceof TFile && isFilePlaintext(file.path)) {
-            NotesIndex.removeFromIndex(oldPath)
-            await NotesIndex.addToIndexAndMemCache(file)
+            searchEngine.removeFromPaths([oldPath])
+            await searchEngine.addFromPaths([file.path])
           }
         })
       )
@@ -108,105 +105,57 @@ export default class OmnisearchPlugin extends Plugin {
 async function populateIndex(): Promise<void> {
   console.time('Omnisearch - Indexing total time')
 
-  // Initialize minisearch
-  let engine = SearchEngine.getEngine()
-
-  // if not iOS, load data from cache
-  if (!Platform.isIosApp) {
-    engine = await SearchEngine.initFromCache()
-  }
+  // // if not iOS, load data from cache
+  // if (!Platform.isIosApp) {
+  //   engine = await SearchEngine.initFromCache()
+  // }
 
   // Load plaintext files
-  SearchEngine.indexingStep.set(IndexingStep.ReadingNotes)
+  indexingStep.set(IndexingStepType.ReadingNotes)
   console.log('Omnisearch - Reading notes')
-  const plainTextFiles = await FileLoader.getPlainTextFiles()
-  let allFiles = [...plainTextFiles]
-  // iOS: since there's no cache, directly index the documents
-  if (Platform.isIosApp) {
-    await wait(1000)
-    await engine.addAllToMinisearch(plainTextFiles)
-  }
+  const plainTextFiles = app.vault
+    .getFiles()
+    .filter(f => isFilePlaintext(f.path))
+    .map(p => p.path)
+  await searchEngine.addFromPaths(plainTextFiles)
+
+  let allFiles: string[] = [...plainTextFiles]
 
   // Load PDFs
   if (settings.PDFIndexing) {
-    SearchEngine.indexingStep.set(IndexingStep.ReadingPDFs)
+    indexingStep.set(IndexingStepType.ReadingPDFs)
     console.log('Omnisearch - Reading PDFs')
-    const pdfDocuments = await FileLoader.getPDFAsDocuments()
-    // iOS: since there's no cache, just index the documents
-    if (Platform.isIosApp) {
-      await wait(1000)
-      await engine.addAllToMinisearch(pdfDocuments)
-    }
+    const pdfDocuments = app.vault
+      .getFiles()
+      .filter(f => isFilePDF(f.path))
+      .map(p => p.path)
+    await searchEngine.addFromPaths(pdfDocuments)
     // Add PDFs to the files list
     allFiles = [...allFiles, ...pdfDocuments]
   }
 
   // Load Images
   if (settings.imagesIndexing) {
-    SearchEngine.indexingStep.set(IndexingStep.ReadingImages)
+    indexingStep.set(IndexingStepType.ReadingImages)
     console.log('Omnisearch - Reading Images')
-    const imagesDocuments = await FileLoader.getImagesAsDocuments()
-    // iOS: since there's no cache, just index the documents
-    if (Platform.isIosApp) {
-      await wait(1000)
-      await engine.addAllToMinisearch(imagesDocuments)
-    }
+    const imagesDocuments = app.vault
+      .getFiles()
+      .filter(f => isFileImage(f.path))
+      .map(p => p.path)
+    await searchEngine.addFromPaths(imagesDocuments)
     // Add Images to the files list
     allFiles = [...allFiles, ...imagesDocuments]
   }
 
   console.log('Omnisearch - Total number of files: ' + allFiles.length)
-  let needToUpdateCache = false
-
-  // Other platforms: make a diff of what's to add/update/delete
-  if (!Platform.isIosApp) {
-    SearchEngine.indexingStep.set(IndexingStep.UpdatingCache)
-    console.log('Omnisearch - Checking index cache diff...')
-    // Check which documents need to be removed/added/updated
-    const diffDocs = await cacheManager.getDiffDocuments(allFiles)
-    console.log(
-      `Omnisearch - Files to add/remove/update: ${diffDocs.toAdd.length}/${diffDocs.toDelete.length}/${diffDocs.toUpdate.length}`
-    )
-
-    if (
-      diffDocs.toAdd.length +
-        diffDocs.toDelete.length +
-        diffDocs.toUpdate.length >
-      100
-    ) {
-      new Notice(
-        `Omnisearch - A great number of files need to be added/updated/cleaned. This process may make cause slowdowns.`
-      )
-    }
-
-    needToUpdateCache = !!(
-      diffDocs.toAdd.length ||
-      diffDocs.toDelete.length ||
-      diffDocs.toUpdate.length
-    )
-
-    // Add
-    await engine.addAllToMinisearch(diffDocs.toAdd)
-
-    // Delete
-    for (const pathToDel of diffDocs.toDelete) {
-      NotesIndex.removeFromIndex(pathToDel)
-    }
-
-    // Update (delete + add)
-    diffDocs.toUpdate.forEach(({ oldDoc, newDoc }) => {
-      NotesIndex.removeFromIndex(oldDoc.path)
-    })
-    await engine.addAllToMinisearch(diffDocs.toUpdate.map(d => d.newDoc))
-  }
 
   // Load PDFs into the main search engine, and write cache
   // SearchEngine.loadTmpDataIntoMain()
-  SearchEngine.indexingStep.set(IndexingStep.Done)
+  indexingStep.set(IndexingStepType.Done)
 
-  if (!Platform.isIosApp && needToUpdateCache) {
+  if (!Platform.isIosApp) {
     console.log('Omnisearch - Writing cache...')
-    await SearchEngine.getEngine().writeToCache(allFiles)
+    await searchEngine.writeToCache()
   }
 
   console.timeEnd('Omnisearch - Indexing total time')

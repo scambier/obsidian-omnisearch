@@ -1,25 +1,20 @@
-import MiniSearch, { type Options, type SearchResult } from 'minisearch'
-import {
-  chsRegex,
-  type IndexedDocument,
-  IndexingStep,
-  type ResultNote,
-  type SearchMatch,
-  SPACE_OR_PUNCTUATION,
-} from '../globals'
+import MiniSearch, {
+  type AsPlainObject,
+  type Options,
+  type SearchResult,
+} from 'minisearch'
+import type { IndexedDocument, ResultNote, SearchMatch } from '../globals'
+import { chsRegex, SPACE_OR_PUNCTUATION } from '../globals'
+import { settings } from '../settings'
 import {
   removeDiacritics,
   stringsToRegex,
   stripMarkdownCharacters,
 } from '../tools/utils'
-import type { Query } from './query'
-import { settings } from '../settings'
-import { cacheManager } from '../cache-manager'
-import { writable } from 'svelte/store'
 import { Notice } from 'obsidian'
 import { getIndexedDocument } from '../file-loader'
-
-let previousResults: SearchResult[] = []
+import type { Query } from './query'
+import { cacheManager } from '../cache-manager'
 
 const tokenize = (text: string): string[] => {
   const tokens = text.split(SPACE_OR_PUNCTUATION)
@@ -32,67 +27,70 @@ const tokenize = (text: string): string[] => {
   } else return tokens
 }
 
-export const minisearchOptions: Options<IndexedDocument> = {
-  tokenize,
-  processTerm: (term: string) =>
-    (settings.ignoreDiacritics ? removeDiacritics(term) : term).toLowerCase(),
-  idField: 'path',
-  fields: [
-    'basename',
-    'aliases',
-    'content',
-    'headings1',
-    'headings2',
-    'headings3',
-  ],
-  storeFields: ['tags'],
-  logger(level, message, code) {
-    if (code === 'version_conflict') {
-      new Notice(
-        'Omnisearch - Your index cache may be incorrect or corrupted. If this message keeps appearing, go to Settings to clear the cache.'
-      )
-    }
-  },
-}
-
-export class SearchEngine {
-  private static engine?: SearchEngine
-  public static indexingStep = writable(IndexingStep.LoadingCache)
-
-  /**
-   * The main singleton SearchEngine instance.
-   * Should be used for all queries
-   */
-  public static getEngine(): SearchEngine {
-    if (!this.engine) {
-      this.engine = new SearchEngine()
-    }
-    return this.engine
-  }
-
-  /**
-   * Instantiates the main instance with cache data (if it exists)
-   */
-  public static async initFromCache(): Promise<SearchEngine> {
-    try {
-      const cache = await cacheManager.getMinisearchCache()
-      if (cache) {
-        this.getEngine().minisearch = cache
+export class Omnisearch {
+  public static readonly options: Options<IndexedDocument> = {
+    tokenize,
+    processTerm: (term: string) =>
+      (settings.ignoreDiacritics ? removeDiacritics(term) : term).toLowerCase(),
+    idField: 'path',
+    fields: [
+      'basename',
+      'aliases',
+      'content',
+      'headings1',
+      'headings2',
+      'headings3',
+    ],
+    storeFields: ['tags'],
+    logger(_level, _message, code) {
+      if (code === 'version_conflict') {
+        new Notice(
+          'Omnisearch - Your index cache may be incorrect or corrupted. If this message keeps appearing, go to Settings to clear the cache.'
+        )
       }
-    } catch (e) {
-      new Notice(
-        'Omnisearch - Cache missing or invalid. Some freezes may occur while Omnisearch indexes your vault.'
-      )
-      console.error('Omnisearch - Could not init engine from cache')
-      console.error(e)
-    }
-    return this.getEngine()
+    },
+  }
+  private minisearch: MiniSearch
+  private indexedDocuments: Map<string, number> = new Map()
+  private previousResults: SearchResult[] = []
+
+  constructor() {
+    this.minisearch = new MiniSearch(Omnisearch.options)
   }
 
-  private minisearch: MiniSearch
+  async loadCache(): Promise<void> {
+    const cache = await cacheManager.getMinisearchCache()
+    if (cache) {
+      this.minisearch = MiniSearch.loadJS(cache.data, Omnisearch.options)
+      this.indexedDocuments = new Map(cache.paths.map(o => [o.path, o.mtime]))
+    }
+  }
 
-  private constructor() {
-    this.minisearch = new MiniSearch(minisearchOptions)
+  /**
+   * Add notes/PDFs/images to the search index
+   * @param paths
+   */
+  public async addFromPaths(paths: string[]): Promise<void> {
+    let documents = await Promise.all(
+      paths.map(async path => await getIndexedDocument(path))
+    )
+
+    // If a document is already added, discard it
+    this.removeFromPaths(
+      documents.filter(d => this.indexedDocuments.has(d.path)).map(d => d.path)
+    )
+
+    documents.forEach(doc => this.indexedDocuments.set(doc.path, doc.mtime))
+    await this.minisearch.addAllAsync(documents)
+  }
+
+  /**
+   * Discard a document from minisearch
+   * @param paths
+   */
+  public removeFromPaths(paths: string[]): void {
+    paths.forEach(p => this.indexedDocuments.delete(p))
+    this.minisearch.discardAll(paths)
   }
 
   /**
@@ -104,7 +102,7 @@ export class SearchEngine {
     options: { prefixLength: number }
   ): Promise<SearchResult[]> {
     if (query.isEmpty()) {
-      previousResults = []
+      this.previousResults = []
       return []
     }
 
@@ -120,7 +118,7 @@ export class SearchEngine {
         headings3: settings.weightH3,
       },
     })
-    if (!results.length) return previousResults
+    if (!results.length) return this.previousResults
 
     // Downrank files that are in Obsidian's excluded list
     if (settings.respectExcluded) {
@@ -169,14 +167,11 @@ export class SearchEngine {
       )
       .slice(0, 50)
 
-    previousResults = results
+    this.previousResults = results
 
     return results
   }
 
-  /**
-   * Parses a text against a regex, and returns the { string, offset } matches
-   */
   public getMatches(text: string, reg: RegExp, query: Query): SearchMatch[] {
     let match: RegExpExecArray | null = null
     const matches: SearchMatch[] = []
@@ -296,26 +291,12 @@ export class SearchEngine {
     return resultNotes
   }
 
-  // #region Read/write minisearch index
-
-  public async addAllToMinisearch(
-    documents: IndexedDocument[],
-    chunkSize = 10
-  ): Promise<void> {
-    await this.minisearch.addAllAsync(documents, { chunkSize })
-  }
-
-  public addSingleToMinisearch(path: string): void {
-    getIndexedDocument(path).then(doc => this.minisearch.add(doc))
-  }
-
-  public removeFromMinisearch(path: string): void {
-    this.minisearch.discard(path)
-  }
-
-  // #endregion
-
-  public async writeToCache(documents: IndexedDocument[]): Promise<void> {
-    await cacheManager.writeMinisearchCache(this.minisearch, documents)
+  public async writeToCache(): Promise<void> {
+    await cacheManager.writeMinisearchCache(
+      this.minisearch,
+      this.indexedDocuments
+    )
   }
 }
+
+export const searchEngine = new Omnisearch()

@@ -1,4 +1,3 @@
-import { cacheManager } from './cache-manager'
 import {
   extractHeadingsFromCache,
   getAliasesFromMetadata,
@@ -47,9 +46,8 @@ async function getBinaryFiles(files: TFile[]): Promise<IndexedDocument[]> {
   const input = []
   for (const file of files) {
     input.push(
-      new Promise(async (resolve, reject) => {
+      new Promise(async (resolve, _reject) => {
         const doc = await getIndexedDocument(file.path)
-        // await cacheManager.updateLiveDocument(file.path, doc)
         data.push(doc)
         return resolve(null)
       })

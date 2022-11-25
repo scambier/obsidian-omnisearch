@@ -1,6 +1,6 @@
 import type { ResultNote } from '../globals'
 import { Query } from '../search/query'
-import { SearchEngine } from '../search/search-engine'
+import { searchEngine } from '../search/omnisearch'
 
 type ResultNoteApi = {
   score: number
@@ -35,8 +35,8 @@ function mapResults(results: ResultNote[]): ResultNoteApi[] {
 
 async function search(q: string): Promise<ResultNoteApi[]> {
   const query = new Query(q)
-  const raw = await SearchEngine.getEngine().getSuggestions(query)
+  const raw = await searchEngine.getSuggestions(query)
   return mapResults(raw)
 }
 
-export default { search }
+export default {search}

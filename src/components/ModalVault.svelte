@@ -3,9 +3,8 @@
   import { onDestroy, onMount, tick } from 'svelte'
   import InputSearch from './InputSearch.svelte'
   import ModalContainer from './ModalContainer.svelte'
-  import { eventBus, IndexingStep, type ResultNote } from 'src/globals'
+  import { eventBus, indexingStep, IndexingStepType, type ResultNote } from 'src/globals'
   import { createNote, openNote } from 'src/tools/notes'
-  import { SearchEngine } from 'src/search/search-engine'
   import { getCtrlKeyLabel, getExtension, isFilePDF, loopIndex } from 'src/tools/utils'
   import {
     OmnisearchInFileModal,
@@ -16,6 +15,7 @@
   import { settings } from '../settings'
   import * as NotesIndex from '../notes-index'
   import { cacheManager } from '../cache-manager'
+  import { searchEngine } from 'src/search/omnisearch'
 
   export let modal: OmnisearchVaultModal
   export let previousQuery: string | undefined
@@ -24,7 +24,6 @@
   let searchQuery: string | undefined
   let resultNotes: ResultNote[] = []
   let query: Query
-  let { indexingStep } = SearchEngine
   let indexingStepDesc = ''
 
   $: selectedNote = resultNotes[selectedIndex]
@@ -36,20 +35,20 @@
   }
   $: {
     switch ($indexingStep) {
-      case IndexingStep.LoadingCache:
+      case IndexingStepType.LoadingCache:
         indexingStepDesc = 'Loading cache...'
         break
-      case IndexingStep.ReadingNotes:
+      case IndexingStepType.ReadingNotes:
         updateResults()
         indexingStepDesc = 'Reading notes...'
         break
-      case IndexingStep.ReadingPDFs:
+      case IndexingStepType.ReadingPDFs:
         indexingStepDesc = 'Reading PDFs...'
         break
-      case IndexingStep.ReadingImages:
+      case IndexingStepType.ReadingImages:
         indexingStepDesc = 'Reading images...'
         break
-      case IndexingStep.UpdatingCache:
+      case IndexingStepType.UpdatingCache:
         indexingStepDesc = 'Updating cache...'
         break
       default:
@@ -99,7 +98,7 @@
 
   async function updateResults() {
     query = new Query(searchQuery)
-    resultNotes = (await SearchEngine.getEngine().getSuggestions(query)).sort(
+    resultNotes = (await searchEngine.getSuggestions(query)).sort(
       (a, b) => b.score - a.score
     )
     selectedIndex = 0
@@ -139,7 +138,7 @@
     openNote(note, newPane)
   }
 
-  async function onClickCreateNote(e: MouseEvent) {
+  async function onClickCreateNote(_e: MouseEvent) {
     await createNoteAndCloseModal()
   }
 

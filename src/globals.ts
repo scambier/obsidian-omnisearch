@@ -1,4 +1,5 @@
 import { EventBus } from './tools/event-bus'
+import { writable } from 'svelte/store'
 
 export const regexLineSplit = /\r?\n|\r|((\.|\?|!)( |\r?\n|\r))/g
 export const regexYaml = /^---\s*\n(.*?)\n?^---\s?/ms
@@ -16,7 +17,7 @@ export const EventNames = {
   ToggleExcerpts: 'toggle-excerpts',
 } as const
 
-export const enum IndexingStep {
+export const enum IndexingStepType {
   Done,
   LoadingCache,
   ReadingNotes,
@@ -49,6 +50,8 @@ export type SearchMatch = {
 export const isSearchMatch = (o: { offset?: number }): o is SearchMatch => {
   return o.offset !== undefined
 }
+
+export const indexingStep = writable(IndexingStepType.LoadingCache)
 
 export type ResultNote = {
   score: number
