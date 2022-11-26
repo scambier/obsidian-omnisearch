@@ -1,8 +1,4 @@
-import MiniSearch, {
-  type AsPlainObject,
-  type Options,
-  type SearchResult,
-} from 'minisearch'
+import MiniSearch, { type Options, type SearchResult } from 'minisearch'
 import type {
   DocumentRef,
   IndexedDocument,
@@ -183,6 +179,8 @@ export class Omnisearch {
       })
     }
 
+    results = results.slice(0, 50)
+
     const documents = await Promise.all(
       results.map(async result => await cacheManager.getDocument(result.id))
     )
@@ -212,11 +210,9 @@ export class Omnisearch {
     }
     // FIXME:
     // Dedupe results - clutch for https://github.com/scambier/obsidian-omnisearch/issues/129
-    results = results
-      .filter(
-        (result, index, arr) => arr.findIndex(t => t.id === result.id) === index
-      )
-      .slice(0, 50)
+    results = results.filter(
+      (result, index, arr) => arr.findIndex(t => t.id === result.id) === index
+    )
 
     this.previousResults = results
 

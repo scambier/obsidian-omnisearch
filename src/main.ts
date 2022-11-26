@@ -6,13 +6,7 @@ import {
 import { loadSettings, settings, SettingsTab, showExcerpt } from './settings'
 import { eventBus, EventNames, indexingStep, IndexingStepType } from './globals'
 import api from './tools/api'
-import {
-  isFileImage,
-  isFileIndexable,
-  isFilePDF,
-  isFilePlaintext,
-  wait,
-} from './tools/utils'
+import { isFileIndexable, isFilePlaintext } from './tools/utils'
 import { OmnisearchCache } from './database'
 import * as NotesIndex from './notes-index'
 import { searchEngine } from './search/omnisearch'
@@ -59,23 +53,28 @@ export default class OmnisearchPlugin extends Plugin {
     app.workspace.onLayoutReady(async () => {
       // Listeners to keep the search index up-to-date
       this.registerEvent(
-        this.app.vault.on('create', file => {
+        this.app.vault.on('create', async file => {
+          cacheManager.addToLiveCache(file.path)
           searchEngine.addFromPaths([file.path], false)
         })
       )
       this.registerEvent(
         this.app.vault.on('delete', file => {
+          cacheManager.removeFromLiveCache(file.path)
           searchEngine.removeFromPaths([file.path])
         })
       )
       this.registerEvent(
         this.app.vault.on('modify', async file => {
+          cacheManager.addToLiveCache(file.path)
           NotesIndex.markNoteForReindex(file)
         })
       )
       this.registerEvent(
         this.app.vault.on('rename', async (file, oldPath) => {
           if (file instanceof TFile && isFilePlaintext(file.path)) {
+            cacheManager.removeFromLiveCache(oldPath)
+            cacheManager.addToLiveCache(file.path)
             searchEngine.removeFromPaths([oldPath])
             await searchEngine.addFromPaths([file.path], false)
           }
@@ -115,7 +114,7 @@ async function populateIndex(): Promise<void> {
   const files = app.vault.getFiles().filter(f => isFileIndexable(f.path))
 
   // Map documents in the background
-  files.forEach(f => cacheManager.addToLiveCache(f.path))
+  // Promise.all(files.map(f => cacheManager.addToLiveCache(f.path)))
 
   if (!Platform.isIosApp) {
     console.time('Omnisearch - Loading index from cache')

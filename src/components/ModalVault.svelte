@@ -3,13 +3,10 @@
   import { onDestroy, onMount, tick } from 'svelte'
   import InputSearch from './InputSearch.svelte'
   import ModalContainer from './ModalContainer.svelte'
-  import { eventBus, indexingStep, IndexingStepType, type ResultNote } from 'src/globals'
+  import { eventBus, indexingStep, IndexingStepType, type ResultNote, } from 'src/globals'
   import { createNote, openNote } from 'src/tools/notes'
-  import { getCtrlKeyLabel, getExtension, isFilePDF, loopIndex } from 'src/tools/utils'
-  import {
-    OmnisearchInFileModal,
-    type OmnisearchVaultModal,
-  } from 'src/components/modals'
+  import { getCtrlKeyLabel, getExtension, isFilePDF, loopIndex, } from 'src/tools/utils'
+  import { OmnisearchInFileModal, type OmnisearchVaultModal, } from 'src/components/modals'
   import ResultItemVault from './ResultItemVault.svelte'
   import { Query } from 'src/search/query'
   import { settings } from '../settings'
@@ -25,12 +22,18 @@
   let resultNotes: ResultNote[] = []
   let query: Query
   let indexingStepDesc = ''
+  let searching = true
 
   $: selectedNote = resultNotes[selectedIndex]
   $: searchQuery = searchQuery ?? previousQuery
   $: if (searchQuery) {
-    updateResults()
+    resultNotes = []
+    searching = true
+    updateResults().then(() => {
+      searching = false
+    })
   } else {
+    searching = false
     resultNotes = []
   }
   $: {
@@ -246,11 +249,13 @@
       on:mousemove="{_ => (selectedIndex = i)}"
       on:click="{onClick}" />
   {/each}
-  {#if !resultNotes.length && searchQuery}
-    <div style="text-align: center;">
+  <div style="text-align: center;">
+    {#if !resultNotes.length && searchQuery && !searching}
       We found 0 result for your search here.
-    </div>
-  {/if}
+    {:else if searching}
+      Searching...
+    {/if}
+  </div>
 </ModalContainer>
 
 <div class="prompt-instructions">

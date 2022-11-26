@@ -1,4 +1,4 @@
-import { Notice, TFile } from 'obsidian'
+import { Notice } from 'obsidian'
 import type { DocumentRef, IndexedDocument } from './globals'
 import { database } from './database'
 import type { AsPlainObject } from 'minisearch'
@@ -11,13 +11,11 @@ import {
   isFilePDF,
   isFilePlaintext,
   makeMD5,
-  removeDiacritics
+  removeDiacritics,
 } from './tools/utils'
-import { getImageText, getPdfText } from "obsidian-text-extract";
+import { getImageText, getPdfText } from 'obsidian-text-extract'
 
-async function getIndexedDocument(
-  path: string
-): Promise<IndexedDocument> {
+async function getIndexedDocument(path: string): Promise<IndexedDocument> {
   const file = app.vault.getFiles().find(f => f.path === path)
   if (!file) throw new Error(`Invalid file path: "${path}"`)
   let content: string
@@ -76,12 +74,20 @@ class CacheManager {
    */
   private nextQueryIsEmpty = false
 
+  /**
+   * The "live cache", containing all indexed vault files
+   * in the form of IndexedDocuments
+   */
   private documents: Map<string, IndexedDocument> = new Map()
 
   public async addToLiveCache(path: string): Promise<void> {
     const doc = await getIndexedDocument(path)
     this.documents.set(path, doc)
-    console.log(path)
+    // console.log(path)
+  }
+
+  public removeFromLiveCache(path: string): void {
+    this.documents.delete(path)
   }
 
   public async getDocument(path: string): Promise<IndexedDocument> {
