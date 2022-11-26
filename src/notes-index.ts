@@ -43,7 +43,10 @@ export function markNoteForReindex(note: TAbstractFile): void {
 
 export async function refreshIndex(): Promise<void> {
   const paths = [...notesToReindex].map(n => n.path)
-  searchEngine.removeFromPaths(paths)
-  searchEngine.addFromPaths(paths)
-  notesToReindex.clear()
+  if (paths.length) {
+    searchEngine.removeFromPaths(paths)
+    searchEngine.addFromPaths(paths, false)
+    notesToReindex.clear()
+    // console.log(`Omnisearch - Reindexed ${paths.length} file(s)`)
+  }
 }

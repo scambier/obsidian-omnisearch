@@ -20,11 +20,12 @@ export const EventNames = {
 export const enum IndexingStepType {
   Done,
   LoadingCache,
-  ReadingNotes,
-  ReadingPDFs,
-  ReadingImages,
-  UpdatingCache,
+  ReadingFiles,
+  IndexingFiles,
+  WritingCache,
 }
+
+export type DocumentRef = { path: string; mtime: number }
 
 export type IndexedDocument = {
   path: string
@@ -51,7 +52,7 @@ export const isSearchMatch = (o: { offset?: number }): o is SearchMatch => {
   return o.offset !== undefined
 }
 
-export const indexingStep = writable(IndexingStepType.LoadingCache)
+export const indexingStep = writable(IndexingStepType.Done)
 
 export type ResultNote = {
   score: number

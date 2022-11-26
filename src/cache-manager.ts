@@ -1,5 +1,5 @@
 import { Notice } from 'obsidian'
-import type { IndexedDocument } from './globals'
+import type { DocumentRef, IndexedDocument } from './globals'
 import { database } from './database'
 import type { AsPlainObject } from 'minisearch'
 import type MiniSearch from 'minisearch'
@@ -53,7 +53,7 @@ class CacheManager {
   }
 
   public async getMinisearchCache(): Promise<{
-    paths: { path: string; mtime: number }[]
+    paths: DocumentRef[]
     data: AsPlainObject
   } | null> {
     try {

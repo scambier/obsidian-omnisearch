@@ -188,8 +188,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Simpler search')
       .setDesc(
-        `When enabled, Omnisearch is a bit more restrictive when using your query terms as prefixes.
-        May return less results, but will be quicker. You should enable this if Omnisearch makes Obsidian freeze while searching.`
+        `Enable this if Obsidian often freezes while making searches. This will return more strict results.`
       )
       .addToggle(toggle =>
         toggle.setValue(settings.simpleSearch).onChange(async v => {
@@ -235,7 +234,7 @@ export class SettingsTab extends PluginSettingTab {
     // Keep line returns in excerpts
     new Setting(containerEl)
       .setName('Render line return in excerpts')
-      .setDesc('Activate this option render line returns in result excerpts.')
+      .setDesc('Activate this option to render line returns in result excerpts.')
       .addToggle(toggle =>
         toggle
           .setValue(settings.renderLineReturnInExcerpts)

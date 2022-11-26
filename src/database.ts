@@ -1,6 +1,6 @@
 import Dexie from 'dexie'
 import type { AsPlainObject } from 'minisearch'
-import type { IndexedDocument } from './globals'
+import type { DocumentRef, IndexedDocument } from './globals'
 
 export class OmnisearchCache extends Dexie {
   public static readonly dbVersion = 8
@@ -8,25 +8,11 @@ export class OmnisearchCache extends Dexie {
 
   private static instance: OmnisearchCache
 
-  //#region Table declarations
-
-  /**
-   * @deprecated
-   */
-  documents!: Dexie.Table<
-    {
-      path: string
-      mtime: number
-      document: IndexedDocument
-    },
-    string
-  >
-
   searchHistory!: Dexie.Table<{ id?: number; query: string }, number>
   minisearch!: Dexie.Table<
     {
       date: string
-      paths: Array<{ path: string; mtime: number }>
+      paths: DocumentRef[]
       data: AsPlainObject
     },
     string
@@ -37,7 +23,6 @@ export class OmnisearchCache extends Dexie {
     // Database structure
     this.version(OmnisearchCache.dbVersion).stores({
       searchHistory: '++id',
-      documents: 'path',
       minisearch: 'date',
     })
   }
@@ -58,7 +43,6 @@ export class OmnisearchCache extends Dexie {
       console.log('Omnisearch - Those IndexedDb databases will be deleted:')
       for (const db of toDelete) {
         if (db.name) {
-          console.log(db.name + ' ' + db.version)
           indexedDB.deleteDatabase(db.name)
         }
       }

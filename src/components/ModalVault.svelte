@@ -38,17 +38,14 @@
       case IndexingStepType.LoadingCache:
         indexingStepDesc = 'Loading cache...'
         break
-      case IndexingStepType.ReadingNotes:
+      case IndexingStepType.ReadingFiles:
+        indexingStepDesc = 'Reading files...'
+        break
+      case IndexingStepType.IndexingFiles:
+        indexingStepDesc = 'Indexing files...'
+        break
+      case IndexingStepType.WritingCache:
         updateResults()
-        indexingStepDesc = 'Reading notes...'
-        break
-      case IndexingStepType.ReadingPDFs:
-        indexingStepDesc = 'Reading PDFs...'
-        break
-      case IndexingStepType.ReadingImages:
-        indexingStepDesc = 'Reading images...'
-        break
-      case IndexingStepType.UpdatingCache:
         indexingStepDesc = 'Updating cache...'
         break
       default:

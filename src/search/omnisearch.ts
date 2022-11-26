@@ -3,15 +3,26 @@ import MiniSearch, {
   type Options,
   type SearchResult,
 } from 'minisearch'
-import type { IndexedDocument, ResultNote, SearchMatch } from '../globals'
-import { chsRegex, SPACE_OR_PUNCTUATION } from '../globals'
+import type {
+  DocumentRef,
+  IndexedDocument,
+  ResultNote,
+  SearchMatch,
+} from '../globals'
+import {
+  chsRegex,
+  indexingStep,
+  IndexingStepType,
+  SPACE_OR_PUNCTUATION,
+} from '../globals'
 import { settings } from '../settings'
 import {
+  chunkArray,
   removeDiacritics,
   stringsToRegex,
   stripMarkdownCharacters,
 } from '../tools/utils'
-import { Notice } from 'obsidian'
+import { Notice, Platform } from 'obsidian'
 import { getIndexedDocument } from '../file-loader'
 import type { Query } from './query'
 import { cacheManager } from '../cache-manager'
@@ -45,7 +56,8 @@ export class Omnisearch {
     logger(_level, _message, code) {
       if (code === 'version_conflict') {
         new Notice(
-          'Omnisearch - Your index cache may be incorrect or corrupted. If this message keeps appearing, go to Settings to clear the cache.'
+          'Omnisearch - Your index cache may be incorrect or corrupted. If this message keeps appearing, go to Settings to clear the cache.',
+          5000
         )
       }
     },
@@ -59,6 +71,7 @@ export class Omnisearch {
   }
 
   async loadCache(): Promise<void> {
+    indexingStep.set(IndexingStepType.LoadingCache)
     const cache = await cacheManager.getMinisearchCache()
     if (cache) {
       this.minisearch = MiniSearch.loadJS(cache.data, Omnisearch.options)
@@ -67,10 +80,37 @@ export class Omnisearch {
   }
 
   /**
+   * Returns the list of documents that need to be reindexed
+   * @param docs
+   */
+  getDiff(docs: DocumentRef[]): {
+    toAdd: DocumentRef[]
+    toRemove: DocumentRef[]
+  } {
+    const indexedArr = [...this.indexedDocuments]
+    const docsMap = new Map(docs.map(d => [d.path, d.mtime]))
+
+    const toAdd = docs.filter(
+      d =>
+        !this.indexedDocuments.has(d.path) ||
+        this.indexedDocuments.get(d.path) !== d.mtime
+    )
+    const toRemove = [...this.indexedDocuments]
+      .filter(
+        ([path, mtime]) => !docsMap.has(path) || docsMap.get(path) !== mtime
+      )
+      .map(o => ({ path: o[0], mtime: o[1] }))
+    return { toAdd, toRemove }
+  }
+
+  /**
    * Add notes/PDFs/images to the search index
    * @param paths
    */
-  public async addFromPaths(paths: string[]): Promise<void> {
+  public async addFromPaths(
+    paths: string[],
+    writeToCache: boolean
+  ): Promise<void> {
     let documents = await Promise.all(
       paths.map(async path => await getIndexedDocument(path))
     )
@@ -80,8 +120,20 @@ export class Omnisearch {
       documents.filter(d => this.indexedDocuments.has(d.path)).map(d => d.path)
     )
 
-    documents.forEach(doc => this.indexedDocuments.set(doc.path, doc.mtime))
-    await this.minisearch.addAllAsync(documents)
+    // Split the documents in smaller chunks to regularly save the cache.
+    // If the user shuts off Obsidian mid-indexing, we at least saved some
+    const chunkedDocs = chunkArray(documents, 500)
+    for (const docs of chunkedDocs) {
+      indexingStep.set(IndexingStepType.IndexingFiles)
+      // Update the list of indexed docks
+      docs.forEach(doc => this.indexedDocuments.set(doc.path, doc.mtime))
+      // Add docs to minisearch
+      await this.minisearch.addAllAsync(docs)
+      // Save the index
+      if (writeToCache) {
+        await this.writeToCache()
+      }
+    }
   }
 
   /**
@@ -292,6 +344,10 @@ export class Omnisearch {
   }
 
   public async writeToCache(): Promise<void> {
+    if (Platform.isIosApp) {
+      return
+    }
+    indexingStep.set(IndexingStepType.WritingCache)
     await cacheManager.writeMinisearchCache(
       this.minisearch,
       this.indexedDocuments

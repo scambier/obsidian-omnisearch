@@ -244,3 +244,15 @@ export function makeMD5(data: BinaryLike): string {
   }
   return createHash('md5').update(data).digest('hex')
 }
+
+export function chunkArray<T>(arr: T[], len: number): T[][] {
+  var chunks = [],
+    i = 0,
+    n = arr.length
+
+  while (i < n) {
+    chunks.push(arr.slice(i, (i += len)))
+  }
+
+  return chunks
+}

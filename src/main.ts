@@ -6,7 +6,13 @@ import {
 import { loadSettings, settings, SettingsTab, showExcerpt } from './settings'
 import { eventBus, EventNames, indexingStep, IndexingStepType } from './globals'
 import api from './tools/api'
-import { isFileImage, isFilePDF, isFilePlaintext } from './tools/utils'
+import {
+  isFileImage,
+  isFileIndexable,
+  isFilePDF,
+  isFilePlaintext,
+  wait,
+} from './tools/utils'
 import { OmnisearchCache } from './database'
 import * as NotesIndex from './notes-index'
 import { searchEngine } from './search/omnisearch'
@@ -53,7 +59,7 @@ export default class OmnisearchPlugin extends Plugin {
       // Listeners to keep the search index up-to-date
       this.registerEvent(
         this.app.vault.on('create', file => {
-          searchEngine.addFromPaths([file.path])
+          searchEngine.addFromPaths([file.path], false)
         })
       )
       this.registerEvent(
@@ -70,7 +76,7 @@ export default class OmnisearchPlugin extends Plugin {
         this.app.vault.on('rename', async (file, oldPath) => {
           if (file instanceof TFile && isFilePlaintext(file.path)) {
             searchEngine.removeFromPaths([oldPath])
-            await searchEngine.addFromPaths([file.path])
+            await searchEngine.addFromPaths([file.path], false)
           }
         })
       )
@@ -78,7 +84,7 @@ export default class OmnisearchPlugin extends Plugin {
       await populateIndex()
     })
 
-    showWelcomeNotice(this)
+    executeFirstLaunchTasks(this)
   }
 
   onunload(): void {
@@ -104,61 +110,48 @@ export default class OmnisearchPlugin extends Plugin {
  */
 async function populateIndex(): Promise<void> {
   console.time('Omnisearch - Indexing total time')
-
-  // // if not iOS, load data from cache
-  // if (!Platform.isIosApp) {
-  //   engine = await SearchEngine.initFromCache()
-  // }
-
-  // Load plaintext files
-  indexingStep.set(IndexingStepType.ReadingNotes)
-  console.log('Omnisearch - Reading notes')
-  const plainTextFiles = app.vault
-    .getFiles()
-    .filter(f => isFilePlaintext(f.path))
-    .map(p => p.path)
-  await searchEngine.addFromPaths(plainTextFiles)
-
-  let allFiles: string[] = [...plainTextFiles]
-
-  // Load PDFs
-  if (settings.PDFIndexing) {
-    indexingStep.set(IndexingStepType.ReadingPDFs)
-    console.log('Omnisearch - Reading PDFs')
-    const pdfDocuments = app.vault
-      .getFiles()
-      .filter(f => isFilePDF(f.path))
-      .map(p => p.path)
-    await searchEngine.addFromPaths(pdfDocuments)
-    // Add PDFs to the files list
-    allFiles = [...allFiles, ...pdfDocuments]
-  }
-
-  // Load Images
-  if (settings.imagesIndexing) {
-    indexingStep.set(IndexingStepType.ReadingImages)
-    console.log('Omnisearch - Reading Images')
-    const imagesDocuments = app.vault
-      .getFiles()
-      .filter(f => isFileImage(f.path))
-      .map(p => p.path)
-    await searchEngine.addFromPaths(imagesDocuments)
-    // Add Images to the files list
-    allFiles = [...allFiles, ...imagesDocuments]
-  }
-
-  console.log('Omnisearch - Total number of files: ' + allFiles.length)
-
-  // Load PDFs into the main search engine, and write cache
-  // SearchEngine.loadTmpDataIntoMain()
-  indexingStep.set(IndexingStepType.Done)
-
   if (!Platform.isIosApp) {
-    console.log('Omnisearch - Writing cache...')
+    await searchEngine.loadCache()
+  }
+
+  indexingStep.set(IndexingStepType.ReadingFiles)
+  const diff = searchEngine.getDiff(
+    app.vault
+      .getFiles()
+      .filter(f => isFileIndexable(f.path))
+      .map(f => ({ path: f.path, mtime: f.stat.mtime }))
+  )
+
+  console.log(
+    'Omnisearch - Total number of files to add/update: ' + diff.toAdd.length
+  )
+  console.log(
+    'Omnisearch - Total number of files to remove: ' + diff.toRemove.length
+  )
+
+  if (diff.toAdd.length >= 500) {
+    new Notice(
+      `Omnisearch - ${diff.toAdd.length} files need to be indexed. Obsidian may experience stutters and freezes during the process`,
+      10_000
+    )
+  }
+
+  indexingStep.set(IndexingStepType.IndexingFiles)
+  await searchEngine.removeFromPaths(diff.toRemove.map(o => o.path))
+  await searchEngine.addFromPaths(
+    diff.toAdd.map(o => o.path),
+    true
+  )
+
+  if (diff.toRemove.length || diff.toAdd.length) {
     await searchEngine.writeToCache()
   }
 
   console.timeEnd('Omnisearch - Indexing total time')
+  if (diff.toAdd.length >= 500) {
+    new Notice(`Omnisearch - Your files have been indexed.`)
+  }
+  indexingStep.set(IndexingStepType.Done)
 }
 
 async function cleanOldCacheFiles() {
@@ -179,7 +172,7 @@ async function cleanOldCacheFiles() {
   }
 }
 
-function showWelcomeNotice(plugin: Plugin) {
+function executeFirstLaunchTasks(plugin: Plugin) {
   const code = '1.8.0-beta.3'
   if (settings.welcomeMessage !== code) {
     const welcome = new DocumentFragment()
