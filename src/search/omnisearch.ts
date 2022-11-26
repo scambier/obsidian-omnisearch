@@ -23,7 +23,6 @@ import {
   stripMarkdownCharacters,
 } from '../tools/utils'
 import { Notice, Platform } from 'obsidian'
-import { getIndexedDocument } from '../file-loader'
 import type { Query } from './query'
 import { cacheManager } from '../cache-manager'
 
@@ -112,7 +111,7 @@ export class Omnisearch {
     writeToCache: boolean
   ): Promise<void> {
     let documents = await Promise.all(
-      paths.map(async path => await getIndexedDocument(path))
+      paths.map(async path => await cacheManager.getDocument(path))
     )
 
     // If a document is already added, discard it
@@ -185,7 +184,7 @@ export class Omnisearch {
     }
 
     const documents = await Promise.all(
-      results.map(async result => await getIndexedDocument(result.id))
+      results.map(async result => await cacheManager.getDocument(result.id))
     )
 
     // If the search query contains quotes, filter out results that don't have the exact match
@@ -292,7 +291,7 @@ export class Omnisearch {
 
     // TODO: this already called in search(), pass each document in its SearchResult instead?
     const documents = await Promise.all(
-      results.map(async result => await getIndexedDocument(result.id))
+      results.map(async result => await cacheManager.getDocument(result.id))
     )
 
     // Map the raw results to get usable suggestions

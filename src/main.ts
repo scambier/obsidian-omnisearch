@@ -16,6 +16,7 @@ import {
 import { OmnisearchCache } from './database'
 import * as NotesIndex from './notes-index'
 import { searchEngine } from './search/omnisearch'
+import { cacheManager } from './cache-manager'
 
 export default class OmnisearchPlugin extends Plugin {
   private ribbonButton?: HTMLElement
@@ -110,16 +111,20 @@ export default class OmnisearchPlugin extends Plugin {
  */
 async function populateIndex(): Promise<void> {
   console.time('Omnisearch - Indexing total time')
+  indexingStep.set(IndexingStepType.ReadingFiles)
+  const files = app.vault.getFiles().filter(f => isFileIndexable(f.path))
+
+  // Map documents in the background
+  files.forEach(f => cacheManager.addToLiveCache(f.path))
+
   if (!Platform.isIosApp) {
+    console.time('Omnisearch - Loading index from cache')
     await searchEngine.loadCache()
+    console.timeEnd('Omnisearch - Loading index from cache')
   }
 
-  indexingStep.set(IndexingStepType.ReadingFiles)
   const diff = searchEngine.getDiff(
-    app.vault
-      .getFiles()
-      .filter(f => isFileIndexable(f.path))
-      .map(f => ({ path: f.path, mtime: f.stat.mtime }))
+    files.map(f => ({ path: f.path, mtime: f.stat.mtime }))
   )
 
   console.log(
@@ -137,7 +142,7 @@ async function populateIndex(): Promise<void> {
   }
 
   indexingStep.set(IndexingStepType.IndexingFiles)
-  await searchEngine.removeFromPaths(diff.toRemove.map(o => o.path))
+  searchEngine.removeFromPaths(diff.toRemove.map(o => o.path))
   await searchEngine.addFromPaths(
     diff.toAdd.map(o => o.path),
     true

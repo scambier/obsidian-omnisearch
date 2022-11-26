@@ -1,15 +1,96 @@
-import { Notice } from 'obsidian'
+import { Notice, TFile } from 'obsidian'
 import type { DocumentRef, IndexedDocument } from './globals'
 import { database } from './database'
 import type { AsPlainObject } from 'minisearch'
 import type MiniSearch from 'minisearch'
-import { makeMD5 } from './tools/utils'
+import {
+  extractHeadingsFromCache,
+  getAliasesFromMetadata,
+  getTagsFromMetadata,
+  isFileImage,
+  isFilePDF,
+  isFilePlaintext,
+  makeMD5,
+  removeDiacritics
+} from './tools/utils'
+import { getImageText, getPdfText } from "obsidian-text-extract";
+
+async function getIndexedDocument(
+  path: string
+): Promise<IndexedDocument> {
+  const file = app.vault.getFiles().find(f => f.path === path)
+  if (!file) throw new Error(`Invalid file path: "${path}"`)
+  let content: string
+  if (isFilePlaintext(path)) {
+    content = await app.vault.cachedRead(file)
+  } else if (isFilePDF(path)) {
+    content = await getPdfText(file)
+  } else if (isFileImage(file.path)) {
+    content = await getImageText(file)
+  } else {
+    throw new Error('Invalid file format: ' + file.path)
+  }
+  content = removeDiacritics(content)
+  const metadata = app.metadataCache.getFileCache(file)
+
+  // Look for links that lead to non-existing files,
+  // and add them to the index.
+  if (metadata) {
+    // // FIXME: https://github.com/scambier/obsidian-omnisearch/issues/129
+    // const nonExisting = getNonExistingNotes(file, metadata)
+    // for (const name of nonExisting.filter(
+    //   o => !cacheManager.getLiveDocument(o)
+    // )) {
+    //   NotesIndex.addNonExistingToIndex(name, file.path)
+    // }
+
+    // EXCALIDRAW
+    // Remove the json code
+    if (metadata.frontmatter?.['excalidraw-plugin']) {
+      const comments =
+        metadata.sections?.filter(s => s.type === 'comment') ?? []
+      for (const { start, end } of comments.map(c => c.position)) {
+        content =
+          content.substring(0, start.offset - 1) + content.substring(end.offset)
+      }
+    }
+  }
+
+  return {
+    basename: removeDiacritics(file.basename),
+    content,
+    path: file.path,
+    mtime: file.stat.mtime,
+
+    tags: getTagsFromMetadata(metadata),
+    aliases: getAliasesFromMetadata(metadata).join(''),
+    headings1: metadata ? extractHeadingsFromCache(metadata, 1).join(' ') : '',
+    headings2: metadata ? extractHeadingsFromCache(metadata, 2).join(' ') : '',
+    headings3: metadata ? extractHeadingsFromCache(metadata, 3).join(' ') : '',
+  }
+}
 
 class CacheManager {
   /**
    * Show an empty input field next time the user opens Omnisearch modal
    */
   private nextQueryIsEmpty = false
+
+  private documents: Map<string, IndexedDocument> = new Map()
+
+  public async addToLiveCache(path: string): Promise<void> {
+    const doc = await getIndexedDocument(path)
+    this.documents.set(path, doc)
+    console.log(path)
+  }
+
+  public async getDocument(path: string): Promise<IndexedDocument> {
+    if (this.documents.has(path)) {
+      return this.documents.get(path)!
+    }
+    await this.addToLiveCache(path)
+    return this.documents.get(path)!
+  }
 
   public async addToSearchHistory(query: string): Promise<void> {
     if (!query) {
