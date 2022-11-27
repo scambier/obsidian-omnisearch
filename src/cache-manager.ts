@@ -83,7 +83,6 @@ class CacheManager {
   public async addToLiveCache(path: string): Promise<void> {
     const doc = await getIndexedDocument(path)
     this.documents.set(path, doc)
-    // console.log(path)
   }
 
   public removeFromLiveCache(path: string): void {

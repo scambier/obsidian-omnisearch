@@ -116,6 +116,7 @@ async function populateIndex(): Promise<void> {
   console.time('Omnisearch - Indexing total time')
   indexingStep.set(IndexingStepType.ReadingFiles)
   const files = app.vault.getFiles().filter(f => isFileIndexable(f.path))
+  console.log(`Omnisearch - ${files.length} files total`)
 
   // Map documents in the background
   // Promise.all(files.map(f => cacheManager.addToLiveCache(f.path)))
@@ -130,12 +131,16 @@ async function populateIndex(): Promise<void> {
     files.map(f => ({ path: f.path, mtime: f.stat.mtime }))
   )
 
-  console.log(
-    'Omnisearch - Total number of files to add/update: ' + diff.toAdd.length
-  )
-  console.log(
-    'Omnisearch - Total number of files to remove: ' + diff.toRemove.length
-  )
+  if (diff.toAdd.length) {
+    console.log(
+      'Omnisearch - Total number of files to add/update: ' + diff.toAdd.length
+    )
+  }
+  if (diff.toRemove.length) {
+    console.log(
+      'Omnisearch - Total number of files to remove: ' + diff.toRemove.length
+    )
+  }
 
   if (diff.toAdd.length >= 500) {
     new Notice(
