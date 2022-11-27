@@ -54,8 +54,10 @@ export default class OmnisearchPlugin extends Plugin {
       // Listeners to keep the search index up-to-date
       this.registerEvent(
         this.app.vault.on('create', async file => {
-          cacheManager.addToLiveCache(file.path)
-          searchEngine.addFromPaths([file.path], false)
+          if (isFileIndexable(file.path)) {
+            await cacheManager.addToLiveCache(file.path)
+            searchEngine.addFromPaths([file.path], false)
+          }
         })
       )
       this.registerEvent(
@@ -66,13 +68,15 @@ export default class OmnisearchPlugin extends Plugin {
       )
       this.registerEvent(
         this.app.vault.on('modify', async file => {
-          cacheManager.addToLiveCache(file.path)
-          NotesIndex.markNoteForReindex(file)
+          if (isFileIndexable(file.path)) {
+            await cacheManager.addToLiveCache(file.path)
+            NotesIndex.markNoteForReindex(file)
+          }
         })
       )
       this.registerEvent(
         this.app.vault.on('rename', async (file, oldPath) => {
-          if (file instanceof TFile && isFilePlaintext(file.path)) {
+          if (isFileIndexable(file.path)) {
             cacheManager.removeFromLiveCache(oldPath)
             cacheManager.addToLiveCache(file.path)
             searchEngine.removeFromPaths([oldPath])
