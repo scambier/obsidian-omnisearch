@@ -7,6 +7,7 @@ import {
 } from 'obsidian'
 import type { SearchMatch } from '../globals'
 import {
+  chsSegmenter,
   excerptAfter,
   excerptBefore,
   highlightClass,
@@ -70,7 +71,10 @@ export function getAllIndices(text: string, regex: RegExp): SearchMatch[] {
  */
 export function stringsToRegex(strings: string[]): RegExp {
   if (!strings.length) return /^$/g
-  const joined = strings.map(s => '\\b' + escapeRegex(s)).join('|')
+  // \\b is "word boundary", and is not applied if the user uses the cm-chs-patch plugin
+  const joined = strings
+    .map(s => (chsSegmenter ? '' : '\\b') + escapeRegex(s))
+    .join('|')
   const reg = new RegExp(`(${joined})`, 'gi')
   // console.log(reg)
   return reg

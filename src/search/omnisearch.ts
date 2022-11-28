@@ -7,6 +7,7 @@ import type {
 } from '../globals'
 import {
   chsRegex,
+  chsSegmenter,
   indexingStep,
   IndexingStepType,
   SPACE_OR_PUNCTUATION,
@@ -24,7 +25,6 @@ import { cacheManager } from '../cache-manager'
 
 const tokenize = (text: string): string[] => {
   const tokens = text.split(SPACE_OR_PUNCTUATION)
-  const chsSegmenter = (app as any).plugins.plugins['cm-chs-patch']
 
   if (chsSegmenter) {
     return tokens.flatMap(word =>
