@@ -372,12 +372,6 @@ export let settings = Object.assign({}, DEFAULT_SETTINGS) as OmnisearchSettings
 
 export async function loadSettings(plugin: Plugin): Promise<void> {
   settings = Object.assign({}, DEFAULT_SETTINGS, await plugin.loadData())
-
-  if (Platform.isMobileApp) {
-    settings.PDFIndexing = false
-    settings.imagesIndexing = false
-  }
-
   showExcerpt.set(settings.showExcerpt)
 }
 

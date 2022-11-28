@@ -208,8 +208,8 @@ export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
 export function isFileIndexable(path: string): boolean {
   return (
     isFilePlaintext(path) ||
-    (settings.PDFIndexing && isFilePDF(path)) ||
-    (settings.imagesIndexing && isFileImage(path))
+    (!Platform.isMobileApp && settings.PDFIndexing && isFilePDF(path)) ||
+    (!Platform.isMobileApp && settings.imagesIndexing && isFileImage(path))
   )
 }
 
