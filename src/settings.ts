@@ -44,6 +44,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   welcomeMessage: string
   /** If a query returns 0 result, try again with more relax conditions */
   simpleSearch: boolean
+  hightlight: boolean
 }
 
 /**
@@ -149,7 +150,7 @@ export class SettingsTab extends PluginSettingTab {
 
     //#endregion Indexing
 
-    // #region Behavior
+    //#region Behavior
 
     new Setting(containerEl).setName('Behavior').setHeading()
 
@@ -197,9 +198,9 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
-    // #endregion Behavior
+    //#endregion Behavior
 
-    // #region User Interface
+    //#region User Interface
 
     new Setting(containerEl).setName('User Interface').setHeading()
 
@@ -234,7 +235,9 @@ export class SettingsTab extends PluginSettingTab {
     // Keep line returns in excerpts
     new Setting(containerEl)
       .setName('Render line return in excerpts')
-      .setDesc('Activate this option to render line returns in result excerpts.')
+      .setDesc(
+        'Activate this option to render line returns in result excerpts.'
+      )
       .addToggle(toggle =>
         toggle
           .setValue(settings.renderLineReturnInExcerpts)
@@ -284,9 +287,22 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
-    // #endregion User Interface
+    // Highlight results
+    new Setting(containerEl)
+      .setName('Highlight matching words in results')
+      .setDesc(
+        'Will highlight matching results when enabled. See README for more customization options.'
+      )
+      .addToggle(toggle =>
+        toggle.setValue(settings.hightlight).onChange(async v => {
+          settings.hightlight = v
+          await saveSettings(this.plugin)
+        })
+      )
 
-    // #region Results Weighting
+    //#endregion User Interface
+
+    //#region Results Weighting
 
     new Setting(containerEl).setName('Results weighting').setHeading()
 
@@ -308,9 +324,9 @@ export class SettingsTab extends PluginSettingTab {
       .setName(`Headings level 3 (default: ${DEFAULT_SETTINGS.weightH3})`)
       .addSlider(cb => this.weightSlider(cb, 'weightH3'))
 
-    // #endregion Results Weighting
+    //#endregion Results Weighting
 
-    // #region Danger Zone
+    //#region Danger Zone
 
     new Setting(containerEl).setName('Danger Zone').setHeading()
 
@@ -357,6 +373,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   showExcerpt: true,
   renderLineReturnInExcerpts: true,
   showCreateButton: false,
+  hightlight: true,
   showPreviousQueryResults: true,
   simpleSearch: false,
 

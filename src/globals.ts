@@ -1,5 +1,6 @@
 import { EventBus } from './tools/event-bus'
 import { writable } from 'svelte/store'
+import { settings } from './settings'
 
 export const regexLineSplit = /\r?\n|\r|((\.|\?|!)( |\r?\n|\r))/g
 export const regexYaml = /^---\s*\n(.*?)\n?^---\s?/ms
@@ -9,7 +10,9 @@ export const chsRegex = /[\u4e00-\u9fa5]/
 export const excerptBefore = 100
 export const excerptAfter = 300
 
-export const highlightClass = 'suggestion-highlight omnisearch-highlight'
+export const highlightClass = `suggestion-highlight omnisearch-highlight ${
+  settings.hightlight ? 'omnisearch-default-highlight' : ''
+}`
 
 export const eventBus = new EventBus()
 
