@@ -188,7 +188,7 @@
   function switchToInFileModal(): void {
     // Do nothing if the selectedNote is a PDF,
     // or if there is 0 match (e.g indexing in progress)
-    if (isFilePDF(selectedNote?.path) || !selectedNote?.matches.length) {
+    if (selectedNote && (isFilePDF(selectedNote?.path) || !selectedNote?.matches.length)) {
       return
     }
 
