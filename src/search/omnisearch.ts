@@ -66,7 +66,6 @@ export class Omnisearch {
   }
 
   async loadCache(): Promise<void> {
-    indexingStep.set(IndexingStepType.LoadingCache)
     const cache = await cacheManager.getMinisearchCache()
     if (cache) {
       this.minisearch = MiniSearch.loadJS(cache.data, Omnisearch.options)
@@ -104,7 +103,7 @@ export class Omnisearch {
    */
   public async addFromPaths(
     paths: string[],
-    writeToCache: boolean
+    mustWriteToCache: boolean
   ): Promise<void> {
     let documents = await Promise.all(
       paths.map(async path => await cacheManager.getDocument(path))
@@ -119,13 +118,12 @@ export class Omnisearch {
     // If the user shuts off Obsidian mid-indexing, we at least saved some
     const chunkedDocs = chunkArray(documents, 500)
     for (const docs of chunkedDocs) {
-      indexingStep.set(IndexingStepType.IndexingFiles)
       // Update the list of indexed docks
       docs.forEach(doc => this.indexedDocuments.set(doc.path, doc.mtime))
       // Add docs to minisearch
       await this.minisearch.addAllAsync(docs)
       // Save the index
-      if (writeToCache) {
+      if (mustWriteToCache) {
         await this.writeToCache()
       }
     }
@@ -342,7 +340,6 @@ export class Omnisearch {
     if (Platform.isIosApp) {
       return
     }
-    indexingStep.set(IndexingStepType.WritingCache)
     await cacheManager.writeMinisearchCache(
       this.minisearch,
       this.indexedDocuments

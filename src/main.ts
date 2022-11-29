@@ -123,6 +123,7 @@ async function populateIndex(): Promise<void> {
 
   if (!Platform.isIosApp) {
     console.time('Omnisearch - Loading index from cache')
+    indexingStep.set(IndexingStepType.LoadingCache)
     await searchEngine.loadCache()
     console.timeEnd('Omnisearch - Loading index from cache')
   }
@@ -157,6 +158,7 @@ async function populateIndex(): Promise<void> {
   )
 
   if (diff.toRemove.length || diff.toAdd.length) {
+    indexingStep.set(IndexingStepType.WritingCache)
     await searchEngine.writeToCache()
   }
 
