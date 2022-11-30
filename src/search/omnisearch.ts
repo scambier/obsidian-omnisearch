@@ -135,7 +135,9 @@ export class Omnisearch {
    */
   public removeFromPaths(paths: string[]): void {
     paths.forEach(p => this.indexedDocuments.delete(p))
-    this.minisearch.discardAll(paths)
+    // Make sure to not discard a file that we don't have
+    const existing = paths.filter(p => this.minisearch.has(p))
+    this.minisearch.discardAll(existing)
   }
 
   /**
