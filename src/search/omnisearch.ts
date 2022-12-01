@@ -118,8 +118,13 @@ export class Omnisearch {
     // If the user shuts off Obsidian mid-indexing, we at least saved some
     const chunkedDocs = chunkArray(documents, 500)
     for (const docs of chunkedDocs) {
-      // Update the list of indexed docks
+      // Update the list of indexed docs
       docs.forEach(doc => this.indexedDocuments.set(doc.path, doc.mtime))
+
+      // Discard files that may have been already added (though it shouldn't happen)
+      const alreadyAdded = docs.filter(doc => this.minisearch.has(doc.path))
+      this.removeFromPaths(alreadyAdded.map(o => o.path))
+
       // Add docs to minisearch
       await this.minisearch.addAllAsync(docs)
       // Save the index
