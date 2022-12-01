@@ -7,7 +7,7 @@ import { loadSettings, settings, SettingsTab, showExcerpt } from './settings'
 import { eventBus, EventNames, indexingStep, IndexingStepType } from './globals'
 import api from './tools/api'
 import { isFileIndexable, isFilePlaintext } from './tools/utils'
-import { OmnisearchCache } from './database'
+import { database, OmnisearchCache } from './database'
 import * as NotesIndex from './notes-index'
 import { searchEngine } from './search/omnisearch'
 import { cacheManager } from './cache-manager'
@@ -91,9 +91,10 @@ export default class OmnisearchPlugin extends Plugin {
     executeFirstLaunchTasks(this)
   }
 
-  onunload(): void {
+  async onunload(): Promise<void> {
     // @ts-ignore
     delete globalThis['omnisearch']
+    await database.clearCache()
   }
 
   addRibbonButton(): void {
