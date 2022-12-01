@@ -1,15 +1,6 @@
-import {
-  extractHeadingsFromCache,
-  getAliasesFromMetadata,
-  getTagsFromMetadata,
-  isFileImage,
-  isFilePDF,
-  isFilePlaintext,
-  removeDiacritics,
-} from './tools/utils'
+import { isFileImage, isFilePDF, isFilePlaintext } from './tools/utils'
 import type { TFile } from 'obsidian'
 import type { IndexedDocument } from './globals'
-import { getImageText, getPdfText } from 'obsidian-text-extract'
 import { cacheManager } from './cache-manager'
 
 /**
