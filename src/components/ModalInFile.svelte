@@ -15,7 +15,7 @@
     OmnisearchVaultModal,
   } from 'src/components/modals'
   import ResultItemInFile from './ResultItemInFile.svelte'
-  import { Query } from 'src/search/query'
+  import { SearchQuery } from 'src/search/query'
   import { openNote } from 'src/tools/notes'
   import { searchEngine } from 'src/search/omnisearch'
 
@@ -28,7 +28,7 @@
   let groupedOffsets: number[] = []
   let selectedIndex = 0
   let note: ResultNote | undefined
-  let query: Query
+  let query: SearchQuery
 
   $: searchQuery = previousQuery ?? ''
 
@@ -47,7 +47,7 @@
 
   $: (async () => {
     if (searchQuery) {
-      query = new Query(searchQuery)
+      query = new SearchQuery(searchQuery)
       note =
         (
           await searchEngine.getSuggestions(query, {

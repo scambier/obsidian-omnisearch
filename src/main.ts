@@ -6,7 +6,7 @@ import {
 import { loadSettings, settings, SettingsTab, showExcerpt } from './settings'
 import { eventBus, EventNames, indexingStep, IndexingStepType } from './globals'
 import api from './tools/api'
-import { isFileIndexable, isFilePlaintext } from './tools/utils'
+import { isFileIndexable } from './tools/utils'
 import { database, OmnisearchCache } from './database'
 import * as NotesIndex from './notes-index'
 import { searchEngine } from './search/omnisearch'
@@ -16,9 +16,9 @@ export default class OmnisearchPlugin extends Plugin {
   private ribbonButton?: HTMLElement
 
   async onload(): Promise<void> {
+    await loadSettings(this)
     await cleanOldCacheFiles()
     await OmnisearchCache.clearOldDatabases()
-    await loadSettings(this)
 
     registerAPI(this)
 

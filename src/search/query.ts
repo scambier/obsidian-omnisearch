@@ -1,3 +1,4 @@
+import type { QueryCombination } from 'minisearch'
 import { settings } from '../settings'
 import { removeDiacritics, stripSurroundingQuotes } from '../tools/utils'
 import { parseQuery } from '../vendor/parse-query'
@@ -17,7 +18,7 @@ type QueryToken = {
 /**
  * This class is used to parse a query string into a structured object
  */
-export class Query {
+export class SearchQuery {
   public segments: QueryToken[] = []
   public exclusions: QueryToken[] = []
 
@@ -38,6 +39,21 @@ export class Query {
 
   public isEmpty(): boolean {
     return this.segments.length === 0
+  }
+
+  public toMinisearchQuery(): QueryCombination {
+    const parts = this.segments
+      .map(({ value }) => value)
+      .join(' ')
+      .split('||')
+      .map(s => s.trim())
+    return {
+      combineWith: 'OR',
+      queries: parts.map(part => ({
+        queries: part.split(' '),
+        combineWith: 'AND',
+      })),
+    }
   }
 
   public segmentsToStr(): string {

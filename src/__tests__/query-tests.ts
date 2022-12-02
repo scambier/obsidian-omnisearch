@@ -1,4 +1,4 @@
-import { Query } from '../search/query'
+import { SearchQuery } from '../search/query'
 
 describe('The Query class', () => {
   const stringQuery =
@@ -6,7 +6,7 @@ describe('The Query class', () => {
 
   it('should correctly parse string queries', () => {
     // Act
-    const query = new Query(stringQuery)
+    const query = new SearchQuery(stringQuery)
 
     // Assert
     const segments = query.segments.map(s => s.value)
@@ -25,7 +25,7 @@ describe('The Query class', () => {
 
   it('should mark quoted segments & exclusions as "exact"', () => {
     // Act
-    const query = new Query(stringQuery)
+    const query = new SearchQuery(stringQuery)
 
     // Assert
     expect(query.segments.filter(s => s.exact)).toHaveLength(2)
@@ -42,7 +42,7 @@ describe('The Query class', () => {
 
   it('should not exclude words when there is no space before', () => {
     // Act
-    const query = new Query('foo bar-baz')
+    const query = new SearchQuery('foo bar-baz')
 
     // Assert
     expect(query.exclusions).toHaveLength(0)
@@ -51,7 +51,7 @@ describe('The Query class', () => {
   describe('.getExactTerms()', () => {
     it('should an array of strings containg "exact" values', () => {
       // Act
-      const query = new Query(stringQuery)
+      const query = new SearchQuery(stringQuery)
 
       // Assert
       expect(query.getExactTerms()).toEqual(['lorem ipsum', 'sit amet'])

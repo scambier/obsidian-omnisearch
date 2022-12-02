@@ -107,9 +107,13 @@ abstract class OmnisearchModal extends Modal {
       eventBus.emit('prev-search-history')
     })
 
-    // Context
+    // Toggle context excerpt
     this.scope.register(['Ctrl'], 'H', _e => {
       eventBus.emit(EventNames.ToggleExcerpts)
+    })
+
+    this.scope.register(['Ctrl'], 'E', _e => {
+      eventBus.emit('complete-with-ai')
     })
   }
 }

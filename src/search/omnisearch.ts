@@ -5,13 +5,7 @@ import type {
   ResultNote,
   SearchMatch,
 } from '../globals'
-import {
-  chsRegex,
-  chsSegmenter,
-  indexingStep,
-  IndexingStepType,
-  SPACE_OR_PUNCTUATION,
-} from '../globals'
+import { chsRegex, chsSegmenter, SPACE_OR_PUNCTUATION } from '../globals'
 import { settings } from '../settings'
 import {
   chunkArray,
@@ -20,7 +14,7 @@ import {
   stripMarkdownCharacters,
 } from '../tools/utils'
 import { Notice, Platform } from 'obsidian'
-import type { Query } from './query'
+import type { SearchQuery } from './query'
 import { cacheManager } from '../cache-manager'
 
 const tokenize = (text: string): string[] => {
@@ -121,7 +115,7 @@ export class Omnisearch {
       // Update the list of indexed docs
       docs.forEach(doc => this.indexedDocuments.set(doc.path, doc.mtime))
 
-      // Discard files that may have been already added (though it shouldn't happen)
+      // Discards files that may have been already added (though it shouldn't happen)
       const alreadyAdded = docs.filter(doc => this.minisearch.has(doc.path))
       this.removeFromPaths(alreadyAdded.map(o => o.path))
 
@@ -150,18 +144,17 @@ export class Omnisearch {
    * and returns an array of raw results
    */
   public async search(
-    query: Query,
+    query: SearchQuery,
     options: { prefixLength: number }
   ): Promise<SearchResult[]> {
     if (query.isEmpty()) {
       this.previousResults = []
       return []
     }
-
-    let results = this.minisearch.search(query.segmentsToStr(), {
+    let results = this.minisearch.search(query.toMinisearchQuery(), {
       prefix: term => term.length >= options.prefixLength,
       fuzzy: 0.2,
-      combineWith: 'AND',
+      // combineWith: 'AND',
       boost: {
         basename: settings.weightBasename,
         aliases: settings.weightBasename,
@@ -224,7 +217,11 @@ export class Omnisearch {
     return results
   }
 
-  public getMatches(text: string, reg: RegExp, query: Query): SearchMatch[] {
+  public getMatches(
+    text: string,
+    reg: RegExp,
+    query: SearchQuery
+  ): SearchMatch[] {
     let match: RegExpExecArray | null = null
     const matches: SearchMatch[] = []
     let count = 0
@@ -255,7 +252,7 @@ export class Omnisearch {
    * @returns
    */
   public async getSuggestions(
-    query: Query,
+    query: SearchQuery,
     options?: Partial<{ singleFilePath: string | null }>
   ): Promise<ResultNote[]> {
     // Get the raw results

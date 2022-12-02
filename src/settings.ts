@@ -45,6 +45,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   /** If a query returns 0 result, try again with more relax conditions */
   simpleSearch: boolean
   hightlight: boolean
+  openAiToken: string
 }
 
 /**
@@ -199,6 +200,23 @@ export class SettingsTab extends PluginSettingTab {
       )
 
     //#endregion Behavior
+
+    //#region AI
+
+    new Setting(containerEl).setName('Artificial Intelligence').setHeading()
+
+    new Setting(containerEl)
+      .setName('OpenAI token')
+      .setDesc('Your private OpenAI token')
+      .addText(component => {
+        component
+          .setValue(settings.openAiToken)
+          .onChange(async v => {
+            settings.openAiToken = v
+            await saveSettings(this.plugin)
+          })
+      })
+    //#endregion AI
 
     //#region User Interface
 
@@ -367,6 +385,8 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   indexedFileTypes: [] as string[],
   PDFIndexing: false,
   imagesIndexing: false,
+
+  openAiToken: '',
 
   showShortName: false,
   ribbonIcon: true,

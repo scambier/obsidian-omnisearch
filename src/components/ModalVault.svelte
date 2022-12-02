@@ -8,11 +8,12 @@
   import { getCtrlKeyLabel, getExtension, isFilePDF, loopIndex, } from 'src/tools/utils'
   import { OmnisearchInFileModal, type OmnisearchVaultModal, } from 'src/components/modals'
   import ResultItemVault from './ResultItemVault.svelte'
-  import { Query } from 'src/search/query'
+  import { SearchQuery } from 'src/search/query'
   import { settings } from '../settings'
   import * as NotesIndex from '../notes-index'
   import { cacheManager } from '../cache-manager'
   import { searchEngine } from 'src/search/omnisearch'
+  import ai from 'src/tools/ai'
 
   export let modal: OmnisearchVaultModal
   export let previousQuery: string | undefined
@@ -20,9 +21,11 @@
   let historySearchIndex = 0
   let searchQuery: string | undefined
   let resultNotes: ResultNote[] = []
-  let query: Query
+  let query: SearchQuery
   let indexingStepDesc = ''
   let searching = true
+  let searchWithAi = false
+  let aiResults:string[] = []
 
   $: selectedNote = resultNotes[selectedIndex]
   $: searchQuery = searchQuery ?? previousQuery
@@ -69,6 +72,7 @@
     eventBus.on('vault', 'arrow-down', () => moveIndex(1))
     eventBus.on('vault', 'prev-search-history', prevSearchHistory)
     eventBus.on('vault', 'next-search-history', nextSearchHistory)
+    eventBus.on('vault', 'complete-with-ai', completeWithAi)
     await NotesIndex.refreshIndex()
     if (settings.showPreviousQueryResults) {
       previousQuery = (await cacheManager.getSearchHistory())[0]
@@ -97,7 +101,7 @@
   }
 
   async function updateResults() {
-    query = new Query(searchQuery)
+    query = new SearchQuery(searchQuery)
     resultNotes = (await searchEngine.getSuggestions(query)).sort(
       (a, b) => b.score - a.score
     )
@@ -188,7 +192,10 @@
   function switchToInFileModal(): void {
     // Do nothing if the selectedNote is a PDF,
     // or if there is 0 match (e.g indexing in progress)
-    if (selectedNote && (isFilePDF(selectedNote?.path) || !selectedNote?.matches.length)) {
+    if (
+      selectedNote &&
+      (isFilePDF(selectedNote?.path) || !selectedNote?.matches.length)
+    ) {
       return
     }
 
@@ -224,6 +231,16 @@
       elem?.scrollIntoView({ behavior: 'auto', block: 'nearest' })
     }
   }
+
+  async function completeWithAi() {
+    if (searchQuery) {
+      searchWithAi = true
+      const words = await ai.getRelatedKeywords(searchQuery)
+      searchWithAi = false
+      aiResults = words
+      searchQuery = words.join(' || ')
+    }
+  }
 </script>
 
 <InputSearch
@@ -238,6 +255,16 @@
 {#if indexingStepDesc}
   <div style="text-align: center; color: var(--text-accent); margin-top: 10px">
     ⏳ Work in progress: {indexingStepDesc}
+  </div>
+{/if}
+
+{#if searchWithAi}
+  <div style="text-align: center; color: var(--text-accent); margin-top: 10px">
+    🧠 Thinking really hard
+  </div>
+{:else if aiResults?.length}
+  <div style="text-align: center; color: var(--text-accent); margin-top: 10px">
+    💡 {aiResults.join(', ')}
   </div>
 {/if}
 
@@ -259,47 +286,52 @@
 </ModalContainer>
 
 <div class="prompt-instructions">
-  <div class="prompt-instruction">
+  <div>
     <span class="prompt-instruction-command">↑↓</span><span>to navigate</span>
   </div>
-  <div class="prompt-instruction">
+  <div>
     <span class="prompt-instruction-command">alt ↑↓</span>
     <span>to cycle history</span>
   </div>
-  <div class="prompt-instruction">
-    <span class="prompt-instruction-command">↵</span><span>to open</span>
+
+  <div>
+    <span class="prompt-instruction-command">ctrl e</span>
+    <span>to extend search with AI</span>
   </div>
-  <div class="prompt-instruction">
+
+  <div>
     <span class="prompt-instruction-command">↹</span>
     <span>to switch to In-File Search</span>
   </div>
 
-  <br />
+  <div>
+    <span class="prompt-instruction-command">↵</span><span>to open</span>
+  </div>
 
-  <div class="prompt-instruction">
+  <div>
     <span class="prompt-instruction-command">{getCtrlKeyLabel()} ↵</span>
     <span>to open in a new pane</span>
   </div>
-  <div class="prompt-instruction">
+
+  <div>
     <span class="prompt-instruction-command">shift ↵</span>
     <span>to create</span>
   </div>
-  <div class="prompt-instruction">
+
+  <div>
     <span class="prompt-instruction-command">ctrl shift ↵</span>
     <span>to create in a new pane</span>
   </div>
 
-  <br />
-
-  <div class="prompt-instruction">
+  <div>
     <span class="prompt-instruction-command">alt ↵</span>
     <span>to insert a link</span>
   </div>
-  <div class="prompt-instruction">
+  <div>
     <span class="prompt-instruction-command">ctrl+h</span>
     <span>to toggle excerpts</span>
   </div>
-  <div class="prompt-instruction">
+  <div>
     <span class="prompt-instruction-command">esc</span><span>to close</span>
   </div>
 </div>
