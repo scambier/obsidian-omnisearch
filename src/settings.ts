@@ -19,7 +19,7 @@ interface WeightingSettings {
 
 export interface OmnisearchSettings extends WeightingSettings {
   /** Respect the "excluded files" Obsidian setting by downranking results ignored files */
-  respectExcluded: boolean
+  hideExcluded: boolean
   /** Ignore diacritics when indexing files */
   ignoreDiacritics: boolean
   /** Extensions of plain text files to index, in addition to .md */
@@ -158,11 +158,12 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Respect Obsidian\'s "Excluded Files"')
       .setDesc(
-        'Files that are in Obsidian\'s "Options > Files & Links > Excluded Files" list will be downranked in results.'
+        `By default, fFiles that are in Obsidian\'s "Options > Files & Links > Excluded Files" list are downranked in results.
+        Enable this option to completely hide them`
       )
       .addToggle(toggle =>
-        toggle.setValue(settings.respectExcluded).onChange(async v => {
-          settings.respectExcluded = v
+        toggle.setValue(settings.hideExcluded).onChange(async v => {
+          settings.hideExcluded = v
           await saveSettings(this.plugin)
         })
       )
@@ -362,7 +363,7 @@ export class SettingsTab extends PluginSettingTab {
 }
 
 export const DEFAULT_SETTINGS: OmnisearchSettings = {
-  respectExcluded: true,
+  hideExcluded: false,
   ignoreDiacritics: true,
   indexedFileTypes: [] as string[],
   PDFIndexing: false,

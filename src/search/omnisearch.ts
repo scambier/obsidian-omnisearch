@@ -172,8 +172,18 @@ export class Omnisearch {
     })
     if (!results.length) return this.previousResults
 
-    // Downrank files that are in Obsidian's excluded list
-    if (settings.respectExcluded) {
+    // Hide or downrank files that are in Obsidian's excluded list
+    if (settings.hideExcluded) {
+      // Filter the files out
+      results = results.filter(
+        result =>
+          !(
+            app.metadataCache.isUserIgnored &&
+            app.metadataCache.isUserIgnored(result.id)
+          )
+      )
+    } else {
+      // Just downrank them
       results.forEach(result => {
         if (
           app.metadataCache.isUserIgnored &&
