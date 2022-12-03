@@ -328,26 +328,26 @@ export class SettingsTab extends PluginSettingTab {
     //#endregion Results Weighting
 
     //#region Danger Zone
+    if (!Platform.isIosApp) {
+      new Setting(containerEl).setName('Danger Zone').setHeading()
 
-    new Setting(containerEl).setName('Danger Zone').setHeading()
-
-    const resetCacheDesc = new DocumentFragment()
-    resetCacheDesc.createSpan({}, span => {
-      span.innerHTML = `Erase all Omnisearch cache data.
+      const resetCacheDesc = new DocumentFragment()
+      resetCacheDesc.createSpan({}, span => {
+        span.innerHTML = `Erase all Omnisearch cache data.
       Use this if Omnisearch results are inconsistent, missing, or appear outdated.<br>
       <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
-    })
-    new Setting(containerEl)
-      .setName('Clear cache data')
-      .setDesc(resetCacheDesc)
-      .addButton(cb => {
-        cb.setButtonText('Clear cache')
-        cb.onClick(async () => {
-          await database.clearCache()
-          new Notice('Omnisearch - Cache cleared. Please restart Obsidian.')
-        })
       })
-
+      new Setting(containerEl)
+        .setName('Clear cache data')
+        .setDesc(resetCacheDesc)
+        .addButton(cb => {
+          cb.setButtonText('Clear cache')
+          cb.onClick(async () => {
+            await database.clearCache()
+            new Notice('Omnisearch - Cache cleared. Please restart Obsidian.')
+          })
+        })
+    }
     //#endregion Danger Zone
   }
 
