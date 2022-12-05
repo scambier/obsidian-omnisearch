@@ -22,7 +22,7 @@ specifiers:
   lodash-es: 4.17.21
   minisearch: 6.0.0-beta.1
   obsidian: latest
-  obsidian-text-extract: 1.0.3
+  obsidian-text-extract: 1.0.4
   prettier: ^2.8.0
   prettier-plugin-svelte: ^2.8.1
   pure-md5: ^0.1.14
@@ -38,7 +38,7 @@ dependencies:
   dexie: 3.2.2
   lodash-es: 4.17.21
   minisearch: 6.0.0-beta.1
-  obsidian-text-extract: 1.0.3
+  obsidian-text-extract: 1.0.4
   pure-md5: 0.1.14
 
 devDependencies:
@@ -4136,8 +4136,8 @@ packages:
       object-keys: 1.1.1
     dev: true
 
-  /obsidian-text-extract/1.0.3:
-    resolution: {integrity: sha512-nqIfKfAV3vCn5jFl77iJQOqM9fTik3cESroeMENbr3q/1R6hj0ancJISw6/fIMRwWb50zVra51cWqL+rPZCDMQ==}
+  /obsidian-text-extract/1.0.4:
+    resolution: {integrity: sha512-lJ7HaEPGUoGVYr6iCSEU8oPrnA8xRBQgSU9KryWteq3wO+Yiw2Zue70G0rZf9Yj+DkgR92PtuR8aQZQxTy/uLA==}
     dependencies:
       dexie: 3.2.2
       p-limit: 4.0.0
