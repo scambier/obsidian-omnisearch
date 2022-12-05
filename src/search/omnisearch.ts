@@ -151,7 +151,7 @@ export class Omnisearch {
    */
   public async search(
     query: Query,
-    options: { prefixLength: number }
+    options: { prefixLength: number; singleFilePath?: string }
   ): Promise<SearchResult[]> {
     if (query.isEmpty()) {
       this.previousResults = []
@@ -171,6 +171,10 @@ export class Omnisearch {
       },
     })
     if (!results.length) return this.previousResults
+
+    if (options.singleFilePath) {
+      return results.filter(r => r.id === options.singleFilePath)
+    }
 
     // Hide or downrank files that are in Obsidian's excluded list
     if (settings.hideExcluded) {
@@ -192,6 +196,20 @@ export class Omnisearch {
           result.score /= 10
         }
       })
+    }
+
+    // Extract tags from the query
+    const tags = query.segments
+      .filter(s => s.value.startsWith('#'))
+      .map(s => s.value)
+
+    // Put the results with tags on top
+    for (const tag of tags) {
+      for (const result of results) {
+        if ((result.tags ?? []).includes(tag)) {
+          result.score *= 100
+        }
+      }
     }
 
     results = results.slice(0, 50)
@@ -266,39 +284,26 @@ export class Omnisearch {
    */
   public async getSuggestions(
     query: Query,
-    options?: Partial<{ singleFilePath: string | null }>
+    options?: Partial<{ singleFilePath?: string }>
   ): Promise<ResultNote[]> {
     // Get the raw results
     let results: SearchResult[]
     if (settings.simpleSearch) {
-      results = await this.search(query, { prefixLength: 1 })
+      results = await this.search(query, {
+        prefixLength: 1,
+        singleFilePath: options?.singleFilePath,
+      })
     } else {
-      results = await this.search(query, { prefixLength: 3 })
+      results = await this.search(query, {
+        prefixLength: 3,
+        singleFilePath: options?.singleFilePath,
+      })
     }
 
     // Extract tags from the query
     const tags = query.segments
       .filter(s => s.value.startsWith('#'))
       .map(s => s.value)
-
-    // Either keep the 50 first results,
-    // or the one corresponding to `singleFile`
-    if (options?.singleFilePath) {
-      const result = results.find(r => r.id === options.singleFilePath)
-      if (result) results = [result]
-      else results = []
-    } else {
-      results = results.slice(0, 50)
-
-      // Put the results with tags on top
-      for (const tag of tags) {
-        for (const result of results) {
-          if ((result.tags ?? []).includes(tag)) {
-            result.score *= 100
-          }
-        }
-      }
-    }
 
     // TODO: this already called in search(), pass each document in its SearchResult instead?
     const documents = await Promise.all(
