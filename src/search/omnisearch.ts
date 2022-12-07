@@ -101,10 +101,7 @@ export class Omnisearch {
    * Add notes/PDFs/images to the search index
    * @param paths
    */
-  public async addFromPaths(
-    paths: string[],
-    mustWriteToCache: boolean
-  ): Promise<void> {
+  public async addFromPaths(paths: string[]): Promise<void> {
     let documents = await Promise.all(
       paths.map(async path => await cacheManager.getDocument(path))
     )
@@ -127,10 +124,6 @@ export class Omnisearch {
 
       // Add docs to minisearch
       await this.minisearch.addAllAsync(docs)
-      // Save the index
-      if (mustWriteToCache) {
-        await this.writeToCache()
-      }
     }
   }
 
@@ -305,7 +298,6 @@ export class Omnisearch {
       .filter(s => s.value.startsWith('#'))
       .map(s => s.value)
 
-    // TODO: this already called in search(), pass each document in its SearchResult instead?
     const documents = await Promise.all(
       results.map(async result => await cacheManager.getDocument(result.id))
     )

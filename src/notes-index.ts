@@ -45,7 +45,7 @@ export async function refreshIndex(): Promise<void> {
   const paths = [...notesToReindex].map(n => n.path)
   if (paths.length) {
     searchEngine.removeFromPaths(paths)
-    searchEngine.addFromPaths(paths, false)
+    searchEngine.addFromPaths(paths)
     notesToReindex.clear()
     // console.log(`Omnisearch - Reindexed ${paths.length} file(s)`)
   }

@@ -56,7 +56,7 @@ export default class OmnisearchPlugin extends Plugin {
         this.app.vault.on('create', async file => {
           if (isFileIndexable(file.path)) {
             await cacheManager.addToLiveCache(file.path)
-            searchEngine.addFromPaths([file.path], false)
+            searchEngine.addFromPaths([file.path])
           }
         })
       )
@@ -80,7 +80,7 @@ export default class OmnisearchPlugin extends Plugin {
             cacheManager.removeFromLiveCache(oldPath)
             cacheManager.addToLiveCache(file.path)
             searchEngine.removeFromPaths([oldPath])
-            await searchEngine.addFromPaths([file.path], false)
+            await searchEngine.addFromPaths([file.path])
           }
         })
       )
@@ -157,10 +157,7 @@ async function populateIndex(): Promise<void> {
 
   indexingStep.set(IndexingStepType.IndexingFiles)
   searchEngine.removeFromPaths(diff.toRemove.map(o => o.path))
-  await searchEngine.addFromPaths(
-    diff.toAdd.map(o => o.path),
-    true
-  )
+  await searchEngine.addFromPaths(diff.toAdd.map(o => o.path))
 
   if (diff.toRemove.length || diff.toAdd.length) {
     indexingStep.set(IndexingStepType.WritingCache)
