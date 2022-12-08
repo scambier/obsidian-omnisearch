@@ -26,7 +26,7 @@ and [obsidian-text-extract](https://github.com/scambier/obsidian-text-extract) f
     its filename, and its headings
 - Keyboard first: you never have to use your mouse
 - Workflow similar to the "Quick Switcher" core plugin
-- Resistance to typos
+- Fuzzy search
 - Switch between Vault and In-file search to quickly skim multiple results in a single note
 - Supports `"expressions in quotes"` and `-exclusions`
 - Directly Insert a `[[link]]` from the search results
@@ -40,7 +40,7 @@ information.
 
 - Omnisearch is available on [the official Community Plugins repository](https://obsidian.md/plugins?search=Omnisearch).
 - Beta releases can be installed through [BRAT](https://github.com/TfTHacker/obsidian42-brat). **Be advised that those
-  versions can be buggy and break things.** Only install beta versions if you're willing to 
+  versions can be buggy and break things.**
 
 You can check the [CHANGELOG](./CHANGELOG.md) for more information on the different versions.
 
