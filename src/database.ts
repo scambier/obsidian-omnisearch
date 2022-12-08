@@ -1,6 +1,6 @@
 import Dexie from 'dexie'
 import type { AsPlainObject } from 'minisearch'
-import type { DocumentRef, IndexedDocument } from './globals'
+import type { DocumentRef } from './globals'
 
 export class OmnisearchCache extends Dexie {
   public static readonly dbVersion = 8

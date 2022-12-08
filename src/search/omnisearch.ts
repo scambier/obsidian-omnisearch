@@ -5,13 +5,7 @@ import type {
   ResultNote,
   SearchMatch,
 } from '../globals'
-import {
-  chsRegex,
-  chsSegmenter,
-  indexingStep,
-  IndexingStepType,
-  SPACE_OR_PUNCTUATION,
-} from '../globals'
+import { chsRegex, chsSegmenter, SPACE_OR_PUNCTUATION } from '../globals'
 import { settings } from '../settings'
 import {
   chunkArray,
@@ -81,7 +75,6 @@ export class Omnisearch {
     toAdd: DocumentRef[]
     toRemove: DocumentRef[]
   } {
-    const indexedArr = [...this.indexedDocuments]
     const docsMap = new Map(docs.map(d => [d.path, d.mtime]))
 
     const toAdd = docs.filter(
