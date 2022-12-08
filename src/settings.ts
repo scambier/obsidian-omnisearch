@@ -19,7 +19,7 @@ interface WeightingSettings {
 
 export interface OmnisearchSettings extends WeightingSettings {
   /** Respect the "excluded files" Obsidian setting by downranking results ignored files */
-  respectExcluded: boolean
+  hideExcluded: boolean
   /** Ignore diacritics when indexing files */
   ignoreDiacritics: boolean
   /** Extensions of plain text files to index, in addition to .md */
@@ -44,6 +44,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   welcomeMessage: string
   /** If a query returns 0 result, try again with more relax conditions */
   simpleSearch: boolean
+  hightlight: boolean
 }
 
 /**
@@ -149,7 +150,7 @@ export class SettingsTab extends PluginSettingTab {
 
     //#endregion Indexing
 
-    // #region Behavior
+    //#region Behavior
 
     new Setting(containerEl).setName('Behavior').setHeading()
 
@@ -157,11 +158,12 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Respect Obsidian\'s "Excluded Files"')
       .setDesc(
-        'Files that are in Obsidian\'s "Options > Files & Links > Excluded Files" list will be downranked in results.'
+        `By default, fFiles that are in Obsidian\'s "Options > Files & Links > Excluded Files" list are downranked in results.
+        Enable this option to completely hide them`
       )
       .addToggle(toggle =>
-        toggle.setValue(settings.respectExcluded).onChange(async v => {
-          settings.respectExcluded = v
+        toggle.setValue(settings.hideExcluded).onChange(async v => {
+          settings.hideExcluded = v
           await saveSettings(this.plugin)
         })
       )
@@ -188,8 +190,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Simpler search')
       .setDesc(
-        `When enabled, Omnisearch is a bit more restrictive when using your query terms as prefixes.
-        May return less results, but will be quicker. You should enable this if Omnisearch makes Obsidian freeze while searching.`
+        `Enable this if Obsidian often freezes while making searches. This will return more strict results.`
       )
       .addToggle(toggle =>
         toggle.setValue(settings.simpleSearch).onChange(async v => {
@@ -198,9 +199,9 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
-    // #endregion Behavior
+    //#endregion Behavior
 
-    // #region User Interface
+    //#region User Interface
 
     new Setting(containerEl).setName('User Interface').setHeading()
 
@@ -235,7 +236,9 @@ export class SettingsTab extends PluginSettingTab {
     // Keep line returns in excerpts
     new Setting(containerEl)
       .setName('Render line return in excerpts')
-      .setDesc('Activate this option render line returns in result excerpts.')
+      .setDesc(
+        'Activate this option to render line returns in result excerpts.'
+      )
       .addToggle(toggle =>
         toggle
           .setValue(settings.renderLineReturnInExcerpts)
@@ -285,9 +288,22 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
-    // #endregion User Interface
+    // Highlight results
+    new Setting(containerEl)
+      .setName('Highlight matching words in results')
+      .setDesc(
+        'Will highlight matching results when enabled. See README for more customization options.'
+      )
+      .addToggle(toggle =>
+        toggle.setValue(settings.hightlight).onChange(async v => {
+          settings.hightlight = v
+          await saveSettings(this.plugin)
+        })
+      )
 
-    // #region Results Weighting
+    //#endregion User Interface
+
+    //#region Results Weighting
 
     new Setting(containerEl).setName('Results weighting').setHeading()
 
@@ -309,29 +325,29 @@ export class SettingsTab extends PluginSettingTab {
       .setName(`Headings level 3 (default: ${DEFAULT_SETTINGS.weightH3})`)
       .addSlider(cb => this.weightSlider(cb, 'weightH3'))
 
-    // #endregion Results Weighting
+    //#endregion Results Weighting
 
-    // #region Danger Zone
+    //#region Danger Zone
+    if (!Platform.isIosApp) {
+      new Setting(containerEl).setName('Danger Zone').setHeading()
 
-    new Setting(containerEl).setName('Danger Zone').setHeading()
-
-    const resetCacheDesc = new DocumentFragment()
-    resetCacheDesc.createSpan({}, span => {
-      span.innerHTML = `Erase all Omnisearch cache data.
+      const resetCacheDesc = new DocumentFragment()
+      resetCacheDesc.createSpan({}, span => {
+        span.innerHTML = `Erase all Omnisearch cache data.
       Use this if Omnisearch results are inconsistent, missing, or appear outdated.<br>
       <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
-    })
-    new Setting(containerEl)
-      .setName('Clear cache data')
-      .setDesc(resetCacheDesc)
-      .addButton(cb => {
-        cb.setButtonText('Clear cache')
-        cb.onClick(async () => {
-          await database.clearCache()
-          new Notice('Omnisearch - Cache cleared. Please restart Obsidian.')
-        })
       })
-
+      new Setting(containerEl)
+        .setName('Clear cache data')
+        .setDesc(resetCacheDesc)
+        .addButton(cb => {
+          cb.setButtonText('Clear cache')
+          cb.onClick(async () => {
+            await database.clearCache()
+            new Notice('Omnisearch - Cache cleared. Please restart Obsidian.')
+          })
+        })
+    }
     //#endregion Danger Zone
   }
 
@@ -347,7 +363,7 @@ export class SettingsTab extends PluginSettingTab {
 }
 
 export const DEFAULT_SETTINGS: OmnisearchSettings = {
-  respectExcluded: true,
+  hideExcluded: false,
   ignoreDiacritics: true,
   indexedFileTypes: [] as string[],
   PDFIndexing: false,
@@ -358,6 +374,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   showExcerpt: true,
   renderLineReturnInExcerpts: true,
   showCreateButton: false,
+  hightlight: true,
   showPreviousQueryResults: true,
   simpleSearch: false,
 
@@ -373,12 +390,6 @@ export let settings = Object.assign({}, DEFAULT_SETTINGS) as OmnisearchSettings
 
 export async function loadSettings(plugin: Plugin): Promise<void> {
   settings = Object.assign({}, DEFAULT_SETTINGS, await plugin.loadData())
-
-  if (Platform.isMobileApp) {
-    settings.PDFIndexing = false
-    settings.imagesIndexing = false
-  }
-
   showExcerpt.set(settings.showExcerpt)
 }
 

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { cacheManager } from 'src/cache-manager'
   import { settings, showExcerpt } from 'src/settings'
   import type { ResultNote } from '../globals'
   import {
@@ -21,13 +20,14 @@
       // @ts-ignore
       const file = app.vault.getFiles().find(f => f.path === note.path)
       if (file) {
+      // @ts-ignore
         imagePath = app.vault.getResourcePath(file)
       }
     }
   }
   $: reg = stringsToRegex(note.foundWords)
   $: cleanedContent = makeExcerpt(note.content, note.matches[0]?.offset ?? -1)
-  $: glyph = cacheManager.getLiveDocument(note.path)?.doesNotExist
+  $: glyph = false //cacheManager.getLiveDocument(note.path)?.doesNotExist
   $: title = settings.showShortName ? note.basename : note.path
 </script>
 

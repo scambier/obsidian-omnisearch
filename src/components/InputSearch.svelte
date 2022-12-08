@@ -32,7 +32,7 @@
     // the next time we open the modal, the search field will be empty
     cacheManager.addToSearchHistory('')
     dispatch('input', value)
-  }, 200)
+  }, 500)
 </script>
 
 <div class="omnisearch-input-container">

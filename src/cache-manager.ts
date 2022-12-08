@@ -1,16 +1,101 @@
-import { Notice, type TFile } from 'obsidian'
-import type { IndexedDocument } from './globals'
+import { Notice } from 'obsidian'
+import type { DocumentRef, IndexedDocument } from './globals'
 import { database } from './database'
-import MiniSearch from 'minisearch'
-import { minisearchOptions } from './search/search-engine'
-import { makeMD5 } from './tools/utils'
+import type { AsPlainObject } from 'minisearch'
+import type MiniSearch from 'minisearch'
+import {
+  extractHeadingsFromCache,
+  getAliasesFromMetadata,
+  getTagsFromMetadata,
+  isFileImage,
+  isFilePDF,
+  isFilePlaintext,
+  makeMD5,
+  removeDiacritics,
+} from './tools/utils'
+import { getImageText, getPdfText } from 'obsidian-text-extract'
+
+async function getIndexedDocument(path: string): Promise<IndexedDocument> {
+  const file = app.vault.getFiles().find(f => f.path === path)
+  if (!file) throw new Error(`Invalid file path: "${path}"`)
+  let content: string
+  if (isFilePlaintext(path)) {
+    content = await app.vault.cachedRead(file)
+  } else if (isFilePDF(path)) {
+    content = await getPdfText(file)
+  } else if (isFileImage(file.path)) {
+    content = await getImageText(file)
+  } else {
+    throw new Error('Invalid file format: ' + file.path)
+  }
+  content = removeDiacritics(content)
+  const metadata = app.metadataCache.getFileCache(file)
+
+  // Look for links that lead to non-existing files,
+  // and add them to the index.
+  if (metadata) {
+    // // FIXME: https://github.com/scambier/obsidian-omnisearch/issues/129
+    // const nonExisting = getNonExistingNotes(file, metadata)
+    // for (const name of nonExisting.filter(
+    //   o => !cacheManager.getLiveDocument(o)
+    // )) {
+    //   NotesIndex.addNonExistingToIndex(name, file.path)
+    // }
+
+    // EXCALIDRAW
+    // Remove the json code
+    if (metadata.frontmatter?.['excalidraw-plugin']) {
+      const comments =
+        metadata.sections?.filter(s => s.type === 'comment') ?? []
+      for (const { start, end } of comments.map(c => c.position)) {
+        content =
+          content.substring(0, start.offset - 1) + content.substring(end.offset)
+      }
+    }
+  }
+
+  return {
+    basename: removeDiacritics(file.basename),
+    content,
+    path: file.path,
+    mtime: file.stat.mtime,
+
+    tags: getTagsFromMetadata(metadata),
+    aliases: getAliasesFromMetadata(metadata).join(''),
+    headings1: metadata ? extractHeadingsFromCache(metadata, 1).join(' ') : '',
+    headings2: metadata ? extractHeadingsFromCache(metadata, 2).join(' ') : '',
+    headings3: metadata ? extractHeadingsFromCache(metadata, 3).join(' ') : '',
+  }
+}
 
 class CacheManager {
-  private liveDocuments: Map<string, IndexedDocument> = new Map()
   /**
    * Show an empty input field next time the user opens Omnisearch modal
    */
   private nextQueryIsEmpty = false
+
+  /**
+   * The "live cache", containing all indexed vault files
+   * in the form of IndexedDocuments
+   */
+  private documents: Map<string, IndexedDocument> = new Map()
+
+  public async addToLiveCache(path: string): Promise<void> {
+    const doc = await getIndexedDocument(path)
+    this.documents.set(path, doc)
+  }
+
+  public removeFromLiveCache(path: string): void {
+    this.documents.delete(path)
+  }
+
+  public async getDocument(path: string): Promise<IndexedDocument> {
+    if (this.documents.has(path)) {
+      return this.documents.get(path)!
+    }
+    await this.addToLiveCache(path)
+    return this.documents.get(path)!
+  }
 
   public async addToSearchHistory(query: string): Promise<void> {
     if (!query) {
@@ -36,32 +121,6 @@ class CacheManager {
     return data
   }
 
-  /**
-   * Important: keep this method async for the day it _really_ becomes async.
-   * This will avoid a refactor.
-   * @param path
-   * @param note
-   */
-  public async updateLiveDocument(
-    path: string,
-    note: IndexedDocument
-  ): Promise<void> {
-    this.liveDocuments.set(path, note)
-  }
-
-  public deleteLiveDocument(key: string): void {
-    this.liveDocuments.delete(key)
-  }
-
-  public getLiveDocument(key: string): IndexedDocument | undefined {
-    return this.liveDocuments.get(key)
-  }
-
-  public isDocumentOutdated(file: TFile): boolean {
-    const indexedNote = this.getLiveDocument(file.path)
-    return !indexedNote || indexedNote.mtime !== file.stat.mtime
-  }
-
   //#region Minisearch
 
   public getDocumentsChecksum(documents: IndexedDocument[]): string {
@@ -79,28 +138,13 @@ class CacheManager {
     )
   }
 
-  public async getMinisearchCache(): Promise<MiniSearch | null> {
-    // Retrieve documents and make their checksum
-    const cachedDocs = await database.documents.toArray()
-    const checksum = this.getDocumentsChecksum(cachedDocs.map(d => d.document))
-
-    // Add those documents in the live cache
-    cachedDocs.forEach(doc =>
-      cacheManager.updateLiveDocument(doc.path, doc.document)
-    )
-
-    // Retrieve the search cache, and verify the checksum
-    const cachedIndex = (await database.minisearch.toArray())[0]
-    if (cachedIndex?.checksum !== checksum) {
-      console.warn("Omnisearch - Cache - Checksums don't match, clearing cache")
-      // Invalid (or null) cache, clear everything
-      await database.minisearch.clear()
-      await database.documents.clear()
-      return null
-    }
-
+  public async getMinisearchCache(): Promise<{
+    paths: DocumentRef[]
+    data: AsPlainObject
+  } | null> {
     try {
-      return MiniSearch.loadJS(cachedIndex.data, minisearchOptions)
+      const cachedIndex = (await database.minisearch.toArray())[0]
+      return cachedIndex
     } catch (e) {
       new Notice(
         'Omnisearch - Cache missing or invalid. Some freezes may occur while Omnisearch indexes your vault.'
@@ -111,75 +155,15 @@ class CacheManager {
     }
   }
 
-  /**
-   * Get a dict listing the deleted/added documents since last cache
-   * @param documents
-   */
-  public async getDiffDocuments(documents: IndexedDocument[]): Promise<{
-    toDelete: IndexedDocument[]
-    toAdd: IndexedDocument[]
-    toUpdate: { oldDoc: IndexedDocument; newDoc: IndexedDocument }[]
-  }> {
-    let cachedDocs = await database.documents.toArray()
-    // present in `documents` but not in `cachedDocs`
-    const toAdd = documents.filter(
-      d => !cachedDocs.find(c => c.path === d.path)
-    )
-    // present in `cachedDocs` but not in `documents`
-    const toDelete = cachedDocs
-      .filter(c => !documents.find(d => d.path === c.path))
-      .map(d => d.document)
-
-    // toUpdate: same path, but different mtime
-    const toUpdate = cachedDocs
-      .filter(({ mtime: cMtime, path: cPath }) =>
-        documents.some(
-          ({ mtime: dMtime, path: dPath }) =>
-            cPath === dPath && dMtime !== cMtime
-        )
-      )
-      .map(c => ({
-        oldDoc: c.document,
-        newDoc: documents.find(d => d.path === c.path)!,
-      }))
-
-    return {
-      toAdd,
-      toDelete,
-      toUpdate,
-    }
-  }
-
   public async writeMinisearchCache(
     minisearch: MiniSearch,
-    documents: IndexedDocument[]
+    indexed: Map<string, number>
   ): Promise<void> {
-    const { toDelete, toAdd, toUpdate } = await this.getDiffDocuments(documents)
-
-    // Delete
-    // console.log(`Omnisearch - Cache - Will delete ${toDelete.length} documents`)
-    await database.documents.bulkDelete(toDelete.map(o => o.path))
-
-    // Add
-    // console.log(`Omnisearch - Cache - Will add ${toAdd.length} documents`)
-    await database.documents.bulkAdd(
-      toAdd.map(o => ({ document: o, mtime: o.mtime, path: o.path }))
-    )
-
-    // Update
-    // console.log(`Omnisearch - Cache - Will update ${toUpdate.length} documents`)
-    await database.documents.bulkPut(
-      toUpdate.map(o => ({
-        document: o.newDoc,
-        mtime: o.newDoc.mtime,
-        path: o.newDoc.path,
-      }))
-    )
-
+    const paths = Array.from(indexed).map(([k, v]) => ({ path: k, mtime: v }))
     await database.minisearch.clear()
     await database.minisearch.add({
       date: new Date().toISOString(),
-      checksum: this.getDocumentsChecksum(documents),
+      paths,
       data: minisearch.toJSON(),
     })
     console.log('Omnisearch - Search cache written')

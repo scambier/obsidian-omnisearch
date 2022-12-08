@@ -1,14 +1,19 @@
 import { EventBus } from './tools/event-bus'
+import { writable } from 'svelte/store'
+import { settings } from './settings'
 
 export const regexLineSplit = /\r?\n|\r|((\.|\?|!)( |\r?\n|\r))/g
 export const regexYaml = /^---\s*\n(.*?)\n?^---\s?/ms
 export const regexStripQuotes = /^"|"$|^'|'$/g
 export const chsRegex = /[\u4e00-\u9fa5]/
+export const chsSegmenter = (app as any).plugins.plugins['cm-chs-patch']
 
 export const excerptBefore = 100
 export const excerptAfter = 300
 
-export const highlightClass = 'suggestion-highlight omnisearch-highlight'
+export const highlightClass = `suggestion-highlight omnisearch-highlight ${
+  settings.hightlight ? 'omnisearch-default-highlight' : ''
+}`
 
 export const eventBus = new EventBus()
 
@@ -16,14 +21,15 @@ export const EventNames = {
   ToggleExcerpts: 'toggle-excerpts',
 } as const
 
-export const enum IndexingStep {
+export const enum IndexingStepType {
   Done,
   LoadingCache,
-  ReadingNotes,
-  ReadingPDFs,
-  ReadingImages,
-  UpdatingCache,
+  ReadingFiles,
+  IndexingFiles,
+  WritingCache,
 }
+
+export type DocumentRef = { path: string; mtime: number }
 
 export type IndexedDocument = {
   path: string
@@ -37,6 +43,7 @@ export type IndexedDocument = {
   headings2: string
   headings3: string
 
+  // TODO: reimplement this
   doesNotExist?: boolean
   parent?: string
 }
@@ -48,6 +55,8 @@ export type SearchMatch = {
 export const isSearchMatch = (o: { offset?: number }): o is SearchMatch => {
   return o.offset !== undefined
 }
+
+export const indexingStep = writable(IndexingStepType.Done)
 
 export type ResultNote = {
   score: number

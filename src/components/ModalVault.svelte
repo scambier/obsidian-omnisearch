@@ -3,19 +3,16 @@
   import { onDestroy, onMount, tick } from 'svelte'
   import InputSearch from './InputSearch.svelte'
   import ModalContainer from './ModalContainer.svelte'
-  import { eventBus, IndexingStep, type ResultNote } from 'src/globals'
+  import { eventBus, indexingStep, IndexingStepType, type ResultNote, } from 'src/globals'
   import { createNote, openNote } from 'src/tools/notes'
-  import { SearchEngine } from 'src/search/search-engine'
-  import { getCtrlKeyLabel, getExtension, loopIndex } from 'src/tools/utils'
-  import {
-    OmnisearchInFileModal,
-    type OmnisearchVaultModal,
-  } from 'src/components/modals'
+  import { getCtrlKeyLabel, getExtension, isFilePDF, loopIndex, } from 'src/tools/utils'
+  import { OmnisearchInFileModal, type OmnisearchVaultModal, } from 'src/components/modals'
   import ResultItemVault from './ResultItemVault.svelte'
   import { Query } from 'src/search/query'
   import { settings } from '../settings'
   import * as NotesIndex from '../notes-index'
   import { cacheManager } from '../cache-manager'
+  import { searchEngine } from 'src/search/omnisearch'
 
   export let modal: OmnisearchVaultModal
   export let previousQuery: string | undefined
@@ -24,32 +21,34 @@
   let searchQuery: string | undefined
   let resultNotes: ResultNote[] = []
   let query: Query
-  let { indexingStep } = SearchEngine
   let indexingStepDesc = ''
+  let searching = true
 
   $: selectedNote = resultNotes[selectedIndex]
   $: searchQuery = searchQuery ?? previousQuery
   $: if (searchQuery) {
-    updateResults()
+    resultNotes = []
+    searching = true
+    updateResults().then(() => {
+      searching = false
+    })
   } else {
+    searching = false
     resultNotes = []
   }
   $: {
     switch ($indexingStep) {
-      case IndexingStep.LoadingCache:
+      case IndexingStepType.LoadingCache:
         indexingStepDesc = 'Loading cache...'
         break
-      case IndexingStep.ReadingNotes:
+      case IndexingStepType.ReadingFiles:
+        indexingStepDesc = 'Reading files...'
+        break
+      case IndexingStepType.IndexingFiles:
+        indexingStepDesc = 'Indexing files...'
+        break
+      case IndexingStepType.WritingCache:
         updateResults()
-        indexingStepDesc = 'Reading notes...'
-        break
-      case IndexingStep.ReadingPDFs:
-        indexingStepDesc = 'Reading PDFs...'
-        break
-      case IndexingStep.ReadingImages:
-        indexingStepDesc = 'Reading images...'
-        break
-      case IndexingStep.UpdatingCache:
         indexingStepDesc = 'Updating cache...'
         break
       default:
@@ -99,7 +98,7 @@
 
   async function updateResults() {
     query = new Query(searchQuery)
-    resultNotes = (await SearchEngine.getEngine().getSuggestions(query)).sort(
+    resultNotes = (await searchEngine.getSuggestions(query)).sort(
       (a, b) => b.score - a.score
     )
     selectedIndex = 0
@@ -139,7 +138,7 @@
     openNote(note, newPane)
   }
 
-  async function onClickCreateNote(e: MouseEvent) {
+  async function onClickCreateNote(_e: MouseEvent) {
     await createNoteAndCloseModal()
   }
 
@@ -189,7 +188,7 @@
   function switchToInFileModal(): void {
     // Do nothing if the selectedNote is a PDF,
     // or if there is 0 match (e.g indexing in progress)
-    if (selectedNote?.path.endsWith('.pdf') || !selectedNote?.matches.length) {
+    if (selectedNote && (isFilePDF(selectedNote?.path) || !selectedNote?.matches.length)) {
       return
     }
 
@@ -250,11 +249,13 @@
       on:mousemove="{_ => (selectedIndex = i)}"
       on:click="{onClick}" />
   {/each}
-  {#if !resultNotes.length && searchQuery}
-    <div style="text-align: center;">
+  <div style="text-align: center;">
+    {#if !resultNotes.length && searchQuery && !searching}
       We found 0 result for your search here.
-    </div>
-  {/if}
+    {:else if searching}
+      Searching...
+    {/if}
+  </div>
 </ModalContainer>
 
 <div class="prompt-instructions">

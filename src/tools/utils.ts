@@ -1,12 +1,13 @@
 import {
   type CachedMetadata,
-  Notice,
-  Platform,
   getAllTags,
+  Notice,
   parseFrontMatterAliases,
+  Platform,
 } from 'obsidian'
 import type { SearchMatch } from '../globals'
 import {
+  chsSegmenter,
   excerptAfter,
   excerptBefore,
   highlightClass,
@@ -70,7 +71,10 @@ export function getAllIndices(text: string, regex: RegExp): SearchMatch[] {
  */
 export function stringsToRegex(strings: string[]): RegExp {
   if (!strings.length) return /^$/g
-  const joined = strings.map(s => '\\b' + escapeRegex(s)).join('|')
+  // \\b is "word boundary", and is not applied if the user uses the cm-chs-patch plugin
+  const joined = strings
+    .map(s => (chsSegmenter ? '' : '\\b') + escapeRegex(s))
+    .join('|')
   const reg = new RegExp(`(${joined})`, 'gi')
   // console.log(reg)
   return reg
@@ -170,7 +174,7 @@ export async function filterAsync<T>(
   callbackfn: (value: T, index: number, array: T[]) => Promise<boolean>
 ): Promise<T[]> {
   const filterMap = await mapAsync(array, callbackfn)
-  return array.filter((value, index) => filterMap[index])
+  return array.filter((_value, index) => filterMap[index])
 }
 
 /**
@@ -207,9 +211,9 @@ export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
 
 export function isFileIndexable(path: string): boolean {
   return (
-    (settings.PDFIndexing && path.endsWith('.pdf')) ||
     isFilePlaintext(path) ||
-    (settings.imagesIndexing && isFileImage(path))
+    (!Platform.isMobileApp && settings.PDFIndexing && isFilePDF(path)) ||
+    (!Platform.isMobileApp && settings.imagesIndexing && isFileImage(path))
   )
 }
 
@@ -217,6 +221,10 @@ export function isFileImage(path: string): boolean {
   return (
     path.endsWith('.png') || path.endsWith('.jpg') || path.endsWith('.jpeg')
   )
+}
+
+export function isFilePDF(path: string): boolean {
+  return path.endsWith('.pdf')
 }
 
 export function isFilePlaintext(path: string): boolean {
@@ -239,4 +247,16 @@ export function makeMD5(data: BinaryLike): string {
     return md5(data.toString())
   }
   return createHash('md5').update(data).digest('hex')
+}
+
+export function chunkArray<T>(arr: T[], len: number): T[][] {
+  var chunks = [],
+    i = 0,
+    n = arr.length
+
+  while (i < n) {
+    chunks.push(arr.slice(i, (i += len)))
+  }
+
+  return chunks
 }

@@ -86,7 +86,7 @@ export function parseQuery(
       let val = term.slice(sepIndex + 1)
 
       // Strip backslashes respecting escapes
-      val = (val + '').replace(/\\(.?)/g, function (s, n1) {
+      val = (val + '').replace(/\\(.?)/g, function (_s, n1) {
         switch (n1) {
           case '\\':
             return '\\'
@@ -115,7 +115,7 @@ export function parseQuery(
       }
 
       // Strip backslashes respecting escapes
-      term = (term + '').replace(/\\(.?)/g, function (s, n1) {
+      term = (term + '').replace(/\\(.?)/g, function (_s, n1) {
         switch (n1) {
           case '\\':
             return '\\'
