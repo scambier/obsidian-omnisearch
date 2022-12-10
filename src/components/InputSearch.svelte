@@ -41,6 +41,7 @@
       bind:this="{elInput}"
       bind:value
       class="prompt-input"
+      use:selectInput
       on:compositionend="{_ => toggleInputComposition(false)}"
       on:compositionstart="{_ => toggleInputComposition(true)}"
       on:input="{debouncedOnInput}"
