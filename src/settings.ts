@@ -87,13 +87,8 @@ export class SettingsTab extends PluginSettingTab {
     if (!Platform.isMobileApp) {
       const indexPDFsDesc = new DocumentFragment()
       indexPDFsDesc.createSpan({}, span => {
-        span.innerHTML = `Omnisearch will include PDFs in search results.
-        <ul>
-          <li>⚠️ Each PDF can take anywhere from a few seconds to 2 minutes to be processed.</li>
-          <li>⚠️ Texts extracted from PDFs may contain errors such as missing spaces, or spaces in the middle of words.</li>
-          <li>⚠️ Some PDFs can't be processed correctly and will return an empty text.</li>
-          <li>This feature is currently a work-in-progress, please report issues that you might experience.</li>
-        </ul>
+        span.innerHTML = `Omnisearch will include PDFs in search results.<br>
+        ⚠️ PDFs first need to be processed. This can take anywhere from a few seconds to 2 minutes, then the resulting text is cached.</li>
         <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
       })
       new Setting(containerEl)
@@ -131,8 +126,10 @@ export class SettingsTab extends PluginSettingTab {
     // Additional files to index
     const indexedFileTypesDesc = new DocumentFragment()
     indexedFileTypesDesc.createSpan({}, span => {
-      span.innerHTML = `In addition to standard <code>md</code> files, Omnisearch can also index other plain text files.<br/>
+      span.innerHTML = `In addition to standard <code>md</code> files, Omnisearch can also index other <strong style="color: var(--text-accent)">plaintext</strong> files.<br/>
       Add extensions separated by a space, without the dot. Example: "<code>txt org</code>".<br />
+      ⚠️ <span style="color: var(--text-accent)">Using extensions of non-plaintext files (like .docx or .pptx) WILL cause crashes,
+      because Omnisearch will try to index their content.</span><br />
       <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
     })
     new Setting(containerEl)
@@ -172,8 +169,8 @@ export class SettingsTab extends PluginSettingTab {
     const diacriticsDesc = new DocumentFragment()
     diacriticsDesc.createSpan({}, span => {
       span.innerHTML = `Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky".<br/>
-        <strong style="color: var(--text-accent)"><em>You probably shouldn't disable this</em>.<br>
-        Needs a restart to fully take effect.</strong>
+        ⚠️<span style="color: var(--text-accent)">You probably should NOT disable this.</span><br>
+        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>
         `
     })
     new Setting(containerEl)

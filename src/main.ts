@@ -148,7 +148,7 @@ async function populateIndex(): Promise<void> {
     )
   }
 
-  if (diff.toAdd.length >= 500) {
+  if (diff.toAdd.length >= 1000 && !Platform.isIosApp) {
     new Notice(
       `Omnisearch - ${diff.toAdd.length} files need to be indexed. Obsidian may experience stutters and freezes during the process`,
       10_000
@@ -165,7 +165,7 @@ async function populateIndex(): Promise<void> {
   }
 
   console.timeEnd('Omnisearch - Indexing total time')
-  if (diff.toAdd.length >= 500) {
+  if (diff.toAdd.length >= 1000) {
     new Notice(`Omnisearch - Your files have been indexed.`)
   }
   indexingStep.set(IndexingStepType.Done)
