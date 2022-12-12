@@ -5,7 +5,7 @@ import type {
   ResultNote,
   SearchMatch,
 } from '../globals'
-import { chsRegex, chsSegmenter, SPACE_OR_PUNCTUATION } from '../globals'
+import { chsRegex, getChsSegmenter, SPACE_OR_PUNCTUATION } from '../globals'
 import { settings } from '../settings'
 import {
   chunkArray,
@@ -19,7 +19,7 @@ import { cacheManager } from '../cache-manager'
 
 const tokenize = (text: string): string[] => {
   const tokens = text.split(SPACE_OR_PUNCTUATION)
-
+  const chsSegmenter = getChsSegmenter()
   if (chsSegmenter) {
     return tokens.flatMap(word =>
       chsRegex.test(word) ? chsSegmenter.cut(word) : [word]

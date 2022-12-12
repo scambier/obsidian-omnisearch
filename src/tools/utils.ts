@@ -7,7 +7,7 @@ import {
 } from 'obsidian'
 import type { SearchMatch } from '../globals'
 import {
-  chsSegmenter,
+  getChsSegmenter,
   excerptAfter,
   excerptBefore,
   highlightClass,
@@ -73,7 +73,7 @@ export function stringsToRegex(strings: string[]): RegExp {
   if (!strings.length) return /^$/g
   // \\b is "word boundary", and is not applied if the user uses the cm-chs-patch plugin
   const joined = strings
-    .map(s => (chsSegmenter ? '' : '\\b') + escapeRegex(s))
+    .map(s => (getChsSegmenter() ? '' : '\\b') + escapeRegex(s))
     .join('|')
   const reg = new RegExp(`(${joined})`, 'gi')
   // console.log(reg)
