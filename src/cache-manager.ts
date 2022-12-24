@@ -1,5 +1,9 @@
 import { Notice } from 'obsidian'
-import type { DocumentRef, IndexedDocument } from './globals'
+import {
+  getTextExtractor,
+  type DocumentRef,
+  type IndexedDocument,
+} from './globals'
 import { database } from './database'
 import type { AsPlainObject } from 'minisearch'
 import type MiniSearch from 'minisearch'
@@ -18,15 +22,30 @@ import { getImageText, getPdfText } from 'obsidian-text-extract'
 async function getIndexedDocument(path: string): Promise<IndexedDocument> {
   const file = app.vault.getFiles().find(f => f.path === path)
   if (!file) throw new Error(`Invalid file path: "${path}"`)
-  let content: string
+  let content: string | null = null
+
+  const extractor = getTextExtractor()
   if (isFilePlaintext(path)) {
     content = await app.vault.cachedRead(file)
-  } else if (isFilePDF(path)) {
-    content = await getPdfText(file)
-  } else if (isFileImage(file.path)) {
-    content = await getImageText(file)
+  } else if (extractor) {
+    if (extractor.canFileBeExtracted(path)) {
+      content = await extractor.extractText(file)
+    } else {
+      throw new Error('Invalid file format: ' + file.path)
+    }
   } else {
-    throw new Error('Invalid file format: ' + file.path)
+    if (isFilePDF(path)) {
+      content = await getPdfText(file)
+    } else if (isFileImage(file.path)) {
+      content = await getImageText(file)
+    } else {
+      throw new Error('Invalid file format: ' + file.path)
+    }
+  }
+  if (content === null || content === undefined) {
+    // This shouldn't happen
+    console.warn(`Omnisearch: ${content} content for file`, file.path)
+    content = ''
   }
   content = removeDiacritics(content)
   const metadata = app.metadataCache.getFileCache(file)
@@ -81,8 +100,12 @@ class CacheManager {
   private documents: Map<string, IndexedDocument> = new Map()
 
   public async addToLiveCache(path: string): Promise<void> {
-    const doc = await getIndexedDocument(path)
-    this.documents.set(path, doc)
+    try {
+      const doc = await getIndexedDocument(path)
+      this.documents.set(path, doc)
+    } catch (e) {
+      console.warn('Omnisearch: Error while adding to live cache', e)
+    }
   }
 
   public removeFromLiveCache(path: string): void {

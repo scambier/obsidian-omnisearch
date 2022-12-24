@@ -120,16 +120,6 @@ There are several CSS classes you can use to customize the appearance of Omnisea
 .omnisearch-input-field
 ```
 
-For example, if you'd like the usual yellow highlight on search matches, you can add this code inside a CSS snippet
-file:
-
-```css
-.omnisearch-highlight {
-  color: var(--text-normal);
-  background-color: var(--text-highlight-bg);
-}
-```
-
 See [styles.css](./assets/styles.css) for more information.
 
 ## Issues & Solutions
