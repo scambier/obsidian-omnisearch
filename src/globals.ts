@@ -87,13 +87,7 @@ export function getChsSegmenter(): any | undefined {
 }
 
 export type TextExtractorApi = {
-  extractText: (
-    file: TFile,
-    ocrOptions?: {
-      langs: string[]
-    }
-  ) => Promise<string>
-  getOcrLangs: () => string[]
+  extractText: (file: TFile) => Promise<string>
   canFileBeExtracted: (filePath: string) => boolean
 }
 

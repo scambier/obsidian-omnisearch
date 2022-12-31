@@ -46,7 +46,9 @@ export default class OmnisearchPlugin extends Plugin {
       id: 'show-modal-infile',
       name: 'In-file search',
       editorCallback: (_editor, view) => {
-        new OmnisearchInFileModal(app, view.file).open()
+        if (view.file) {
+          new OmnisearchInFileModal(app, view.file).open()
+        }
       },
     })
 

@@ -31,6 +31,8 @@
     searching = true
     updateResults().then(() => {
       searching = false
+    }).catch((e) => {
+      console.error(e)
     })
   } else {
     searching = false

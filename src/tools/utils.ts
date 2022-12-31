@@ -202,6 +202,9 @@ export function getTagsFromMetadata(metadata: CachedMetadata | null): string[] {
  * https://stackoverflow.com/a/37511463
  */
 export function removeDiacritics(str: string): string {
+  if (str === null || str === undefined) {
+    return ''
+  }
   return str.normalize('NFD').replace(/\p{Diacritic}/gu, '')
 }
 
