@@ -25,15 +25,20 @@ async function getIndexedDocument(path: string): Promise<IndexedDocument> {
   let content: string | null = null
 
   const extractor = getTextExtractor()
+  // Plain text
   if (isFilePlaintext(path)) {
     content = await app.vault.cachedRead(file)
-  } else if (extractor) {
+  }
+  // Image or PDF, with the text-extractor plugin
+  else if (extractor) {
     if (extractor.canFileBeExtracted(path)) {
       content = await extractor.extractText(file)
     } else {
       throw new Error('Invalid file format: ' + file.path)
     }
-  } else {
+  }
+  // Image or PDF, without the text-extractor plugin
+  else {
     if (isFilePDF(path)) {
       content = await getPdfText(file)
     } else if (isFileImage(file.path)) {

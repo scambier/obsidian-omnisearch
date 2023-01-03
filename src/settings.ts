@@ -8,6 +8,7 @@ import {
 } from 'obsidian'
 import { writable } from 'svelte/store'
 import { database } from './database'
+import { getTextExtractor } from './globals'
 import type OmnisearchPlugin from './main'
 
 interface WeightingSettings {
@@ -82,6 +83,20 @@ export class SettingsTab extends PluginSettingTab {
     //#region Indexing
 
     new Setting(containerEl).setName('Indexing').setHeading()
+
+    if (getTextExtractor()) {
+      new Setting(containerEl).setDesc(
+        '👍 You have installed Text Extractor, Omnisearch will use it to index PDFs and images.'
+      )
+    } else {
+      const label = new DocumentFragment()
+      label.createSpan({}, span => {
+        span.innerHTML =
+        `⚠️ Omnisearch will soon require <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a> to index PDFs and images.
+        You can already install it to get a head start.`
+      })
+      new Setting(containerEl).setDesc(label)
+    }
 
     // PDF Indexing
     if (!Platform.isMobileApp) {
