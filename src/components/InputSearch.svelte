@@ -19,12 +19,15 @@
     }
   }
 
-  async function selectInput() {
-    await tick()
-    elInput.focus()
-    await tick()
-    elInput.select()
-    await tick()
+  function selectInput(_?: HTMLElement): void {
+    tick()
+      .then(() => {
+        elInput.focus()
+        return tick()
+      })
+      .then(() => {
+        elInput.select()
+      })
   }
 
   const debouncedOnInput = debounce(() => {
