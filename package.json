@@ -43,7 +43,7 @@
     "dexie": "^3.2.2",
     "lodash-es": "4.17.21",
     "minisearch": "6.0.0-beta.1",
-    "obsidian-text-extract": "link:..\\obsidian-text-extract-lib",
+    "obsidian-text-extract": "^1.0.4",
     "pure-md5": "^0.1.14"
   },
   "pnpm": {
