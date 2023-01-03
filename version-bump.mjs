@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from 'fs'
 
 const targetVersion = process.env.npm_package_version
+console.log(`Bumping version to ${targetVersion}`)
 
 // read minAppVersion from manifest.json and bump version to target version
 const manifest = JSON.parse(readFileSync('manifest-beta.json', 'utf8'))

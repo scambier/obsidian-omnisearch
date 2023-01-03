@@ -1,13 +1,13 @@
 {
   "name": "scambier.obsidian-search",
-  "version": "1.9.1",
+  "version": "1.10.0-beta.1",
   "description": "A search engine for Obsidian",
   "main": "dist/main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-    "version": "node version-bump.mjs && git add manifest.json versions.json package.json",
+    "version": "node version-bump.mjs",
     "test": "jest"
   },
   "keywords": [],
@@ -43,7 +43,7 @@
     "dexie": "^3.2.2",
     "lodash-es": "4.17.21",
     "minisearch": "6.0.0-beta.1",
-    "obsidian-text-extract": "1.0.4",
+    "obsidian-text-extract": "link:..\\obsidian-text-extract-lib",
     "pure-md5": "^0.1.14"
   },
   "pnpm": {
