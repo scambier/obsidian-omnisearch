@@ -7,9 +7,9 @@ import {
 } from 'obsidian'
 import type { SearchMatch } from '../globals'
 import {
-  getChsSegmenter,
   excerptAfter,
   excerptBefore,
+  getChsSegmenter,
   highlightClass,
   isSearchMatch,
   regexLineSplit,
@@ -215,6 +215,7 @@ export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
 export function isFileIndexable(path: string): boolean {
   return (
     isFilePlaintext(path) ||
+    isFileCanvas(path) ||
     (!Platform.isMobileApp && settings.PDFIndexing && isFilePDF(path)) ||
     (!Platform.isMobileApp && settings.imagesIndexing && isFileImage(path))
   )
@@ -231,11 +232,11 @@ export function isFilePDF(path: string): boolean {
 }
 
 export function isFilePlaintext(path: string): boolean {
-  return getPlaintextExtensions().some(t => path.endsWith(`.${t}`))
+  return [...settings.indexedFileTypes, 'md'].some(t => path.endsWith(`.${t}`))
 }
 
-export function getPlaintextExtensions(): string[] {
-  return [...settings.indexedFileTypes, 'md']
+export function isFileCanvas(path: string): boolean {
+  return path.endsWith('.canvas')
 }
 
 export function getExtension(path: string): string {

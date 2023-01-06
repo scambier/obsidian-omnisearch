@@ -1,16 +1,15 @@
 import { Notice } from 'obsidian'
 import {
-  getTextExtractor,
   type DocumentRef,
+  getTextExtractor,
   type IndexedDocument,
 } from './globals'
 import { database } from './database'
-import type { AsPlainObject } from 'minisearch'
-import type MiniSearch from 'minisearch'
 import {
   extractHeadingsFromCache,
   getAliasesFromMetadata,
   getTagsFromMetadata,
+  isFileCanvas,
   isFileImage,
   isFilePDF,
   isFilePlaintext,
@@ -18,18 +17,50 @@ import {
   removeDiacritics,
 } from './tools/utils'
 import { getImageText, getPdfText } from 'obsidian-text-extract'
+import type { CanvasData } from 'obsidian/canvas'
+import type { AsPlainObject } from 'minisearch'
+import type MiniSearch from 'minisearch'
 
-async function getIndexedDocument(path: string): Promise<IndexedDocument> {
+/**
+ * This function is responsible for extracting the text from a file and
+ * returning it as an `IndexedDocument` object.
+ * @param path
+ */
+async function getAndMapIndexedDocument(
+  path: string
+): Promise<IndexedDocument> {
   const file = app.vault.getFiles().find(f => f.path === path)
   if (!file) throw new Error(`Invalid file path: "${path}"`)
   let content: string | null = null
 
   const extractor = getTextExtractor()
-  // Plain text
+
+  // ** Plain text **
+  // Just read the file content
   if (isFilePlaintext(path)) {
     content = await app.vault.cachedRead(file)
   }
-  // Image or PDF, with the text-extractor plugin
+
+  // ** Canvas **
+  // Extract the text fields from the json
+  else if (isFileCanvas(path)) {
+    const canvas = JSON.parse(await app.vault.cachedRead(file)) as CanvasData
+    let texts: string[] = []
+    // Concatenate text from the canvas fields
+    for (const node of canvas.nodes) {
+      if (node.type === 'text') {
+        texts.push(node.text)
+      } else if (node.type === 'file') {
+        texts.push(node.file)
+      }
+    }
+    for (const edge of canvas.edges.filter(e => !!e.label)) {
+      texts.push(edge.label!)
+    }
+    content = texts.join('\r\n')
+  }
+
+  // a) ** Image or PDF ** with Text Extractor
   else if (extractor) {
     if (extractor.canFileBeExtracted(path)) {
       content = await extractor.extractText(file)
@@ -37,7 +68,7 @@ async function getIndexedDocument(path: string): Promise<IndexedDocument> {
       throw new Error('Invalid file format: ' + file.path)
     }
   }
-  // Image or PDF, without the text-extractor plugin
+  // b) ** Image or PDF ** without the text-extractor plugin
   else {
     if (isFilePDF(path)) {
       content = await getPdfText(file)
@@ -106,7 +137,7 @@ class CacheManager {
 
   public async addToLiveCache(path: string): Promise<void> {
     try {
-      const doc = await getIndexedDocument(path)
+      const doc = await getAndMapIndexedDocument(path)
       this.documents.set(path, doc)
     } catch (e) {
       console.warn('Omnisearch: Error while adding to live cache', e)
