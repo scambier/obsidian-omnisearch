@@ -184,7 +184,8 @@ export class SettingsTab extends PluginSettingTab {
     const diacriticsDesc = new DocumentFragment()
     diacriticsDesc.createSpan({}, span => {
       span.innerHTML = `Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky".<br/>
-        ⚠️<span style="color: var(--text-accent)">You probably should NOT disable this.</span><br>
+        ⚠️ <span style="color: var(--text-accent)">You probably should <strong>NOT</strong> disable this.</span><br>
+        ⚠️ <span style="color: var(--text-accent)">Changing this setting will clear the cache.</span><br>
         <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>
         `
     })
@@ -193,6 +194,7 @@ export class SettingsTab extends PluginSettingTab {
       .setDesc(diacriticsDesc)
       .addToggle(toggle =>
         toggle.setValue(settings.ignoreDiacritics).onChange(async v => {
+          await database.clearCache()
           settings.ignoreDiacritics = v
           await saveSettings(this.plugin)
         })
@@ -364,7 +366,7 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   weightSlider(cb: SliderComponent, key: keyof WeightingSettings): void {
-    cb.setLimits(1, 3, 0.1)
+    cb.setLimits(1, 5, 0.1)
       .setValue(settings[key])
       .setDynamicTooltip()
       .onChange(v => {
