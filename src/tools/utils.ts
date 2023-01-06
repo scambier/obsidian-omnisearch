@@ -195,7 +195,25 @@ export function getAliasesFromMetadata(
 }
 
 export function getTagsFromMetadata(metadata: CachedMetadata | null): string[] {
-  return metadata ? getAllTags(metadata) ?? [] : []
+  let tags = metadata ? getAllTags(metadata) ?? [] : []
+  // This will "un-nest" tags that are in the form of "#tag/subtag"
+  // A tag like "#tag/subtag" will be split into 3 tags: '#tag/subtag", "#tag" and "#subtag"
+  // https://github.com/scambier/obsidian-omnisearch/issues/146
+  tags = [
+    ...new Set(
+      tags.reduce((acc, tag) => {
+        return [
+          ...acc,
+          ...tag
+            .split('/')
+            .filter(t => t)
+            .map(t => (t.startsWith('#') ? t : `#${t}`)),
+          tag,
+        ]
+      }, [] as string[])
+    ),
+  ]
+  return tags
 }
 
 /**
