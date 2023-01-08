@@ -85,29 +85,29 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl).setName('Indexing').setHeading()
 
     if (getTextExtractor()) {
-      new Setting(containerEl).setDesc(
-        '👍 You have installed Text Extractor, Omnisearch will use it to index PDFs and images.'
-      )
+      const desc = new DocumentFragment()
+      desc.createSpan({}, span => {
+        span.innerHTML = `👍 You have installed <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a>, Omnisearch will use it to index PDFs and images.
+            <br />Text extraction only works on desktop, but the cache can be synchronized with your mobile device.`
+      })
+      new Setting(containerEl).setDesc(desc)
     } else {
       const label = new DocumentFragment()
       label.createSpan({}, span => {
-        span.innerHTML =
-        `⚠️ Omnisearch will soon require <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a> to index PDFs and images.
+        span.innerHTML = `⚠️ Omnisearch will soon require <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a> to index PDFs and images.
         You can already install it to get a head start.`
       })
       new Setting(containerEl).setDesc(label)
     }
 
     // PDF Indexing
-    if (!Platform.isMobileApp) {
+    if (!Platform.isMobileApp || getTextExtractor()) {
       const indexPDFsDesc = new DocumentFragment()
       indexPDFsDesc.createSpan({}, span => {
-        span.innerHTML = `Omnisearch will include PDFs in search results.<br>
-        ⚠️ PDFs first need to be processed. This can take anywhere from a few seconds to 2 minutes, then the resulting text is cached.</li>
-        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
+        span.innerHTML = `Include PDFs in search results - Will soon depend on Text Extractor.`
       })
       new Setting(containerEl)
-        .setName('PDF Indexing')
+        .setName(`PDFs Indexing`)
         .setDesc(indexPDFsDesc)
         .addToggle(toggle =>
           toggle.setValue(settings.PDFIndexing).onChange(async v => {
@@ -115,21 +115,14 @@ export class SettingsTab extends PluginSettingTab {
             await saveSettings(this.plugin)
           })
         )
-    }
 
-    // Images Indexing
-    if (!Platform.isMobileApp) {
+      // Images Indexing
       const indexImagesDesc = new DocumentFragment()
       indexImagesDesc.createSpan({}, span => {
-        span.innerHTML = `Omnisearch will use <a href="https://en.wikipedia.org/wiki/Tesseract_(software)">Tesseract</a> to index images from their text.
-        <ul>
-          <li>Only English is supported at the moment.</li>
-          <li>Not all images can be correctly read by the OCR, this feature works best with scanned documents.</li>
-        </ul>      
-        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
+        span.innerHTML = `Include images in search results - Will soon depend on Text Extractor.`
       })
       new Setting(containerEl)
-        .setName('BETA - Images Indexing')
+        .setName(`Images Indexing`)
         .setDesc(indexImagesDesc)
         .addToggle(toggle =>
           toggle.setValue(settings.imagesIndexing).onChange(async v => {
@@ -138,6 +131,7 @@ export class SettingsTab extends PluginSettingTab {
           })
         )
     }
+
     // Additional files to index
     const indexedFileTypesDesc = new DocumentFragment()
     indexedFileTypesDesc.createSpan({}, span => {
