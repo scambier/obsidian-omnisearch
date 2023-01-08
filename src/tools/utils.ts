@@ -5,7 +5,7 @@ import {
   parseFrontMatterAliases,
   Platform,
 } from 'obsidian'
-import type { SearchMatch } from '../globals'
+import { getTextExtractor, type SearchMatch } from '../globals'
 import {
   excerptAfter,
   excerptBefore,
@@ -231,11 +231,13 @@ export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
 }
 
 export function isFileIndexable(path: string): boolean {
+  const canIndexPDF = (!Platform.isMobileApp || !!getTextExtractor()) && settings.PDFIndexing
+  const canIndexImages = (!Platform.isMobileApp || !!getTextExtractor()) && settings.imagesIndexing
   return (
     isFilePlaintext(path) ||
     isFileCanvas(path) ||
-    (!Platform.isMobileApp && settings.PDFIndexing && isFilePDF(path)) ||
-    (!Platform.isMobileApp && settings.imagesIndexing && isFileImage(path))
+    (canIndexPDF && isFilePDF(path)) ||
+    (canIndexImages && isFileImage(path))
   )
 }
 
