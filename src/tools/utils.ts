@@ -223,7 +223,12 @@ export function removeDiacritics(str: string): string {
   if (str === null || str === undefined) {
     return ''
   }
-  return str.normalize('NFD').replace(/\p{Diacritic}/gu, '')
+  // Keep backticks for code blocks, because otherwise they are removed by the .normalize() function
+  // https://stackoverflow.com/a/36100275
+  str = str.replaceAll('`', '[__omnisearch__backtick__]')
+  str = str.normalize('NFD').replace(/\p{Diacritic}/gu, '')
+  str = str.replaceAll('[__omnisearch__backtick__]', '`')
+  return str
 }
 
 export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
