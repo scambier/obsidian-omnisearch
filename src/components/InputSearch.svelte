@@ -11,6 +11,10 @@
   let elInput: HTMLInputElement
   const dispatch = createEventDispatcher()
 
+  export function setInputValue(v:string): void {
+    value = v
+  }
+
   $: {
     if (initialValue && !initialSet && !value) {
       initialSet = true

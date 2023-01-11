@@ -23,6 +23,7 @@
   let query: Query
   let indexingStepDesc = ''
   let searching = true
+  let refInput: InputSearch|undefined
 
   $: selectedNote = resultNotes[selectedIndex]
   $: searchQuery = searchQuery ?? previousQuery
@@ -87,7 +88,8 @@
     if (++historySearchIndex >= history.length) {
       historySearchIndex = 0
     }
-    previousQuery = history[historySearchIndex]
+    searchQuery = history[historySearchIndex]
+    refInput?.setInputValue(searchQuery)
   }
 
   async function nextSearchHistory() {
@@ -95,7 +97,8 @@
     if (--historySearchIndex < 0) {
       historySearchIndex = history.length ? history.length - 1 : 0
     }
-    previousQuery = history[historySearchIndex]
+    searchQuery = history[historySearchIndex]
+    refInput?.setInputValue(searchQuery)
   }
 
   async function updateResults() {
@@ -230,6 +233,7 @@
 
 <InputSearch
   initialValue="{searchQuery}"
+  bind:this={refInput}
   on:input="{e => (searchQuery = e.detail)}"
   placeholder="Omnisearch - Vault">
   {#if settings.showCreateButton}
