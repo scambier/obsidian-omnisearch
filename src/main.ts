@@ -46,7 +46,9 @@ export default class OmnisearchPlugin extends Plugin {
       id: 'show-modal-infile',
       name: 'In-file search',
       editorCallback: (_editor, view) => {
-        new OmnisearchInFileModal(app, view.file).open()
+        if (view.file) {
+          new OmnisearchInFileModal(app, view.file).open()
+        }
       },
     })
 
@@ -190,15 +192,13 @@ async function cleanOldCacheFiles() {
 }
 
 function executeFirstLaunchTasks(plugin: Plugin) {
-  const code = '1.8.0-beta.3'
+  const code = '1.10.0-beta.1'
   if (settings.welcomeMessage !== code) {
     const welcome = new DocumentFragment()
     welcome.createSpan({}, span => {
-      span.innerHTML = `<strong>Omnisearch has been updated</strong>
-You can now enable "Images Indexing" to use Optical Character Recognition on your scanned documents
-🔎🖼`
+      span.innerHTML = `🔎 Omnisearch will soon require the <strong>Text Extractor</strong> plugin to index PDF and images. See Omnisearch settings for more information.`
     })
-    new Notice(welcome, 30000)
+    new Notice(welcome, 20_000)
   }
   settings.welcomeMessage = code
 

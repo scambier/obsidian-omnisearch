@@ -5,11 +5,11 @@ import {
   parseFrontMatterAliases,
   Platform,
 } from 'obsidian'
-import type { SearchMatch } from '../globals'
+import { getTextExtractor, type SearchMatch } from '../globals'
 import {
-  getChsSegmenter,
   excerptAfter,
   excerptBefore,
+  getChsSegmenter,
   highlightClass,
   isSearchMatch,
   regexLineSplit,
@@ -195,14 +195,40 @@ export function getAliasesFromMetadata(
 }
 
 export function getTagsFromMetadata(metadata: CachedMetadata | null): string[] {
-  return metadata ? getAllTags(metadata) ?? [] : []
+  let tags = metadata ? getAllTags(metadata) ?? [] : []
+  // This will "un-nest" tags that are in the form of "#tag/subtag"
+  // A tag like "#tag/subtag" will be split into 3 tags: '#tag/subtag", "#tag" and "#subtag"
+  // https://github.com/scambier/obsidian-omnisearch/issues/146
+  tags = [
+    ...new Set(
+      tags.reduce((acc, tag) => {
+        return [
+          ...acc,
+          ...tag
+            .split('/')
+            .filter(t => t)
+            .map(t => (t.startsWith('#') ? t : `#${t}`)),
+          tag,
+        ]
+      }, [] as string[])
+    ),
+  ]
+  return tags
 }
 
 /**
  * https://stackoverflow.com/a/37511463
  */
 export function removeDiacritics(str: string): string {
-  return str.normalize('NFD').replace(/\p{Diacritic}/gu, '')
+  if (str === null || str === undefined) {
+    return ''
+  }
+  // Keep backticks for code blocks, because otherwise they are removed by the .normalize() function
+  // https://stackoverflow.com/a/36100275
+  str = str.replaceAll('`', '[__omnisearch__backtick__]')
+  str = str.normalize('NFD').replace(/\p{Diacritic}/gu, '')
+  str = str.replaceAll('[__omnisearch__backtick__]', '`')
+  return str
 }
 
 export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
@@ -210,10 +236,13 @@ export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
 }
 
 export function isFileIndexable(path: string): boolean {
+  const canIndexPDF = (!Platform.isMobileApp || !!getTextExtractor()) && settings.PDFIndexing
+  const canIndexImages = (!Platform.isMobileApp || !!getTextExtractor()) && settings.imagesIndexing
   return (
     isFilePlaintext(path) ||
-    (!Platform.isMobileApp && settings.PDFIndexing && isFilePDF(path)) ||
-    (!Platform.isMobileApp && settings.imagesIndexing && isFileImage(path))
+    isFileCanvas(path) ||
+    (canIndexPDF && isFilePDF(path)) ||
+    (canIndexImages && isFileImage(path))
   )
 }
 
@@ -228,11 +257,11 @@ export function isFilePDF(path: string): boolean {
 }
 
 export function isFilePlaintext(path: string): boolean {
-  return getPlaintextExtensions().some(t => path.endsWith(`.${t}`))
+  return [...settings.indexedFileTypes, 'md'].some(t => path.endsWith(`.${t}`))
 }
 
-export function getPlaintextExtensions(): string[] {
-  return [...settings.indexedFileTypes, 'md']
+export function isFileCanvas(path: string): boolean {
+  return path.endsWith('.canvas')
 }
 
 export function getExtension(path: string): string {

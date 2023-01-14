@@ -104,8 +104,7 @@ export class Omnisearch {
       documents.filter(d => this.indexedDocuments.has(d.path)).map(d => d.path)
     )
 
-    // Split the documents in smaller chunks to regularly save the cache.
-    // If the user shuts off Obsidian mid-indexing, we at least saved some
+    // Split the documents in smaller chunks to add them to minisearch
     const chunkedDocs = chunkArray(documents, 500)
     for (const docs of chunkedDocs) {
       // Update the list of indexed docs
@@ -146,7 +145,10 @@ export class Omnisearch {
 
     let results = this.minisearch.search(query.segmentsToStr(), {
       prefix: term => term.length >= options.prefixLength,
-      fuzzy: 0.2,
+      // length <= 3: no fuzziness
+      // length <= 5: fuzziness of 10%
+      // length > 5: fuzziness of 20%
+      fuzzy: term => (term.length <= 3 ? 0 : term.length <= 5 ? 0.1 : 0.2),
       combineWith: 'AND',
       boost: {
         basename: settings.weightBasename,

@@ -22,7 +22,7 @@ specifiers:
   lodash-es: 4.17.21
   minisearch: 6.0.0-beta.1
   obsidian: latest
-  obsidian-text-extract: 1.0.4
+  obsidian-text-extract: ^1.0.4
   prettier: ^2.8.1
   prettier-plugin-svelte: ^2.8.1
   pure-md5: ^0.1.14
@@ -56,7 +56,7 @@ devDependencies:
   esbuild-plugin-copy: 1.3.0_esbuild@0.14.0
   esbuild-svelte: 0.7.1_wvi5wuag3veo5vm52k3h7pgaae
   jest: 27.5.1
-  obsidian: 0.16.3
+  obsidian: 1.1.1
   prettier: 2.8.1
   prettier-plugin-svelte: 2.8.1_sro2v6ld777payjtkjtiuogcxi
   svelte: 3.54.0
@@ -4138,6 +4138,7 @@ packages:
 
   /obsidian-text-extract/1.0.4:
     resolution: {integrity: sha512-lJ7HaEPGUoGVYr6iCSEU8oPrnA8xRBQgSU9KryWteq3wO+Yiw2Zue70G0rZf9Yj+DkgR92PtuR8aQZQxTy/uLA==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
     dependencies:
       dexie: 3.2.2
       p-limit: 4.0.0
@@ -4149,8 +4150,8 @@ packages:
       - supports-color
     dev: false
 
-  /obsidian/0.16.3:
-    resolution: {integrity: sha512-hal9qk1A0GMhHSeLr2/+o3OpLmImiP+Y+sx2ewP13ds76KXsziG96n+IPFT0mSkup1zSwhEu+DeRhmbcyCCXWw==}
+  /obsidian/1.1.1:
+    resolution: {integrity: sha512-GcxhsHNkPEkwHEjeyitfYNBcQuYGeAHFs1pEpZIv0CnzSfui8p8bPLm2YKLgcg20B764770B1sYGtxCvk9ptxg==}
     peerDependencies:
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0

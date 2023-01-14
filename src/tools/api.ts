@@ -1,6 +1,7 @@
 import type { ResultNote } from '../globals'
 import { Query } from '../search/query'
 import { searchEngine } from '../search/omnisearch'
+import { makeExcerpt } from './utils'
 
 type ResultNoteApi = {
   score: number
@@ -8,6 +9,7 @@ type ResultNoteApi = {
   basename: string
   foundWords: string[]
   matches: SearchMatchApi[]
+  excerpt: string
 }
 
 export type SearchMatchApi = {
@@ -17,7 +19,10 @@ export type SearchMatchApi = {
 
 function mapResults(results: ResultNote[]): ResultNoteApi[] {
   return results.map(result => {
-    const { score, path, basename, foundWords, matches } = result
+    const { score, path, basename, foundWords, matches, content } = result
+
+    const excerpt = makeExcerpt(content, matches[0]?.offset ?? -1)
+
     return {
       score,
       path,
@@ -29,14 +34,18 @@ function mapResults(results: ResultNote[]): ResultNoteApi[] {
           offset: match.offset,
         }
       }),
+      excerpt,
     }
   })
 }
 
-async function search(q: string): Promise<ResultNoteApi[]> {
+async function search(
+  q: string,
+  options: Partial<{ excerpt: boolean }> = {}
+): Promise<ResultNoteApi[]> {
   const query = new Query(q)
   const raw = await searchEngine.getSuggestions(query)
   return mapResults(raw)
 }
 
-export default {search}
+export default { search }

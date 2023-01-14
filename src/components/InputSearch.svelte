@@ -11,6 +11,10 @@
   let elInput: HTMLInputElement
   const dispatch = createEventDispatcher()
 
+  export function setInputValue(v:string): void {
+    value = v
+  }
+
   $: {
     if (initialValue && !initialSet && !value) {
       initialSet = true
@@ -19,12 +23,15 @@
     }
   }
 
-  async function selectInput() {
-    await tick()
-    elInput.focus()
-    await tick()
-    elInput.select()
-    await tick()
+  function selectInput(_?: HTMLElement): void {
+    tick()
+      .then(() => {
+        elInput.focus()
+        return tick()
+      })
+      .then(() => {
+        elInput.select()
+      })
   }
 
   const debouncedOnInput = debounce(() => {
