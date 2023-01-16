@@ -25,7 +25,7 @@ Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/mi
     its filename, and its headings
 - Keyboard first: you never have to use your mouse
 - Workflow similar to the "Quick Switcher" core plugin
-- Fuzzy search
+- Resistance to typos
 - Switch between Vault and In-file search to quickly skim multiple results in a single note
 - Supports `"expressions in quotes"` and `-exclusions`
 - Directly Insert a `[[link]]` from the search results
