@@ -25,6 +25,6 @@ assignees: ''
 
 **Things to try:**
 
-- Does the problem occur when Obsidian is the only active community plugin:  
+- Does the problem occur when Omnisearch is the only active community plugin:  
 - Does the problem occur when you _don't_ index PDFs, images, or other non-notes files:  
 - Does the problem occur after a cache reset: 
