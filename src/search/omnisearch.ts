@@ -95,9 +95,11 @@ export class Omnisearch {
    * @param paths
    */
   public async addFromPaths(paths: string[]): Promise<void> {
-    let documents = await Promise.all(
-      paths.map(async path => await cacheManager.getDocument(path))
-    )
+    let documents = (
+      await Promise.all(
+        paths.map(async path => await cacheManager.getDocument(path))
+      )
+    ).filter(d => !!d?.path)
 
     // If a document is already added, discard it
     this.removeFromPaths(

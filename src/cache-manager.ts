@@ -138,9 +138,17 @@ class CacheManager {
   public async addToLiveCache(path: string): Promise<void> {
     try {
       const doc = await getAndMapIndexedDocument(path)
+      if (!doc.path) {
+        console.error(
+          `Missing .path field in IndexedDocument "${doc.basename}", skipping`
+        )
+        return
+      }
       this.documents.set(path, doc)
     } catch (e) {
-      console.warn('Omnisearch: Error while adding to live cache', e)
+      console.warn(`Omnisearch: Error while adding "${path}" to live cache`, e)
+      // Shouldn't be needed, but...
+      this.removeFromLiveCache(path)
     }
   }
 
