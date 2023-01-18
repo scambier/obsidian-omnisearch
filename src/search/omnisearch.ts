@@ -348,9 +348,6 @@ export class Omnisearch {
   }
 
   public async writeToCache(): Promise<void> {
-    if (Platform.isIosApp) {
-      return
-    }
     await cacheManager.writeMinisearchCache(
       this.minisearch,
       this.indexedDocuments

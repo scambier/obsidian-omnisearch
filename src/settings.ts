@@ -8,7 +8,7 @@ import {
 } from 'obsidian'
 import { writable } from 'svelte/store'
 import { database } from './database'
-import { getTextExtractor } from './globals'
+import { getTextExtractor, isCacheEnabled } from './globals'
 import type OmnisearchPlugin from './main'
 
 interface WeightingSettings {
@@ -19,6 +19,8 @@ interface WeightingSettings {
 }
 
 export interface OmnisearchSettings extends WeightingSettings {
+  /** Enables caching to speed up indexing */
+  useCache: boolean
   /** Respect the "excluded files" Obsidian setting by downranking results ignored files */
   hideExcluded: boolean
   /** Ignore diacritics when indexing files */
@@ -159,6 +161,19 @@ export class SettingsTab extends PluginSettingTab {
     //#region Behavior
 
     new Setting(containerEl).setName('Behavior').setHeading()
+
+    // Caching
+    new Setting(containerEl)
+      .setName('Save index to cache')
+      .setDesc(
+        'Enable caching to speed up indexing time. In rare cases, the cache write may cause a freeze in Obsidian. This option will disable itself if it happens.'
+      )
+      .addToggle(toggle =>
+        toggle.setValue(settings.useCache).onChange(async v => {
+          settings.useCache = v
+          await saveSettings(this.plugin)
+        })
+      )
 
     // Respect excluded files
     new Setting(containerEl)
@@ -336,7 +351,7 @@ export class SettingsTab extends PluginSettingTab {
     //#endregion Results Weighting
 
     //#region Danger Zone
-    if (!Platform.isIosApp) {
+    if (isCacheEnabled()) {
       new Setting(containerEl).setName('Danger Zone').setHeading()
 
       const resetCacheDesc = new DocumentFragment()
@@ -371,6 +386,7 @@ export class SettingsTab extends PluginSettingTab {
 }
 
 export const DEFAULT_SETTINGS: OmnisearchSettings = {
+  useCache: true,
   hideExcluded: false,
   ignoreDiacritics: true,
   indexedFileTypes: [] as string[],
