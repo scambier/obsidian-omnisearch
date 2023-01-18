@@ -16,7 +16,6 @@ import {
   makeMD5,
   removeDiacritics,
 } from './tools/utils'
-import { getImageText, getPdfText } from 'obsidian-text-extract'
 import type { CanvasData } from 'obsidian/canvas'
 import type { AsPlainObject } from 'minisearch'
 import type MiniSearch from 'minisearch'
@@ -60,24 +59,15 @@ async function getAndMapIndexedDocument(
     content = texts.join('\r\n')
   }
 
-  // a) ** Image or PDF ** with Text Extractor
-  else if (extractor) {
+  // ** Image or PDF **
+  if (extractor) {
     if (extractor.canFileBeExtracted(path)) {
       content = await extractor.extractText(file)
     } else {
       throw new Error('Invalid file format: ' + file.path)
     }
   }
-  // b) ** Image or PDF ** without the text-extractor plugin
-  else {
-    if (isFilePDF(path)) {
-      content = await getPdfText(file)
-    } else if (isFileImage(file.path)) {
-      content = await getImageText(file)
-    } else {
-      throw new Error('Invalid file format: ' + file.path)
-    }
-  }
+
   if (content === null || content === undefined) {
     // This shouldn't happen
     console.warn(`Omnisearch: ${content} content for file`, file.path)
