@@ -279,9 +279,9 @@ export function makeMD5(data: BinaryLike): string {
 }
 
 export function chunkArray<T>(arr: T[], len: number): T[][] {
-  var chunks = [],
-    i = 0,
-    n = arr.length
+  const chunks = []
+  let i = 0
+  const n = arr.length
 
   while (i < n) {
     chunks.push(arr.slice(i, (i += len)))
