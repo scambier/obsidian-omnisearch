@@ -86,53 +86,50 @@ export class SettingsTab extends PluginSettingTab {
 
     new Setting(containerEl).setName('Indexing').setHeading()
 
+    const textExtractDesc = new DocumentFragment()
     if (getTextExtractor()) {
-      const desc = new DocumentFragment()
-      desc.createSpan({}, span => {
+      textExtractDesc.createSpan({}, span => {
         span.innerHTML = `👍 You have installed <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a>, Omnisearch will use it to index PDFs and images.
             <br />Text extraction only works on desktop, but the cache can be synchronized with your mobile device.`
       })
-      new Setting(containerEl).setDesc(desc)
     } else {
-      const label = new DocumentFragment()
-      label.createSpan({}, span => {
-        span.innerHTML = `⚠️ Omnisearch will soon require <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a> to index PDFs and images.
-        You can already install it to get a head start.`
+      textExtractDesc.createSpan({}, span => {
+        span.innerHTML = `⚠️ Omnisearch requires <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a> to index PDFs and images.`
       })
-      new Setting(containerEl).setDesc(label)
     }
+    new Setting(containerEl).setDesc(textExtractDesc)
 
     // PDF Indexing
-    if (!Platform.isMobileApp || getTextExtractor()) {
-      const indexPDFsDesc = new DocumentFragment()
-      indexPDFsDesc.createSpan({}, span => {
-        span.innerHTML = `Include PDFs in search results - Will soon depend on Text Extractor.`
-      })
-      new Setting(containerEl)
-        .setName(`PDFs Indexing`)
-        .setDesc(indexPDFsDesc)
-        .addToggle(toggle =>
-          toggle.setValue(settings.PDFIndexing).onChange(async v => {
-            settings.PDFIndexing = v
-            await saveSettings(this.plugin)
-          })
-        )
+    const indexPDFsDesc = new DocumentFragment()
+    indexPDFsDesc.createSpan({}, span => {
+      span.innerHTML = `Include PDFs in search results`
+    })
+    new Setting(containerEl)
+      .setName(`PDFs Indexing ${getTextExtractor() ? '' : '⚠️ Disabled'}`)
+      .setDesc(indexPDFsDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.PDFIndexing).onChange(async v => {
+          settings.PDFIndexing = v
+          await saveSettings(this.plugin)
+        })
+      )
+      .setDisabled(!getTextExtractor())
 
-      // Images Indexing
-      const indexImagesDesc = new DocumentFragment()
-      indexImagesDesc.createSpan({}, span => {
-        span.innerHTML = `Include images in search results - Will soon depend on Text Extractor.`
-      })
-      new Setting(containerEl)
-        .setName(`Images Indexing`)
-        .setDesc(indexImagesDesc)
-        .addToggle(toggle =>
-          toggle.setValue(settings.imagesIndexing).onChange(async v => {
-            settings.imagesIndexing = v
-            await saveSettings(this.plugin)
-          })
-        )
-    }
+    // Images Indexing
+    const indexImagesDesc = new DocumentFragment()
+    indexImagesDesc.createSpan({}, span => {
+      span.innerHTML = `Include images in search results`
+    })
+    new Setting(containerEl)
+      .setName(`Images Indexing ${getTextExtractor() ? '' : '⚠️ Disabled'}`)
+      .setDesc(indexImagesDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.imagesIndexing).onChange(async v => {
+          settings.imagesIndexing = v
+          await saveSettings(this.plugin)
+        })
+      )
+      .setDisabled(!getTextExtractor())
 
     // Additional files to index
     const indexedFileTypesDesc = new DocumentFragment()
