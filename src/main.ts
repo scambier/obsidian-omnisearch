@@ -64,45 +64,44 @@ export default class OmnisearchPlugin extends Plugin {
       },
     })
 
-    app.workspace.onLayoutReady(async () => {
-      // Listeners to keep the search index up-to-date
-      this.registerEvent(
-        this.app.vault.on('create', async file => {
-          if (isFileIndexable(file.path)) {
-            await cacheManager.addToLiveCache(file.path)
-            searchEngine.addFromPaths([file.path])
-          }
-        })
-      )
-      this.registerEvent(
-        this.app.vault.on('delete', file => {
-          cacheManager.removeFromLiveCache(file.path)
-          searchEngine.removeFromPaths([file.path])
-        })
-      )
-      this.registerEvent(
-        this.app.vault.on('modify', async file => {
-          if (isFileIndexable(file.path)) {
-            await cacheManager.addToLiveCache(file.path)
-            NotesIndex.markNoteForReindex(file)
-          }
-        })
-      )
-      this.registerEvent(
-        this.app.vault.on('rename', async (file, oldPath) => {
-          if (isFileIndexable(file.path)) {
-            cacheManager.removeFromLiveCache(oldPath)
-            cacheManager.addToLiveCache(file.path)
-            searchEngine.removeFromPaths([oldPath])
-            await searchEngine.addFromPaths([file.path])
-          }
-        })
-      )
+    // Listeners to keep the search index up-to-date
+    this.registerEvent(
+      this.app.vault.on('create', async file => {
+        if (isFileIndexable(file.path)) {
+          await cacheManager.addToLiveCache(file.path)
+          searchEngine.addFromPaths([file.path])
+        }
+      })
+    )
+    this.registerEvent(
+      this.app.vault.on('delete', file => {
+        cacheManager.removeFromLiveCache(file.path)
+        searchEngine.removeFromPaths([file.path])
+      })
+    )
+    this.registerEvent(
+      this.app.vault.on('modify', async file => {
+        if (isFileIndexable(file.path)) {
+          await cacheManager.addToLiveCache(file.path)
+          NotesIndex.markNoteForReindex(file)
+        }
+      })
+    )
+    this.registerEvent(
+      this.app.vault.on('rename', async (file, oldPath) => {
+        if (isFileIndexable(file.path)) {
+          cacheManager.removeFromLiveCache(oldPath)
+          cacheManager.addToLiveCache(file.path)
+          searchEngine.removeFromPaths([oldPath])
+          await searchEngine.addFromPaths([file.path])
+        }
+      })
+    )
 
+    app.workspace.onLayoutReady(async () => {
+      this.executeFirstLaunchTasks()
       await this.populateIndex()
     })
-
-    this.executeFirstLaunchTasks()
   }
 
   executeFirstLaunchTasks(): void {
