@@ -280,12 +280,12 @@ export class Omnisearch {
     let results: SearchResult[]
     if (settings.simpleSearch) {
       results = await this.search(query, {
-        prefixLength: 1,
+        prefixLength: 3,
         singleFilePath: options?.singleFilePath,
       })
     } else {
       results = await this.search(query, {
-        prefixLength: 3,
+        prefixLength: 1,
         singleFilePath: options?.singleFilePath,
       })
     }

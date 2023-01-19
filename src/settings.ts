@@ -210,7 +210,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Simpler search')
       .setDesc(
-        `Enable this if Obsidian often freezes while making searches. This will return more strict results.`
+        `Enable this if Obsidian often freezes while making searches. This may return fewer results.`
       )
       .addToggle(toggle =>
         toggle.setValue(settings.simpleSearch).onChange(async v => {
