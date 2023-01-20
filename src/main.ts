@@ -64,41 +64,41 @@ export default class OmnisearchPlugin extends Plugin {
       },
     })
 
-    // Listeners to keep the search index up-to-date
-    this.registerEvent(
-      this.app.vault.on('create', async file => {
-        if (isFileIndexable(file.path)) {
-          await cacheManager.addToLiveCache(file.path)
-          searchEngine.addFromPaths([file.path])
-        }
-      })
-    )
-    this.registerEvent(
-      this.app.vault.on('delete', file => {
-        cacheManager.removeFromLiveCache(file.path)
-        searchEngine.removeFromPaths([file.path])
-      })
-    )
-    this.registerEvent(
-      this.app.vault.on('modify', async file => {
-        if (isFileIndexable(file.path)) {
-          await cacheManager.addToLiveCache(file.path)
-          NotesIndex.markNoteForReindex(file)
-        }
-      })
-    )
-    this.registerEvent(
-      this.app.vault.on('rename', async (file, oldPath) => {
-        if (isFileIndexable(file.path)) {
-          cacheManager.removeFromLiveCache(oldPath)
-          cacheManager.addToLiveCache(file.path)
-          searchEngine.removeFromPaths([oldPath])
-          await searchEngine.addFromPaths([file.path])
-        }
-      })
-    )
-
     app.workspace.onLayoutReady(async () => {
+      // Listeners to keep the search index up-to-date
+      this.registerEvent(
+        this.app.vault.on('create', file => {
+          if (isFileIndexable(file.path)) {
+            // await cacheManager.addToLiveCache(file.path)
+            searchEngine.addFromPaths([file.path])
+          }
+        })
+      )
+      this.registerEvent(
+        this.app.vault.on('delete', file => {
+          cacheManager.removeFromLiveCache(file.path)
+          searchEngine.removeFromPaths([file.path])
+        })
+      )
+      this.registerEvent(
+        this.app.vault.on('modify', async file => {
+          if (isFileIndexable(file.path)) {
+            await cacheManager.addToLiveCache(file.path)
+            NotesIndex.markNoteForReindex(file)
+          }
+        })
+      )
+      this.registerEvent(
+        this.app.vault.on('rename', async (file, oldPath) => {
+          if (isFileIndexable(file.path)) {
+            cacheManager.removeFromLiveCache(oldPath)
+            cacheManager.addToLiveCache(file.path)
+            searchEngine.removeFromPaths([oldPath])
+            await searchEngine.addFromPaths([file.path])
+          }
+        })
+      )
+
       this.executeFirstLaunchTasks()
       await this.populateIndex()
     })
@@ -145,30 +145,38 @@ export default class OmnisearchPlugin extends Plugin {
     indexingStep.set(IndexingStepType.ReadingFiles)
     const files = app.vault.getFiles().filter(f => isFileIndexable(f.path))
     console.log(`Omnisearch - ${files.length} files total`)
-
+    console.log(
+      `Omnisearch - Cache is ${isCacheEnabled() ? 'enabled' : 'disabled'}`
+    )
     // Map documents in the background
     // Promise.all(files.map(f => cacheManager.addToLiveCache(f.path)))
 
     if (isCacheEnabled()) {
       console.time('Omnisearch - Loading index from cache')
       indexingStep.set(IndexingStepType.LoadingCache)
-      await searchEngine.loadCache()
-      console.timeEnd('Omnisearch - Loading index from cache')
+      const hasCache = await searchEngine.loadCache()
+      if (hasCache) {
+        console.timeEnd('Omnisearch - Loading index from cache')
+      }
     }
 
     const diff = searchEngine.getDiff(
       files.map(f => ({ path: f.path, mtime: f.stat.mtime }))
     )
 
-    if (diff.toAdd.length) {
-      console.log(
-        'Omnisearch - Total number of files to add/update: ' + diff.toAdd.length
-      )
-    }
-    if (diff.toRemove.length) {
-      console.log(
-        'Omnisearch - Total number of files to remove: ' + diff.toRemove.length
-      )
+    if (isCacheEnabled()) {
+      if (diff.toAdd.length) {
+        console.log(
+          'Omnisearch - Total number of files to add/update: ' +
+            diff.toAdd.length
+        )
+      }
+      if (diff.toRemove.length) {
+        console.log(
+          'Omnisearch - Total number of files to remove: ' +
+            diff.toRemove.length
+        )
+      }
     }
 
     if (diff.toAdd.length >= 1000 && isCacheEnabled()) {

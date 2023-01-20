@@ -60,12 +60,10 @@ async function getAndMapIndexedDocument(
   }
 
   // ** Image or PDF **
-  if (extractor) {
-    if (extractor.canFileBeExtracted(path)) {
-      content = await extractor.extractText(file)
-    } else {
-      throw new Error('Invalid file format: ' + file.path)
-    }
+  else if (extractor?.canFileBeExtracted(path)) {
+    content = await extractor.extractText(file)
+  } else {
+    throw new Error(`Unsupported file type: "${path}"`)
   }
 
   if (content === null || content === undefined) {
@@ -125,6 +123,10 @@ class CacheManager {
    */
   private documents: Map<string, IndexedDocument> = new Map()
 
+  /**
+   * Set or update the live cache with the content of the given file.
+   * @param path
+   */
   public async addToLiveCache(path: string): Promise<void> {
     try {
       const doc = await getAndMapIndexedDocument(path)

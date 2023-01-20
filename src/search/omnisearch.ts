@@ -16,6 +16,7 @@ import {
 import { Notice, Platform } from 'obsidian'
 import type { Query } from './query'
 import { cacheManager } from '../cache-manager'
+import { sortBy } from 'lodash-es'
 
 const tokenize = (text: string): string[] => {
   const tokens = text.split(SPACE_OR_PUNCTUATION)
@@ -59,12 +60,19 @@ export class Omnisearch {
     this.minisearch = new MiniSearch(Omnisearch.options)
   }
 
-  async loadCache(): Promise<void> {
+  /**
+   * Return true if the cache is valid
+   */
+  async loadCache(): Promise<boolean> {
     const cache = await cacheManager.getMinisearchCache()
     if (cache) {
+      // console.log('Omnisearch - Cache', cache)
       this.minisearch = MiniSearch.loadJS(cache.data, Omnisearch.options)
       this.indexedDocuments = new Map(cache.paths.map(o => [o.path, o.mtime]))
+      return true
     }
+    console.log('Omnisearch - No cache found')
+    return false
   }
 
   /**
@@ -77,11 +85,13 @@ export class Omnisearch {
   } {
     const docsMap = new Map(docs.map(d => [d.path, d.mtime]))
 
+    // console.log(this.indexedDocuments)
     const toAdd = docs.filter(
       d =>
         !this.indexedDocuments.has(d.path) ||
         this.indexedDocuments.get(d.path) !== d.mtime
     )
+    // console.log(toAdd)
     const toRemove = [...this.indexedDocuments]
       .filter(
         ([path, mtime]) => !docsMap.has(path) || docsMap.get(path) !== mtime
@@ -100,6 +110,8 @@ export class Omnisearch {
         paths.map(async path => await cacheManager.getDocument(path))
       )
     ).filter(d => !!d?.path)
+    // Index markdown files first
+    documents = sortBy(documents, d => (d.path.endsWith('.md') ? 0 : 1))
 
     // If a document is already added, discard it
     this.removeFromPaths(
