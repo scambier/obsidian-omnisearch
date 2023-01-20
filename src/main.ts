@@ -1,10 +1,22 @@
-import { Notice, Platform, Plugin } from 'obsidian'
+import { Notice, Plugin } from 'obsidian'
 import {
   OmnisearchInFileModal,
   OmnisearchVaultModal,
 } from './components/modals'
-import { loadSettings, settings, SettingsTab, showExcerpt } from './settings'
-import { eventBus, EventNames, indexingStep, IndexingStepType } from './globals'
+import {
+  loadSettings,
+  saveSettings,
+  settings,
+  SettingsTab,
+  showExcerpt,
+} from './settings'
+import {
+  eventBus,
+  EventNames,
+  indexingStep,
+  IndexingStepType,
+  isCacheEnabled,
+} from './globals'
 import api from './tools/api'
 import { isFileIndexable } from './tools/utils'
 import { database, OmnisearchCache } from './database'
@@ -55,9 +67,9 @@ export default class OmnisearchPlugin extends Plugin {
     app.workspace.onLayoutReady(async () => {
       // Listeners to keep the search index up-to-date
       this.registerEvent(
-        this.app.vault.on('create', async file => {
+        this.app.vault.on('create', file => {
           if (isFileIndexable(file.path)) {
-            await cacheManager.addToLiveCache(file.path)
+            // await cacheManager.addToLiveCache(file.path)
             searchEngine.addFromPaths([file.path])
           }
         })
@@ -87,10 +99,23 @@ export default class OmnisearchPlugin extends Plugin {
         })
       )
 
-      await populateIndex()
+      this.executeFirstLaunchTasks()
+      await this.populateIndex()
     })
+  }
 
-    executeFirstLaunchTasks(this)
+  executeFirstLaunchTasks(): void {
+    const code = '1.10.1'
+    if (settings.welcomeMessage !== code) {
+      const welcome = new DocumentFragment()
+      welcome.createSpan({}, span => {
+        span.innerHTML = `🔎 Omnisearch now requires the <strong>Text Extractor</strong> plugin to index PDF and images. See Omnisearch settings for more information.`
+      })
+      new Notice(welcome, 20_000)
+    }
+    settings.welcomeMessage = code
+
+    this.saveData(settings)
   }
 
   async onunload(): Promise<void> {
@@ -114,64 +139,83 @@ export default class OmnisearchPlugin extends Plugin {
       this.ribbonButton.parentNode?.removeChild(this.ribbonButton)
     }
   }
+
+  private async populateIndex(): Promise<void> {
+    console.time('Omnisearch - Indexing total time')
+    indexingStep.set(IndexingStepType.ReadingFiles)
+    const files = app.vault.getFiles().filter(f => isFileIndexable(f.path))
+    console.log(`Omnisearch - ${files.length} files total`)
+    console.log(
+      `Omnisearch - Cache is ${isCacheEnabled() ? 'enabled' : 'disabled'}`
+    )
+    // Map documents in the background
+    // Promise.all(files.map(f => cacheManager.addToLiveCache(f.path)))
+
+    if (isCacheEnabled()) {
+      console.time('Omnisearch - Loading index from cache')
+      indexingStep.set(IndexingStepType.LoadingCache)
+      const hasCache = await searchEngine.loadCache()
+      if (hasCache) {
+        console.timeEnd('Omnisearch - Loading index from cache')
+      }
+    }
+
+    const diff = searchEngine.getDiff(
+      files.map(f => ({ path: f.path, mtime: f.stat.mtime }))
+    )
+
+    if (isCacheEnabled()) {
+      if (diff.toAdd.length) {
+        console.log(
+          'Omnisearch - Total number of files to add/update: ' +
+            diff.toAdd.length
+        )
+      }
+      if (diff.toRemove.length) {
+        console.log(
+          'Omnisearch - Total number of files to remove: ' +
+            diff.toRemove.length
+        )
+      }
+    }
+
+    if (diff.toAdd.length >= 1000 && isCacheEnabled()) {
+      new Notice(
+        `Omnisearch - ${diff.toAdd.length} files need to be indexed. Obsidian may experience stutters and freezes during the process`,
+        10_000
+      )
+    }
+
+    indexingStep.set(IndexingStepType.IndexingFiles)
+    searchEngine.removeFromPaths(diff.toRemove.map(o => o.path))
+    await searchEngine.addFromPaths(diff.toAdd.map(o => o.path))
+
+    if ((diff.toRemove.length || diff.toAdd.length) && isCacheEnabled()) {
+      indexingStep.set(IndexingStepType.WritingCache)
+
+      // Disable settings.useCache while writing the cache, in case it freezes
+      settings.useCache = false
+      saveSettings(this)
+
+      // Write the cache
+      await searchEngine.writeToCache()
+
+      // Re-enable settings.caching
+      settings.useCache = true
+      saveSettings(this)
+    }
+
+    console.timeEnd('Omnisearch - Indexing total time')
+    if (diff.toAdd.length >= 1000) {
+      new Notice(`Omnisearch - Your files have been indexed.`)
+    }
+    indexingStep.set(IndexingStepType.Done)
+  }
 }
 
 /**
  * Read the files and feed them to Minisearch
  */
-async function populateIndex(): Promise<void> {
-  console.time('Omnisearch - Indexing total time')
-  indexingStep.set(IndexingStepType.ReadingFiles)
-  const files = app.vault.getFiles().filter(f => isFileIndexable(f.path))
-  console.log(`Omnisearch - ${files.length} files total`)
-
-  // Map documents in the background
-  // Promise.all(files.map(f => cacheManager.addToLiveCache(f.path)))
-
-  if (!Platform.isIosApp) {
-    console.time('Omnisearch - Loading index from cache')
-    indexingStep.set(IndexingStepType.LoadingCache)
-    await searchEngine.loadCache()
-    console.timeEnd('Omnisearch - Loading index from cache')
-  }
-
-  const diff = searchEngine.getDiff(
-    files.map(f => ({ path: f.path, mtime: f.stat.mtime }))
-  )
-
-  if (diff.toAdd.length) {
-    console.log(
-      'Omnisearch - Total number of files to add/update: ' + diff.toAdd.length
-    )
-  }
-  if (diff.toRemove.length) {
-    console.log(
-      'Omnisearch - Total number of files to remove: ' + diff.toRemove.length
-    )
-  }
-
-  if (diff.toAdd.length >= 1000 && !Platform.isIosApp) {
-    new Notice(
-      `Omnisearch - ${diff.toAdd.length} files need to be indexed. Obsidian may experience stutters and freezes during the process`,
-      10_000
-    )
-  }
-
-  indexingStep.set(IndexingStepType.IndexingFiles)
-  searchEngine.removeFromPaths(diff.toRemove.map(o => o.path))
-  await searchEngine.addFromPaths(diff.toAdd.map(o => o.path))
-
-  if (diff.toRemove.length || diff.toAdd.length) {
-    indexingStep.set(IndexingStepType.WritingCache)
-    await searchEngine.writeToCache()
-  }
-
-  console.timeEnd('Omnisearch - Indexing total time')
-  if (diff.toAdd.length >= 1000) {
-    new Notice(`Omnisearch - Your files have been indexed.`)
-  }
-  indexingStep.set(IndexingStepType.Done)
-}
 
 async function cleanOldCacheFiles() {
   const toDelete = [
@@ -189,20 +233,6 @@ async function cleanOldCacheFiles() {
       } catch (e) {}
     }
   }
-}
-
-function executeFirstLaunchTasks(plugin: Plugin) {
-  const code = '1.10.0-beta.1'
-  if (settings.welcomeMessage !== code) {
-    const welcome = new DocumentFragment()
-    welcome.createSpan({}, span => {
-      span.innerHTML = `🔎 Omnisearch will soon require the <strong>Text Extractor</strong> plugin to index PDF and images. See Omnisearch settings for more information.`
-    })
-    new Notice(welcome, 20_000)
-  }
-  settings.welcomeMessage = code
-
-  plugin.saveData(settings)
 }
 
 function registerAPI(plugin: OmnisearchPlugin): void {

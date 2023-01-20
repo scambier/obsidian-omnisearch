@@ -2,6 +2,7 @@ import { EventBus } from './tools/event-bus'
 import { writable } from 'svelte/store'
 import { settings } from './settings'
 import type { TFile } from 'obsidian'
+import { Platform } from 'obsidian'
 
 export const regexLineSplit = /\r?\n|\r|((\.|\?|!)( |\r?\n|\r))/g
 export const regexYaml = /^---\s*\n(.*?)\n?^---\s?/ms
@@ -77,10 +78,9 @@ export function isInputComposition(): boolean {
   return inComposition
 }
 
-
 /**
  * Plugin dependency - Chs Patch for Chinese word segmentation
- * @returns 
+ * @returns
  */
 export function getChsSegmenter(): any | undefined {
   return (app as any).plugins.plugins['cm-chs-patch']
@@ -93,10 +93,14 @@ export type TextExtractorApi = {
 
 /**
  * Plugin dependency - Text Extractor
- * @returns 
+ * @returns
  */
 export function getTextExtractor(): TextExtractorApi | undefined {
   return (app as any).plugins?.plugins?.['text-extractor']?.api
+}
+
+export function isCacheEnabled(): boolean {
+  return !Platform.isIosApp && settings.useCache
 }
 
 export const SPACE_OR_PUNCTUATION =

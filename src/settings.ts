@@ -8,7 +8,7 @@ import {
 } from 'obsidian'
 import { writable } from 'svelte/store'
 import { database } from './database'
-import { getTextExtractor } from './globals'
+import { getTextExtractor, isCacheEnabled } from './globals'
 import type OmnisearchPlugin from './main'
 
 interface WeightingSettings {
@@ -19,6 +19,8 @@ interface WeightingSettings {
 }
 
 export interface OmnisearchSettings extends WeightingSettings {
+  /** Enables caching to speed up indexing */
+  useCache: boolean
   /** Respect the "excluded files" Obsidian setting by downranking results ignored files */
   hideExcluded: boolean
   /** Ignore diacritics when indexing files */
@@ -84,53 +86,50 @@ export class SettingsTab extends PluginSettingTab {
 
     new Setting(containerEl).setName('Indexing').setHeading()
 
+    const textExtractDesc = new DocumentFragment()
     if (getTextExtractor()) {
-      const desc = new DocumentFragment()
-      desc.createSpan({}, span => {
+      textExtractDesc.createSpan({}, span => {
         span.innerHTML = `👍 You have installed <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a>, Omnisearch will use it to index PDFs and images.
             <br />Text extraction only works on desktop, but the cache can be synchronized with your mobile device.`
       })
-      new Setting(containerEl).setDesc(desc)
     } else {
-      const label = new DocumentFragment()
-      label.createSpan({}, span => {
-        span.innerHTML = `⚠️ Omnisearch will soon require <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a> to index PDFs and images.
-        You can already install it to get a head start.`
+      textExtractDesc.createSpan({}, span => {
+        span.innerHTML = `⚠️ Omnisearch requires <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a> to index PDFs and images.`
       })
-      new Setting(containerEl).setDesc(label)
     }
+    new Setting(containerEl).setDesc(textExtractDesc)
 
     // PDF Indexing
-    if (!Platform.isMobileApp || getTextExtractor()) {
-      const indexPDFsDesc = new DocumentFragment()
-      indexPDFsDesc.createSpan({}, span => {
-        span.innerHTML = `Include PDFs in search results - Will soon depend on Text Extractor.`
-      })
-      new Setting(containerEl)
-        .setName(`PDFs Indexing`)
-        .setDesc(indexPDFsDesc)
-        .addToggle(toggle =>
-          toggle.setValue(settings.PDFIndexing).onChange(async v => {
-            settings.PDFIndexing = v
-            await saveSettings(this.plugin)
-          })
-        )
+    const indexPDFsDesc = new DocumentFragment()
+    indexPDFsDesc.createSpan({}, span => {
+      span.innerHTML = `Include PDFs in search results`
+    })
+    new Setting(containerEl)
+      .setName(`PDFs Indexing ${getTextExtractor() ? '' : '⚠️ Disabled'}`)
+      .setDesc(indexPDFsDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.PDFIndexing).onChange(async v => {
+          settings.PDFIndexing = v
+          await saveSettings(this.plugin)
+        })
+      )
+      .setDisabled(!getTextExtractor())
 
-      // Images Indexing
-      const indexImagesDesc = new DocumentFragment()
-      indexImagesDesc.createSpan({}, span => {
-        span.innerHTML = `Include images in search results - Will soon depend on Text Extractor.`
-      })
-      new Setting(containerEl)
-        .setName(`Images Indexing`)
-        .setDesc(indexImagesDesc)
-        .addToggle(toggle =>
-          toggle.setValue(settings.imagesIndexing).onChange(async v => {
-            settings.imagesIndexing = v
-            await saveSettings(this.plugin)
-          })
-        )
-    }
+    // Images Indexing
+    const indexImagesDesc = new DocumentFragment()
+    indexImagesDesc.createSpan({}, span => {
+      span.innerHTML = `Include images in search results`
+    })
+    new Setting(containerEl)
+      .setName(`Images Indexing ${getTextExtractor() ? '' : '⚠️ Disabled'}`)
+      .setDesc(indexImagesDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.imagesIndexing).onChange(async v => {
+          settings.imagesIndexing = v
+          await saveSettings(this.plugin)
+        })
+      )
+      .setDisabled(!getTextExtractor())
 
     // Additional files to index
     const indexedFileTypesDesc = new DocumentFragment()
@@ -159,6 +158,19 @@ export class SettingsTab extends PluginSettingTab {
     //#region Behavior
 
     new Setting(containerEl).setName('Behavior').setHeading()
+
+    // Caching
+    new Setting(containerEl)
+      .setName('Save index to cache')
+      .setDesc(
+        'Enable caching to speed up indexing time. In rare cases, the cache write may cause a freeze in Obsidian. This option will disable itself if it happens.'
+      )
+      .addToggle(toggle =>
+        toggle.setValue(settings.useCache).onChange(async v => {
+          settings.useCache = v
+          await saveSettings(this.plugin)
+        })
+      )
 
     // Respect excluded files
     new Setting(containerEl)
@@ -198,7 +210,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Simpler search')
       .setDesc(
-        `Enable this if Obsidian often freezes while making searches. This will return more strict results.`
+        `Enable this if Obsidian often freezes while making searches. This may return fewer results.`
       )
       .addToggle(toggle =>
         toggle.setValue(settings.simpleSearch).onChange(async v => {
@@ -336,7 +348,7 @@ export class SettingsTab extends PluginSettingTab {
     //#endregion Results Weighting
 
     //#region Danger Zone
-    if (!Platform.isIosApp) {
+    if (isCacheEnabled()) {
       new Setting(containerEl).setName('Danger Zone').setHeading()
 
       const resetCacheDesc = new DocumentFragment()
@@ -371,6 +383,7 @@ export class SettingsTab extends PluginSettingTab {
 }
 
 export const DEFAULT_SETTINGS: OmnisearchSettings = {
+  useCache: true,
   hideExcluded: false,
   ignoreDiacritics: true,
   indexedFileTypes: [] as string[],

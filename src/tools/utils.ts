@@ -5,16 +5,17 @@ import {
   parseFrontMatterAliases,
   Platform,
 } from 'obsidian'
-import { getTextExtractor, type SearchMatch } from '../globals'
 import {
   excerptAfter,
   excerptBefore,
   getChsSegmenter,
+  getTextExtractor,
   highlightClass,
   isSearchMatch,
   regexLineSplit,
   regexStripQuotes,
   regexYaml,
+  type SearchMatch,
 } from '../globals'
 import { settings } from '../settings'
 import { type BinaryLike, createHash } from 'crypto'
@@ -236,8 +237,9 @@ export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
 }
 
 export function isFileIndexable(path: string): boolean {
-  const canIndexPDF = (!Platform.isMobileApp || !!getTextExtractor()) && settings.PDFIndexing
-  const canIndexImages = (!Platform.isMobileApp || !!getTextExtractor()) && settings.imagesIndexing
+  const hasTextExtractor = !!getTextExtractor()
+  const canIndexPDF = hasTextExtractor && settings.PDFIndexing
+  const canIndexImages = hasTextExtractor && settings.imagesIndexing
   return (
     isFilePlaintext(path) ||
     isFileCanvas(path) ||
@@ -279,9 +281,9 @@ export function makeMD5(data: BinaryLike): string {
 }
 
 export function chunkArray<T>(arr: T[], len: number): T[][] {
-  var chunks = [],
-    i = 0,
-    n = arr.length
+  const chunks = []
+  let i = 0
+  const n = arr.length
 
   while (i < n) {
     chunks.push(arr.slice(i, (i += len)))

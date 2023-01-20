@@ -16,7 +16,6 @@ import {
   makeMD5,
   removeDiacritics,
 } from './tools/utils'
-import { getImageText, getPdfText } from 'obsidian-text-extract'
 import type { CanvasData } from 'obsidian/canvas'
 import type { AsPlainObject } from 'minisearch'
 import type MiniSearch from 'minisearch'
@@ -60,24 +59,13 @@ async function getAndMapIndexedDocument(
     content = texts.join('\r\n')
   }
 
-  // a) ** Image or PDF ** with Text Extractor
-  else if (extractor) {
-    if (extractor.canFileBeExtracted(path)) {
-      content = await extractor.extractText(file)
-    } else {
-      throw new Error('Invalid file format: ' + file.path)
-    }
+  // ** Image or PDF **
+  else if (extractor?.canFileBeExtracted(path)) {
+    content = await extractor.extractText(file)
+  } else {
+    throw new Error(`Unsupported file type: "${path}"`)
   }
-  // b) ** Image or PDF ** without the text-extractor plugin
-  else {
-    if (isFilePDF(path)) {
-      content = await getPdfText(file)
-    } else if (isFileImage(file.path)) {
-      content = await getImageText(file)
-    } else {
-      throw new Error('Invalid file format: ' + file.path)
-    }
-  }
+
   if (content === null || content === undefined) {
     // This shouldn't happen
     console.warn(`Omnisearch: ${content} content for file`, file.path)
@@ -135,6 +123,10 @@ class CacheManager {
    */
   private documents: Map<string, IndexedDocument> = new Map()
 
+  /**
+   * Set or update the live cache with the content of the given file.
+   * @param path
+   */
   public async addToLiveCache(path: string): Promise<void> {
     try {
       const doc = await getAndMapIndexedDocument(path)
