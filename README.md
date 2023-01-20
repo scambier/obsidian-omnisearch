@@ -136,13 +136,13 @@ See [styles.css](./assets/styles.css) for more information.
 - Once Obsidian has indexed your files at startup, it doesn't do anything while its modal is closed. Your changes are
   not indexed until you open the modal again. If you experience slowdowns while using Obsidian, it's unlikely that
   Omnisearch is responsible.
-- However, Text Extractor can make Obsidian slower when indexing PDFs and images for the first time. If you don't need
+- However, Text Extractor can make Obsidian slower while indexing PDFs and images for the first time. If you don't need
   those features, you can disable them in the plugin settings.
 
 **Omnisearch is slow to index my PDFs and images**
 
 - The first time Text Extractor reads those files, it can take a long time to extract their text. The results are then
-  cached, and indexing shouldn't take more time than your average markdown note.
+  cached for the text startup.
 
 **Omnisearch gives inconsistent/invalid results, there are errors in the developer console**
 
