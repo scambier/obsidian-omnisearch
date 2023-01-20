@@ -18,7 +18,8 @@ Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/mi
 > Omnisearch's first goal is to _locate_ files instantly. You can see it as a _Quick Switcher_ on steroids.
 
 - Find your **📝notes, 📄PDFs, and 🖼images** faster than ever
-  - _Images OCR and PDF indexing are only available on desktop_
+  - Indexing of images and PDF indexing is available
+    through [Text Extractor](https://github.com/scambier/obsidian-text-extractor)
 - Automatic document scoring using
   the [BM25 algorithm](https://github.com/lucaong/minisearch/issues/129#issuecomment-1046257399)
   - The relevance of a document against a query depends on the number of times the query terms appear in the document,
@@ -130,15 +131,18 @@ See [styles.css](./assets/styles.css) for more information.
 - If you have several thousands of files, Obsidian may freeze a few seconds at startup while the Omnisearch cache is
   loaded in memory.
 
+**Omnisearch seems to make Obsidian slower.**
+
+- Once Obsidian has indexed your files at startup, it doesn't do anything while its modal is closed. Your changes are
+  not indexed until you open the modal again. If you experience slowdowns while using Obsidian, it's unlikely that
+  Omnisearch is responsible.
+- However, Text Extractor can make Obsidian slower when indexing PDFs and images for the first time. If you don't need
+  those features, you can disable them in the plugin settings.
+
 **Omnisearch is slow to index my PDFs and images**
 
-- The first time Omnisearch indexes those files, it needs to extract their text. This can take a long time, but
-  will only happen once. This process is also resumable, so you can temporarily disable PDFs/images indexing, or close
-  Obsidian without losing data.
-
-**Can I index PDFs/images on mobile?**
-
-- Not at the moment. On mobile devices, text extraction either doesn't work or consumes too much resources.
+- The first time Text Extractor reads those files, it can take a long time to extract their text. The results are then
+  cached, and indexing shouldn't take more time than your average markdown note.
 
 **Omnisearch gives inconsistent/invalid results, there are errors in the developer console**
 
@@ -150,10 +154,6 @@ See [styles.css](./assets/styles.css) for more information.
 - If applicable, make sure that "*Ignore diacritics*" is enabled.
 - If you have modified them, reset weightings to their original values.
 - Rewrite your query and avoid numbers and common words.
-
-**How do I highlight matches in search results?**
-
-See [here](https://github.com/scambier/obsidian-omnisearch#css-customization).
 
 **I'm still having an issue**
 
