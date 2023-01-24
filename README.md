@@ -18,7 +18,7 @@ Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/mi
 > Omnisearch's first goal is to _locate_ files instantly. You can see it as a _Quick Switcher_ on steroids.
 
 - Find your **📝notes, 📄PDFs, and 🖼images** faster than ever
-  - Indexing of images and PDF indexing is available
+  - Images and PDF indexing is available
     through [Text Extractor](https://github.com/scambier/obsidian-text-extractor)
 - Automatic document scoring using
   the [BM25 algorithm](https://github.com/lucaong/minisearch/issues/129#issuecomment-1046257399)
