@@ -5,6 +5,7 @@
     highlighter,
     isFileImage,
     makeExcerpt,
+    removeDiacritics,
     stringsToRegex,
   } from '../tools/utils'
   import ResultItemContainer from './ResultItemContainer.svelte'
@@ -13,6 +14,7 @@
   export let note: ResultNote
 
   let imagePath: string | null = null
+  let title = ''
 
   $: {
     imagePath = null
@@ -20,7 +22,7 @@
       // @ts-ignore
       const file = app.vault.getFiles().find(f => f.path === note.path)
       if (file) {
-      // @ts-ignore
+        // @ts-ignore
         imagePath = app.vault.getResourcePath(file)
       }
     }
@@ -28,15 +30,20 @@
   $: reg = stringsToRegex(note.foundWords)
   $: cleanedContent = makeExcerpt(note.content, note.matches[0]?.offset ?? -1)
   $: glyph = false //cacheManager.getLiveDocument(note.path)?.doesNotExist
-  $: title = settings.showShortName ? note.basename : note.path
+  $: {
+    title = settings.showShortName ? note.basename : note.path
+    if (settings.ignoreDiacritics) {
+      title = removeDiacritics(title)
+    }
+  }
 </script>
 
 <ResultItemContainer
+  glyph="{glyph}"
   id="{note.path}"
-  selected="{selected}"
-  on:mousemove
   on:click
-  glyph="{glyph}">
+  on:mousemove
+  selected="{selected}">
   <div style="display:flex">
     <div>
       <div>
