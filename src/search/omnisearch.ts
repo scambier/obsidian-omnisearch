@@ -55,6 +55,7 @@ export class Omnisearch {
   private minisearch: MiniSearch
   private indexedDocuments: Map<string, number> = new Map()
   private previousResults: SearchResult[] = []
+  private previousQuery: Query | null = null
 
   constructor() {
     this.minisearch = new MiniSearch(Omnisearch.options)
@@ -154,6 +155,7 @@ export class Omnisearch {
   ): Promise<SearchResult[]> {
     if (query.isEmpty()) {
       this.previousResults = []
+      this.previousQuery = null
       return []
     }
 
@@ -172,7 +174,12 @@ export class Omnisearch {
         headings3: settings.weightH3,
       },
     })
-    if (!results.length) return this.previousResults
+
+    // If the query does not return any result,
+    // retry but with a shorter prefix limit
+    if (!results.length) {
+      return []
+    }
 
     if (options.singleFilePath) {
       return results.filter(r => r.id === options.singleFilePath)
@@ -249,6 +256,7 @@ export class Omnisearch {
       (result, index, arr) => arr.findIndex(t => t.id === result.id) === index
     )
 
+    this.previousQuery = query
     this.previousResults = results
 
     return results

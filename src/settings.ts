@@ -210,7 +210,8 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Simpler search')
       .setDesc(
-        `Enable this if Obsidian often freezes while making searches. This may return fewer results.`
+        `Enable this if Obsidian often freezes while making searches.
+        Words shorter than 3 characters won't be used as prefixes; this can reduce search delay but will return fewer results.`
       )
       .addToggle(toggle =>
         toggle.setValue(settings.simpleSearch).onChange(async v => {

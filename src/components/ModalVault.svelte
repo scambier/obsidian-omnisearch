@@ -3,16 +3,32 @@
   import { onDestroy, onMount, tick } from 'svelte'
   import InputSearch from './InputSearch.svelte'
   import ModalContainer from './ModalContainer.svelte'
-  import { eventBus, indexingStep, IndexingStepType, type ResultNote, } from 'src/globals'
+  import {
+    eventBus,
+    indexingStep,
+    IndexingStepType,
+    type ResultNote,
+    SPACE_OR_PUNCTUATION,
+  } from 'src/globals'
   import { createNote, openNote } from 'src/tools/notes'
-  import { getCtrlKeyLabel, getExtension, isFilePDF, loopIndex, } from 'src/tools/utils'
-  import { OmnisearchInFileModal, type OmnisearchVaultModal, } from 'src/components/modals'
+  import {
+    getCtrlKeyLabel,
+    getExtension,
+    isFilePDF,
+    loopIndex,
+  } from 'src/tools/utils'
+  import {
+    OmnisearchInFileModal,
+    type OmnisearchVaultModal,
+  } from 'src/components/modals'
   import ResultItemVault from './ResultItemVault.svelte'
   import { Query } from 'src/search/query'
   import { settings } from '../settings'
   import * as NotesIndex from '../notes-index'
   import { cacheManager } from '../cache-manager'
   import { searchEngine } from 'src/search/omnisearch'
+  import CancelablePromise, { cancelable } from 'cancelable-promise'
+  import { update } from 'lodash-es'
 
   export let modal: OmnisearchVaultModal
   export let previousQuery: string | undefined
@@ -23,18 +39,30 @@
   let query: Query
   let indexingStepDesc = ''
   let searching = true
-  let refInput: InputSearch|undefined
+  let refInput: InputSearch | undefined
+
+  let pWaitingResults: CancelablePromise | null = null
 
   $: selectedNote = resultNotes[selectedIndex]
   $: searchQuery = searchQuery ?? previousQuery
   $: if (searchQuery) {
-    resultNotes = []
+    if (pWaitingResults) {
+      pWaitingResults.cancel()
+      pWaitingResults = null
+    }
     searching = true
-    updateResults().then(() => {
-      searching = false
-    }).catch((e) => {
-      console.error(e)
-    })
+    pWaitingResults = cancelable(
+      new Promise((resolve, reject) => {
+        updateResults()
+          .then(() => {
+            searching = false
+            resolve(null)
+          })
+          .catch(e => {
+            reject(e)
+          })
+      })
+    )
   } else {
     searching = false
     resultNotes = []
@@ -193,7 +221,10 @@
   function switchToInFileModal(): void {
     // Do nothing if the selectedNote is a PDF,
     // or if there is 0 match (e.g indexing in progress)
-    if (selectedNote && (isFilePDF(selectedNote?.path) || !selectedNote?.matches.length)) {
+    if (
+      selectedNote &&
+      (isFilePDF(selectedNote?.path) || !selectedNote?.matches.length)
+    ) {
       return
     }
 
@@ -232,8 +263,8 @@
 </script>
 
 <InputSearch
+  bind:this="{refInput}"
   initialValue="{searchQuery}"
-  bind:this={refInput}
   on:input="{e => (searchQuery = e.detail)}"
   placeholder="Omnisearch - Vault">
   {#if settings.showCreateButton}
@@ -258,6 +289,15 @@
   <div style="text-align: center;">
     {#if !resultNotes.length && searchQuery && !searching}
       We found 0 result for your search here.
+      {#if settings.simpleSearch && searchQuery
+          .split(SPACE_OR_PUNCTUATION)
+          .some(w => w.length < 3)}
+        <br />
+        <span style="color: var(--text-accent); font-size: small">
+          You have enabled "Simpler Search" in the settings, try to type more
+          characters.
+        </span>
+      {/if}
     {:else if searching}
       Searching...
     {/if}
