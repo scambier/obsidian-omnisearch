@@ -10,8 +10,6 @@ import {
   getAliasesFromMetadata,
   getTagsFromMetadata,
   isFileCanvas,
-  isFileImage,
-  isFilePDF,
   isFilePlaintext,
   makeMD5,
   removeDiacritics,

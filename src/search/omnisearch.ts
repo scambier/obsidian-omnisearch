@@ -13,7 +13,7 @@ import {
   stringsToRegex,
   stripMarkdownCharacters,
 } from '../tools/utils'
-import { Notice, Platform } from 'obsidian'
+import { Notice } from 'obsidian'
 import type { Query } from './query'
 import { cacheManager } from '../cache-manager'
 import { sortBy } from 'lodash-es'

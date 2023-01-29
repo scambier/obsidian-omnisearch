@@ -28,7 +28,6 @@
   import { cacheManager } from '../cache-manager'
   import { searchEngine } from 'src/search/omnisearch'
   import CancelablePromise, { cancelable } from 'cancelable-promise'
-  import { update } from 'lodash-es'
 
   export let modal: OmnisearchVaultModal
   export let previousQuery: string | undefined
