@@ -32,8 +32,6 @@ export interface OmnisearchSettings extends WeightingSettings {
   imagesIndexing: boolean
   /** Activate the small 🔍 button on Obsidian's ribbon */
   ribbonIcon: boolean
-  /** Display short filenames in search results, instead of the full path */
-  showShortName: boolean
   /** Display the small contextual excerpt in search results */
   showExcerpt: boolean
   /** Render line returns with <br> in excerpts */
@@ -295,19 +293,6 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
-    // Display note names without the full path
-    new Setting(containerEl)
-      .setName('Hide full path in results list')
-      .setDesc(
-        'In the search results, only show the note name, without the full path.'
-      )
-      .addToggle(toggle =>
-        toggle.setValue(settings.showShortName).onChange(async v => {
-          settings.showShortName = v
-          await saveSettings(this.plugin)
-        })
-      )
-
     // Highlight results
     new Setting(containerEl)
       .setName('Highlight matching words in results')
@@ -390,7 +375,6 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   PDFIndexing: false,
   imagesIndexing: false,
 
-  showShortName: false,
   ribbonIcon: true,
   showExcerpt: true,
   renderLineReturnInExcerpts: true,

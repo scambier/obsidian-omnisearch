@@ -43,6 +43,12 @@ export function removeFrontMatter(text: string): string {
   return text.replace(regexYaml, '')
 }
 
+export function pathWithoutFilename(path: string): string {
+  const split = path.split('/')
+  split.pop()
+  return split.join('/')
+}
+
 export function wait(ms: number): Promise<void> {
   return new Promise(resolve => {
     setTimeout(resolve, ms)
