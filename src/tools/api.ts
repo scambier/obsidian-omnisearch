@@ -2,6 +2,7 @@ import type { ResultNote } from '../globals'
 import { Query } from '../search/query'
 import { searchEngine } from '../search/omnisearch'
 import { makeExcerpt } from './utils'
+import { refreshIndex } from '../notes-index'
 
 type ResultNoteApi = {
   score: number
@@ -69,4 +70,4 @@ export function notifyOnIndexed(): void {
   onIndexedCallbacks.forEach(cb => cb())
 }
 
-export default { search, registerOnIndexed, unregisterOnIndexed }
+export default { search, registerOnIndexed, unregisterOnIndexed, refreshIndex }
