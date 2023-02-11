@@ -29,6 +29,7 @@ Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/mi
 - Resistance to typos
 - Switch between Vault and In-file search to quickly skim multiple results in a single note
 - Supports `"expressions in quotes"` and `-exclusions`
+- Filters file types with '.jpg' or '.md'
 - Directly Insert a `[[link]]` from the search results
 - Supports Vim navigation keys
 
@@ -77,6 +78,8 @@ object `omnisearch` (`window.omnisearch`)
 type OmnisearchApi = {
   // Returns a promise that will contain the same results as the Vault modal
   search: (query: string) => Promise<ResultNoteApi[]>,
+  // Refreshes the index
+  refreshIndex: () => Promise<void>
   // Register a callback that will be called when the indexing is done
   registerOnIndexed: (callback: () => void) => void,
   // Unregister a callback that was previously registered
