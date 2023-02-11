@@ -74,9 +74,13 @@ object `omnisearch` (`window.omnisearch`)
 
 ```ts
 // API:
-{
+type OmnisearchApi = {
   // Returns a promise that will contain the same results as the Vault modal
-  search: (query: string) => Promise<ResultNoteApi[]>
+  search: (query: string) => Promise<ResultNoteApi[]>,
+  // Register a callback that will be called when the indexing is done
+  registerOnIndexed: (callback: () => void) => void,
+  // Unregister a callback that was previously registered
+  unregisterOnIndexed: (callback: () => void) => void,
 }
 
 type ResultNoteApi = {
