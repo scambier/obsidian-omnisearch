@@ -62,27 +62,27 @@
   on:click
   on:mousemove
   selected="{selected}">
-  <div style="flex-grow: 1;">
+  <div>
     <div class="omnisearch-result__title-container">
       <span class="omnisearch-result__title">
         <!--        <span bind:this="{filePathIcon}"></span>-->
         <span>{@html title.replace(reg, highlighter)}</span>
 
         <!-- Counter -->
-        <!--{#if note.matches.length > 0}-->
-        <!--  <span class="omnisearch-result__counter">-->
-        <!--    {note.matches.length}&nbsp;{note.matches.length > 1-->
-        <!--      ? 'matches'-->
-        <!--      : 'match'}-->
-        <!--  </span>-->
-        <!--{/if}-->
+        {#if note.matches.length > 0}
+          <span class="omnisearch-result__counter">
+            {note.matches.length}&nbsp;{note.matches.length > 1
+              ? 'matches'
+              : 'match'}
+          </span>
+        {/if}
       </span>
+    </div>
 
-      <!-- Folder path -->
-      <div class="omnisearch-result__folder-path">
-        <span bind:this="{folderPathIcon}"></span>
-        <span>{notePath}</span>
-      </div>
+    <!-- Folder path -->
+    <div class="omnisearch-result__folder-path">
+      <span bind:this="{folderPathIcon}"></span>
+      <span>{notePath}</span>
     </div>
 
     <div style="display: flex; flex-direction: row;">

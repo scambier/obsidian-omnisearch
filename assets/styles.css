@@ -28,10 +28,12 @@
   align-items: center;
   display: flex;
   gap: 5px;
+  color: var(--text-muted);
 }
 
 .omnisearch-result__counter {
   font-size: 0.7rem;
+  color: var(--text-muted);
 }
 
 .omnisearch-result__body {
@@ -45,6 +47,7 @@
   -webkit-box-orient: vertical;
 
   color: var(--text-muted);
+  margin-left: 0.5em;
 }
 
 .omnisearch-result__image-container {
