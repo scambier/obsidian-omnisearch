@@ -175,6 +175,13 @@ export class Omnisearch {
       },
     })
 
+    // Filter query results to only keep files that match query.extensions (if any)
+    if (query.extensions.length) {
+      results = results.filter(r =>
+        query.extensions.some(e => r.id.endsWith(e))
+      )
+    }
+
     // If the query does not return any result,
     // retry but with a shorter prefix limit
     if (!results.length) {

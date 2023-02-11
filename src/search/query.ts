@@ -1,6 +1,7 @@
 import { settings } from '../settings'
 import { removeDiacritics, stripSurroundingQuotes } from '../tools/utils'
 import { parseQuery } from '../vendor/parse-query'
+import { regexExtensions } from '../globals'
 
 type QueryToken = {
   /**
@@ -20,8 +21,13 @@ type QueryToken = {
 export class Query {
   public segments: QueryToken[] = []
   public exclusions: QueryToken[] = []
+  public extensions: string[] = []
 
   constructor(text = '') {
+    // Extract & remove extensions from the query
+    this.extensions = this.extractExtensions(text)
+    text = this.removeExtensions(text)
+
     if (settings.ignoreDiacritics) text = removeDiacritics(text)
     const tokens = parseQuery(text.toLowerCase(), { tokenize: true })
     this.exclusions = tokens.exclude.text
@@ -58,5 +64,20 @@ export class Query {
       value: stripped,
       exact: stripped !== str,
     }
+  }
+
+  /**
+   * Extracts an array of extensions like ".png" from a string
+   */
+  private extractExtensions(str: string): string[] {
+    const extensions = (str.match(regexExtensions) ?? []).map(o => o.trim())
+    if (extensions) {
+      return extensions.map(ext => ext.toLowerCase())
+    }
+    return []
+  }
+
+  private removeExtensions(str: string): string {
+    return str.replace(regexExtensions, '')
   }
 }
