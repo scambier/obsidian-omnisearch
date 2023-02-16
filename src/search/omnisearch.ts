@@ -31,11 +31,22 @@ const tokenize = (text: string): string[] => {
 export class Omnisearch {
   public static readonly options: Options<IndexedDocument> = {
     tokenize,
+    extractField: (doc, fieldName) => {
+      if (fieldName === 'folder') {
+        // return path without the filename
+        const parts = doc.path.split('/')
+        parts.pop()
+        return parts.join('/')
+      }
+      return (doc as any)[fieldName]
+    },
     processTerm: (term: string) =>
       (settings.ignoreDiacritics ? removeDiacritics(term) : term).toLowerCase(),
     idField: 'path',
     fields: [
       'basename',
+      // Different from `path`, since `path` is the unique index and needs to include the filename
+      'folder',
       'aliases',
       'content',
       'headings1',
