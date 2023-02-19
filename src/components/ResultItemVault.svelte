@@ -3,18 +3,16 @@
   import type { ResultNote } from '../globals'
   import {
     getExtension,
-    highlighter,
+    highlighterGroups,
     isFileCanvas,
     isFileImage,
     isFilePDF,
-    isFilePlaintext,
     makeExcerpt,
     pathWithoutFilename,
     removeDiacritics,
     stringsToRegex,
   } from '../tools/utils'
   import ResultItemContainer from './ResultItemContainer.svelte'
-  import { onMount } from 'svelte'
   import { setIcon } from 'obsidian'
 
   export let selected = false
@@ -54,7 +52,8 @@
     if (elFilePathIcon) {
       if (isFileImage(note.path)) setIcon(elFilePathIcon, 'image')
       else if (isFilePDF(note.path)) setIcon(elFilePathIcon, 'file-text')
-      else if (isFileCanvas(note.path)) setIcon(elFilePathIcon, 'layout-dashboard')
+      else if (isFileCanvas(note.path))
+        setIcon(elFilePathIcon, 'layout-dashboard')
       else setIcon(elFilePathIcon, 'file')
     }
   }
@@ -70,7 +69,7 @@
     <div class="omnisearch-result__title-container">
       <span class="omnisearch-result__title">
         <span bind:this="{elFilePathIcon}"></span>
-        <span>{@html title.replace(reg, highlighter)}</span>
+        <span>{@html title.replace(reg, highlighterGroups)}</span>
         <span class="omnisearch-result__extension"
           >.{getExtension(note.path)}</span>
 
@@ -96,7 +95,7 @@
     <div style="display: flex; flex-direction: row;">
       {#if $showExcerpt}
         <div class="omnisearch-result__body">
-          {@html cleanedContent.replace(reg, highlighter)}
+          {@html cleanedContent.replace(reg, highlighterGroups)}
         </div>
       {/if}
 

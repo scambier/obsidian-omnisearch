@@ -15,6 +15,7 @@ import {
   regexLineSplit,
   regexStripQuotes,
   regexYaml,
+  SPACE_OR_PUNCTUATION,
   type SearchMatch,
 } from '../globals'
 import { settings } from '../settings'
@@ -24,6 +25,8 @@ import { md5 } from 'pure-md5'
 export function highlighter(str: string): string {
   return `<span class="${highlightClass}">${str}</span>`
 }
+
+export const highlighterGroups = `$1<span class="${highlightClass}">$2</span>`
 
 export function escapeHTML(html: string): string {
   return html
@@ -78,12 +81,16 @@ export function getAllIndices(text: string, regex: RegExp): SearchMatch[] {
  */
 export function stringsToRegex(strings: string[]): RegExp {
   if (!strings.length) return /^$/g
-  // \\b is "word boundary", and is not applied if the user uses the cm-chs-patch plugin
-  const joined = strings
-    .map(s => (getChsSegmenter() ? '' : '\\b') + escapeRegex(s))
-    .join('|')
-  const reg = new RegExp(`(${joined})`, 'gi')
-  // console.log(reg)
+  // Default word split is not applied if the user uses the cm-chs-patch plugin
+  const joined =
+    '(' +
+    (getChsSegmenter() ? '' : SPACE_OR_PUNCTUATION.source) +
+    ')' +
+    '(' +
+    strings.map(s => escapeRegex(s)).join('|') +
+    ')'
+
+  const reg = new RegExp(`${joined}`, 'giu')
   return reg
 }
 
@@ -256,7 +263,7 @@ export function isFileIndexable(path: string): boolean {
 
 export function isFileImage(path: string): boolean {
   const ext = getExtension(path)
-  return (ext === 'png' || ext === 'jpg' || ext === 'jpeg')
+  return ext === 'png' || ext === 'jpg' || ext === 'jpeg'
 }
 
 export function isFilePDF(path: string): boolean {
