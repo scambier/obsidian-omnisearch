@@ -255,13 +255,12 @@ export function isFileIndexable(path: string): boolean {
 }
 
 export function isFileImage(path: string): boolean {
-  return (
-    path.endsWith('.png') || path.endsWith('.jpg') || path.endsWith('.jpeg')
-  )
+  const ext = getExtension(path)
+  return (ext === 'png' || ext === 'jpg' || ext === 'jpeg')
 }
 
 export function isFilePDF(path: string): boolean {
-  return path.endsWith('.pdf')
+  return getExtension(path) === 'pdf'
 }
 
 export function isFilePlaintext(path: string): boolean {

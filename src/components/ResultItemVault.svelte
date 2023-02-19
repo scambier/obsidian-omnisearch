@@ -2,9 +2,12 @@
   import { settings, showExcerpt } from 'src/settings'
   import type { ResultNote } from '../globals'
   import {
+    getExtension,
     highlighter,
+    isFileCanvas,
     isFileImage,
     isFilePDF,
+    isFilePlaintext,
     makeExcerpt,
     pathWithoutFilename,
     removeDiacritics,
@@ -20,8 +23,8 @@
   let imagePath: string | null = null
   let title = ''
   let notePath = ''
-  let folderPathIcon
-  let filePathIcon
+  let elFolderPathIcon: HTMLElement
+  let elFilePathIcon: HTMLElement
 
   $: {
     imagePath = null
@@ -45,13 +48,14 @@
     }
 
     // Icons
-    if (folderPathIcon) {
-      setIcon(folderPathIcon, 'folder-open')
+    if (elFolderPathIcon) {
+      setIcon(elFolderPathIcon, 'folder-open')
     }
-    if (filePathIcon) {
-      if (isFileImage(note.path)) setIcon(filePathIcon, 'file-image')
-      else if (isFilePDF(note.path)) setIcon(filePathIcon, 'file-line-chart')
-      else setIcon(filePathIcon, 'file-text')
+    if (elFilePathIcon) {
+      if (isFileImage(note.path)) setIcon(elFilePathIcon, 'image')
+      else if (isFilePDF(note.path)) setIcon(elFilePathIcon, 'file-text')
+      else if (isFileCanvas(note.path)) setIcon(elFilePathIcon, 'layout-dashboard')
+      else setIcon(elFilePathIcon, 'file')
     }
   }
 </script>
@@ -65,8 +69,10 @@
   <div>
     <div class="omnisearch-result__title-container">
       <span class="omnisearch-result__title">
-        <!--        <span bind:this="{filePathIcon}"></span>-->
+        <span bind:this="{elFilePathIcon}"></span>
         <span>{@html title.replace(reg, highlighter)}</span>
+        <span class="omnisearch-result__extension"
+          >.{getExtension(note.path)}</span>
 
         <!-- Counter -->
         {#if note.matches.length > 0}
@@ -80,10 +86,12 @@
     </div>
 
     <!-- Folder path -->
-    <div class="omnisearch-result__folder-path">
-      <span bind:this="{folderPathIcon}"></span>
-      <span>{notePath}</span>
-    </div>
+    {#if notePath}
+      <div class="omnisearch-result__folder-path">
+        <span bind:this="{elFolderPathIcon}"></span>
+        <span>{notePath}</span>
+      </div>
+    {/if}
 
     <div style="display: flex; flex-direction: row;">
       {#if $showExcerpt}
