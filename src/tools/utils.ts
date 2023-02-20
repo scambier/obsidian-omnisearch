@@ -26,7 +26,11 @@ export function highlighter(str: string): string {
   return `<span class="${highlightClass}">${str}</span>`
 }
 
-export const highlighterGroups = `$1<span class="${highlightClass}">$2</span>`
+export function highlighterGroups(...args: any[]) {
+  if (args[1] && args[2])
+    return `${args[1]}<span class="${highlightClass}">${args[2]}</span>`
+  return '&lt;no content&gt;'
+}
 
 export function escapeHTML(html: string): string {
   return html
