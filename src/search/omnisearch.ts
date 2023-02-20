@@ -366,7 +366,7 @@ export class Omnisearch {
 
         // Tags, starting with #
         ...tags,
-      ].filter(w => w.length > 1)
+      ].filter(w => w.length > 1 || /\p{Emoji}/u.test(w))
 
       // console.log(foundWords)
       const matches = this.getMatches(
