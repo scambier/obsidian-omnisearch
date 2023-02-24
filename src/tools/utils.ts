@@ -307,3 +307,11 @@ export function chunkArray<T>(arr: T[], len: number): T[][] {
 
   return chunks
 }
+
+/**
+ * Converts a 'fooBarBAZLorem' into ['foo', 'Bar', 'BAZ', 'Lorem]
+ * @param text
+ */
+export function splitCamelCase(text: string): string[] {
+  return text.replace(/([a-z](?=[A-Z]))/g, '$1 ').split(' ')
+}
