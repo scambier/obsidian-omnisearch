@@ -31,11 +31,22 @@ const tokenize = (text: string): string[] => {
 export class Omnisearch {
   public static readonly options: Options<IndexedDocument> = {
     tokenize,
+    extractField: (doc, fieldName) => {
+      if (fieldName === 'directory') {
+        // return path without the filename
+        const parts = doc.path.split('/')
+        parts.pop()
+        return parts.join('/')
+      }
+      return (doc as any)[fieldName]
+    },
     processTerm: (term: string) =>
       (settings.ignoreDiacritics ? removeDiacritics(term) : term).toLowerCase(),
     idField: 'path',
     fields: [
       'basename',
+      // Different from `path`, since `path` is the unique index and needs to include the filename
+      'directory',
       'aliases',
       'content',
       'headings1',
@@ -168,12 +179,20 @@ export class Omnisearch {
       combineWith: 'AND',
       boost: {
         basename: settings.weightBasename,
+        directory: settings.weightDirectory,
         aliases: settings.weightBasename,
         headings1: settings.weightH1,
         headings2: settings.weightH2,
         headings3: settings.weightH3,
       },
     })
+
+    // Filter query results to only keep files that match query.extensions (if any)
+    if (query.extensions.length) {
+      results = results.filter(r =>
+        query.extensions.some(e => r.id.endsWith(e))
+      )
+    }
 
     // If the query does not return any result,
     // retry but with a shorter prefix limit
@@ -348,7 +367,7 @@ export class Omnisearch {
 
         // Tags, starting with #
         ...tags,
-      ].filter(w => w.length > 1)
+      ].filter(w => w.length > 1 || /\p{Emoji}/u.test(w))
 
       // console.log(foundWords)
       const matches = this.getMatches(

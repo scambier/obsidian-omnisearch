@@ -17,7 +17,7 @@ import {
   IndexingStepType,
   isCacheEnabled,
 } from './globals'
-import api from './tools/api'
+import api, { notifyOnIndexed } from './tools/api'
 import { isFileIndexable } from './tools/utils'
 import { database, OmnisearchCache } from './database'
 import * as NotesIndex from './notes-index'
@@ -210,6 +210,7 @@ export default class OmnisearchPlugin extends Plugin {
       new Notice(`Omnisearch - Your files have been indexed.`)
     }
     indexingStep.set(IndexingStepType.Done)
+    notifyOnIndexed()
   }
 }
 

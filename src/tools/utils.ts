@@ -15,6 +15,7 @@ import {
   regexLineSplit,
   regexStripQuotes,
   regexYaml,
+  SPACE_OR_PUNCTUATION,
   type SearchMatch,
 } from '../globals'
 import { settings } from '../settings'
@@ -23,6 +24,12 @@ import { md5 } from 'pure-md5'
 
 export function highlighter(str: string): string {
   return `<span class="${highlightClass}">${str}</span>`
+}
+
+export function highlighterGroups(...args: any[]) {
+  if (args[1] && args[2])
+    return `${args[1]}<span class="${highlightClass}">${args[2]}</span>`
+  return '&lt;no content&gt;'
 }
 
 export function escapeHTML(html: string): string {
@@ -41,6 +48,12 @@ export function splitLines(text: string): string[] {
 export function removeFrontMatter(text: string): string {
   // Regex to recognize YAML Front Matter (at beginning of file, 3 hyphens, than any charecter, including newlines, then 3 hyphens).
   return text.replace(regexYaml, '')
+}
+
+export function pathWithoutFilename(path: string): string {
+  const split = path.split('/')
+  split.pop()
+  return split.join('/')
 }
 
 export function wait(ms: number): Promise<void> {
@@ -72,12 +85,16 @@ export function getAllIndices(text: string, regex: RegExp): SearchMatch[] {
  */
 export function stringsToRegex(strings: string[]): RegExp {
   if (!strings.length) return /^$/g
-  // \\b is "word boundary", and is not applied if the user uses the cm-chs-patch plugin
-  const joined = strings
-    .map(s => (getChsSegmenter() ? '' : '\\b') + escapeRegex(s))
-    .join('|')
-  const reg = new RegExp(`(${joined})`, 'gi')
-  // console.log(reg)
+  // Default word split is not applied if the user uses the cm-chs-patch plugin
+  const joined =
+    '(' +
+    (getChsSegmenter() ? '' : SPACE_OR_PUNCTUATION.source) +
+    ')' +
+    '(' +
+    strings.map(s => escapeRegex(s)).join('|') +
+    ')'
+
+  const reg = new RegExp(`${joined}`, 'giu')
   return reg
 }
 
@@ -249,13 +266,12 @@ export function isFileIndexable(path: string): boolean {
 }
 
 export function isFileImage(path: string): boolean {
-  return (
-    path.endsWith('.png') || path.endsWith('.jpg') || path.endsWith('.jpeg')
-  )
+  const ext = getExtension(path)
+  return ext === 'png' || ext === 'jpg' || ext === 'jpeg'
 }
 
 export function isFilePDF(path: string): boolean {
-  return path.endsWith('.pdf')
+  return getExtension(path) === 'pdf'
 }
 
 export function isFilePlaintext(path: string): boolean {

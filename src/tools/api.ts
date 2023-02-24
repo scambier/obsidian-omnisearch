@@ -2,6 +2,7 @@ import type { ResultNote } from '../globals'
 import { Query } from '../search/query'
 import { searchEngine } from '../search/omnisearch'
 import { makeExcerpt } from './utils'
+import { refreshIndex } from '../notes-index'
 
 type ResultNoteApi = {
   score: number
@@ -16,6 +17,13 @@ export type SearchMatchApi = {
   match: string
   offset: number
 }
+
+let notified = false
+
+/**
+ * Callbacks to be called when the search index is ready
+ */
+let onIndexedCallbacks: Array<() => void> = []
 
 function mapResults(results: ResultNote[]): ResultNoteApi[] {
   return results.map(result => {
@@ -39,13 +47,27 @@ function mapResults(results: ResultNote[]): ResultNoteApi[] {
   })
 }
 
-async function search(
-  q: string,
-  options: Partial<{ excerpt: boolean }> = {}
-): Promise<ResultNoteApi[]> {
+async function search(q: string): Promise<ResultNoteApi[]> {
   const query = new Query(q)
   const raw = await searchEngine.getSuggestions(query)
   return mapResults(raw)
 }
 
-export default { search }
+function registerOnIndexed(cb: () => void): void {
+  onIndexedCallbacks.push(cb)
+  // Immediately call the callback if the indexing is already ready done
+  if (notified) {
+    cb()
+  }
+}
+
+function unregisterOnIndexed(cb: () => void): void {
+  onIndexedCallbacks = onIndexedCallbacks.filter(o => o !== cb)
+}
+
+export function notifyOnIndexed(): void {
+  notified = true
+  onIndexedCallbacks.forEach(cb => cb())
+}
+
+export default { search, registerOnIndexed, unregisterOnIndexed, refreshIndex }
