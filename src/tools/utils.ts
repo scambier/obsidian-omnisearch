@@ -27,7 +27,12 @@ export function highlighter(str: string): string {
 }
 
 export function highlighterGroups(...args: any[]) {
-  if (args[1] && args[2])
+  if (
+    args[1] !== null &&
+    args[1] !== undefined &&
+    args[2] !== null &&
+    args[2] !== undefined
+  )
     return `${args[1]}<span class="${highlightClass}">${args[2]}</span>`
   return '&lt;no content&gt;'
 }
@@ -88,7 +93,7 @@ export function stringsToRegex(strings: string[]): RegExp {
   // Default word split is not applied if the user uses the cm-chs-patch plugin
   const joined =
     '(' +
-    (getChsSegmenter() ? '' : SPACE_OR_PUNCTUATION.source) +
+    (getChsSegmenter() ? '' : `^|${SPACE_OR_PUNCTUATION.source}`) +
     ')' +
     '(' +
     strings.map(s => escapeRegex(s)).join('|') +
