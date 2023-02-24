@@ -32,7 +32,7 @@ export class Omnisearch {
   public static readonly options: Options<IndexedDocument> = {
     tokenize,
     extractField: (doc, fieldName) => {
-      if (fieldName === 'folder') {
+      if (fieldName === 'directory') {
         // return path without the filename
         const parts = doc.path.split('/')
         parts.pop()
@@ -46,7 +46,7 @@ export class Omnisearch {
     fields: [
       'basename',
       // Different from `path`, since `path` is the unique index and needs to include the filename
-      'folder',
+      'directory',
       'aliases',
       'content',
       'headings1',
@@ -179,6 +179,7 @@ export class Omnisearch {
       combineWith: 'AND',
       boost: {
         basename: settings.weightBasename,
+        directory: settings.weightDirectory,
         aliases: settings.weightBasename,
         headings1: settings.weightH1,
         headings2: settings.weightH2,

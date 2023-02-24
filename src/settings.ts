@@ -12,6 +12,7 @@ import type OmnisearchPlugin from './main'
 
 interface WeightingSettings {
   weightBasename: number
+  weightDirectory: number
   weightH1: number
   weightH2: number
   weightH3: number
@@ -319,6 +320,10 @@ export class SettingsTab extends PluginSettingTab {
       .addSlider(cb => this.weightSlider(cb, 'weightBasename'))
 
     new Setting(containerEl)
+      .setName(`File directory (default: ${DEFAULT_SETTINGS.weightDirectory})`)
+      .addSlider(cb => this.weightSlider(cb, 'weightDirectory'))
+
+    new Setting(containerEl)
       .setName(`Headings level 1 (default: ${DEFAULT_SETTINGS.weightH1})`)
       .addSlider(cb => this.weightSlider(cb, 'weightH1'))
 
@@ -383,7 +388,8 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   showPreviousQueryResults: true,
   simpleSearch: false,
 
-  weightBasename: 2,
+  weightBasename: 3,
+  weightDirectory: 2,
   weightH1: 1.5,
   weightH2: 1.3,
   weightH3: 1.1,
