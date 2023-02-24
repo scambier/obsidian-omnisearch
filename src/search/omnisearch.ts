@@ -189,9 +189,11 @@ export class Omnisearch {
 
     // Filter query results to only keep files that match query.extensions (if any)
     if (query.extensions.length) {
-      results = results.filter(r =>
-        query.extensions.some(e => r.id.endsWith(e))
-      )
+      results = results.filter(r => {
+        // ".can" should match ".canvas"
+        const ext = '.' + r.id.split('.').pop()
+        return query.extensions.some(e => ext.startsWith(e))
+      })
     }
 
     // If the query does not return any result,
