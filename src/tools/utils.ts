@@ -68,8 +68,9 @@ export function wait(ms: number): Promise<void> {
 }
 
 // https://stackoverflow.com/a/3561711
+// but we enclose special chars in brackets to avoid them being interpreted as regex
 export function escapeRegex(str: string): string {
-  return str.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
+  return str.replace(/[-/\\^$*+?.()|[\]{}]/g, '[$&]')
 }
 
 /**
