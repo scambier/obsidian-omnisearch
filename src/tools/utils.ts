@@ -91,14 +91,17 @@ export function getAllIndices(text: string, regex: RegExp): SearchMatch[] {
  */
 export function stringsToRegex(strings: string[]): RegExp {
   if (!strings.length) return /^$/g
-  // Default word split is not applied if the user uses the cm-chs-patch plugin
   const joined =
     '(' +
-    (getChsSegmenter() ? '' : `^|${SPACE_OR_PUNCTUATION.source}`) +
+    // Default word split is not applied if the user uses the cm-chs-patch plugin
+    (getChsSegmenter()
+      ? ''
+      : // Split on start of line, spaces, punctuation, or capital letters (for camelCase)
+      settings.splitCamelCase
+      ? `^|${SPACE_OR_PUNCTUATION.source}|[A-Z]`
+      : `^|${SPACE_OR_PUNCTUATION.source}`) +
     ')' +
-    '(' +
-    strings.map(s => escapeRegex(s)).join('|') +
-    ')'
+    `(${strings.map(s => escapeRegex(s)).join('|')})`
 
   const reg = new RegExp(`${joined}`, 'giu')
   return reg

@@ -46,6 +46,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   /** If a query returns 0 result, try again with more relax conditions */
   simpleSearch: boolean
   highlight: boolean
+  splitCamelCase: boolean
 }
 
 /**
@@ -200,6 +201,25 @@ export class SettingsTab extends PluginSettingTab {
         toggle.setValue(settings.ignoreDiacritics).onChange(async v => {
           await database.clearCache()
           settings.ignoreDiacritics = v
+          await saveSettings(this.plugin)
+        })
+      )
+
+    // Split CamelCaseWords
+    const camelCaseDesc = new DocumentFragment()
+    camelCaseDesc.createSpan({}, span => {
+      span.innerHTML = `Enable this if you want to be able to search for CamelCaseWords as separate words.<br/>        
+        ⚠️ <span style="color: var(--text-accent)">Changing this setting will clear the cache.</span><br>
+        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>
+        `
+    })
+    new Setting(containerEl)
+      .setName('Split CamelCaseWords')
+      .setDesc(camelCaseDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.splitCamelCase).onChange(async v => {
+          await database.clearCache()
+          settings.splitCamelCase = v
           await saveSettings(this.plugin)
         })
       )
@@ -379,6 +399,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   indexedFileTypes: [] as string[],
   PDFIndexing: false,
   imagesIndexing: false,
+  splitCamelCase: false,
 
   ribbonIcon: true,
   showExcerpt: true,

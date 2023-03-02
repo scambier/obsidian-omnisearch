@@ -26,7 +26,11 @@ const tokenize = (text: string): string[] => {
     return tokens.flatMap(word =>
       chsRegex.test(word) ? chsSegmenter.cut(word) : [word]
     )
-  } else return tokens.flatMap(splitCamelCase)
+  } else {
+    if (settings.splitCamelCase)
+      return [...tokens, ...tokens.flatMap(splitCamelCase)]
+    return tokens
+  }
 }
 
 export class Omnisearch {
