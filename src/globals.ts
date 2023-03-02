@@ -14,7 +14,7 @@ export const excerptBefore = 100
 export const excerptAfter = 300
 
 export const highlightClass = `suggestion-highlight omnisearch-highlight ${
-  settings.hightlight ? 'omnisearch-default-highlight' : ''
+  settings.highlight ? 'omnisearch-default-highlight' : ''
 }`
 
 export const eventBus = new EventBus()

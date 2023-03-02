@@ -10,6 +10,7 @@ import { settings } from '../settings'
 import {
   chunkArray,
   removeDiacritics,
+  splitCamelCase,
   stringsToRegex,
   stripMarkdownCharacters,
 } from '../tools/utils'
@@ -25,7 +26,11 @@ const tokenize = (text: string): string[] => {
     return tokens.flatMap(word =>
       chsRegex.test(word) ? chsSegmenter.cut(word) : [word]
     )
-  } else return tokens
+  } else {
+    if (settings.splitCamelCase)
+      return [...tokens, ...tokens.flatMap(splitCamelCase)]
+    return tokens
+  }
 }
 
 export class Omnisearch {
