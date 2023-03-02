@@ -45,7 +45,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   welcomeMessage: string
   /** If a query returns 0 result, try again with more relax conditions */
   simpleSearch: boolean
-  hightlight: boolean
+  highlight: boolean
 }
 
 /**
@@ -301,8 +301,8 @@ export class SettingsTab extends PluginSettingTab {
         'Will highlight matching results when enabled. See README for more customization options.'
       )
       .addToggle(toggle =>
-        toggle.setValue(settings.hightlight).onChange(async v => {
-          settings.hightlight = v
+        toggle.setValue(settings.highlight).onChange(async v => {
+          settings.highlight = v
           await saveSettings(this.plugin)
         })
       )
@@ -384,7 +384,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   showExcerpt: true,
   renderLineReturnInExcerpts: true,
   showCreateButton: false,
-  hightlight: true,
+  highlight: true,
   showPreviousQueryResults: true,
   simpleSearch: false,
 
