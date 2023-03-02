@@ -92,6 +92,7 @@ type ResultNoteApi = {
   basename: string
   foundWords: string[]
   matches: SearchMatchApi[]
+  excerpt: string
 }
 
 type SearchMatchApi = {
