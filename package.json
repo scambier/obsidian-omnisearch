@@ -1,6 +1,6 @@
 {
   "name": "scambier.obsidian-search",
-  "version": "1.12.2",
+  "version": "1.12.3",
   "description": "A search engine for Obsidian",
   "main": "dist/main.js",
   "scripts": {
