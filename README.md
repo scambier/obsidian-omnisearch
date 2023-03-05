@@ -13,6 +13,19 @@ Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/mi
 
 ![](https://raw.githubusercontent.com/scambier/obsidian-omnisearch/master/images/omnisearch.gif)
 
+
+## Documentation
+
+https://publish.obsidian.md/omnisearch/Index
+
+## Installation
+
+- Omnisearch is available on [the official Community Plugins repository](https://obsidian.md/plugins?search=Omnisearch).
+- Beta releases can be installed through [BRAT](https://github.com/TfTHacker/obsidian42-brat). **Be advised that those
+  versions can be buggy and break things.**
+
+You can check the [CHANGELOG](./CHANGELOG.md) for more information on the different versions.
+
 ## Features
 
 > Omnisearch's first goal is to _locate_ files instantly. You can see it as a _Quick Switcher_ on steroids.
@@ -36,18 +49,6 @@ Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/mi
 **Note:** support of Chinese, Japanese, Korean, etc. depends
 on [this additional plugin](https://github.com/aidenlx/cm-chs-patch). Please read its documentation for more
 information.
-
-## Installation
-
-- Omnisearch is available on [the official Community Plugins repository](https://obsidian.md/plugins?search=Omnisearch).
-- Beta releases can be installed through [BRAT](https://github.com/TfTHacker/obsidian42-brat). **Be advised that those
-  versions can be buggy and break things.**
-
-You can check the [CHANGELOG](./CHANGELOG.md) for more information on the different versions.
-
-## Documentation
-
-https://publish.obsidian.md/omnisearch/Index
 
 ## LICENSE
 
