@@ -20,7 +20,8 @@
   id="{index.toString()}"
   selected="{selected}"
   on:mousemove
-  on:click>
+  on:click
+  on:auxclick>
   <div class="omnisearch-result__body">
     {@html cleanedContent.replace(reg, highlighterGroups)}
   </div>

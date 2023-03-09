@@ -160,7 +160,10 @@
         index="{i}"
         selected="{i === selectedIndex}"
         on:mousemove="{_e => (selectedIndex = i)}"
-        on:click="{(evt) => openSelection(evt.ctrlKey)}" />
+        on:click="{evt => openSelection(evt.ctrlKey)}"
+        on:auxclick="{evt => {
+          if (evt.button == 1) openSelection(true)
+        }}" />
     {/each}
   {:else}
     <div style="text-align: center;">

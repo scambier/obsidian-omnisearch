@@ -283,7 +283,10 @@
       selected="{i === selectedIndex}"
       note="{result}"
       on:mousemove="{_ => (selectedIndex = i)}"
-      on:click="{onClick}" />
+      on:click="{onClick}"
+      on:auxclick="{evt => {
+        if (evt.button == 1) openNoteInNewPane()
+      }}" />
   {/each}
   <div style="text-align: center;">
     {#if !resultNotes.length && searchQuery && !searching}
