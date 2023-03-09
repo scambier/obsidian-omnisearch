@@ -319,8 +319,6 @@
     <span>to switch to In-File Search</span>
   </div>
 
-  <br />
-
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">{getCtrlKeyLabel()} ↵</span>
     <span>to open in a new pane</span>
@@ -333,8 +331,6 @@
     <span class="prompt-instruction-command">ctrl shift ↵</span>
     <span>to create in a new pane</span>
   </div>
-
-  <br />
 
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">alt ↵</span>
