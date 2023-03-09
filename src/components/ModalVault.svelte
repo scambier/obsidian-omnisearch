@@ -315,7 +315,7 @@
     <span class="prompt-instruction-command">↵</span><span>to open</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">↹</span>
+    <span class="prompt-instruction-command">tab</span>
     <span>to switch to In-File Search</span>
   </div>
 
