@@ -247,7 +247,8 @@ export class Omnisearch {
       }
     }
 
-    results = results.slice(0, 50)
+    // Sort results and keep the 50 best
+    results = results.sort((a, b) => b.score - a.score).slice(0, 50)
 
     const documents = await Promise.all(
       results.map(async result => await cacheManager.getDocument(result.id))

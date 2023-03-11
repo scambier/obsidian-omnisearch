@@ -130,9 +130,7 @@
 
   async function updateResults() {
     query = new Query(searchQuery)
-    resultNotes = (await searchEngine.getSuggestions(query)).sort(
-      (a, b) => b.score - a.score
-    )
+    resultNotes = await searchEngine.getSuggestions(query)
     selectedIndex = 0
     await scrollIntoView()
   }
