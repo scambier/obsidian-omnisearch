@@ -266,7 +266,10 @@
       selected="{i === selectedIndex}"
       note="{result}"
       on:mousemove="{_ => (selectedIndex = i)}"
-      on:click="{onClick}" />
+      on:click="{onClick}"
+      on:auxclick="{evt => {
+        if (evt.button == 1) openNoteInNewPane()
+      }}" />
   {/each}
   <div style="text-align: center;">
     {#if !resultNotes.length && searchQuery && !searching}
@@ -298,11 +301,9 @@
     <span class="prompt-instruction-command">↵</span><span>to open</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">↹</span>
+    <span class="prompt-instruction-command">tab</span>
     <span>to switch to In-File Search</span>
   </div>
-
-  <br />
 
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">{getCtrlKeyLabel()} ↵</span>
@@ -316,8 +317,6 @@
     <span class="prompt-instruction-command">ctrl shift ↵</span>
     <span>to create in a new pane</span>
   </div>
-
-  <br />
 
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">alt ↵</span>

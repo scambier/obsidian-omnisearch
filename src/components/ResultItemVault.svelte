@@ -63,6 +63,7 @@
   glyph="{glyph}"
   id="{note.path}"
   on:click
+  on:auxclick
   on:mousemove
   selected="{selected}">
   <div>

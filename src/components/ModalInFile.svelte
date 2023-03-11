@@ -6,7 +6,7 @@
     type ResultNote,
     type SearchMatch,
   } from 'src/globals'
-  import { loopIndex } from 'src/tools/utils'
+  import { getCtrlKeyLabel, loopIndex } from 'src/tools/utils'
   import { onDestroy, onMount, tick } from 'svelte'
   import { MarkdownView } from 'obsidian'
   import ModalContainer from './ModalContainer.svelte'
@@ -36,6 +36,7 @@
     eventBus.enable('infile')
 
     eventBus.on('infile', 'enter', openSelection)
+    eventBus.on('infile', 'open-in-new-pane', openSelectionInNewTab)
     eventBus.on('infile', 'arrow-up', () => moveIndex(-1))
     eventBus.on('infile', 'arrow-down', () => moveIndex(1))
     eventBus.on('infile', 'tab', switchToVaultModal)
@@ -108,15 +109,17 @@
     elem?.scrollIntoView({ behavior: 'auto', block: 'nearest' })
   }
 
-  async function openSelection(
-    evt?: MouseEvent | KeyboardEvent
-  ): Promise<void> {
+  async function openSelectionInNewTab(): Promise<void> {
+    return openSelection(true)
+  }
+
+  async function openSelection(newTab = false): Promise<void> {
     if (note) {
       modal.close()
       if (parent) parent.close()
 
       // Open (or switch focus to) the note
-      await openNote(note, evt?.ctrlKey)
+      await openNote(note, newTab)
 
       // Move cursor to the match
       const view = app.workspace.getActiveViewOfType(MarkdownView)
@@ -157,7 +160,10 @@
         index="{i}"
         selected="{i === selectedIndex}"
         on:mousemove="{_e => (selectedIndex = i)}"
-        on:click="{openSelection}" />
+        on:click="{evt => openSelection(evt.ctrlKey)}"
+        on:auxclick="{evt => {
+          if (evt.button == 1) openSelection(true)
+        }}" />
     {/each}
   {:else}
     <div style="text-align: center;">
@@ -174,7 +180,7 @@
     <span class="prompt-instruction-command">↵</span><span>to open</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">↹</span>
+    <span class="prompt-instruction-command">tab</span>
     <span>to switch to Vault Search</span>
   </div>
   <div class="prompt-instruction">
@@ -184,5 +190,10 @@
     {:else}
       <span>to close</span>
     {/if}
+  </div>
+
+  <div class="prompt-instruction">
+    <span class="prompt-instruction-command">{getCtrlKeyLabel()} ↵</span>
+    <span>to open in a new pane</span>
   </div>
 </div>
