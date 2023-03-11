@@ -47,6 +47,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   simpleSearch: boolean
   highlight: boolean
   splitCamelCase: boolean
+  verboseLogging: boolean
 }
 
 /**
@@ -357,6 +358,22 @@ export class SettingsTab extends PluginSettingTab {
 
     //#endregion Results Weighting
 
+    //#region Debugging
+
+    new Setting(containerEl).setName('Debugging').setHeading()
+
+    new Setting(containerEl)
+      .setName('Enable verbose logging')
+      .setDesc('Adds a LOT of logs for debugging purposes. Don\'t forget to disable it.')
+      .addToggle(toggle =>
+        toggle.setValue(settings.verboseLogging).onChange(async v => {
+          settings.verboseLogging = v
+          await saveSettings(this.plugin)
+        })
+      )
+
+    //#endregion Debugginh
+
     //#region Danger Zone
     if (isCacheEnabled()) {
       new Setting(containerEl).setName('Danger Zone').setHeading()
@@ -416,6 +433,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   weightH3: 1.1,
 
   welcomeMessage: '',
+  verboseLogging: false,
 } as const
 
 export let settings = Object.assign({}, DEFAULT_SETTINGS) as OmnisearchSettings

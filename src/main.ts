@@ -18,7 +18,7 @@ import {
   isCacheEnabled,
 } from './globals'
 import api, { notifyOnIndexed } from './tools/api'
-import { isFileIndexable } from './tools/utils'
+import { isFileIndexable, logDebug } from './tools/utils'
 import { database, OmnisearchCache } from './database'
 import * as NotesIndex from './notes-index'
 import { searchEngine } from './search/omnisearch'
@@ -69,6 +69,7 @@ export default class OmnisearchPlugin extends Plugin {
       this.registerEvent(
         this.app.vault.on('create', file => {
           if (isFileIndexable(file.path)) {
+            logDebug('Indexing new file', file.path)
             // await cacheManager.addToLiveCache(file.path)
             searchEngine.addFromPaths([file.path])
           }
@@ -76,6 +77,7 @@ export default class OmnisearchPlugin extends Plugin {
       )
       this.registerEvent(
         this.app.vault.on('delete', file => {
+          logDebug('Removing file', file.path)
           cacheManager.removeFromLiveCache(file.path)
           searchEngine.removeFromPaths([file.path])
         })
@@ -83,6 +85,7 @@ export default class OmnisearchPlugin extends Plugin {
       this.registerEvent(
         this.app.vault.on('modify', async file => {
           if (isFileIndexable(file.path)) {
+            logDebug('Updating file', file.path)
             await cacheManager.addToLiveCache(file.path)
             NotesIndex.markNoteForReindex(file)
           }
@@ -91,6 +94,7 @@ export default class OmnisearchPlugin extends Plugin {
       this.registerEvent(
         this.app.vault.on('rename', async (file, oldPath) => {
           if (isFileIndexable(file.path)) {
+            logDebug('Renaming file', file.path)
             cacheManager.removeFromLiveCache(oldPath)
             cacheManager.addToLiveCache(file.path)
             searchEngine.removeFromPaths([oldPath])

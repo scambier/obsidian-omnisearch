@@ -324,3 +324,9 @@ export function chunkArray<T>(arr: T[], len: number): T[][] {
 export function splitCamelCase(text: string): string[] {
   return text.replace(/([a-z](?=[A-Z]))/g, '$1 ').split(' ')
 }
+
+export function logDebug(...attr: any[]): void {
+  if (settings.verboseLogging) {
+    console.log(...['Omnisearch -', ...attr])
+  }
+}
