@@ -14,6 +14,7 @@ import {
   splitCamelCase,
   stringsToRegex,
   stripMarkdownCharacters,
+  warnDebug,
 } from '../tools/utils'
 import { Notice } from 'obsidian'
 import type { Query } from './query'
@@ -144,11 +145,11 @@ export class Omnisearch {
       logDebug('Indexing into search engine', docs)
       // Update the list of indexed docs
       docs.forEach(doc => this.indexedDocuments.set(doc.path, doc.mtime))
-      
+
       // Discard files that may have been already added (though it shouldn't happen)
       const alreadyAdded = docs.filter(doc => this.minisearch.has(doc.path))
       this.removeFromPaths(alreadyAdded.map(o => o.path))
-      
+
       // Add docs to minisearch
       await this.minisearch.addAllAsync(docs)
     }
@@ -304,11 +305,16 @@ export class Omnisearch {
   }
 
   public getMatches(text: string, reg: RegExp, query: Query): SearchMatch[] {
+    const startTime = new Date().getTime()
     let match: RegExpExecArray | null = null
     const matches: SearchMatch[] = []
     let count = 0
     while ((match = reg.exec(text)) !== null) {
-      if (++count >= 100) break // Avoid infinite loops, stop looking after 100 matches
+      // Avoid infinite loops, stop looking after 100 matches or if we're taking too much time
+      if (++count >= 100 || new Date().getTime() - startTime > 50) {
+        warnDebug('Stopped getMatches at', count, 'results')
+        break
+      }
       const m = match[0]
       if (m) matches.push({ match: m, offset: match.index })
     }

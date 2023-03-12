@@ -325,8 +325,18 @@ export function splitCamelCase(text: string): string[] {
   return text.replace(/([a-z](?=[A-Z]))/g, '$1 ').split(' ')
 }
 
-export function logDebug(...attr: any[]): void {
+export function logDebug(...args: any[]): void {
+  printDebug(console.log, ...args)
+}
+
+export function warnDebug(...args: any[]): void {
+  printDebug(console.warn, ...args)
+}
+
+function printDebug(fn: (...args: any[]) => any, ...args: any[]): void {
   if (settings.verboseLogging) {
-    console.log(...['Omnisearch -', ...attr])
+    const t = new Date()
+    const ts = `${t.getMinutes()}:${t.getSeconds()}:${t.getMilliseconds()}`
+    fn(...['Omnisearch -', ts + ' -', ...args])
   }
 }
