@@ -6,6 +6,8 @@
  * MIT Licensed
  */
 
+import { warnDebug } from "../tools/utils";
+
 interface SearchParserOptions {
   offsets?: boolean
   tokenize: true
@@ -30,7 +32,7 @@ type SearchParserTextOffset = {
 type SearchParserOffset = (
   | SearchParserKeyWordOffset
   | SearchParserTextOffset
-) & {
+  ) & {
   offsetStart: number
   offsetEnd: number
 }
@@ -43,7 +45,7 @@ interface SearchParserResult extends ISearchParserDictionary {
 
 export function parseQuery(
   string: string,
-  options: SearchParserOptions
+  options: SearchParserOptions,
 ): SearchParserResult {
   // Set a default options object when none is provided
   if (!options) {
@@ -74,9 +76,14 @@ export function parseQuery(
   const regex =
     /(\S+:'(?:[^'\\]|\\.)*')|(\S+:"(?:[^"\\]|\\.)*")|(-?"(?:[^"\\]|\\.)*")|(-?'(?:[^'\\]|\\.)*')|\S+|\S+:\S+/g
   let match
-  let count = 0 // TODO: FIXME: this is a hack to avoid infinite loops
+  let count = 0
+  const startTime = new Date().getTime()
+
   while ((match = regex.exec(string)) !== null) {
-    if (++count >= 100) break
+    if (++count >= 100 || new Date().getTime() - startTime > 50) {
+      warnDebug('Stopped SearchParserResult at', count, 'results')
+      break
+    }
     let term = match[0]
     const sepIndex = term.indexOf(':')
 
@@ -291,11 +298,11 @@ export function parseQuery(
           query[key].from = rangeValues[0]
           query[key].to = rangeValues[1]
         }
-        // When pairs of ranges are specified
-        // keyword:XXXX-YYYY,AAAA-BBBB
-        // else if (!rangeValues.length % 2) {
-        // }
-        // When only getting a single value,
+          // When pairs of ranges are specified
+          // keyword:XXXX-YYYY,AAAA-BBBB
+          // else if (!rangeValues.length % 2) {
+          // }
+          // When only getting a single value,
         // or an odd number of values
         else {
           query[key].from = value

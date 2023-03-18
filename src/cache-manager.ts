@@ -11,6 +11,7 @@ import {
   getTagsFromMetadata,
   isFileCanvas,
   isFilePlaintext,
+  logDebug,
   makeMD5,
   removeDiacritics,
 } from './tools/utils'
@@ -150,6 +151,7 @@ class CacheManager {
     if (this.documents.has(path)) {
       return this.documents.get(path)!
     }
+    logDebug('Generating IndexedDocument from', path)
     await this.addToLiveCache(path)
     return this.documents.get(path)!
   }

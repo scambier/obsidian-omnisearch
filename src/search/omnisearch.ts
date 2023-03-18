@@ -9,9 +9,12 @@ import { chsRegex, getChsSegmenter, SPACE_OR_PUNCTUATION } from '../globals'
 import { settings } from '../settings'
 import {
   chunkArray,
+  logDebug,
   removeDiacritics,
+  splitCamelCase,
   stringsToRegex,
   stripMarkdownCharacters,
+  warnDebug,
 } from '../tools/utils'
 import { Notice } from 'obsidian'
 import type { Query } from './query'
@@ -25,7 +28,11 @@ const tokenize = (text: string): string[] => {
     return tokens.flatMap(word =>
       chsRegex.test(word) ? chsSegmenter.cut(word) : [word]
     )
-  } else return tokens
+  } else {
+    if (settings.splitCamelCase)
+      return [...tokens, ...tokens.flatMap(splitCamelCase)]
+    return tokens
+  }
 }
 
 export class Omnisearch {
@@ -117,11 +124,13 @@ export class Omnisearch {
    * @param paths
    */
   public async addFromPaths(paths: string[]): Promise<void> {
+    logDebug('Adding files', paths)
     let documents = (
       await Promise.all(
         paths.map(async path => await cacheManager.getDocument(path))
       )
     ).filter(d => !!d?.path)
+    logDebug('Sorting documents to first index markdown')
     // Index markdown files first
     documents = sortBy(documents, d => (d.path.endsWith('.md') ? 0 : 1))
 
@@ -133,6 +142,7 @@ export class Omnisearch {
     // Split the documents in smaller chunks to add them to minisearch
     const chunkedDocs = chunkArray(documents, 500)
     for (const docs of chunkedDocs) {
+      logDebug('Indexing into search engine', docs)
       // Update the list of indexed docs
       docs.forEach(doc => this.indexedDocuments.set(doc.path, doc.mtime))
 
@@ -170,6 +180,8 @@ export class Omnisearch {
       return []
     }
 
+    logDebug('Starting search for', query)
+
     let results = this.minisearch.search(query.segmentsToStr(), {
       prefix: term => term.length >= options.prefixLength,
       // length <= 3: no fuzziness
@@ -186,6 +198,8 @@ export class Omnisearch {
         headings3: settings.weightH3,
       },
     })
+
+    logDebug('Found', results.length, 'results')
 
     // Filter query results to only keep files that match query.extensions (if any)
     if (query.extensions.length) {
@@ -242,7 +256,10 @@ export class Omnisearch {
       }
     }
 
-    results = results.slice(0, 50)
+    logDebug('Sorting and limiting results')
+
+    // Sort results and keep the 50 best
+    results = results.sort((a, b) => b.score - a.score).slice(0, 50)
 
     const documents = await Promise.all(
       results.map(async result => await cacheManager.getDocument(result.id))
@@ -251,6 +268,7 @@ export class Omnisearch {
     // If the search query contains quotes, filter out results that don't have the exact match
     const exactTerms = query.getExactTerms()
     if (exactTerms.length) {
+      logDebug('Filtering with quoted terms')
       results = results.filter(r => {
         const document = documents.find(d => d.path === r.id)
         const title = document?.path.toLowerCase() ?? ''
@@ -264,6 +282,7 @@ export class Omnisearch {
     // If the search query contains exclude terms, filter out results that have them
     const exclusions = query.exclusions
     if (exclusions.length) {
+      logDebug('Filtering with exclusions')
       results = results.filter(r => {
         const content = stripMarkdownCharacters(
           documents.find(d => d.path === r.id)?.content ?? ''
@@ -271,6 +290,8 @@ export class Omnisearch {
         return exclusions.every(q => !content.includes(q.value))
       })
     }
+
+    logDebug('Deduping')
     // FIXME:
     // Dedupe results - clutch for https://github.com/scambier/obsidian-omnisearch/issues/129
     results = results.filter(
@@ -284,11 +305,16 @@ export class Omnisearch {
   }
 
   public getMatches(text: string, reg: RegExp, query: Query): SearchMatch[] {
+    const startTime = new Date().getTime()
     let match: RegExpExecArray | null = null
     const matches: SearchMatch[] = []
     let count = 0
     while ((match = reg.exec(text)) !== null) {
-      if (++count >= 100) break // Avoid infinite loops, stop looking after 100 matches
+      // Avoid infinite loops, stop looking after 100 matches or if we're taking too much time
+      if (++count >= 100 || new Date().getTime() - startTime > 50) {
+        warnDebug('Stopped getMatches at', count, 'results')
+        break
+      }
       const m = match[0]
       if (m) matches.push({ match: m, offset: match.index })
     }
@@ -331,17 +357,13 @@ export class Omnisearch {
       })
     }
 
-    // Extract tags from the query
-    const tags = query.segments
-      .filter(s => s.value.startsWith('#'))
-      .map(s => s.value)
-
     const documents = await Promise.all(
       results.map(async result => await cacheManager.getDocument(result.id))
     )
 
     // Map the raw results to get usable suggestions
     const resultNotes = results.map(result => {
+      logDebug('Locating matches for', result.id)
       let note = documents.find(d => d.path === result.id)
       if (!note) {
         // throw new Error(`Omnisearch - Note "${result.id}" not indexed`)
@@ -357,6 +379,12 @@ export class Omnisearch {
       query.segments.forEach(s => {
         s.value = s.value.replace(/^#/, '')
       })
+
+      // Extract tags from the query
+      const tags = query.segments
+        .filter(s => s.value.startsWith('#'))
+        .map(s => s.value)
+
       // Clean search matches that match quoted expressions,
       // and inject those expressions instead
       const foundWords = [
@@ -370,13 +398,15 @@ export class Omnisearch {
         // Tags, starting with #
         ...tags,
       ].filter(w => w.length > 1 || /\p{Emoji}/u.test(w))
+      logDebug('Matching tokens:', foundWords)
 
-      // console.log(foundWords)
+      logDebug('Getting matches locations...')
       const matches = this.getMatches(
         note.content,
         stringsToRegex(foundWords),
         query
       )
+      logDebug('Matches:', matches)
       const resultNote: ResultNote = {
         score: result.score,
         foundWords,

@@ -15,6 +15,7 @@
     getCtrlKeyLabel,
     getExtension,
     isFilePDF,
+    logDebug,
     loopIndex,
   } from 'src/tools/utils'
   import {
@@ -27,7 +28,6 @@
   import * as NotesIndex from '../notes-index'
   import { cacheManager } from '../cache-manager'
   import { searchEngine } from 'src/search/omnisearch'
-  import CancelablePromise, { cancelable } from 'cancelable-promise'
 
   export let modal: OmnisearchVaultModal
   export let previousQuery: string | undefined
@@ -40,28 +40,13 @@
   let searching = true
   let refInput: InputSearch | undefined
 
-  let pWaitingResults: CancelablePromise | null = null
-
   $: selectedNote = resultNotes[selectedIndex]
   $: searchQuery = searchQuery ?? previousQuery
   $: if (searchQuery) {
-    if (pWaitingResults) {
-      pWaitingResults.cancel()
-      pWaitingResults = null
-    }
     searching = true
-    pWaitingResults = cancelable(
-      new Promise((resolve, reject) => {
-        updateResults()
-          .then(() => {
-            searching = false
-            resolve(null)
-          })
-          .catch(e => {
-            reject(e)
-          })
-      })
-    )
+    updateResults().then(() => {
+      searching = false
+    })
   } else {
     searching = false
     resultNotes = []
@@ -130,9 +115,7 @@
 
   async function updateResults() {
     query = new Query(searchQuery)
-    resultNotes = (await searchEngine.getSuggestions(query)).sort(
-      (a, b) => b.score - a.score
-    )
+    resultNotes = await searchEngine.getSuggestions(query)
     selectedIndex = 0
     await scrollIntoView()
   }
