@@ -15,7 +15,6 @@
     getCtrlKeyLabel,
     getExtension,
     isFilePDF,
-    logDebug,
     loopIndex,
   } from 'src/tools/utils'
   import {

@@ -26,6 +26,7 @@ specifiers:
   prettier: ^2.8.1
   prettier-plugin-svelte: ^2.8.1
   pure-md5: ^0.1.14
+  search-query-parser: ^1.6.0
   svelte: ^3.54.0
   svelte-check: ^2.10.2
   svelte-jester: ^2.3.2
@@ -40,6 +41,7 @@ dependencies:
   lodash-es: 4.17.21
   minisearch: 6.0.0-beta.1
   pure-md5: 0.1.14
+  search-query-parser: 1.6.0
 
 devDependencies:
   '@babel/preset-env': 7.20.2
@@ -4476,6 +4478,10 @@ packages:
     dependencies:
       xmlchars: 2.2.0
     dev: true
+
+  /search-query-parser/1.6.0:
+    resolution: {integrity: sha512-bhf+phLlKF38nuniwLcVHWPArHGdzenlPhPi955CR3vm1QQifXIuPHwAffhjapojdVVzmv4hgIJ6NOX1d/w+Uw==}
+    dev: false
 
   /semver/6.3.0:
     resolution: {integrity: sha512-b39TBaTSfV6yBrapU89p5fKekE2m/NwnDocOVruQFS1/veMgdzuPcnOM34M6CwxW8jH/lxEa5rBoDeUwu5HHTw==}

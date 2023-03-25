@@ -72,8 +72,8 @@ export class Omnisearch {
   }
   private minisearch: MiniSearch
   private indexedDocuments: Map<string, number> = new Map()
-  private previousResults: SearchResult[] = []
-  private previousQuery: Query | null = null
+  // private previousResults: SearchResult[] = []
+  // private previousQuery: Query | null = null
 
   constructor() {
     this.minisearch = new MiniSearch(Omnisearch.options)
@@ -175,8 +175,8 @@ export class Omnisearch {
     options: { prefixLength: number; singleFilePath?: string }
   ): Promise<SearchResult[]> {
     if (query.isEmpty()) {
-      this.previousResults = []
-      this.previousQuery = null
+      // this.previousResults = []
+      // this.previousQuery = null
       return []
     }
 
@@ -243,9 +243,8 @@ export class Omnisearch {
     }
 
     // Extract tags from the query
-    const tags = query.segments
-      .filter(s => s.value.startsWith('#'))
-      .map(s => s.value)
+    const tags = query.query.text
+      .filter(s => s.startsWith('#'))
 
     // Put the results with tags on top
     for (const tag of tags) {
@@ -280,14 +279,14 @@ export class Omnisearch {
     }
 
     // If the search query contains exclude terms, filter out results that have them
-    const exclusions = query.exclusions
+    const exclusions = query.query.exclude.text
     if (exclusions.length) {
       logDebug('Filtering with exclusions')
       results = results.filter(r => {
         const content = stripMarkdownCharacters(
           documents.find(d => d.path === r.id)?.content ?? ''
         ).toLowerCase()
-        return exclusions.every(q => !content.includes(q.value))
+        return exclusions.every(q => !content.includes(q))
       })
     }
 
@@ -298,8 +297,8 @@ export class Omnisearch {
       (result, index, arr) => arr.findIndex(t => t.id === result.id) === index
     )
 
-    this.previousQuery = query
-    this.previousResults = results
+    // this.previousQuery = query
+    // this.previousResults = results
 
     return results
   }
@@ -375,16 +374,6 @@ export class Omnisearch {
         } as IndexedDocument
       }
 
-      // Remove '#' from tags, for highlighting
-      query.segments.forEach(s => {
-        s.value = s.value.replace(/^#/, '')
-      })
-
-      // Extract tags from the query
-      const tags = query.segments
-        .filter(s => s.value.startsWith('#'))
-        .map(s => s.value)
-
       // Clean search matches that match quoted expressions,
       // and inject those expressions instead
       const foundWords = [
@@ -393,10 +382,10 @@ export class Omnisearch {
         ...Object.keys(result.match),
 
         // Quoted expressions
-        ...query.segments.filter(s => s.exact).map(s => s.value),
+        ...query.getExactTerms(),
 
         // Tags, starting with #
-        ...tags,
+        ...query.getTags(),
       ].filter(w => w.length > 1 || /\p{Emoji}/u.test(w))
       logDebug('Matching tokens:', foundWords)
 

@@ -44,7 +44,8 @@
     "dexie": "^3.2.2",
     "lodash-es": "4.17.21",
     "minisearch": "6.0.0-beta.1",
-    "pure-md5": "^0.1.14"
+    "pure-md5": "^0.1.14",
+    "search-query-parser": "^1.6.0"
   },
   "pnpm": {
     "overrides": {
