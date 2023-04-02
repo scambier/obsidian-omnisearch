@@ -9,7 +9,7 @@ describe('The Query class', () => {
     const query = new Query(stringQuery)
 
     // Assert
-    const segments = query.segments.map(s => s.value)
+    const segments = query.query.text
     expect(segments).toHaveLength(5)
     expect(segments).toContain('foo')
     expect(segments).toContain('bar')
@@ -17,27 +17,10 @@ describe('The Query class', () => {
     expect(segments).toContain('dolor')
     expect(segments).toContain('sit amet')
 
-    const exclusions = query.exclusions.map(s => s.value)
+    const exclusions = query.query.exclude.text
     expect(exclusions).toHaveLength(2)
     expect(exclusions).toContain('baz')
     expect(exclusions).toContain('quoted exclusion')
-  })
-
-  it('should mark quoted segments & exclusions as "exact"', () => {
-    // Act
-    const query = new Query(stringQuery)
-
-    // Assert
-    expect(query.segments.filter(s => s.exact)).toHaveLength(2)
-    expect(
-      query.segments.find(o => o.value === 'lorem ipsum')!.exact
-    ).toBeTruthy()
-    expect(query.segments.find(o => o.value === 'sit amet')!.exact).toBeTruthy()
-
-    expect(query.exclusions.filter(s => s.exact)).toHaveLength(1)
-    expect(
-      query.exclusions.find(o => o.value === 'quoted exclusion')!.exact
-    ).toBeTruthy()
   })
 
   it('should not exclude words when there is no space before', () => {
@@ -45,7 +28,7 @@ describe('The Query class', () => {
     const query = new Query('foo bar-baz')
 
     // Assert
-    expect(query.exclusions).toHaveLength(0)
+    expect(query.query.exclude.text).toHaveLength(0)
   })
 
   describe('.getExactTerms()', () => {

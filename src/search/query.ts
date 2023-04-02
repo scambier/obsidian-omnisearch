@@ -1,83 +1,77 @@
 import { settings } from '../settings'
-import { removeDiacritics, stripSurroundingQuotes } from '../tools/utils'
-import { parseQuery } from '../vendor/parse-query'
-import { regexExtensions } from '../globals'
+import { removeDiacritics } from '../tools/utils'
+import { parse } from 'search-query-parser'
 
-type QueryToken = {
-  /**
-   * The query token string value
-   */
-  value: string
+const keywords = ['ext', 'path'] as const
 
-  /**
-   * Was this token encased in quotes?
-   */
-  exact: boolean
-}
+type Keywords = {
+  [K in typeof keywords[number]]?: string[]
+} & { text: string[] }
 
-/**
- * This class is used to parse a query string into a structured object
- */
 export class Query {
-  public segments: QueryToken[] = []
-  public exclusions: QueryToken[] = []
-  public extensions: string[] = []
+  query: Keywords & { exclude: Keywords }
+  /**
+   * @deprecated
+   */
+  extensions: string[] = []
 
   constructor(text = '') {
-    // Extract & remove extensions from the query
-    this.extensions = this.extractExtensions(text)
-    text = this.removeExtensions(text)
+    if (settings.ignoreDiacritics) {
+      text = removeDiacritics(text)
+    }
+    const parsed = parse(text.toLowerCase(), {
+      tokenize: true,
+      keywords: keywords as unknown as string[],
+    }) as unknown as typeof this.query
 
-    if (settings.ignoreDiacritics) text = removeDiacritics(text)
-    const tokens = parseQuery(text.toLowerCase(), { tokenize: true })
-    this.exclusions = tokens.exclude.text
-      .map(this.formatToken)
-      .filter(o => !!o.value)
-    this.segments = tokens.text.reduce<QueryToken[]>((prev, curr) => {
-      const formatted = this.formatToken(curr)
-      if (formatted.value) {
-        prev.push(formatted)
+    // Default values
+    parsed.text = parsed.text ?? []
+    parsed.exclude = parsed.exclude ?? {}
+    parsed.exclude.text = parsed.exclude.text ?? []
+    if (!Array.isArray(parsed.exclude.text)) {
+      parsed.exclude.text = [parsed.exclude.text]
+    }
+
+    // Make sure that all fields are string[]
+    for (const k of keywords) {
+      const v = parsed[k]
+      if (v) {
+        parsed[k] = Array.isArray(v) ? v : [v]
       }
-      return prev
-    }, [])
+      const e = parsed.exclude[k]
+      if (e) {
+        parsed.exclude[k] = Array.isArray(e) ? e : [e]
+      }
+    }
+    this.query = parsed
+    this.extensions = this.query.ext ?? []
   }
 
   public isEmpty(): boolean {
-    return this.segments.length === 0
+    for (const k of keywords) {
+      if (this.query[k]?.length) {
+        return false
+      }
+      if (this.query.text.length) {
+        return false
+      }
+    }
+    return true
   }
 
   public segmentsToStr(): string {
-    return this.segments.map(({ value }) => value).join(' ')
+    return this.query.text.join(' ')
+  }
+  
+  public getTags(): string[] {
+    return this.query.text.filter(o => o.startsWith('#'))
   }
 
-  /**
-   * Returns the terms that are encased in quotes
-   * @returns
-   */
+  public getTagsWithoutHashtag(): string[] {
+    return this.getTags().map(o => o.replace(/^#/, ''))
+  }
+
   public getExactTerms(): string[] {
-    return this.segments.filter(({ exact }) => exact).map(({ value }) => value)
-  }
-
-  private formatToken(str: string): QueryToken {
-    const stripped = stripSurroundingQuotes(str)
-    return {
-      value: stripped,
-      exact: stripped !== str,
-    }
-  }
-
-  /**
-   * Extracts an array of extensions like ".png" from a string
-   */
-  private extractExtensions(str: string): string[] {
-    const extensions = (str.match(regexExtensions) ?? []).map(o => o.trim())
-    if (extensions) {
-      return extensions.map(ext => ext.toLowerCase())
-    }
-    return []
-  }
-
-  private removeExtensions(str: string): string {
-    return str.replace(regexExtensions, '')
+    return this.query.text.filter(o => o.split(' ').length > 1)
   }
 }
