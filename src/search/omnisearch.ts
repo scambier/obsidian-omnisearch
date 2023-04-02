@@ -259,7 +259,7 @@ export class Omnisearch {
     }
 
     // Extract tags from the query
-    const tags = query.query.text.filter(s => s.startsWith('#'))
+    const tags = query.getTags()
 
     // Put the results with tags on top
     for (const tag of tags) {
