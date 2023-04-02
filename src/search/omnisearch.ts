@@ -210,6 +210,15 @@ export class Omnisearch {
       })
     }
 
+    // Filter query results that match the path
+    if (query.query.path) {
+      results = results.filter(r =>
+        query.query.path?.some(p =>
+          (r.id as string).toLowerCase().includes(p.toLowerCase())
+        )
+      )
+    }
+
     // If the query does not return any result,
     // retry but with a shorter prefix limit
     if (!results.length) {
@@ -243,8 +252,7 @@ export class Omnisearch {
     }
 
     // Extract tags from the query
-    const tags = query.query.text
-      .filter(s => s.startsWith('#'))
+    const tags = query.query.text.filter(s => s.startsWith('#'))
 
     // Put the results with tags on top
     for (const tag of tags) {
