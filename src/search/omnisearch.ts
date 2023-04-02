@@ -218,6 +218,13 @@ export class Omnisearch {
         )
       )
     }
+    if (query.query.exclude.path) {
+      results = results.filter(r =>
+        !query.query.exclude.path?.some(p =>
+          (r.id as string).toLowerCase().includes(p.toLowerCase())
+        )
+      )
+    }
 
     // If the query does not return any result,
     // retry but with a shorter prefix limit
