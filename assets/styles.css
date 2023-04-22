@@ -23,6 +23,10 @@
   gap: 5px;
 }
 
+.omnisearch-result__title > span {
+  display: flex;
+}
+
 .omnisearch-result__folder-path {
   font-size: 0.75rem;
   align-items: center;
