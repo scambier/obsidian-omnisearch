@@ -29,7 +29,7 @@
   import { searchEngine } from 'src/search/omnisearch'
 
   export let modal: OmnisearchVaultModal
-  export let previousQuery: string | undefined
+  let previousQuery: string | undefined
   let selectedIndex = 0
   let historySearchIndex = 0
   let searchQuery: string | undefined
