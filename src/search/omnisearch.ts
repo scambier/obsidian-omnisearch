@@ -226,8 +226,6 @@ export class Omnisearch {
       )
     }
 
-    // If the query does not return any result,
-    // retry but with a shorter prefix limit
     if (!results.length) {
       return []
     }
