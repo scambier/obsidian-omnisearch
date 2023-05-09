@@ -33,7 +33,7 @@ export function highlighterGroups(...args: any[]) {
     args[2] !== null &&
     args[2] !== undefined
   )
-    return `${args[1]}<span class="${highlightClass}">${args[2]}</span>`
+    return `<span>${args[1]}</span><span class="${highlightClass} b">${args[2]}</span>`
   return '&lt;no content&gt;'
 }
 
