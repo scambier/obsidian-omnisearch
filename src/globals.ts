@@ -16,6 +16,7 @@ export const excerptAfter = 300
 export const highlightClass = `suggestion-highlight omnisearch-highlight ${
   settings.highlight ? 'omnisearch-default-highlight' : ''
 }`
+export const K_DISABLE_OMNISEARCH = 'omnisearch-disabled'
 
 export const eventBus = new EventBus()
 

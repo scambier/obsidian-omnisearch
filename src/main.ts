@@ -4,6 +4,7 @@ import {
   OmnisearchVaultModal,
 } from './components/modals'
 import {
+  isPluginDisabled,
   loadSettings,
   saveSettings,
   settings,
@@ -29,6 +30,13 @@ export default class OmnisearchPlugin extends Plugin {
 
   async onload(): Promise<void> {
     await loadSettings(this)
+    this.addSettingTab(new SettingsTab(this))
+
+    if (isPluginDisabled()) {
+      console.log('Omnisearch - Plugin disabled')
+      return
+    }
+
     await cleanOldCacheFiles()
     await OmnisearchCache.clearOldDatabases()
 
@@ -38,7 +46,6 @@ export default class OmnisearchPlugin extends Plugin {
       this.addRibbonButton()
     }
 
-    this.addSettingTab(new SettingsTab(this))
     eventBus.disable('vault')
     eventBus.disable('infile')
     eventBus.on('global', EventNames.ToggleExcerpts, () => {
@@ -252,3 +259,4 @@ function registerAPI(plugin: OmnisearchPlugin): void {
   // Deprecated
   ;(app as any).plugins.plugins.omnisearch.api = api
 }
+
