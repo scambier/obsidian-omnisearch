@@ -27,6 +27,7 @@
   import * as NotesIndex from '../notes-index'
   import { cacheManager } from '../cache-manager'
   import { searchEngine } from 'src/search/omnisearch'
+  import { cancelable, CancelablePromise } from 'cancelable-promise'
 
   export let modal: OmnisearchVaultModal
   let previousQuery: string | undefined
@@ -112,9 +113,20 @@
     refInput?.setInputValue(searchQuery)
   }
 
+  let cancelableQuery: CancelablePromise<ResultNote[]> | null = null
   async function updateResults() {
+    // If search is already in progress, cancel it and start a new one
+    if (cancelableQuery) {
+      cancelableQuery.cancel()
+      cancelableQuery = null
+    }
     query = new Query(searchQuery)
-    resultNotes = await searchEngine.getSuggestions(query)
+    cancelableQuery = cancelable(
+      new Promise(resolve => {
+        resolve(searchEngine.getSuggestions(query))
+      })
+    )
+    resultNotes = await cancelableQuery
     selectedIndex = 0
     await scrollIntoView()
   }
