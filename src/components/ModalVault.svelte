@@ -30,7 +30,7 @@
   import { cancelable, CancelablePromise } from 'cancelable-promise'
 
   export let modal: OmnisearchVaultModal
-  let previousQuery: string | undefined
+  export let previousQuery: string | undefined
   let selectedIndex = 0
   let historySearchIndex = 0
   let searchQuery: string | undefined
