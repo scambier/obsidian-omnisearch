@@ -41,6 +41,17 @@
 
   $: selectedNote = resultNotes[selectedIndex]
   $: searchQuery = searchQuery ?? previousQuery
+  $: if (settings.openInNewPane) {
+    openInNewPaneKey = '↵'
+    openInCurrentPaneKey = getCtrlKeyLabel() + ' ↵'
+    createInNewPaneKey = 'shift ↵'
+    createInCurrentPaneKey = getCtrlKeyLabel() + ' shift ↵'
+  } else {
+    openInNewPaneKey = getCtrlKeyLabel() + ' ↵'
+    openInCurrentPaneKey = '↵'
+    createInNewPaneKey = getCtrlKeyLabel() + ' shift ↵'
+    createInCurrentPaneKey = 'shift ↵'
+  }
   $: if (searchQuery) {
     searching = true
     updateResults().then(() => {
@@ -297,7 +308,7 @@
     <span>to cycle history</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">↵</span><span>to open</span>
+    <span class="prompt-instruction-command">{openInCurrentPaneKey}</span><span>to open</span>
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">tab</span>
@@ -305,15 +316,15 @@
   </div>
 
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">{getCtrlKeyLabel()} ↵</span>
+    <span class="prompt-instruction-command">{openInNewPaneKey}</span>
     <span>to open in a new pane</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">shift ↵</span>
+    <span class="prompt-instruction-command">{createInCurrentPaneKey}</span>
     <span>to create</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">ctrl shift ↵</span>
+    <span class="prompt-instruction-command">{createInNewPaneKey}</span>
     <span>to create in a new pane</span>
   </div>
 

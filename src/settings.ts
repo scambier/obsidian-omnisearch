@@ -47,6 +47,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   simpleSearch: boolean
   highlight: boolean
   splitCamelCase: boolean
+  openInNewPane: boolean
   verboseLogging: boolean
 }
 
@@ -239,6 +240,18 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
+    new Setting(containerEl)
+      .setName('Open in new pane')
+      .setDesc(
+        'Open and create files in a new pane instead of the current pane.'
+      )
+      .addToggle(toggle =>
+        toggle.setValue(settings.openInNewPane).onChange(async v => {
+          settings.openInNewPane = v
+          await saveSettings(this.plugin)
+        })
+      )
+
     //#endregion Behavior
 
     //#region User Interface
@@ -417,6 +430,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   PDFIndexing: false,
   imagesIndexing: false,
   splitCamelCase: false,
+  openInNewPane: false,
 
   ribbonIcon: true,
   showExcerpt: true,
