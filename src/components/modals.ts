@@ -1,4 +1,5 @@
 import { App, Modal, TFile } from 'obsidian'
+import type { Modifier } from 'obsidian'
 import ModalVault from './ModalVault.svelte'
 import ModalInFile from './ModalInFile.svelte'
 import { eventBus, EventNames, isInputComposition } from '../globals'
@@ -62,10 +63,10 @@ abstract class OmnisearchModal extends Modal {
 
     // #endregion Up/Down navigation
 
-    let openInCurrentPaneKey,
-      openInNewPaneKey,
-      createInCurrentPaneKey,
-      createInNewPaneKey
+    let openInCurrentPaneKey: Modifier[]
+    let openInNewPaneKey: Modifier[]
+    let createInCurrentPaneKey: Modifier[]
+    let createInNewPaneKey: Modifier[]
     if (settings.openInNewPane) {
       openInCurrentPaneKey = ['Mod']
       openInNewPaneKey = []

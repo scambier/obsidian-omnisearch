@@ -38,6 +38,10 @@
   let indexingStepDesc = ''
   let searching = true
   let refInput: InputSearch | undefined
+  let openInNewPaneKey: string
+  let openInCurrentPaneKey: string
+  let createInNewPaneKey: string
+  let createInCurrentPaneKey: string
 
   $: selectedNote = resultNotes[selectedIndex]
   $: searchQuery = searchQuery ?? previousQuery
