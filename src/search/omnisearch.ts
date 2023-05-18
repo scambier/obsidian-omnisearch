@@ -201,13 +201,16 @@ export class Omnisearch {
 
     logDebug('Found', results.length, 'results')
 
-    // Filter query results to only keep files that match query.extensions (if any)
-    if (query.extensions.length) {
+    // Filter query results to only keep files that match query.query.ext (if any)
+    if (query.query.ext?.length) {
       results = results.filter(r => {
         // ".can" should match ".canvas"
         const ext = '.' + r.id.split('.').pop()
-        return query.extensions.some(e => ext.startsWith(e))
+        return query.query.ext?.some(e =>
+          ext.startsWith(e.startsWith('.') ? e : '.' + e)
+        )
       })
+      console.log(query.query.ext, results.length)
     }
 
     // Filter query results that match the path
@@ -219,10 +222,11 @@ export class Omnisearch {
       )
     }
     if (query.query.exclude.path) {
-      results = results.filter(r =>
-        !query.query.exclude.path?.some(p =>
-          (r.id as string).toLowerCase().includes(p.toLowerCase())
-        )
+      results = results.filter(
+        r =>
+          !query.query.exclude.path?.some(p =>
+            (r.id as string).toLowerCase().includes(p.toLowerCase())
+          )
       )
     }
 
