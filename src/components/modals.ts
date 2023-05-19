@@ -70,13 +70,13 @@ abstract class OmnisearchModal extends Modal {
     if (settings.openInNewPane) {
       openInCurrentPaneKey = ['Mod']
       openInNewPaneKey = []
-      createInCurrentPaneKey = ['Ctrl', 'Shift']
+      createInCurrentPaneKey = ['Mod', 'Shift']
       createInNewPaneKey = ['Shift']
     } else {
       openInCurrentPaneKey = []
       openInNewPaneKey = ['Mod']
       createInCurrentPaneKey = ['Shift']
-      createInNewPaneKey = ['Ctrl', 'Shift']
+      createInNewPaneKey = ['Mod', 'Shift']
     }
 
     // Open in new pane
