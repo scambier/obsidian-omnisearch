@@ -50,11 +50,11 @@
     openInNewPaneKey = '↵'
     openInCurrentPaneKey = getCtrlKeyLabel() + ' ↵'
     createInNewPaneKey = 'shift ↵'
-    createInCurrentPaneKey = 'ctrl shift ↵'
+    createInCurrentPaneKey = getCtrlKeyLabel() + ' shift ↵'
   } else {
     openInNewPaneKey = getCtrlKeyLabel() + ' ↵'
     openInCurrentPaneKey = '↵'
-    createInNewPaneKey = 'ctrl shift ↵'
+    createInNewPaneKey = getCtrlKeyLabel() + ' shift ↵'
     createInCurrentPaneKey = 'shift ↵'
   }
   $: if (searchQuery) {
