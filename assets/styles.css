@@ -18,6 +18,7 @@
 }
 
 .omnisearch-result__title {
+  white-space: pre-wrap;
   align-items: center;
   display: flex;
   gap: 5px;

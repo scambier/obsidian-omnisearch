@@ -5,23 +5,25 @@
   import { cacheManager } from '../cache-manager'
 
   export let initialValue = ''
-  let initialSet = false
   export let placeholder = ''
+  let initialSet = false
   let value = ''
   let elInput: HTMLInputElement
   const dispatch = createEventDispatcher()
 
-  export function setInputValue(v:string): void {
+  export function setInputValue(v: string): void {
     value = v
   }
 
-  $: {
-    if (initialValue && !initialSet && !value) {
+  function watchInitialValue(v: string): void {
+    if (v && !initialSet && !value) {
       initialSet = true
-      value = initialValue
+      value = v
       selectInput()
     }
   }
+
+  $: watchInitialValue(initialValue)
 
   function selectInput(_?: HTMLElement): void {
     tick()
@@ -39,14 +41,14 @@
     // the next time we open the modal, the search field will be empty
     cacheManager.addToSearchHistory('')
     dispatch('input', value)
-  }, 250)
+  }, 300)
 </script>
 
 <div class="omnisearch-input-container">
   <div class="omnisearch-input-field">
     <input
       bind:this="{elInput}"
-      bind:value
+      bind:value="{value}"
       class="prompt-input"
       use:selectInput
       on:compositionend="{_ => toggleInputComposition(false)}"

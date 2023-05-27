@@ -27,6 +27,7 @@
   import * as NotesIndex from '../notes-index'
   import { cacheManager } from '../cache-manager'
   import { searchEngine } from 'src/search/omnisearch'
+  import { cancelable, CancelablePromise } from 'cancelable-promise'
 
   export let modal: OmnisearchVaultModal
   export let previousQuery: string | undefined
@@ -38,9 +39,24 @@
   let indexingStepDesc = ''
   let searching = true
   let refInput: InputSearch | undefined
+  let openInNewPaneKey: string
+  let openInCurrentPaneKey: string
+  let createInNewPaneKey: string
+  let createInCurrentPaneKey: string
 
   $: selectedNote = resultNotes[selectedIndex]
   $: searchQuery = searchQuery ?? previousQuery
+  $: if (settings.openInNewPane) {
+    openInNewPaneKey = '↵'
+    openInCurrentPaneKey = getCtrlKeyLabel() + ' ↵'
+    createInNewPaneKey = 'shift ↵'
+    createInCurrentPaneKey = getCtrlKeyLabel() + ' shift ↵'
+  } else {
+    openInNewPaneKey = getCtrlKeyLabel() + ' ↵'
+    openInCurrentPaneKey = '↵'
+    createInNewPaneKey = getCtrlKeyLabel() + ' shift ↵'
+    createInCurrentPaneKey = 'shift ↵'
+  }
   $: if (searchQuery) {
     searching = true
     updateResults().then(() => {
@@ -112,9 +128,20 @@
     refInput?.setInputValue(searchQuery)
   }
 
+  let cancelableQuery: CancelablePromise<ResultNote[]> | null = null
   async function updateResults() {
+    // If search is already in progress, cancel it and start a new one
+    if (cancelableQuery) {
+      cancelableQuery.cancel()
+      cancelableQuery = null
+    }
     query = new Query(searchQuery)
-    resultNotes = await searchEngine.getSuggestions(query)
+    cancelableQuery = cancelable(
+      new Promise(resolve => {
+        resolve(searchEngine.getSuggestions(query))
+      })
+    )
+    resultNotes = await cancelableQuery
     selectedIndex = 0
     await scrollIntoView()
   }
@@ -297,7 +324,7 @@
     <span>to cycle history</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">↵</span><span>to open</span>
+    <span class="prompt-instruction-command">{openInCurrentPaneKey}</span><span>to open</span>
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">tab</span>
@@ -305,15 +332,15 @@
   </div>
 
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">{getCtrlKeyLabel()} ↵</span>
+    <span class="prompt-instruction-command">{openInNewPaneKey}</span>
     <span>to open in a new pane</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">shift ↵</span>
+    <span class="prompt-instruction-command">{createInCurrentPaneKey}</span>
     <span>to create</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">ctrl shift ↵</span>
+    <span class="prompt-instruction-command">{createInNewPaneKey}</span>
     <span>to create in a new pane</span>
   </div>
 

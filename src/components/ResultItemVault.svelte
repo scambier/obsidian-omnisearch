@@ -71,8 +71,9 @@
       <span class="omnisearch-result__title">
         <span bind:this="{elFilePathIcon}"></span>
         <span>{@html title.replace(reg, highlighterGroups)}</span>
-        <span class="omnisearch-result__extension"
-          >.{getExtension(note.path)}</span>
+        <span class="omnisearch-result__extension">
+          .{getExtension(note.path)}
+        </span>
 
         <!-- Counter -->
         {#if note.matches.length > 0}

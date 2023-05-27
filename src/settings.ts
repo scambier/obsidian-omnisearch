@@ -7,7 +7,7 @@ import {
 } from 'obsidian'
 import { writable } from 'svelte/store'
 import { database } from './database'
-import { getTextExtractor, isCacheEnabled } from './globals'
+import { K_DISABLE_OMNISEARCH, getTextExtractor, isCacheEnabled } from './globals'
 import type OmnisearchPlugin from './main'
 
 interface WeightingSettings {
@@ -47,6 +47,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   simpleSearch: boolean
   highlight: boolean
   splitCamelCase: boolean
+  openInNewPane: boolean
   verboseLogging: boolean
 }
 
@@ -54,6 +55,8 @@ export interface OmnisearchSettings extends WeightingSettings {
  * A store to reactively toggle the `showExcerpt` setting on the fly
  */
 export const showExcerpt = writable(false)
+
+const needsARestart = `<strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
 
 export class SettingsTab extends PluginSettingTab {
   plugin: OmnisearchPlugin
@@ -71,6 +74,11 @@ export class SettingsTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this
     containerEl.empty()
+
+    if (app.loadLocalStorage(K_DISABLE_OMNISEARCH) == '1') {
+      const span = containerEl.createEl('span')
+      span.innerHTML = `<strong style="color: var(--text-accent)">⚠️ OMNISEARCH IS DISABLED ⚠️</strong>`
+    }
 
     // Settings main title
     containerEl.createEl('h2', { text: 'Omnisearch' })
@@ -138,7 +146,7 @@ export class SettingsTab extends PluginSettingTab {
       Add extensions separated by a space, without the dot. Example: "<code>txt org</code>".<br />
       ⚠️ <span style="color: var(--text-accent)">Using extensions of non-plaintext files (like .docx or .pptx) WILL cause crashes,
       because Omnisearch will try to index their content.</span><br />
-      <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
+      ${needsARestart}`
     })
     new Setting(containerEl)
       .setName('Additional files to index')
@@ -192,7 +200,7 @@ export class SettingsTab extends PluginSettingTab {
       span.innerHTML = `Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky".<br/>
         ⚠️ <span style="color: var(--text-accent)">You probably should <strong>NOT</strong> disable this.</span><br>
         ⚠️ <span style="color: var(--text-accent)">Changing this setting will clear the cache.</span><br>
-        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>
+        ${needsARestart}
         `
     })
     new Setting(containerEl)
@@ -211,7 +219,7 @@ export class SettingsTab extends PluginSettingTab {
     camelCaseDesc.createSpan({}, span => {
       span.innerHTML = `Enable this if you want to be able to search for CamelCaseWords as separate words.<br/>        
         ⚠️ <span style="color: var(--text-accent)">Changing this setting will clear the cache.</span><br>
-        <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>
+        ${needsARestart}
         `
     })
     new Setting(containerEl)
@@ -235,6 +243,18 @@ export class SettingsTab extends PluginSettingTab {
       .addToggle(toggle =>
         toggle.setValue(settings.simpleSearch).onChange(async v => {
           settings.simpleSearch = v
+          await saveSettings(this.plugin)
+        })
+      )
+
+    new Setting(containerEl)
+      .setName('Open in new pane')
+      .setDesc(
+        'Open and create files in a new pane instead of the current pane.'
+      )
+      .addToggle(toggle =>
+        toggle.setValue(settings.openInNewPane).onChange(async v => {
+          settings.openInNewPane = v
           await saveSettings(this.plugin)
         })
       )
@@ -364,7 +384,9 @@ export class SettingsTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('Enable verbose logging')
-      .setDesc('Adds a LOT of logs for debugging purposes. Don\'t forget to disable it.')
+      .setDesc(
+        "Adds a LOT of logs for debugging purposes. Don't forget to disable it."
+      )
       .addToggle(toggle =>
         toggle.setValue(settings.verboseLogging).onChange(async v => {
           settings.verboseLogging = v
@@ -375,14 +397,33 @@ export class SettingsTab extends PluginSettingTab {
     //#endregion Debugginh
 
     //#region Danger Zone
-    if (isCacheEnabled()) {
-      new Setting(containerEl).setName('Danger Zone').setHeading()
+    new Setting(containerEl).setName('Danger Zone').setHeading()
 
+    const disableDesc = new DocumentFragment()
+    disableDesc.createSpan({}, span => {
+      span.innerHTML = `Disable Omnisearch on this device only.<br>
+        ${needsARestart}`
+    })
+    new Setting(containerEl)
+      .setName('Disable on this device')
+      .setDesc(disableDesc)
+      .addToggle(toggle =>
+        toggle.setValue(isPluginDisabled()).onChange(async v => {
+          if (v) {
+            app.saveLocalStorage(K_DISABLE_OMNISEARCH, '1')
+          } else {
+            app.saveLocalStorage(K_DISABLE_OMNISEARCH) // No value = unset
+          }
+          new Notice('Omnisearch - Disabled. Please restart Obsidian.')
+        })
+      )
+
+    if (isCacheEnabled()) {
       const resetCacheDesc = new DocumentFragment()
       resetCacheDesc.createSpan({}, span => {
         span.innerHTML = `Erase all Omnisearch cache data.
-      Use this if Omnisearch results are inconsistent, missing, or appear outdated.<br>
-      <strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
+          Use this if Omnisearch results are inconsistent, missing, or appear outdated.<br>
+          ${needsARestart}`
       })
       new Setting(containerEl)
         .setName('Clear cache data')
@@ -417,6 +458,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   PDFIndexing: false,
   imagesIndexing: false,
   splitCamelCase: false,
+  openInNewPane: false,
 
   ribbonIcon: true,
   showExcerpt: true,
@@ -445,4 +487,8 @@ export async function loadSettings(plugin: Plugin): Promise<void> {
 
 export async function saveSettings(plugin: Plugin): Promise<void> {
   await plugin.saveData(settings)
+}
+
+export function isPluginDisabled(): boolean {
+  return app.loadLocalStorage(K_DISABLE_OMNISEARCH) == '1'
 }

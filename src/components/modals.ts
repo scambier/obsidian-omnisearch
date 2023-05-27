@@ -1,7 +1,9 @@
 import { App, Modal, TFile } from 'obsidian'
+import type { Modifier } from 'obsidian'
 import ModalVault from './ModalVault.svelte'
 import ModalInFile from './ModalInFile.svelte'
 import { eventBus, EventNames, isInputComposition } from '../globals'
+import { settings } from '../settings'
 
 abstract class OmnisearchModal extends Modal {
   protected constructor(app: App) {
@@ -61,8 +63,24 @@ abstract class OmnisearchModal extends Modal {
 
     // #endregion Up/Down navigation
 
+    let openInCurrentPaneKey: Modifier[]
+    let openInNewPaneKey: Modifier[]
+    let createInCurrentPaneKey: Modifier[]
+    let createInNewPaneKey: Modifier[]
+    if (settings.openInNewPane) {
+      openInCurrentPaneKey = ['Mod']
+      openInNewPaneKey = []
+      createInCurrentPaneKey = ['Mod', 'Shift']
+      createInNewPaneKey = ['Shift']
+    } else {
+      openInCurrentPaneKey = []
+      openInNewPaneKey = ['Mod']
+      createInCurrentPaneKey = ['Shift']
+      createInNewPaneKey = ['Mod', 'Shift']
+    }
+
     // Open in new pane
-    this.scope.register(['Mod'], 'Enter', e => {
+    this.scope.register(openInNewPaneKey, 'Enter', e => {
       e.preventDefault()
       eventBus.emit('open-in-new-pane')
     })
@@ -74,17 +92,17 @@ abstract class OmnisearchModal extends Modal {
     })
 
     // Create a new note
-    this.scope.register(['Shift'], 'Enter', e => {
+    this.scope.register(createInCurrentPaneKey, 'Enter', e => {
       e.preventDefault()
       eventBus.emit('create-note')
     })
-    this.scope.register(['Ctrl', 'Shift'], 'Enter', e => {
+    this.scope.register(createInNewPaneKey, 'Enter', e => {
       e.preventDefault()
       eventBus.emit('create-note', { newLeaf: true })
     })
 
     // Open in current pane
-    this.scope.register([], 'Enter', e => {
+    this.scope.register(openInCurrentPaneKey, 'Enter', e => {
       if (!isInputComposition()) {
         // Check if the user is still typing
         e.preventDefault()
