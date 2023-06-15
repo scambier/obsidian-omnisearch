@@ -276,7 +276,7 @@ export function isFileIndexable(path: string): boolean {
 
 export function isFileImage(path: string): boolean {
   const ext = getExtension(path)
-  return ext === 'png' || ext === 'jpg' || ext === 'jpeg'
+  return ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'webp'
 }
 
 export function isFilePDF(path: string): boolean {
