@@ -26,14 +26,10 @@ export function highlighter(str: string): string {
   return `<span class="${highlightClass}">${str}</span>`
 }
 
-export function highlighterGroups(...args: any[]) {
-  if (
-    args[1] !== null &&
-    args[1] !== undefined &&
-    args[2] !== null &&
-    args[2] !== undefined
-  )
-    return `<span>${args[1]}</span><span class="${highlightClass}">${args[2]}</span>`
+export function highlighterGroups(substring: string, ...args: any[]) {
+  // args[0] is the single char preceding args[1], which is the word we want to highlight
+  if (!!args[1].trim())
+    return `<span>${args[0]}</span><span class="${highlightClass}">${args[1]}</span>`
   return '&lt;no content&gt;'
 }
 
@@ -91,15 +87,20 @@ export function getAllIndices(text: string, regex: RegExp): SearchMatch[] {
  */
 export function stringsToRegex(strings: string[]): RegExp {
   if (!strings.length) return /^$/g
+
+  // sort strings by decreasing length, so that longer strings are matched first
+  strings.sort((a, b) => b.length - a.length)
+
   const joined =
     '(' +
     // Default word split is not applied if the user uses the cm-chs-patch plugin
     (getChsSegmenter()
       ? ''
       : // Split on start of line, spaces, punctuation, or capital letters (for camelCase)
+      // We also add the hyphen to the list of characters that can split words
       settings.splitCamelCase
-      ? `^|${SPACE_OR_PUNCTUATION.source}|[A-Z]`
-      : `^|${SPACE_OR_PUNCTUATION.source}`) +
+      ? `^|${SPACE_OR_PUNCTUATION.source}|\-|[A-Z]`
+      : `^|${SPACE_OR_PUNCTUATION.source}|\-`) +
     ')' +
     `(${strings.map(s => escapeRegex(s)).join('|')})`
 
@@ -318,11 +319,32 @@ export function chunkArray<T>(arr: T[], len: number): T[][] {
 }
 
 /**
- * Converts a 'fooBarBAZLorem' into ['foo', 'Bar', 'BAZ', 'Lorem]
+ * Converts a 'fooBarBAZLorem' into ['foo', 'Bar', 'BAZ', 'Lorem']
+ * If the string isn't camelCase, returns an empty array
  * @param text
  */
 export function splitCamelCase(text: string): string[] {
-  return text.replace(/([a-z](?=[A-Z]))/g, '$1 ').split(' ')
+  const split = text
+    .replace(/([a-z](?=[A-Z]))/g, '$1 ')
+    .split(' ')
+    .filter(t => t)
+  if (split.length > 1) {
+    return split
+  }
+  return []
+}
+
+/**
+ * Converts a 'foo-bar-baz' into ['foo', 'bar', 'baz']
+ * If the string isn't hyphenated, returns an empty array
+ * @param text
+ */
+export function splitHyphens(text: string): string[] {
+  const split = text.split('-').filter(t => t)
+  if (split.length > 1) {
+    return split
+  }
+  return []
 }
 
 export function logDebug(...args: any[]): void {
