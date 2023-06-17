@@ -12,6 +12,7 @@ import {
   logDebug,
   removeDiacritics,
   splitCamelCase,
+  splitHyphens,
   stringsToRegex,
   stripMarkdownCharacters,
   warnDebug,
@@ -22,17 +23,22 @@ import { cacheManager } from '../cache-manager'
 import { sortBy } from 'lodash-es'
 
 const tokenize = (text: string): string[] => {
-  const tokens = text.split(SPACE_OR_PUNCTUATION)
+  let tokens = text.split(SPACE_OR_PUNCTUATION)
+
+  // When enabled, we only use the chsSegmenter,
+  // and not the other custom tokenizers
   const chsSegmenter = getChsSegmenter()
   if (chsSegmenter) {
-    return tokens.flatMap(word =>
+    tokens = tokens.flatMap(word =>
       chsRegex.test(word) ? chsSegmenter.cut(word) : [word]
     )
   } else {
-    if (settings.splitCamelCase)
-      return [...tokens, ...tokens.flatMap(splitCamelCase)]
-    return tokens
+    // Split camelCase tokens into "camel" and "case
+    tokens = [...tokens, ...tokens.flatMap(splitCamelCase)]
+    // Split hyphenated tokens
+    tokens = [...tokens, ...tokens.flatMap(splitHyphens)]
   }
+  return tokens
 }
 
 export class Omnisearch {

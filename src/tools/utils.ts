@@ -318,11 +318,32 @@ export function chunkArray<T>(arr: T[], len: number): T[][] {
 }
 
 /**
- * Converts a 'fooBarBAZLorem' into ['foo', 'Bar', 'BAZ', 'Lorem]
+ * Converts a 'fooBarBAZLorem' into ['foo', 'Bar', 'BAZ', 'Lorem']
+ * If the string isn't camelCase, returns an empty array
  * @param text
  */
 export function splitCamelCase(text: string): string[] {
-  return text.replace(/([a-z](?=[A-Z]))/g, '$1 ').split(' ')
+  const split = text
+    .replace(/([a-z](?=[A-Z]))/g, '$1 ')
+    .split(' ')
+    .filter(t => t)
+  if (split.length > 1) {
+    return split
+  }
+  return []
+}
+
+/**
+ * Converts a 'foo-bar-baz' into ['foo', 'bar', 'baz']
+ * If the string isn't hyphenated, returns an empty array
+ * @param text
+ */
+export function splitHyphens(text: string): string[] {
+  const split = text.split('-').filter(t => t)
+  if (split.length > 1) {
+    return split
+  }
+  return []
 }
 
 export function logDebug(...args: any[]): void {
