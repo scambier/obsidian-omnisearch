@@ -9,11 +9,10 @@ type Keywords = {
 } & { text: string[] }
 
 export class Query {
-  query: Keywords & { exclude: Keywords }
-  /**
-   * @deprecated
-   */
-  extensions: string[] = []
+  query: Keywords & {
+    exclude: Keywords
+  }
+  #inQuotes: string[]
 
   constructor(text = '') {
     if (settings.ignoreDiacritics) {
@@ -44,7 +43,10 @@ export class Query {
       }
     }
     this.query = parsed
-    this.extensions = this.query.ext ?? []
+
+    // Get strings in quotes, and remove the quotes
+    this.#inQuotes =
+      text.match(/"([^"]+)"/g)?.map(o => o.replace(/"/g, '')) ?? []
   }
 
   public isEmpty(): boolean {
@@ -62,7 +64,7 @@ export class Query {
   public segmentsToStr(): string {
     return this.query.text.join(' ')
   }
-  
+
   public getTags(): string[] {
     return this.query.text.filter(o => o.startsWith('#'))
   }
@@ -72,6 +74,11 @@ export class Query {
   }
 
   public getExactTerms(): string[] {
-    return this.query.text.filter(o => o.split(' ').length > 1)
+    return [
+      ...new Set([
+        ...this.query.text.filter(o => o.split(' ').length > 1),
+        ...this.#inQuotes,
+      ]),
+    ]
   }
 }
