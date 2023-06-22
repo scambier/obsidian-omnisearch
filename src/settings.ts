@@ -7,7 +7,11 @@ import {
 } from 'obsidian'
 import { writable } from 'svelte/store'
 import { database } from './database'
-import { K_DISABLE_OMNISEARCH, getTextExtractor, isCacheEnabled } from './globals'
+import {
+  K_DISABLE_OMNISEARCH,
+  getTextExtractor,
+  isCacheEnabled,
+} from './globals'
 import type OmnisearchPlugin from './main'
 
 interface WeightingSettings {
@@ -49,6 +53,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   splitCamelCase: boolean
   openInNewPane: boolean
   verboseLogging: boolean
+  fuzziness: '0' | '1' | '2'
 }
 
 /**
@@ -259,6 +264,29 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
+    // Fuzziness
+    new Setting(containerEl)
+      .setName('Fuzziness')
+      .setDesc(
+        "Define the level of fuzziness for the search. The higher the fuzziness, the more results you'll get."
+      )
+      .addDropdown(dropdown =>
+        dropdown
+          .addOptions({
+            0: 'Exact match',
+            1: 'Not too fuzzy',
+            2: 'Fuzzy enough',
+          })
+          .setValue(settings.fuzziness)
+          .onChange(async v => {
+            if (!['0', '1', '2'].includes(v)) {
+              v = '2'
+            }
+            settings.fuzziness = v as '0' | '1' | '2'
+            await saveSettings(this.plugin)
+          })
+      )
+
     //#endregion Behavior
 
     //#region User Interface
@@ -467,6 +495,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   highlight: true,
   showPreviousQueryResults: true,
   simpleSearch: false,
+  fuzziness: '0',
 
   weightBasename: 3,
   weightDirectory: 2,

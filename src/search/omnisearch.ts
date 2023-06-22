@@ -188,12 +188,26 @@ export class Omnisearch {
 
     logDebug('Starting search for', query)
 
+    let fuzziness: number
+    switch (settings.fuzziness) {
+      case '0':
+        fuzziness = 0
+        break
+      case '1':
+        fuzziness = 0.1
+        break
+      default:
+        fuzziness = 0.2
+        break
+    }
+
     let results = this.minisearch.search(query.segmentsToStr(), {
       prefix: term => term.length >= options.prefixLength,
       // length <= 3: no fuzziness
       // length <= 5: fuzziness of 10%
       // length > 5: fuzziness of 20%
-      fuzzy: term => (term.length <= 3 ? 0 : term.length <= 5 ? 0.1 : 0.2),
+      fuzzy: term =>
+        term.length <= 3 ? 0 : term.length <= 5 ? fuzziness / 2 : fuzziness,
       combineWith: 'AND',
       boost: {
         basename: settings.weightBasename,
@@ -216,7 +230,6 @@ export class Omnisearch {
           ext.startsWith(e.startsWith('.') ? e : '.' + e)
         )
       })
-      console.log(query.query.ext, results.length)
     }
 
     // Filter query results that match the path
