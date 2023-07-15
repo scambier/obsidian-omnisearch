@@ -270,6 +270,7 @@ export function isFileIndexable(path: string): boolean {
   return (
     isFilePlaintext(path) ||
     isFileCanvas(path) ||
+    isFileFromDataloomPlugin(path) ||
     (canIndexPDF && isFilePDF(path)) ||
     (canIndexImages && isFileImage(path))
   )
@@ -290,6 +291,10 @@ export function isFilePlaintext(path: string): boolean {
 
 export function isFileCanvas(path: string): boolean {
   return path.endsWith('.canvas')
+}
+
+export function isFileFromDataloomPlugin(path: string): boolean {
+  return path.endsWith('.loom')
 }
 
 export function getExtension(path: string): string {

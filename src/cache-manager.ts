@@ -10,6 +10,7 @@ import {
   getAliasesFromMetadata,
   getTagsFromMetadata,
   isFileCanvas,
+  isFileFromDataloomPlugin,
   isFilePlaintext,
   logDebug,
   makeMD5,
@@ -56,6 +57,30 @@ async function getAndMapIndexedDocument(
       texts.push(edge.label!)
     }
     content = texts.join('\r\n')
+  }
+
+  // ** Dataloom plugin **
+  else if (isFileFromDataloomPlugin(path)) {
+    try {
+      const data = JSON.parse(await app.vault.cachedRead(file))
+      // data is a json object, we recursively iterate the keys
+      // and concatenate the values if the key is "markdown"
+      const texts: string[] = []
+      const iterate = (obj: any) => {
+        for (const key in obj) {
+          if (typeof obj[key] === 'object') {
+            iterate(obj[key])
+          } else if (key === 'markdown') {
+            texts.push(obj[key])
+          }
+        }
+      }
+      iterate(data)
+      content = texts.join('\r\n')
+    } catch (e) {
+      console.error('Omnisearch: Error while parsing Dataloom file', path)
+      console.error(e)
+    }
   }
 
   // ** Image or PDF **
