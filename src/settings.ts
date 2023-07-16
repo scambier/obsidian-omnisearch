@@ -33,8 +33,10 @@ export interface OmnisearchSettings extends WeightingSettings {
   indexedFileTypes: string[]
   /** Enable PDF indexing */
   PDFIndexing: boolean
-  /** Enable PDF indexing */
+  /** Enable Images indexing */
   imagesIndexing: boolean
+  /** Enable Dataloom indexing */
+  dataloomIndexing: boolean
   /** Activate the small 🔍 button on Obsidian's ribbon */
   ribbonIcon: boolean
   /** Display the small contextual excerpt in search results */
@@ -139,6 +141,23 @@ export class SettingsTab extends PluginSettingTab {
       .addToggle(toggle =>
         toggle.setValue(settings.imagesIndexing).onChange(async v => {
           settings.imagesIndexing = v
+          await saveSettings(this.plugin)
+        })
+      )
+      .setDisabled(!getTextExtractor())
+
+    // Dataloom Indexing
+    const indexDataLoomDesc = new DocumentFragment()
+    indexDataLoomDesc.createSpan({}, span => {
+      span.innerHTML = `Include <a href="https://github.com/trey-wallis/obsidian-dataloom">DataLoom</a> <pre style="display:inline">.loom</pre> files in search results
+      <br/>${needsARestart}`
+    })
+    new Setting(containerEl)
+      .setName('DataLoom indexing (beta)')
+      .setDesc(indexDataLoomDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.dataloomIndexing).onChange(async v => {
+          settings.dataloomIndexing = v
           await saveSettings(this.plugin)
         })
       )
@@ -485,6 +504,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   indexedFileTypes: [] as string[],
   PDFIndexing: false,
   imagesIndexing: false,
+  dataloomIndexing: false,
   splitCamelCase: false,
   openInNewPane: false,
 
