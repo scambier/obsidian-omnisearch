@@ -12,6 +12,7 @@ import {
   isFileCanvas,
   isFileFromDataloomPlugin,
   isFilePlaintext,
+  isFilenameIndexable,
   logDebug,
   makeMD5,
   removeDiacritics,
@@ -87,8 +88,11 @@ async function getAndMapIndexedDocument(
   // ** Image or PDF **
   else if (extractor?.canFileBeExtracted(path)) {
     content = await extractor.extractText(file)
-  } else {
-    throw new Error(`Unsupported file type: "${path}"`)
+  }
+  
+  // ** Unsupported files **
+  else if (isFilenameIndexable(path)) {
+    content = file.path
   }
 
   if (content === null || content === undefined) {

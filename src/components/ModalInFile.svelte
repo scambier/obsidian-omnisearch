@@ -18,7 +18,6 @@
   import { Query } from 'src/search/query'
   import { openNote } from 'src/tools/notes'
   import { searchEngine } from 'src/search/omnisearch'
-  import { cacheManager } from 'src/cache-manager'
 
   export let modal: OmnisearchInFileModal
   export let parent: OmnisearchVaultModal | null = null

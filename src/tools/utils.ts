@@ -18,7 +18,7 @@ import {
   SPACE_OR_PUNCTUATION,
   type SearchMatch,
 } from '../globals'
-import { settings } from '../settings'
+import { canIndexUnsupportedFiles, settings } from '../settings'
 import { type BinaryLike, createHash } from 'crypto'
 import { md5 } from 'pure-md5'
 
@@ -26,7 +26,7 @@ export function highlighter(str: string): string {
   return `<span class="${highlightClass}">${str}</span>`
 }
 
-export function highlighterGroups(substring: string, ...args: any[]) {
+export function highlighterGroups(_substring: string, ...args: any[]) {
   // args[0] is the single char preceding args[1], which is the word we want to highlight
   if (!!args[1].trim())
     return `<span>${args[0]}</span><span class="${highlightClass}">${args[1]}</span>`
@@ -263,7 +263,7 @@ export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
   return Platform.isMacOS ? '⌘' : 'ctrl'
 }
 
-export function isFileIndexable(path: string): boolean {
+export function isContentIndexable(path: string): boolean {
   const hasTextExtractor = !!getTextExtractor()
   const canIndexPDF = hasTextExtractor && settings.PDFIndexing
   const canIndexImages = hasTextExtractor && settings.imagesIndexing
@@ -274,6 +274,21 @@ export function isFileIndexable(path: string): boolean {
     (canIndexPDF && isFilePDF(path)) ||
     (canIndexImages && isFileImage(path))
   )
+}
+
+export function isFilenameIndexable(path: string): boolean {
+  return (
+    canIndexUnsupportedFiles() ||
+    isFilePlaintext(path) ||
+    isFileCanvas(path) ||
+    isFileFromDataloomPlugin(path) ||
+    isFilePDF(path) ||
+    isFileImage(path)    
+  )
+}
+
+export function isFileIndexable(path: string): boolean {
+  return isFilenameIndexable(path) || isContentIndexable(path)
 }
 
 export function isFileImage(path: string): boolean {
