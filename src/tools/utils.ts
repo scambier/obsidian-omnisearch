@@ -294,7 +294,7 @@ export function isFileCanvas(path: string): boolean {
 }
 
 export function isFileFromDataloomPlugin(path: string): boolean {
-  return path.endsWith('.loom')
+  return path.endsWith('.loom') || path.endsWith('.dashboard')
 }
 
 export function getExtension(path: string): string {
