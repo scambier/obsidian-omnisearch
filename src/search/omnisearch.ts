@@ -12,6 +12,7 @@ import {
   logDebug,
   removeDiacritics,
   splitCamelCase,
+  splitHyphens,
   stringsToRegex,
   stripMarkdownCharacters,
   warnDebug,
@@ -22,17 +23,22 @@ import { cacheManager } from '../cache-manager'
 import { sortBy } from 'lodash-es'
 
 const tokenize = (text: string): string[] => {
-  const tokens = text.split(SPACE_OR_PUNCTUATION)
+  let tokens = text.split(SPACE_OR_PUNCTUATION)
+
+  // When enabled, we only use the chsSegmenter,
+  // and not the other custom tokenizers
   const chsSegmenter = getChsSegmenter()
   if (chsSegmenter) {
-    return tokens.flatMap(word =>
+    tokens = tokens.flatMap(word =>
       chsRegex.test(word) ? chsSegmenter.cut(word) : [word]
     )
   } else {
-    if (settings.splitCamelCase)
-      return [...tokens, ...tokens.flatMap(splitCamelCase)]
-    return tokens
+    // Split camelCase tokens into "camel" and "case
+    tokens = [...tokens, ...tokens.flatMap(splitCamelCase)]
+    // Split hyphenated tokens
+    tokens = [...tokens, ...tokens.flatMap(splitHyphens)]
   }
+  return tokens
 }
 
 export class Omnisearch {
@@ -182,12 +188,26 @@ export class Omnisearch {
 
     logDebug('Starting search for', query)
 
+    let fuzziness: number
+    switch (settings.fuzziness) {
+      case '0':
+        fuzziness = 0
+        break
+      case '1':
+        fuzziness = 0.1
+        break
+      default:
+        fuzziness = 0.2
+        break
+    }
+
     let results = this.minisearch.search(query.segmentsToStr(), {
       prefix: term => term.length >= options.prefixLength,
       // length <= 3: no fuzziness
       // length <= 5: fuzziness of 10%
       // length > 5: fuzziness of 20%
-      fuzzy: term => (term.length <= 3 ? 0 : term.length <= 5 ? 0.1 : 0.2),
+      fuzzy: term =>
+        term.length <= 3 ? 0 : term.length <= 5 ? fuzziness / 2 : fuzziness,
       combineWith: 'AND',
       boost: {
         basename: settings.weightBasename,

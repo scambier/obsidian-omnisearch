@@ -10,7 +10,9 @@ import {
   getAliasesFromMetadata,
   getTagsFromMetadata,
   isFileCanvas,
+  isFileFromDataloomPlugin,
   isFilePlaintext,
+  isFilenameIndexable,
   logDebug,
   makeMD5,
   removeDiacritics,
@@ -18,6 +20,7 @@ import {
 import type { CanvasData } from 'obsidian/canvas'
 import type { AsPlainObject } from 'minisearch'
 import type MiniSearch from 'minisearch'
+import { settings } from './settings'
 
 /**
  * This function is responsible for extracting the text from a file and
@@ -58,11 +61,38 @@ async function getAndMapIndexedDocument(
     content = texts.join('\r\n')
   }
 
+  // ** Dataloom plugin **
+  else if (settings.dataloomIndexing && isFileFromDataloomPlugin(path)) {
+    try {
+      const data = JSON.parse(await app.vault.cachedRead(file))
+      // data is a json object, we recursively iterate the keys
+      // and concatenate the values if the key is "markdown"
+      const texts: string[] = []
+      const iterate = (obj: any) => {
+        for (const key in obj) {
+          if (typeof obj[key] === 'object') {
+            iterate(obj[key])
+          } else if (key === 'markdown') {
+            texts.push(obj[key])
+          }
+        }
+      }
+      iterate(data)
+      content = texts.join('\r\n')
+    } catch (e) {
+      console.error('Omnisearch: Error while parsing Dataloom file', path)
+      console.error(e)
+    }
+  }
+
   // ** Image or PDF **
   else if (extractor?.canFileBeExtracted(path)) {
     content = await extractor.extractText(file)
-  } else {
-    throw new Error(`Unsupported file type: "${path}"`)
+  }
+  
+  // ** Unsupported files **
+  else if (isFilenameIndexable(path)) {
+    content = file.path
   }
 
   if (content === null || content === undefined) {

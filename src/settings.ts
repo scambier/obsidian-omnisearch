@@ -34,8 +34,12 @@ export interface OmnisearchSettings extends WeightingSettings {
   indexedFileTypes: string[]
   /** Enable PDF indexing */
   PDFIndexing: boolean
-  /** Enable PDF indexing */
+  /** Enable Images indexing */
   imagesIndexing: boolean
+  /** Enable Dataloom indexing */
+  dataloomIndexing: boolean
+  /** Enable indexing of unknown files */
+  unsupportedFilesIndexing: 'yes' | 'no' | 'default'
   /** Activate the small 🔍 button on Obsidian's ribbon */
   ribbonIcon: boolean
   /** Display the small contextual excerpt in search results */
@@ -54,6 +58,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   splitCamelCase: boolean
   openInNewPane: boolean
   verboseLogging: boolean
+  fuzziness: '0' | '1' | '2'
 }
 
 /**
@@ -144,24 +149,62 @@ export class SettingsTab extends PluginSettingTab {
       )
       .setDisabled(!getTextExtractor())
 
-    // Additional files to index
+    // Dataloom Indexing
+    const indexDataLoomDesc = new DocumentFragment()
+    indexDataLoomDesc.createSpan({}, span => {
+      span.innerHTML = `Include <a href="https://github.com/trey-wallis/obsidian-dataloom">DataLoom</a> <pre style="display:inline">.loom</pre> files in search results
+      <br/>${needsARestart}`
+    })
+    new Setting(containerEl)
+      .setName('DataLoom indexing (beta)')
+      .setDesc(indexDataLoomDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.dataloomIndexing).onChange(async v => {
+          settings.dataloomIndexing = v
+          await saveSettings(this.plugin)
+        })
+      )
+      .setDisabled(!getTextExtractor())
+
+    // Additional text files to index
     const indexedFileTypesDesc = new DocumentFragment()
     indexedFileTypesDesc.createSpan({}, span => {
-      span.innerHTML = `In addition to standard <code>md</code> files, Omnisearch can also index other <strong style="color: var(--text-accent)">plaintext</strong> files.<br/>
-      Add extensions separated by a space, without the dot. Example: "<code>txt org</code>".<br />
+      span.innerHTML = `In addition to standard <code>md</code> files, Omnisearch can also index other <strong style="color: var(--text-accent)">PLAINTEXT</strong> files.<br/>
+      Add extensions separated by a space, without the dot. Example: "<code>txt org csv</code>".<br />
       ⚠️ <span style="color: var(--text-accent)">Using extensions of non-plaintext files (like .docx or .pptx) WILL cause crashes,
       because Omnisearch will try to index their content.</span><br />
       ${needsARestart}`
     })
     new Setting(containerEl)
-      .setName('Additional files to index')
+      .setName('Additional TEXT files to index')
       .setDesc(indexedFileTypesDesc)
       .addText(component => {
         component
           .setValue(settings.indexedFileTypes.join(' '))
-          .setPlaceholder('Example: txt org')
+          .setPlaceholder('Example: txt org csv')
           .onChange(async v => {
             settings.indexedFileTypes = v.split(' ')
+            await saveSettings(this.plugin)
+          })
+      })
+
+    // Unsupported files
+    const indexUnsupportedDesc = new DocumentFragment()
+    indexUnsupportedDesc.createSpan({}, span => {
+      span.innerHTML = `
+      Omnisearch can index file<strong>names</strong> of "unsupported" files, such as e.g. <pre style="display:inline">.mp4</pre> or <pre style="display:inline">.xlsx</pre>.<br/>
+      "Obsidian setting" will respect the value of "<em>Files & Links > Detect all file extensions</em>".
+      <br />${needsARestart}`
+    })
+    new Setting(containerEl)
+      .setName('Index unsupported files (beta)')
+      .setDesc(indexUnsupportedDesc)
+      .addDropdown(dropdown => {
+        dropdown
+          .addOptions({ yes: 'Yes', no: 'No', default: 'Obsidian setting' })
+          .setValue(settings.unsupportedFilesIndexing)
+          .onChange(async v => {
+            ;(settings.unsupportedFilesIndexing as any) = v
             await saveSettings(this.plugin)
           })
       })
@@ -262,6 +305,29 @@ export class SettingsTab extends PluginSettingTab {
           settings.openInNewPane = v
           await saveSettings(this.plugin)
         })
+      )
+
+    // Fuzziness
+    new Setting(containerEl)
+      .setName('Fuzziness')
+      .setDesc(
+        "Define the level of fuzziness for the search. The higher the fuzziness, the more results you'll get."
+      )
+      .addDropdown(dropdown =>
+        dropdown
+          .addOptions({
+            0: 'Exact match',
+            1: 'Not too fuzzy',
+            2: 'Fuzzy enough',
+          })
+          .setValue(settings.fuzziness)
+          .onChange(async v => {
+            if (!['0', '1', '2'].includes(v)) {
+              v = '2'
+            }
+            settings.fuzziness = v as '0' | '1' | '2'
+            await saveSettings(this.plugin)
+          })
       )
 
     //#endregion Behavior
@@ -466,6 +532,8 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   indexedFileTypes: [] as string[],
   PDFIndexing: false,
   imagesIndexing: false,
+  dataloomIndexing: false,
+  unsupportedFilesIndexing: 'no',
   splitCamelCase: false,
   openInNewPane: false,
 
@@ -476,6 +544,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   highlight: true,
   showPreviousQueryResults: true,
   simpleSearch: false,
+  fuzziness: '0',
 
   weightBasename: 3,
   weightDirectory: 2,
@@ -500,5 +569,13 @@ export async function saveSettings(plugin: Plugin): Promise<void> {
 }
 
 export function isPluginDisabled(): boolean {
-  return app.loadLocalStorage(K_DISABLE_OMNISEARCH) == '1'
+  return app.loadLocalStorage(K_DISABLE_OMNISEARCH) === '1'
+}
+
+export function canIndexUnsupportedFiles(): boolean {
+  return (
+    settings.unsupportedFilesIndexing === 'yes' ||
+    (settings.unsupportedFilesIndexing === 'default' &&
+      !!app.vault.getConfig('showUnsupportedFiles'))
+  )
 }
