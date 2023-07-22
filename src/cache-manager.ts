@@ -96,13 +96,15 @@ async function getAndMapIndexedDocument(
     }
   }
 
+  const tags = getTagsFromMetadata(metadata)
   return {
     basename: removeDiacritics(file.basename),
     content,
     path: file.path,
     mtime: file.stat.mtime,
 
-    tags: getTagsFromMetadata(metadata),
+    tags: tags,
+    unmarkedTags: tags.map(t => t.replace('#', '')),
     aliases: getAliasesFromMetadata(metadata).join(''),
     headings1: metadata ? extractHeadingsFromCache(metadata, 1).join(' ') : '',
     headings2: metadata ? extractHeadingsFromCache(metadata, 2).join(' ') : '',

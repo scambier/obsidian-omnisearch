@@ -7,7 +7,11 @@ import {
 } from 'obsidian'
 import { writable } from 'svelte/store'
 import { database } from './database'
-import { K_DISABLE_OMNISEARCH, getTextExtractor, isCacheEnabled } from './globals'
+import {
+  K_DISABLE_OMNISEARCH,
+  getTextExtractor,
+  isCacheEnabled,
+} from './globals'
 import type OmnisearchPlugin from './main'
 
 interface WeightingSettings {
@@ -16,6 +20,7 @@ interface WeightingSettings {
   weightH1: number
   weightH2: number
   weightH3: number
+  weightUnmarkedTags: number
 }
 
 export interface OmnisearchSettings extends WeightingSettings {
@@ -376,6 +381,10 @@ export class SettingsTab extends PluginSettingTab {
       .setName(`Headings level 3 (default: ${DEFAULT_SETTINGS.weightH3})`)
       .addSlider(cb => this.weightSlider(cb, 'weightH3'))
 
+    new Setting(containerEl)
+      .setName(`Tags without the # (default: ${DEFAULT_SETTINGS.weightUnmarkedTags})`)
+      .addSlider(cb => this.weightSlider(cb, 'weightUnmarkedTags'))
+
     //#endregion Results Weighting
 
     //#region Debugging
@@ -473,6 +482,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   weightH1: 1.5,
   weightH2: 1.3,
   weightH3: 1.1,
+  weightUnmarkedTags: 1.1,
 
   welcomeMessage: '',
   verboseLogging: false,
