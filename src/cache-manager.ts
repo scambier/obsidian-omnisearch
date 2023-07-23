@@ -20,7 +20,6 @@ import {
 import type { CanvasData } from 'obsidian/canvas'
 import type { AsPlainObject } from 'minisearch'
 import type MiniSearch from 'minisearch'
-import { settings } from './settings'
 
 /**
  * This function is responsible for extracting the text from a file and
@@ -62,7 +61,7 @@ async function getAndMapIndexedDocument(
   }
 
   // ** Dataloom plugin **
-  else if (settings.dataloomIndexing && isFileFromDataloomPlugin(path)) {
+  else if (isFileFromDataloomPlugin(path)) {
     try {
       const data = JSON.parse(await app.vault.cachedRead(file))
       // data is a json object, we recursively iterate the keys
