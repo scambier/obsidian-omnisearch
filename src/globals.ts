@@ -42,6 +42,7 @@ export type IndexedDocument = {
   content: string
   aliases: string
   tags: string[]
+  unmarkedTags: string[]
   headings1: string
   headings2: string
   headings3: string

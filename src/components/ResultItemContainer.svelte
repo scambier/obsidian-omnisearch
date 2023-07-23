@@ -12,6 +12,7 @@
   class:is-selected={selected}
   on:mousemove
   on:click
+  on:keypress
   on:auxclick>
   {#if glyph}
     <GlyphAddNote />

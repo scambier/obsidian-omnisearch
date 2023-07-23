@@ -216,6 +216,7 @@ export class Omnisearch {
         headings1: settings.weightH1,
         headings2: settings.weightH2,
         headings3: settings.weightH3,
+        unmarkedTags: settings.weightUnmarkedTags
       },
     })
 
