@@ -216,7 +216,7 @@ export class Omnisearch {
         headings1: settings.weightH1,
         headings2: settings.weightH2,
         headings3: settings.weightH3,
-        unmarkedTags: settings.weightUnmarkedTags
+        unmarkedTags: settings.weightUnmarkedTags,
       },
     })
 
@@ -343,7 +343,7 @@ export class Omnisearch {
   public getMatches(text: string, reg: RegExp, query: Query): SearchMatch[] {
     const startTime = new Date().getTime()
     let match: RegExpExecArray | null = null
-    const matches: SearchMatch[] = []
+    let matches: SearchMatch[] = []
     let count = 0
     while ((match = reg.exec(text)) !== null) {
       // Avoid infinite loops, stop looking after 100 matches or if we're taking too much time
@@ -351,13 +351,14 @@ export class Omnisearch {
         warnDebug('Stopped getMatches at', count, 'results')
         break
       }
-      const m = match[0]
-      if (m) matches.push({ match: m, offset: match.index })
+      const m = match[2]
+      if (m) matches.push({ match: m, offset: match.index + 1 })
     }
 
     // If the query can be found "as is" in the text, put this match first
     const best = text.toLowerCase().indexOf(query.segmentsToStr())
     if (best > -1) {
+      matches = matches.filter(m => m.offset !== best)
       matches.unshift({
         offset: best,
         match: query.segmentsToStr(),
