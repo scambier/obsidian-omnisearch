@@ -36,8 +36,6 @@ export interface OmnisearchSettings extends WeightingSettings {
   PDFIndexing: boolean
   /** Enable Images indexing */
   imagesIndexing: boolean
-  /** Enable Dataloom indexing */
-  dataloomIndexing: boolean
   /** Enable indexing of unknown files */
   unsupportedFilesIndexing: 'yes' | 'no' | 'default'
   /** Activate the small 🔍 button on Obsidian's ribbon */
@@ -149,23 +147,6 @@ export class SettingsTab extends PluginSettingTab {
       )
       .setDisabled(!getTextExtractor())
 
-    // Dataloom Indexing
-    const indexDataLoomDesc = new DocumentFragment()
-    indexDataLoomDesc.createSpan({}, span => {
-      span.innerHTML = `Include <a href="https://github.com/trey-wallis/obsidian-dataloom">DataLoom</a> <pre style="display:inline">.loom</pre> files in search results
-      <br/>${needsARestart}`
-    })
-    new Setting(containerEl)
-      .setName('DataLoom indexing (beta)')
-      .setDesc(indexDataLoomDesc)
-      .addToggle(toggle =>
-        toggle.setValue(settings.dataloomIndexing).onChange(async v => {
-          settings.dataloomIndexing = v
-          await saveSettings(this.plugin)
-        })
-      )
-      .setDisabled(!getTextExtractor())
-
     // Additional text files to index
     const indexedFileTypesDesc = new DocumentFragment()
     indexedFileTypesDesc.createSpan({}, span => {
@@ -197,7 +178,7 @@ export class SettingsTab extends PluginSettingTab {
       <br />${needsARestart}`
     })
     new Setting(containerEl)
-      .setName('Index unsupported files (beta)')
+      .setName('Index unsupported files')
       .setDesc(indexUnsupportedDesc)
       .addDropdown(dropdown => {
         dropdown
@@ -219,7 +200,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Save index to cache')
       .setDesc(
-        'Enable caching to speed up indexing time. In rare cases, the cache write may cause a freeze in Obsidian. This option will disable itself if it happens.'
+        'Enable caching to speed up indexing time. In rare cases, the cache write may cause a crash in Obsidian. This option will disable itself if it happens.'
       )
       .addToggle(toggle =>
         toggle.setValue(settings.useCache).onChange(async v => {
@@ -238,26 +219,6 @@ export class SettingsTab extends PluginSettingTab {
       .addToggle(toggle =>
         toggle.setValue(settings.hideExcluded).onChange(async v => {
           settings.hideExcluded = v
-          await saveSettings(this.plugin)
-        })
-      )
-
-    // Ignore diacritics
-    const diacriticsDesc = new DocumentFragment()
-    diacriticsDesc.createSpan({}, span => {
-      span.innerHTML = `Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky".<br/>
-        ⚠️ <span style="color: var(--text-accent)">You probably should <strong>NOT</strong> disable this.</span><br>
-        ⚠️ <span style="color: var(--text-accent)">Changing this setting will clear the cache.</span><br>
-        ${needsARestart}
-        `
-    })
-    new Setting(containerEl)
-      .setName('Ignore diacritics')
-      .setDesc(diacriticsDesc)
-      .addToggle(toggle =>
-        toggle.setValue(settings.ignoreDiacritics).onChange(async v => {
-          await database.clearCache()
-          settings.ignoreDiacritics = v
           await saveSettings(this.plugin)
         })
       )
@@ -474,6 +435,26 @@ export class SettingsTab extends PluginSettingTab {
     //#region Danger Zone
     new Setting(containerEl).setName('Danger Zone').setHeading()
 
+    // Ignore diacritics
+    const diacriticsDesc = new DocumentFragment()
+    diacriticsDesc.createSpan({}, span => {
+      span.innerHTML = `Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky".<br/>
+        ⚠️ <span style="color: var(--text-accent)">You probably should <strong>NOT</strong> disable this.</span><br>
+        ⚠️ <span style="color: var(--text-accent)">Changing this setting will clear the cache.</span><br>
+        ${needsARestart}
+        `
+    })
+    new Setting(containerEl)
+      .setName('Ignore diacritics')
+      .setDesc(diacriticsDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.ignoreDiacritics).onChange(async v => {
+          await database.clearCache()
+          settings.ignoreDiacritics = v
+          await saveSettings(this.plugin)
+        })
+      )
+
     const disableDesc = new DocumentFragment()
     disableDesc.createSpan({}, span => {
       span.innerHTML = `Disable Omnisearch on this device only.<br>
@@ -532,7 +513,6 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   indexedFileTypes: [] as string[],
   PDFIndexing: false,
   imagesIndexing: false,
-  dataloomIndexing: false,
   unsupportedFilesIndexing: 'no',
   splitCamelCase: false,
   openInNewPane: false,
@@ -544,7 +524,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   highlight: true,
   showPreviousQueryResults: true,
   simpleSearch: false,
-  fuzziness: '0',
+  fuzziness: '1',
 
   weightBasename: 3,
   weightDirectory: 2,
