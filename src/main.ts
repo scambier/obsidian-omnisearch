@@ -118,11 +118,11 @@ export default class OmnisearchPlugin extends Plugin {
   executeFirstLaunchTasks(): void {
     const code = '1.10.1'
     if (settings.welcomeMessage !== code) {
-      const welcome = new DocumentFragment()
-      welcome.createSpan({}, span => {
-        span.innerHTML = `🔎 Omnisearch now requires the <strong>Text Extractor</strong> plugin to index PDF and images. See Omnisearch settings for more information.`
-      })
-      new Notice(welcome, 20_000)
+      // const welcome = new DocumentFragment()
+      // welcome.createSpan({}, span => {
+      //   span.innerHTML = `🔎 Omnisearch now requires the <strong>Text Extractor</strong> plugin to index PDF and images. See Omnisearch settings for more information.`
+      // })
+      // new Notice(welcome, 20_000)
     }
     settings.welcomeMessage = code
 
