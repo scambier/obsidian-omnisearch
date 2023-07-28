@@ -100,31 +100,36 @@ export class SettingsTab extends PluginSettingTab {
 
     //#region Indexing
 
-    new Setting(containerEl).setName('Indexing').setHeading()
-
-    const textExtractDesc = new DocumentFragment()
-    if (getTextExtractor()) {
-      textExtractDesc.createSpan({}, span => {
-        span.innerHTML = `👍 You have installed <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a>, Omnisearch will use it to index PDFs and images.
+    const indexingDesc = new DocumentFragment()
+    indexingDesc.createSpan({}, span => {
+      span.innerHTML = `⚠️ <span style="color: var(--text-accent)">Changing indexing settings will clear the cache, and requires a restart of Obsidian.</span><br/><br/>`
+      if (getTextExtractor()) {
+        span.innerHTML += `
+        👍 You have installed <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a>, Omnisearch can use it to index PDFs and images contents.
             <br />Text extraction only works on desktop, but the cache can be synchronized with your mobile device.`
-      })
-    } else {
-      textExtractDesc.createSpan({}, span => {
-        span.innerHTML = `⚠️ Omnisearch requires <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a> to index PDFs and images.`
-      })
-    }
-    new Setting(containerEl).setDesc(textExtractDesc)
+      } else {
+        span.innerHTML += `⚠️ Omnisearch requires <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a> to index PDFs and images.`
+      }
+    })
+
+    new Setting(containerEl)
+      .setName('Indexing')
+      .setHeading()
+      .setDesc(indexingDesc)
 
     // PDF Indexing
     const indexPDFsDesc = new DocumentFragment()
     indexPDFsDesc.createSpan({}, span => {
-      span.innerHTML = `Include PDFs in search results`
+      span.innerHTML = `Omnisearch will use Text Extractor to index the content of your PDFs`
     })
     new Setting(containerEl)
-      .setName(`PDFs Indexing ${getTextExtractor() ? '' : '⚠️ Disabled'}`)
+      .setName(
+        `PDFs content indexing ${getTextExtractor() ? '' : '⚠️ Disabled'}`
+      )
       .setDesc(indexPDFsDesc)
       .addToggle(toggle =>
         toggle.setValue(settings.PDFIndexing).onChange(async v => {
+          await database.clearCache()
           settings.PDFIndexing = v
           await saveSettings(this.plugin)
         })
@@ -134,18 +139,41 @@ export class SettingsTab extends PluginSettingTab {
     // Images Indexing
     const indexImagesDesc = new DocumentFragment()
     indexImagesDesc.createSpan({}, span => {
-      span.innerHTML = `Include images in search results`
+      span.innerHTML = `Omnisearch will use Text Extractor to OCR your images and index their content`
     })
     new Setting(containerEl)
-      .setName(`Images Indexing ${getTextExtractor() ? '' : '⚠️ Disabled'}`)
+      .setName(`Images OCR indexing ${getTextExtractor() ? '' : '⚠️ Disabled'}`)
       .setDesc(indexImagesDesc)
       .addToggle(toggle =>
         toggle.setValue(settings.imagesIndexing).onChange(async v => {
+          await database.clearCache()
           settings.imagesIndexing = v
           await saveSettings(this.plugin)
         })
       )
       .setDisabled(!getTextExtractor())
+
+    // Index filenames of unsupported files
+    const indexUnsupportedDesc = new DocumentFragment()
+    indexUnsupportedDesc.createSpan({}, span => {
+      span.innerHTML = `
+      Omnisearch can index file<strong>names</strong> of "unsupported" files, such as e.g. <pre style="display:inline">.mp4</pre>, <pre style="display:inline">.xlsx</pre>, 
+      or non-extracted PDFs & images.<br/>
+      "Obsidian setting" will respect the value of "Files & Links > Detect all file extensions"`
+    })
+    new Setting(containerEl)
+      .setName('Index paths of unsupported files')
+      .setDesc(indexUnsupportedDesc)
+      .addDropdown(dropdown => {
+        dropdown
+          .addOptions({ yes: 'Yes', no: 'No', default: 'Obsidian setting' })
+          .setValue(settings.unsupportedFilesIndexing)
+          .onChange(async v => {
+            await database.clearCache()
+            ;(settings.unsupportedFilesIndexing as any) = v
+            await saveSettings(this.plugin)
+          })
+      })
 
     // Additional text files to index
     const indexedFileTypesDesc = new DocumentFragment()
@@ -153,8 +181,7 @@ export class SettingsTab extends PluginSettingTab {
       span.innerHTML = `In addition to standard <code>md</code> files, Omnisearch can also index other <strong style="color: var(--text-accent)">PLAINTEXT</strong> files.<br/>
       Add extensions separated by a space, without the dot. Example: "<code>txt org csv</code>".<br />
       ⚠️ <span style="color: var(--text-accent)">Using extensions of non-plaintext files (like .docx or .pptx) WILL cause crashes,
-      because Omnisearch will try to index their content.</span><br />
-      ${needsARestart}`
+      because Omnisearch will try to index their content.</span>`
     })
     new Setting(containerEl)
       .setName('Additional TEXT files to index')
@@ -164,28 +191,8 @@ export class SettingsTab extends PluginSettingTab {
           .setValue(settings.indexedFileTypes.join(' '))
           .setPlaceholder('Example: txt org csv')
           .onChange(async v => {
+            await database.clearCache()
             settings.indexedFileTypes = v.split(' ')
-            await saveSettings(this.plugin)
-          })
-      })
-
-    // Unsupported files
-    const indexUnsupportedDesc = new DocumentFragment()
-    indexUnsupportedDesc.createSpan({}, span => {
-      span.innerHTML = `
-      Omnisearch can index file<strong>names</strong> of "unsupported" files, such as e.g. <pre style="display:inline">.mp4</pre> or <pre style="display:inline">.xlsx</pre>.<br/>
-      "Obsidian setting" will respect the value of "<em>Files & Links > Detect all file extensions</em>".
-      <br />${needsARestart}`
-    })
-    new Setting(containerEl)
-      .setName('Index unsupported files')
-      .setDesc(indexUnsupportedDesc)
-      .addDropdown(dropdown => {
-        dropdown
-          .addOptions({ yes: 'Yes', no: 'No', default: 'Obsidian setting' })
-          .setValue(settings.unsupportedFilesIndexing)
-          .onChange(async v => {
-            ;(settings.unsupportedFilesIndexing as any) = v
             await saveSettings(this.plugin)
           })
       })
@@ -409,7 +416,9 @@ export class SettingsTab extends PluginSettingTab {
       .addSlider(cb => this.weightSlider(cb, 'weightH3'))
 
     new Setting(containerEl)
-      .setName(`Tags without the # (default: ${DEFAULT_SETTINGS.weightUnmarkedTags})`)
+      .setName(
+        `Tags without the # (default: ${DEFAULT_SETTINGS.weightUnmarkedTags})`
+      )
       .addSlider(cb => this.weightSlider(cb, 'weightUnmarkedTags'))
 
     //#endregion Results Weighting
@@ -488,7 +497,6 @@ export class SettingsTab extends PluginSettingTab {
           cb.setButtonText('Clear cache')
           cb.onClick(async () => {
             await database.clearCache()
-            new Notice('Omnisearch - Cache cleared. Please restart Obsidian.')
           })
         })
     }

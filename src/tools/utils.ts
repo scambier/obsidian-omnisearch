@@ -278,12 +278,10 @@ export function isContentIndexable(path: string): boolean {
 
 export function isFilenameIndexable(path: string): boolean {
   return (
-    canIndexUnsupportedFiles() ||
+    (canIndexUnsupportedFiles()) ||
     isFilePlaintext(path) ||
     isFileCanvas(path) ||
-    isFileFromDataloomPlugin(path) ||
-    isFilePDF(path) ||
-    isFileImage(path)    
+    isFileFromDataloomPlugin(path)
   )
 }
 
