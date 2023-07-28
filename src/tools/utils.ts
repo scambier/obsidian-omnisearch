@@ -358,11 +358,10 @@ export function splitCamelCase(text: string): string[] {
  * @param text
  */
 export function splitHyphens(text: string): string[] {
-  const split = text.split('-').filter(t => t)
-  if (split.length > 1) {
-    return split
+  if (!text.includes('-')) {
+    return []
   }
-  return []
+  return text.split('-').filter(t => t)
 }
 
 export function logDebug(...args: any[]): void {
