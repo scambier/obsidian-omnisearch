@@ -507,9 +507,9 @@ export class SettingsTab extends PluginSettingTab {
     cb.setLimits(1, 5, 0.1)
       .setValue(settings[key])
       .setDynamicTooltip()
-      .onChange(v => {
+      .onChange(async (v) => {
         settings[key] = v
-        saveSettings(this.plugin)
+        await saveSettings(this.plugin)
       })
   }
 }

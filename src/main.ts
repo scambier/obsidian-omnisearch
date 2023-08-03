@@ -103,7 +103,7 @@ export default class OmnisearchPlugin extends Plugin {
           if (isFileIndexable(file.path)) {
             logDebug('Renaming file', file.path)
             cacheManager.removeFromLiveCache(oldPath)
-            cacheManager.addToLiveCache(file.path)
+            await cacheManager.addToLiveCache(file.path)
             searchEngine.removeFromPaths([oldPath])
             await searchEngine.addFromPaths([file.path])
           }
@@ -206,14 +206,14 @@ export default class OmnisearchPlugin extends Plugin {
 
       // Disable settings.useCache while writing the cache, in case it freezes
       settings.useCache = false
-      saveSettings(this)
+      await saveSettings(this)
 
       // Write the cache
       await searchEngine.writeToCache()
 
       // Re-enable settings.caching
       settings.useCache = true
-      saveSettings(this)
+      await saveSettings(this)
     }
 
     console.timeEnd('Omnisearch - Indexing total time')
