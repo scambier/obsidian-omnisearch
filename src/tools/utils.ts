@@ -342,14 +342,15 @@ export function chunkArray<T>(arr: T[], len: number): T[][] {
  * @param text
  */
 export function splitCamelCase(text: string): string[] {
-  const split = text
+  // if no camel case found, do nothing
+  if (!/[a-z][A-Z]/.test(text)) {
+    return [];
+  }
+  const splittedText = text
     .replace(/([a-z](?=[A-Z]))/g, '$1 ')
     .split(' ')
-    .filter(t => t)
-  if (split.length > 1) {
-    return split
-  }
-  return []
+    .filter(t => t);
+  return splittedText;
 }
 
 /**
