@@ -281,7 +281,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Set Vim like navigation keys')
       .setDesc(
-        'Navigate down the results with Ctrl/⌘ + J/N + or Navigate up with Ctrl/⌘ + K/P'
+        'Navigate down the results with Ctrl/⌘ + J/N, or navigate up with Ctrl/⌘ + K/P'
       )
       .addToggle(toggle =>
         toggle.setValue(settings.vimLikeNavigationShortcut).onChange(async v => {
@@ -539,6 +539,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   unsupportedFilesIndexing: 'no',
   splitCamelCase: false,
   openInNewPane: false,
+  vimLikeNavigationShortcut: app.vault.getConfig('vimMode') as boolean,
 
   ribbonIcon: true,
   showExcerpt: true,
