@@ -56,6 +56,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   splitCamelCase: boolean
   openInNewPane: boolean
   verboseLogging: boolean
+  vimLikeNavigationShortcut: boolean
   fuzziness: '0' | '1' | '2'
 }
 
@@ -263,6 +264,7 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
+    // Open in new pane
     new Setting(containerEl)
       .setName('Open in new pane')
       .setDesc(
@@ -271,6 +273,19 @@ export class SettingsTab extends PluginSettingTab {
       .addToggle(toggle =>
         toggle.setValue(settings.openInNewPane).onChange(async v => {
           settings.openInNewPane = v
+          await saveSettings(this.plugin)
+        })
+      )
+
+    // Set Vim like navigation keys
+    new Setting(containerEl)
+      .setName('Set Vim like navigation keys')
+      .setDesc(
+        'Navigate down the results with Ctrl/⌘ + J/N, or navigate up with Ctrl/⌘ + K/P'
+      )
+      .addToggle(toggle =>
+        toggle.setValue(settings.vimLikeNavigationShortcut).onChange(async v => {
+          settings.vimLikeNavigationShortcut = v
           await saveSettings(this.plugin)
         })
       )
@@ -524,6 +539,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   unsupportedFilesIndexing: 'no',
   splitCamelCase: false,
   openInNewPane: false,
+  vimLikeNavigationShortcut: app.vault.getConfig('vimMode') as boolean,
 
   ribbonIcon: true,
   showExcerpt: true,
