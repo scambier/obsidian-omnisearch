@@ -30,6 +30,8 @@ export class Query {
     if (!Array.isArray(parsed.exclude.text)) {
       parsed.exclude.text = [parsed.exclude.text]
     }
+    // Remove empty excluded strings
+    parsed.exclude.text = parsed.exclude.text.filter(o => o.length)
 
     // Make sure that all fields are string[]
     for (const k of keywords) {
