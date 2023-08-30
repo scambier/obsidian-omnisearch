@@ -77,10 +77,12 @@ export class Query {
 
   public getExactTerms(): string[] {
     return [
-      ...new Set([
-        ...this.query.text.filter(o => o.split(' ').length > 1),
-        ...this.#inQuotes,
-      ]),
+      ...new Set(
+        [
+          ...this.query.text.filter(o => o.split(' ').length > 1),
+          ...this.#inQuotes,
+        ].map(str => str.toLowerCase())
+      ),
     ]
   }
 }
