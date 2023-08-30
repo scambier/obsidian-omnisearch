@@ -188,6 +188,7 @@ export class Omnisearch {
       return []
     }
 
+    logDebug('=== New search ===')
     logDebug('Starting search for', query)
 
     let fuzziness: number
@@ -299,6 +300,9 @@ export class Omnisearch {
     // Sort results and keep the 50 best
     results = results.sort((a, b) => b.score - a.score).slice(0, 50)
 
+    if (results.length)
+      logDebug('First result:', results[0])
+
     const documents = await Promise.all(
       results.map(async result => await cacheManager.getDocument(result.id))
     )
@@ -306,7 +310,7 @@ export class Omnisearch {
     // If the search query contains quotes, filter out results that don't have the exact match
     const exactTerms = query.getExactTerms()
     if (exactTerms.length) {
-      logDebug('Filtering with quoted terms')
+      logDebug('Filtering with quoted terms: ', exactTerms)
       results = results.filter(r => {
         const document = documents.find(d => d.path === r.id)
         const title = document?.path.toLowerCase() ?? ''
@@ -353,8 +357,9 @@ export class Omnisearch {
         warnDebug('Stopped getMatches at', count, 'results')
         break
       }
-      const m = match[2]
-      if (m) matches.push({ match: m, offset: match.index + 1 })
+      logDebug('match :', match)
+      const m = match[1]
+      if (m) matches.push({ match: m, offset: match.index })
     }
 
     // If the query can be found "as is" in the text, put this match first

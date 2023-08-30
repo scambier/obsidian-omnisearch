@@ -26,11 +26,8 @@ export function highlighter(str: string): string {
   return `<span class="${highlightClass}">${str}</span>`
 }
 
-export function highlighterGroups(_substring: string, ...args: any[]) {
-  // args[0] is the single char preceding args[1], which is the word we want to highlight
-  if (!!args[1].trim())
-    return `<span>${args[0]}</span><span class="${highlightClass}">${args[1]}</span>`
-  return '&lt;no content&gt;'
+export function highlighterGroups(substring: string, ...args: any[]): string {
+  return `<span class="${highlightClass}">${substring}</span>`
 }
 
 export function escapeHTML(html: string): string {
@@ -91,21 +88,9 @@ export function stringsToRegex(strings: string[]): RegExp {
   // sort strings by decreasing length, so that longer strings are matched first
   strings.sort((a, b) => b.length - a.length)
 
-  const joined =
-    '(' +
-    // Default word split is not applied if the user uses the cm-chs-patch plugin
-    (getChsSegmenter()
-      ? ''
-      : // Split on start of line, spaces, punctuation, or capital letters (for camelCase)
-      // We also add the hyphen to the list of characters that can split words
-      settings.splitCamelCase
-      ? `^|${SPACE_OR_PUNCTUATION.source}|\-|[A-Z]`
-      : `^|${SPACE_OR_PUNCTUATION.source}|\-`) +
-    ')' +
-    `(${strings.map(s => escapeRegex(s)).join('|')})`
+  const joined = `(${strings.map(s => escapeRegex(s)).join('|')})`
 
-  const reg = new RegExp(`${joined}`, 'giu')
-  return reg
+  return new RegExp(`${joined}`, 'giu')
 }
 
 export function extractHeadingsFromCache(
