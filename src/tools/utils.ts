@@ -1,52 +1,17 @@
 import {
   type CachedMetadata,
   getAllTags,
-  Notice,
   parseFrontMatterAliases,
   Platform,
 } from 'obsidian'
-import {
-  excerptAfter,
-  excerptBefore,
-  getChsSegmenter,
-  getTextExtractor,
-  highlightClass,
-  isSearchMatch,
-  regexLineSplit,
-  regexStripQuotes,
-  regexYaml,
-  SPACE_OR_PUNCTUATION,
-  type SearchMatch,
-} from '../globals'
+import { getTextExtractor, isSearchMatch, type SearchMatch } from '../globals'
 import { canIndexUnsupportedFiles, settings } from '../settings'
 import { type BinaryLike, createHash } from 'crypto'
 import { md5 } from 'pure-md5'
 
-export function highlighter(str: string): string {
-  return `<span class="${highlightClass}">${str}</span>`
-}
-
-export function highlighterGroups(substring: string, ...args: any[]): string {
-  return `<span class="${highlightClass}">${substring}</span>`
-}
-
-export function escapeHTML(html: string): string {
-  return html
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;')
-}
-
-export function splitLines(text: string): string[] {
-  return text.split(regexLineSplit).filter(l => !!l && l.length > 2)
-}
-
-export function removeFrontMatter(text: string): string {
-  // Regex to recognize YAML Front Matter (at beginning of file, 3 hyphens, than any charecter, including newlines, then 3 hyphens).
-  return text.replace(regexYaml, '')
-}
+// export function highlighter(str: string): string {
+//   return `<span class="${highlightClass}">${str}</span>`
+// }
 
 export function pathWithoutFilename(path: string): string {
   const split = path.split('/')
@@ -79,20 +44,6 @@ export function getAllIndices(text: string, regex: RegExp): SearchMatch[] {
     .filter(isSearchMatch)
 }
 
-/**
- * Used to find excerpts in a note body, or select which words to highlight
- */
-export function stringsToRegex(strings: string[]): RegExp {
-  if (!strings.length) return /^$/g
-
-  // sort strings by decreasing length, so that longer strings are matched first
-  strings.sort((a, b) => b.length - a.length)
-
-  const joined = `(${strings.map(s => escapeRegex(s)).join('|')})`
-
-  return new RegExp(`${joined}`, 'giu')
-}
-
 export function extractHeadingsFromCache(
   cache: CachedMetadata,
   level: number
@@ -104,69 +55,6 @@ export function extractHeadingsFromCache(
 
 export function loopIndex(index: number, nbItems: number): number {
   return (index + nbItems) % nbItems
-}
-
-export function makeExcerpt(content: string, offset: number): string {
-  try {
-    const pos = offset ?? -1
-    const from = Math.max(0, pos - excerptBefore)
-    const to = Math.min(content.length, pos + excerptAfter)
-    if (pos > -1) {
-      content =
-        (from > 0 ? '…' : '') +
-        content.slice(from, to).trim() +
-        (to < content.length - 1 ? '…' : '')
-    } else {
-      content = content.slice(0, excerptAfter)
-    }
-    if (settings.renderLineReturnInExcerpts) {
-      const lineReturn = new RegExp(/(?:\r\n|\r|\n)/g)
-      // Remove multiple line returns
-      content = content
-        .split(lineReturn)
-        .filter(l => l)
-        .join('\n')
-
-      const last = content.lastIndexOf('\n', pos - from)
-
-      if (last > 0) {
-        content = content.slice(last)
-      }
-    }
-
-    content = escapeHTML(content)
-
-    if (settings.renderLineReturnInExcerpts) {
-      content = content.trim().replaceAll('\n', '<br>')
-    }
-
-    return content
-  } catch (e) {
-    new Notice(
-      'Omnisearch - Error while creating excerpt, see developer console'
-    )
-    console.error(`Omnisearch - Error while creating excerpt`)
-    console.error(e)
-    return ''
-  }
-}
-
-/**
- * splits a string in words or "expressions in quotes"
- * @param str
- * @returns
- */
-export function splitQuotes(str: string): string[] {
-  return (
-    str
-      .match(/"(.*?)"/g)
-      ?.map(s => s.replace(/"/g, ''))
-      .filter(q => !!q) ?? []
-  )
-}
-
-export function stripSurroundingQuotes(str: string): string {
-  return str.replace(regexStripQuotes, '')
 }
 
 function mapAsync<T, U>(
@@ -263,7 +151,7 @@ export function isContentIndexable(path: string): boolean {
 
 export function isFilenameIndexable(path: string): boolean {
   return (
-    (canIndexUnsupportedFiles()) ||
+    canIndexUnsupportedFiles() ||
     isFilePlaintext(path) ||
     isFileCanvas(path) ||
     isFileFromDataloomPlugin(path)
@@ -329,13 +217,13 @@ export function chunkArray<T>(arr: T[], len: number): T[][] {
 export function splitCamelCase(text: string): string[] {
   // if no camel case found, do nothing
   if (!/[a-z][A-Z]/.test(text)) {
-    return [];
+    return []
   }
   const splittedText = text
     .replace(/([a-z](?=[A-Z]))/g, '$1 ')
     .split(' ')
-    .filter(t => t);
-  return splittedText;
+    .filter(t => t)
+  return splittedText
 }
 
 /**
