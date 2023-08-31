@@ -1,10 +1,5 @@
 import MiniSearch, { type Options, type SearchResult } from 'minisearch'
-import type {
-  DocumentRef,
-  IndexedDocument,
-  ResultNote,
-  SearchMatch,
-} from '../globals'
+import type { DocumentRef, IndexedDocument, ResultNote } from '../globals'
 import { chsRegex, getChsSegmenter, SPACE_OR_PUNCTUATION } from '../globals'
 import { settings } from '../settings'
 import {
@@ -13,14 +8,13 @@ import {
   removeDiacritics,
   splitCamelCase,
   splitHyphens,
-  stringsToRegex,
   stripMarkdownCharacters,
-  warnDebug,
 } from '../tools/utils'
 import { Notice } from 'obsidian'
 import type { Query } from './query'
 import { cacheManager } from '../cache-manager'
 import { sortBy } from 'lodash-es'
+import { getMatches, stringsToRegex } from 'src/tools/text-processing'
 
 const tokenize = (text: string): string[] => {
   let tokens = text.split(SPACE_OR_PUNCTUATION)
@@ -300,8 +294,7 @@ export class Omnisearch {
     // Sort results and keep the 50 best
     results = results.sort((a, b) => b.score - a.score).slice(0, 50)
 
-    if (results.length)
-      logDebug('First result:', results[0])
+    if (results.length) logDebug('First result:', results[0])
 
     const documents = await Promise.all(
       results.map(async result => await cacheManager.getDocument(result.id))
@@ -344,35 +337,6 @@ export class Omnisearch {
     // this.previousResults = results
 
     return results
-  }
-
-  public getMatches(text: string, reg: RegExp, query: Query): SearchMatch[] {
-    const startTime = new Date().getTime()
-    let match: RegExpExecArray | null = null
-    let matches: SearchMatch[] = []
-    let count = 0
-    while ((match = reg.exec(text)) !== null) {
-      // Avoid infinite loops, stop looking after 100 matches or if we're taking too much time
-      if (++count >= 100 || new Date().getTime() - startTime > 50) {
-        warnDebug('Stopped getMatches at', count, 'results')
-        break
-      }
-      logDebug('match :', match)
-      const m = match[1]
-      if (m) matches.push({ match: m, offset: match.index })
-    }
-
-    // If the query can be found "as is" in the text, put this match first
-    const best = text.toLowerCase().indexOf(query.segmentsToStr())
-    if (best > -1) {
-      matches = matches.filter(m => m.offset !== best)
-      matches.unshift({
-        offset: best,
-        match: query.segmentsToStr(),
-      })
-    }
-
-    return matches
   }
 
   /**
@@ -435,12 +399,12 @@ export class Omnisearch {
       logDebug('Matching tokens:', foundWords)
 
       logDebug('Getting matches locations...')
-      const matches = this.getMatches(
+      const matches = getMatches(
         note.content,
         stringsToRegex(foundWords),
         query
       )
-      logDebug('Matches:', matches)
+      logDebug(`Matches for ${note.basename}`, matches)
       const resultNote: ResultNote = {
         score: result.score,
         foundWords,
