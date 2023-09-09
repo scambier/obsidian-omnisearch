@@ -1,55 +1,17 @@
 import {
   type CachedMetadata,
   getAllTags,
-  Notice,
   parseFrontMatterAliases,
   Platform,
 } from 'obsidian'
-import {
-  excerptAfter,
-  excerptBefore,
-  getChsSegmenter,
-  getTextExtractor,
-  highlightClass,
-  isSearchMatch,
-  regexLineSplit,
-  regexStripQuotes,
-  regexYaml,
-  SPACE_OR_PUNCTUATION,
-  type SearchMatch,
-} from '../globals'
+import { getTextExtractor, isSearchMatch, type SearchMatch } from '../globals'
 import { canIndexUnsupportedFiles, settings } from '../settings'
 import { type BinaryLike, createHash } from 'crypto'
 import { md5 } from 'pure-md5'
 
-export function highlighter(str: string): string {
-  return `<span class="${highlightClass}">${str}</span>`
-}
-
-export function highlighterGroups(_substring: string, ...args: any[]) {
-  // args[0] is the single char preceding args[1], which is the word we want to highlight
-  if (!!args[1].trim())
-    return `<span>${args[0]}</span><span class="${highlightClass}">${args[1]}</span>`
-  return '&lt;no content&gt;'
-}
-
-export function escapeHTML(html: string): string {
-  return html
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;')
-}
-
-export function splitLines(text: string): string[] {
-  return text.split(regexLineSplit).filter(l => !!l && l.length > 2)
-}
-
-export function removeFrontMatter(text: string): string {
-  // Regex to recognize YAML Front Matter (at beginning of file, 3 hyphens, than any charecter, including newlines, then 3 hyphens).
-  return text.replace(regexYaml, '')
-}
+// export function highlighter(str: string): string {
+//   return `<span class="${highlightClass}">${str}</span>`
+// }
 
 export function pathWithoutFilename(path: string): string {
   const split = path.split('/')
@@ -82,32 +44,6 @@ export function getAllIndices(text: string, regex: RegExp): SearchMatch[] {
     .filter(isSearchMatch)
 }
 
-/**
- * Used to find excerpts in a note body, or select which words to highlight
- */
-export function stringsToRegex(strings: string[]): RegExp {
-  if (!strings.length) return /^$/g
-
-  // sort strings by decreasing length, so that longer strings are matched first
-  strings.sort((a, b) => b.length - a.length)
-
-  const joined =
-    '(' +
-    // Default word split is not applied if the user uses the cm-chs-patch plugin
-    (getChsSegmenter()
-      ? ''
-      : // Split on start of line, spaces, punctuation, or capital letters (for camelCase)
-      // We also add the hyphen to the list of characters that can split words
-      settings.splitCamelCase
-      ? `^|${SPACE_OR_PUNCTUATION.source}|\-|[A-Z]`
-      : `^|${SPACE_OR_PUNCTUATION.source}|\-`) +
-    ')' +
-    `(${strings.map(s => escapeRegex(s)).join('|')})`
-
-  const reg = new RegExp(`${joined}`, 'giu')
-  return reg
-}
-
 export function extractHeadingsFromCache(
   cache: CachedMetadata,
   level: number
@@ -119,69 +55,6 @@ export function extractHeadingsFromCache(
 
 export function loopIndex(index: number, nbItems: number): number {
   return (index + nbItems) % nbItems
-}
-
-export function makeExcerpt(content: string, offset: number): string {
-  try {
-    const pos = offset ?? -1
-    const from = Math.max(0, pos - excerptBefore)
-    const to = Math.min(content.length, pos + excerptAfter)
-    if (pos > -1) {
-      content =
-        (from > 0 ? '…' : '') +
-        content.slice(from, to).trim() +
-        (to < content.length - 1 ? '…' : '')
-    } else {
-      content = content.slice(0, excerptAfter)
-    }
-    if (settings.renderLineReturnInExcerpts) {
-      const lineReturn = new RegExp(/(?:\r\n|\r|\n)/g)
-      // Remove multiple line returns
-      content = content
-        .split(lineReturn)
-        .filter(l => l)
-        .join('\n')
-
-      const last = content.lastIndexOf('\n', pos - from)
-
-      if (last > 0) {
-        content = content.slice(last)
-      }
-    }
-
-    content = escapeHTML(content)
-
-    if (settings.renderLineReturnInExcerpts) {
-      content = content.trim().replaceAll('\n', '<br>')
-    }
-
-    return content
-  } catch (e) {
-    new Notice(
-      'Omnisearch - Error while creating excerpt, see developer console'
-    )
-    console.error(`Omnisearch - Error while creating excerpt`)
-    console.error(e)
-    return ''
-  }
-}
-
-/**
- * splits a string in words or "expressions in quotes"
- * @param str
- * @returns
- */
-export function splitQuotes(str: string): string[] {
-  return (
-    str
-      .match(/"(.*?)"/g)
-      ?.map(s => s.replace(/"/g, ''))
-      .filter(q => !!q) ?? []
-  )
-}
-
-export function stripSurroundingQuotes(str: string): string {
-  return str.replace(regexStripQuotes, '')
 }
 
 function mapAsync<T, U>(
@@ -281,9 +154,7 @@ export function isFilenameIndexable(path: string): boolean {
     canIndexUnsupportedFiles() ||
     isFilePlaintext(path) ||
     isFileCanvas(path) ||
-    isFileFromDataloomPlugin(path) ||
-    isFilePDF(path) ||
-    isFileImage(path)    
+    isFileFromDataloomPlugin(path)
   )
 }
 
@@ -344,14 +215,15 @@ export function chunkArray<T>(arr: T[], len: number): T[][] {
  * @param text
  */
 export function splitCamelCase(text: string): string[] {
-  const split = text
+  // if no camel case found, do nothing
+  if (!/[a-z][A-Z]/.test(text)) {
+    return []
+  }
+  const splittedText = text
     .replace(/([a-z](?=[A-Z]))/g, '$1 ')
     .split(' ')
     .filter(t => t)
-  if (split.length > 1) {
-    return split
-  }
-  return []
+  return splittedText
 }
 
 /**
@@ -360,11 +232,10 @@ export function splitCamelCase(text: string): string[] {
  * @param text
  */
 export function splitHyphens(text: string): string[] {
-  const split = text.split('-').filter(t => t)
-  if (split.length > 1) {
-    return split
+  if (!text.includes('-')) {
+    return []
   }
-  return []
+  return text.split('-').filter(t => t)
 }
 
 export function logDebug(...args: any[]): void {

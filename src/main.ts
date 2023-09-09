@@ -1,4 +1,4 @@
-import { Notice, Plugin } from 'obsidian'
+import { Notice, Platform, Plugin } from 'obsidian'
 import {
   OmnisearchInFileModal,
   OmnisearchVaultModal,
@@ -103,7 +103,7 @@ export default class OmnisearchPlugin extends Plugin {
           if (isFileIndexable(file.path)) {
             logDebug('Renaming file', file.path)
             cacheManager.removeFromLiveCache(oldPath)
-            cacheManager.addToLiveCache(file.path)
+            await cacheManager.addToLiveCache(file.path)
             searchEngine.removeFromPaths([oldPath])
             await searchEngine.addFromPaths([file.path])
           }
@@ -118,11 +118,11 @@ export default class OmnisearchPlugin extends Plugin {
   executeFirstLaunchTasks(): void {
     const code = '1.10.1'
     if (settings.welcomeMessage !== code) {
-      const welcome = new DocumentFragment()
-      welcome.createSpan({}, span => {
-        span.innerHTML = `🔎 Omnisearch now requires the <strong>Text Extractor</strong> plugin to index PDF and images. See Omnisearch settings for more information.`
-      })
-      new Notice(welcome, 20_000)
+      // const welcome = new DocumentFragment()
+      // welcome.createSpan({}, span => {
+      //   span.innerHTML = `🔎 Omnisearch now requires the <strong>Text Extractor</strong> plugin to index PDF and images. See Omnisearch settings for more information.`
+      // })
+      // new Notice(welcome, 20_000)
     }
     settings.welcomeMessage = code
 
@@ -206,18 +206,18 @@ export default class OmnisearchPlugin extends Plugin {
 
       // Disable settings.useCache while writing the cache, in case it freezes
       settings.useCache = false
-      saveSettings(this)
+      await saveSettings(this)
 
       // Write the cache
       await searchEngine.writeToCache()
 
       // Re-enable settings.caching
       settings.useCache = true
-      saveSettings(this)
+      await saveSettings(this)
     }
 
     console.timeEnd('Omnisearch - Indexing total time')
-    if (diff.toAdd.length >= 1000) {
+    if (diff.toAdd.length >= 1000 && !Platform.isIosApp) {
       new Notice(`Omnisearch - Your files have been indexed.`)
     }
     indexingStep.set(IndexingStepType.Done)

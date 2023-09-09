@@ -11,6 +11,8 @@ import {
   getTagsFromMetadata,
   isFileCanvas,
   isFileFromDataloomPlugin,
+  isFileImage,
+  isFilePDF,
   isFilePlaintext,
   isFilenameIndexable,
   logDebug,
@@ -20,6 +22,7 @@ import {
 import type { CanvasData } from 'obsidian/canvas'
 import type { AsPlainObject } from 'minisearch'
 import type MiniSearch from 'minisearch'
+import { settings } from './settings'
 
 /**
  * This function is responsible for extracting the text from a file and
@@ -84,11 +87,23 @@ async function getAndMapIndexedDocument(
     }
   }
 
-  // ** Image or PDF **
-  else if (extractor?.canFileBeExtracted(path)) {
+  // ** Image **
+  else if (
+    isFileImage(path) &&
+    settings.imagesIndexing &&
+    extractor?.canFileBeExtracted(path)
+  ) {
     content = await extractor.extractText(file)
   }
-  
+  // ** PDF **
+  else if (
+    isFilePDF(path) &&
+    settings.PDFIndexing &&
+    extractor?.canFileBeExtracted(path)
+  ) {
+    content = await extractor.extractText(file)
+  }
+
   // ** Unsupported files **
   else if (isFilenameIndexable(path)) {
     content = file.path

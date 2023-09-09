@@ -1,8 +1,8 @@
 {
   "id": "omnisearch",
   "name": "Omnisearch",
-  "version": "1.15.0",
-  "minAppVersion": "1.0.0",
+  "version": "1.16.0",
+  "minAppVersion": "1.3.0",
   "description": "A search engine that just works",
   "author": "Simon Cambier",
   "authorUrl": "https://github.com/scambier/obsidian-omnisearch",

@@ -3,17 +3,16 @@
   import type { ResultNote } from '../globals'
   import {
     getExtension,
-    highlighterGroups,
     isFileCanvas,
     isFileImage,
     isFilePDF,
-    makeExcerpt,
     pathWithoutFilename,
     removeDiacritics,
-    stringsToRegex,
   } from '../tools/utils'
   import ResultItemContainer from './ResultItemContainer.svelte'
   import { setIcon } from 'obsidian'
+  import { cloneDeep } from 'lodash-es'
+  import { stringsToRegex, getMatches, makeExcerpt, highlightText } from 'src/tools/text-processing'
 
   export let selected = false
   export let note: ResultNote
@@ -36,6 +35,11 @@
     }
   }
   $: reg = stringsToRegex(note.foundWords)
+  $: matchesTitle = getMatches(title, reg)
+  $: matchesExcerpt = cloneDeep(note.matches).map(m => {
+    m.offset = m.offset - cleanedContent.offset
+    return m
+  })
   $: cleanedContent = makeExcerpt(note.content, note.matches[0]?.offset ?? -1)
   $: glyph = false //cacheManager.getLiveDocument(note.path)?.doesNotExist
   $: {
@@ -70,7 +74,7 @@
     <div class="omnisearch-result__title-container">
       <span class="omnisearch-result__title">
         <span bind:this="{elFilePathIcon}"></span>
-        <span>{@html title.replace(reg, highlighterGroups)}</span>
+        <span>{@html highlightText(title, matchesTitle)}</span>
         <span class="omnisearch-result__extension">
           .{getExtension(note.path)}
         </span>
@@ -97,7 +101,7 @@
     <div style="display: flex; flex-direction: row;">
       {#if $showExcerpt}
         <div class="omnisearch-result__body">
-          {@html cleanedContent.replace(reg, highlighterGroups)}
+          {@html highlightText(cleanedContent.content, matchesExcerpt)}
         </div>
       {/if}
 

@@ -1,19 +1,22 @@
 <script lang="ts">
-  import type { ResultNote } from '../globals'
   import {
-    highlighterGroups,
     makeExcerpt,
-    stringsToRegex,
-  } from '../tools/utils'
+    highlightText,
+  } from 'src/tools/text-processing'
+  import type { ResultNote } from '../globals'
   import ResultItemContainer from './ResultItemContainer.svelte'
+  import { cloneDeep } from 'lodash-es'
 
   export let offset: number
   export let note: ResultNote
   export let index = 0
   export let selected = false
 
-  $: reg = stringsToRegex(note.foundWords)
   $: cleanedContent = makeExcerpt(note?.content ?? '', offset)
+  $: matchesExcerpt = cloneDeep(note.matches).map(m => {
+    m.offset = m.offset - cleanedContent.offset
+    return m
+  })
 </script>
 
 <ResultItemContainer
@@ -23,6 +26,6 @@
   on:click
   on:auxclick>
   <div class="omnisearch-result__body">
-    {@html cleanedContent.replace(reg, highlighterGroups)}
+    {@html highlightText(cleanedContent.content, matchesExcerpt)}
   </div>
 </ResultItemContainer>

@@ -1,10 +1,5 @@
 import MiniSearch, { type Options, type SearchResult } from 'minisearch'
-import type {
-  DocumentRef,
-  IndexedDocument,
-  ResultNote,
-  SearchMatch,
-} from '../globals'
+import type { DocumentRef, IndexedDocument, ResultNote } from '../globals'
 import { chsRegex, getChsSegmenter, SPACE_OR_PUNCTUATION } from '../globals'
 import { settings } from '../settings'
 import {
@@ -13,17 +8,22 @@ import {
   removeDiacritics,
   splitCamelCase,
   splitHyphens,
-  stringsToRegex,
   stripMarkdownCharacters,
-  warnDebug,
 } from '../tools/utils'
 import { Notice } from 'obsidian'
 import type { Query } from './query'
 import { cacheManager } from '../cache-manager'
 import { sortBy } from 'lodash-es'
+import { getMatches, stringsToRegex } from 'src/tools/text-processing'
 
 const tokenize = (text: string): string[] => {
   let tokens = text.split(SPACE_OR_PUNCTUATION)
+
+  // Split hyphenated tokens
+  tokens = [...tokens, ...tokens.flatMap(splitHyphens)]
+
+  // Split camelCase tokens into "camel" and "case
+  tokens = [...tokens, ...tokens.flatMap(splitCamelCase)]
 
   // When enabled, we only use the chsSegmenter,
   // and not the other custom tokenizers
@@ -32,12 +32,8 @@ const tokenize = (text: string): string[] => {
     tokens = tokens.flatMap(word =>
       chsRegex.test(word) ? chsSegmenter.cut(word) : [word]
     )
-  } else {
-    // Split camelCase tokens into "camel" and "case
-    tokens = [...tokens, ...tokens.flatMap(splitCamelCase)]
-    // Split hyphenated tokens
-    tokens = [...tokens, ...tokens.flatMap(splitHyphens)]
   }
+
   return tokens
 }
 
@@ -186,6 +182,7 @@ export class Omnisearch {
       return []
     }
 
+    logDebug('=== New search ===')
     logDebug('Starting search for', query)
 
     let fuzziness: number
@@ -216,7 +213,7 @@ export class Omnisearch {
         headings1: settings.weightH1,
         headings2: settings.weightH2,
         headings3: settings.weightH3,
-        unmarkedTags: settings.weightUnmarkedTags
+        unmarkedTags: settings.weightUnmarkedTags,
       },
     })
 
@@ -297,6 +294,8 @@ export class Omnisearch {
     // Sort results and keep the 50 best
     results = results.sort((a, b) => b.score - a.score).slice(0, 50)
 
+    if (results.length) logDebug('First result:', results[0])
+
     const documents = await Promise.all(
       results.map(async result => await cacheManager.getDocument(result.id))
     )
@@ -304,7 +303,7 @@ export class Omnisearch {
     // If the search query contains quotes, filter out results that don't have the exact match
     const exactTerms = query.getExactTerms()
     if (exactTerms.length) {
-      logDebug('Filtering with quoted terms')
+      logDebug('Filtering with quoted terms: ', exactTerms)
       results = results.filter(r => {
         const document = documents.find(d => d.path === r.id)
         const title = document?.path.toLowerCase() ?? ''
@@ -338,33 +337,6 @@ export class Omnisearch {
     // this.previousResults = results
 
     return results
-  }
-
-  public getMatches(text: string, reg: RegExp, query: Query): SearchMatch[] {
-    const startTime = new Date().getTime()
-    let match: RegExpExecArray | null = null
-    const matches: SearchMatch[] = []
-    let count = 0
-    while ((match = reg.exec(text)) !== null) {
-      // Avoid infinite loops, stop looking after 100 matches or if we're taking too much time
-      if (++count >= 100 || new Date().getTime() - startTime > 50) {
-        warnDebug('Stopped getMatches at', count, 'results')
-        break
-      }
-      const m = match[0]
-      if (m) matches.push({ match: m, offset: match.index })
-    }
-
-    // If the query can be found "as is" in the text, put this match first
-    const best = text.toLowerCase().indexOf(query.segmentsToStr())
-    if (best > -1) {
-      matches.unshift({
-        offset: best,
-        match: query.segmentsToStr(),
-      })
-    }
-
-    return matches
   }
 
   /**
@@ -427,12 +399,12 @@ export class Omnisearch {
       logDebug('Matching tokens:', foundWords)
 
       logDebug('Getting matches locations...')
-      const matches = this.getMatches(
+      const matches = getMatches(
         note.content,
         stringsToRegex(foundWords),
         query
       )
-      logDebug('Matches:', matches)
+      logDebug(`Matches for ${note.basename}`, matches)
       const resultNote: ResultNote = {
         score: result.score,
         foundWords,

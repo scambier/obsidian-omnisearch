@@ -1,7 +1,7 @@
 import type { ResultNote } from '../globals'
 import { Query } from '../search/query'
 import { searchEngine } from '../search/omnisearch'
-import { makeExcerpt } from './utils'
+import { makeExcerpt } from './text-processing'
 import { refreshIndex } from '../notes-index'
 
 type ResultNoteApi = {
@@ -31,7 +31,7 @@ function mapResults(results: ResultNote[]): ResultNoteApi[] {
 
     const excerpt = makeExcerpt(content, matches[0]?.offset ?? -1)
 
-    return {
+    const res: ResultNoteApi = {
       score,
       path,
       basename,
@@ -42,8 +42,10 @@ function mapResults(results: ResultNote[]): ResultNoteApi[] {
           offset: match.offset,
         }
       }),
-      excerpt,
+      excerpt: excerpt.content,
     }
+
+    return res
   })
 }
 

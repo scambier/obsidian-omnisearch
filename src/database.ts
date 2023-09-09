@@ -1,6 +1,7 @@
 import Dexie from 'dexie'
 import type { AsPlainObject } from 'minisearch'
 import type { DocumentRef } from './globals'
+import { Notice } from 'obsidian'
 
 export class OmnisearchCache extends Dexie {
   public static readonly dbVersion = 8
@@ -57,6 +58,7 @@ export class OmnisearchCache extends Dexie {
   }
 
   public async clearCache() {
+    new Notice('Omnisearch - Cache cleared. Please restart Obsidian.')
     await this.minisearch.clear()
   }
 }
