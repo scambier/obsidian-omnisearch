@@ -1,4 +1,4 @@
-import { App, Modal, TFile } from 'obsidian'
+import { App, MarkdownView, Modal, TFile } from 'obsidian'
 import type { Modifier } from 'obsidian'
 import ModalVault from './ModalVault.svelte'
 import ModalInFile from './ModalInFile.svelte'
@@ -144,11 +144,15 @@ abstract class OmnisearchModal extends Modal {
 export class OmnisearchVaultModal extends OmnisearchModal {
   constructor(app: App, query?: string) {
     super(app)
+
+    // Get selected text
+    const selection = app.workspace.getActiveViewOfType(MarkdownView)?.editor.getSelection()
+
     const cmp = new ModalVault({
       target: this.modalEl,
       props: {
         modal: this,
-        previousQuery: query,
+        previousQuery: selection ?? query,
       },
     })
 
