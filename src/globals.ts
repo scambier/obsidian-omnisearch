@@ -32,6 +32,19 @@ export const enum IndexingStepType {
   WritingCache,
 }
 
+export const enum Action {
+  Enter = 'enter',
+  OpenInBackground = 'open-in-background',
+  CreateNote = 'create-note',
+  OpenInNewPane = 'open-in-new-pane',
+  InsertLink = 'insert-link',
+  Tab = 'tab',
+  ArrowUp = 'arrow-up',
+  ArrowDown = 'arrow-down',
+  PrevSearchHistory = 'prev-search-history',
+  NextSearchHistory = 'next-search-history',
+}
+
 export type DocumentRef = { path: string; mtime: number }
 
 export type IndexedDocument = {
