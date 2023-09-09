@@ -92,6 +92,7 @@
   onMount(async () => {
     eventBus.enable('vault')
     eventBus.on('vault', Action.Enter, openNoteAndCloseModal)
+    eventBus.on('vault', Action.OpenInBackground, openNoteInBackground)
     eventBus.on('vault', Action.CreateNote, createNoteAndCloseModal)
     eventBus.on('vault', Action.OpenInNewPane, openNoteInNewPane)
     eventBus.on('vault', Action.InsertLink, insertLink)
@@ -161,6 +162,11 @@
     if (!selectedNote) return
     openSearchResult(selectedNote)
     modal.close()
+  }
+
+  function openNoteInBackground(): void {
+    if (!selectedNote) return
+    openSearchResult(selectedNote, true)
   }
 
   function openNoteInNewPane(): void {
@@ -337,6 +343,12 @@
     <span class="prompt-instruction-command">{openInNewPaneKey}</span>
     <span>to open in a new pane</span>
   </div>
+
+  <div class="prompt-instruction">
+    <span class="prompt-instruction-command">alt o</span>
+    <span>to open in the background</span>
+  </div>
+
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">{createInCurrentPaneKey}</span>
     <span>to create</span>
@@ -351,7 +363,7 @@
     <span>to insert a link</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">ctrl+h</span>
+    <span class="prompt-instruction-command">ctrl h</span>
     <span>to toggle excerpts</span>
   </div>
   <div class="prompt-instruction">

@@ -110,6 +110,15 @@ abstract class OmnisearchModal extends Modal {
       }
     })
 
+    // Open in background
+    this.scope.register(['Alt'], 'O', e => {
+      if (!isInputComposition()) {
+        // Check if the user is still typing
+        e.preventDefault()
+        eventBus.emit(Action.OpenInBackground)
+      }
+    })
+
     this.scope.register([], 'Tab', e => {
       e.preventDefault()
       eventBus.emit(Action.Tab) // Switch context
