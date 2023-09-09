@@ -9,6 +9,7 @@
     IndexingStepType,
     type ResultNote,
     SPACE_OR_PUNCTUATION,
+    Action,
   } from 'src/globals'
   import { createNote, openNote } from 'src/tools/notes'
   import {
@@ -90,15 +91,15 @@
 
   onMount(async () => {
     eventBus.enable('vault')
-    eventBus.on('vault', 'enter', openNoteAndCloseModal)
-    eventBus.on('vault', 'create-note', createNoteAndCloseModal)
-    eventBus.on('vault', 'open-in-new-pane', openNoteInNewPane)
-    eventBus.on('vault', 'insert-link', insertLink)
-    eventBus.on('vault', 'tab', switchToInFileModal)
-    eventBus.on('vault', 'arrow-up', () => moveIndex(-1))
-    eventBus.on('vault', 'arrow-down', () => moveIndex(1))
-    eventBus.on('vault', 'prev-search-history', prevSearchHistory)
-    eventBus.on('vault', 'next-search-history', nextSearchHistory)
+    eventBus.on('vault', Action.Enter, openNoteAndCloseModal)
+    eventBus.on('vault', Action.CreateNote, createNoteAndCloseModal)
+    eventBus.on('vault', Action.OpenInNewPane, openNoteInNewPane)
+    eventBus.on('vault', Action.InsertLink, insertLink)
+    eventBus.on('vault', Action.Tab, switchToInFileModal)
+    eventBus.on('vault', Action.ArrowUp, () => moveIndex(-1))
+    eventBus.on('vault', Action.ArrowDown, () => moveIndex(1))
+    eventBus.on('vault', Action.PrevSearchHistory, prevSearchHistory)
+    eventBus.on('vault', Action.NextSearchHistory, nextSearchHistory)
     await NotesIndex.refreshIndex()
     if (settings.showPreviousQueryResults) {
       previousQuery = (await cacheManager.getSearchHistory())[0]
@@ -324,7 +325,8 @@
     <span>to cycle history</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">{openInCurrentPaneKey}</span><span>to open</span>
+    <span class="prompt-instruction-command">{openInCurrentPaneKey}</span>
+    <span>to open</span>
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">tab</span>
