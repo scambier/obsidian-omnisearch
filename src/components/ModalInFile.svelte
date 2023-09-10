@@ -35,11 +35,11 @@
   onMount(() => {
     eventBus.enable('infile')
 
-    eventBus.on('infile', 'enter', openSelection)
-    eventBus.on('infile', 'open-in-new-pane', openSelectionInNewTab)
-    eventBus.on('infile', 'arrow-up', () => moveIndex(-1))
-    eventBus.on('infile', 'arrow-down', () => moveIndex(1))
-    eventBus.on('infile', 'tab', switchToVaultModal)
+    eventBus.on('infile', Action.Enter, openSelection)
+    eventBus.on('infile', Action.OpenInNewPane, openSelectionInNewTab)
+    eventBus.on('infile', Action.ArrowUp, () => moveIndex(-1))
+    eventBus.on('infile', Action.ArrowDown, () => moveIndex(1))
+    eventBus.on('infile', Action.Tab, switchToVaultModal)
   })
 
   onDestroy(() => {

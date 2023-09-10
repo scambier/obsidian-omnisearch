@@ -1,8 +1,8 @@
-import { App, Modal, TFile } from 'obsidian'
+import { App, MarkdownView, Modal, TFile } from 'obsidian'
 import type { Modifier } from 'obsidian'
 import ModalVault from './ModalVault.svelte'
 import ModalInFile from './ModalInFile.svelte'
-import { eventBus, EventNames, isInputComposition } from '../globals'
+import { Action, eventBus, EventNames, isInputComposition } from '../globals'
 import { settings } from '../settings'
 
 abstract class OmnisearchModal extends Modal {
@@ -24,11 +24,11 @@ abstract class OmnisearchModal extends Modal {
 
     this.scope.register([], 'ArrowDown', e => {
       e.preventDefault()
-      eventBus.emit('arrow-down')
+      eventBus.emit(Action.ArrowDown)
     })
     this.scope.register([], 'ArrowUp', e => {
       e.preventDefault()
-      eventBus.emit('arrow-up')
+      eventBus.emit(Action.ArrowUp)
     })
 
     // Ctrl+j/k
@@ -82,23 +82,23 @@ abstract class OmnisearchModal extends Modal {
     // Open in new pane
     this.scope.register(openInNewPaneKey, 'Enter', e => {
       e.preventDefault()
-      eventBus.emit('open-in-new-pane')
+      eventBus.emit(Action.OpenInNewPane)
     })
 
     // Insert link
     this.scope.register(['Alt'], 'Enter', e => {
       e.preventDefault()
-      eventBus.emit('insert-link')
+      eventBus.emit(Action.InsertLink)
     })
 
     // Create a new note
     this.scope.register(createInCurrentPaneKey, 'Enter', e => {
       e.preventDefault()
-      eventBus.emit('create-note')
+      eventBus.emit(Action.CreateNote)
     })
     this.scope.register(createInNewPaneKey, 'Enter', e => {
       e.preventDefault()
-      eventBus.emit('create-note', { newLeaf: true })
+      eventBus.emit(Action.CreateNote, { newLeaf: true })
     })
 
     // Open in current pane
@@ -106,23 +106,32 @@ abstract class OmnisearchModal extends Modal {
       if (!isInputComposition()) {
         // Check if the user is still typing
         e.preventDefault()
-        eventBus.emit('enter')
+        eventBus.emit(Action.Enter)
+      }
+    })
+
+    // Open in background
+    this.scope.register(['Alt'], 'O', e => {
+      if (!isInputComposition()) {
+        // Check if the user is still typing
+        e.preventDefault()
+        eventBus.emit(Action.OpenInBackground)
       }
     })
 
     this.scope.register([], 'Tab', e => {
       e.preventDefault()
-      eventBus.emit('tab') // Switch context
+      eventBus.emit(Action.Tab) // Switch context
     })
 
     // Search history
     this.scope.register(['Alt'], 'ArrowDown', e => {
       e.preventDefault()
-      eventBus.emit('next-search-history')
+      eventBus.emit(Action.NextSearchHistory)
     })
     this.scope.register(['Alt'], 'ArrowUp', e => {
       e.preventDefault()
-      eventBus.emit('prev-search-history')
+      eventBus.emit(Action.PrevSearchHistory)
     })
 
     // Context
@@ -135,11 +144,15 @@ abstract class OmnisearchModal extends Modal {
 export class OmnisearchVaultModal extends OmnisearchModal {
   constructor(app: App, query?: string) {
     super(app)
+
+    // Get selected text
+    const selection = app.workspace.getActiveViewOfType(MarkdownView)?.editor.getSelection()
+
     const cmp = new ModalVault({
       target: this.modalEl,
       props: {
         modal: this,
-        previousQuery: query,
+        previousQuery: selection ?? query,
       },
     })
 
