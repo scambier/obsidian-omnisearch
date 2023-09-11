@@ -75,6 +75,10 @@ export class Query {
     return this.getTags().map(o => o.replace(/^#/, ''))
   }
 
+  /**
+   * 
+   * @returns An array of strings that are in quotes
+   */
   public getExactTerms(): string[] {
     return [
       ...new Set(
