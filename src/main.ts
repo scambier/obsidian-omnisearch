@@ -1,4 +1,4 @@
-import { Notice, Platform, Plugin } from 'obsidian'
+import { Notice, Platform, Plugin, loadPdfJs } from 'obsidian'
 import {
   OmnisearchInFileModal,
   OmnisearchVaultModal,
@@ -27,6 +27,7 @@ import { cacheManager } from './cache-manager'
 
 export default class OmnisearchPlugin extends Plugin {
   private ribbonButton?: HTMLElement
+  cacheManager = cacheManager;
 
   async onload(): Promise<void> {
     await loadSettings(this)
@@ -36,6 +37,8 @@ export default class OmnisearchPlugin extends Plugin {
       console.log('Omnisearch - Plugin disabled')
       return
     }
+
+    await loadPdfJs();
 
     await cleanOldCacheFiles()
     await OmnisearchCache.clearOldDatabases()

@@ -23,6 +23,7 @@ import type { CanvasData } from 'obsidian/canvas'
 import type { AsPlainObject } from 'minisearch'
 import type MiniSearch from 'minisearch'
 import { settings } from './settings'
+import type OmnisearchPlugin from './main';
 
 /**
  * This function is responsible for extracting the text from a file and
@@ -101,7 +102,21 @@ async function getAndMapIndexedDocument(
     settings.PDFIndexing &&
     extractor?.canFileBeExtracted(path)
   ) {
-    content = await extractor.extractText(file)
+    const arrayBuffer = await app.vault.readBinary(file);
+    // @ts-ignore
+    const document = await window.pdfjsLib.getDocument(arrayBuffer).promise;
+    content = "";
+    for (let i = 1; i <= document.numPages; i++) {
+      const page = await document.getPage(i);
+      const textContent = await page.getTextContent();
+      content += textContent.items.map((item: any) => 'str' in item ? item.str : '')
+        .join(' ')
+        // Replace \n with spaces
+        .replace(/\n/g, ' ')
+        // Trim multiple spaces
+        .replace(/ +/g, ' ')
+        .trim();
+    }
   }
 
   // ** Unsupported files **
