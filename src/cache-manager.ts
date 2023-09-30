@@ -74,7 +74,7 @@ async function getAndMapIndexedDocument(
         for (const key in obj) {
           if (typeof obj[key] === 'object') {
             iterate(obj[key])
-          } else if (key === 'markdown') {
+          } else if (key === 'content') {
             texts.push(obj[key])
           }
         }
