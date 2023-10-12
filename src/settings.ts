@@ -464,7 +464,7 @@ export class SettingsTab extends PluginSettingTab {
 
     const httpServerDesc = new DocumentFragment()
     httpServerDesc.createSpan({}, span => {
-      span.innerHTML = `Omnisearch can be used through a simple HTTP server (<a href="https://publish.obsidian.md/omnisearch/Public+API+%26+URL+Scheme#HTTP">more information</a>).`
+      span.innerHTML = `Omnisearch can be used through a simple HTTP server (<a href="https://publish.obsidian.md/omnisearch/Public+API+%26+URL+Scheme#HTTP+Server">more information</a>).`
     })
     new Setting(containerEl)
       .setName('API Access Through HTTP')
