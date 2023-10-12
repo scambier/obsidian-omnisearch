@@ -255,7 +255,7 @@
     } else {
       // Open in-file modal for active file
       const view = app.workspace.getActiveViewOfType(MarkdownView)
-      if (view) {
+      if (view?.file) {
         new OmnisearchInFileModal(app, view.file, searchQuery).open()
       }
     }
