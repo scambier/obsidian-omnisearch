@@ -58,6 +58,8 @@ export interface OmnisearchSettings extends WeightingSettings {
   verboseLogging: boolean
   vimLikeNavigationShortcut: boolean
   fuzziness: '0' | '1' | '2'
+  httpApiEnabled: boolean
+  httpApiPort: string
 }
 
 /**
@@ -284,10 +286,12 @@ export class SettingsTab extends PluginSettingTab {
         'Navigate down the results with Ctrl/⌘ + J/N, or navigate up with Ctrl/⌘ + K/P'
       )
       .addToggle(toggle =>
-        toggle.setValue(settings.vimLikeNavigationShortcut).onChange(async v => {
-          settings.vimLikeNavigationShortcut = v
-          await saveSettings(this.plugin)
-        })
+        toggle
+          .setValue(settings.vimLikeNavigationShortcut)
+          .onChange(async v => {
+            settings.vimLikeNavigationShortcut = v
+            await saveSettings(this.plugin)
+          })
       )
 
     // Fuzziness
@@ -454,7 +458,52 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
-    //#endregion Debugginh
+    //#endregion Debugging
+
+    //#region HTTP Server
+
+    const httpServerDesc = new DocumentFragment()
+    httpServerDesc.createSpan({}, span => {
+      span.innerHTML = `Omnisearch can be used through a simple HTTP server (<a href="https://publish.obsidian.md/omnisearch/Public+API+%26+URL+Scheme#HTTP">more information</a>).`
+    })
+    new Setting(containerEl)
+      .setName('API Access Through HTTP')
+      .setHeading()
+      .setDesc(httpServerDesc)
+
+    new Setting(containerEl)
+      .setName('Enable the HTTP server')
+      .addToggle(toggle =>
+        toggle.setValue(settings.httpApiEnabled).onChange(async v => {
+          settings.httpApiEnabled = v
+          if (v) {
+            this.plugin.apiHttpServer.listen(settings.httpApiPort)
+          } else {
+            this.plugin.apiHttpServer.close()
+          }
+          await saveSettings(this.plugin)
+        })
+      )
+
+    new Setting(containerEl).setName('HTTP Port').addText(component => {
+      component
+        .setValue(settings.httpApiPort)
+        .setPlaceholder('51361')
+        .onChange(async v => {
+          if (parseInt(v) > 65535) {
+            v = settings.httpApiPort
+            component.setValue(settings.httpApiPort)
+          }
+          settings.httpApiPort = v
+          if (settings.httpApiEnabled) {
+            this.plugin.apiHttpServer.close()
+            this.plugin.apiHttpServer.listen(settings.httpApiPort)
+          }
+          await saveSettings(this.plugin)
+        })
+    })
+
+    //#endregion HTTP Server
 
     //#region Danger Zone
     new Setting(containerEl).setName('Danger Zone').setHeading()
@@ -479,6 +528,7 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
+    // Disable Omnisearch
     const disableDesc = new DocumentFragment()
     disableDesc.createSpan({}, span => {
       span.innerHTML = `Disable Omnisearch on this device only.<br>
@@ -498,6 +548,7 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
+    // Clear cache data
     if (isCacheEnabled()) {
       const resetCacheDesc = new DocumentFragment()
       resetCacheDesc.createSpan({}, span => {
@@ -522,7 +573,7 @@ export class SettingsTab extends PluginSettingTab {
     cb.setLimits(1, 5, 0.1)
       .setValue(settings[key])
       .setDynamicTooltip()
-      .onChange(async (v) => {
+      .onChange(async v => {
         settings[key] = v
         await saveSettings(this.plugin)
       })
@@ -556,6 +607,9 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   weightH2: 1.3,
   weightH3: 1.1,
   weightUnmarkedTags: 1.1,
+
+  httpApiEnabled: false,
+  httpApiPort: '51361',
 
   welcomeMessage: '',
   verboseLogging: false,

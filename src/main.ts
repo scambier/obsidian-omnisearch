@@ -24,9 +24,12 @@ import { database, OmnisearchCache } from './database'
 import * as NotesIndex from './notes-index'
 import { searchEngine } from './search/omnisearch'
 import { cacheManager } from './cache-manager'
+import getServer from './tools/api-server'
 
 export default class OmnisearchPlugin extends Plugin {
   private ribbonButton?: HTMLElement
+
+  public apiHttpServer = getServer()
 
   async onload(): Promise<void> {
     await loadSettings(this)
@@ -112,6 +115,10 @@ export default class OmnisearchPlugin extends Plugin {
 
       this.executeFirstLaunchTasks()
       await this.populateIndex()
+      
+      if (settings.httpApiEnabled) {
+        this.apiHttpServer.listen(settings.httpApiPort)
+      }
     })
   }
 
@@ -137,6 +144,7 @@ export default class OmnisearchPlugin extends Plugin {
     if (process.env.NODE_ENV === 'production') {
       await database.clearCache()
     }
+    this.apiHttpServer.close()
   }
 
   addRibbonButton(): void {
