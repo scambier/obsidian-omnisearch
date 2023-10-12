@@ -20,10 +20,8 @@ export function getServer() {
       if (req.url) {
         // parse URL
         const parsedUrl = url.parse(req.url, true)
-        console.log(parsedUrl)
         if (parsedUrl.pathname === '/search') {
           const q = parsedUrl.query.q as string
-          console.log(q)
           const results = await api.search(q)
           res.statusCode = 200
           res.setHeader('Content-Type', 'application/json')
