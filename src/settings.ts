@@ -1,5 +1,6 @@
 import {
   Notice,
+  Platform,
   Plugin,
   PluginSettingTab,
   Setting,
@@ -462,46 +463,48 @@ export class SettingsTab extends PluginSettingTab {
 
     //#region HTTP Server
 
-    const httpServerDesc = new DocumentFragment()
-    httpServerDesc.createSpan({}, span => {
-      span.innerHTML = `Omnisearch can be used through a simple HTTP server (<a href="https://publish.obsidian.md/omnisearch/Public+API+%26+URL+Scheme#HTTP+Server">more information</a>).`
-    })
-    new Setting(containerEl)
-      .setName('API Access Through HTTP')
-      .setHeading()
-      .setDesc(httpServerDesc)
+    if (!Platform.isMobile) {
+      const httpServerDesc = new DocumentFragment()
+      httpServerDesc.createSpan({}, span => {
+        span.innerHTML = `Omnisearch can be used through a simple HTTP server (<a href="https://publish.obsidian.md/omnisearch/Public+API+%26+URL+Scheme#HTTP+Server">more information</a>).`
+      })
+      new Setting(containerEl)
+        .setName('API Access Through HTTP')
+        .setHeading()
+        .setDesc(httpServerDesc)
 
-    new Setting(containerEl)
-      .setName('Enable the HTTP server')
-      .addToggle(toggle =>
-        toggle.setValue(settings.httpApiEnabled).onChange(async v => {
-          settings.httpApiEnabled = v
-          if (v) {
-            this.plugin.apiHttpServer.listen(settings.httpApiPort)
-          } else {
-            this.plugin.apiHttpServer.close()
-          }
-          await saveSettings(this.plugin)
-        })
-      )
+      new Setting(containerEl)
+        .setName('Enable the HTTP server')
+        .addToggle(toggle =>
+          toggle.setValue(settings.httpApiEnabled).onChange(async v => {
+            settings.httpApiEnabled = v
+            if (v) {
+              this.plugin.apiHttpServer.listen(settings.httpApiPort)
+            } else {
+              this.plugin.apiHttpServer.close()
+            }
+            await saveSettings(this.plugin)
+          })
+        )
 
-    new Setting(containerEl).setName('HTTP Port').addText(component => {
-      component
-        .setValue(settings.httpApiPort)
-        .setPlaceholder('51361')
-        .onChange(async v => {
-          if (parseInt(v) > 65535) {
-            v = settings.httpApiPort
-            component.setValue(settings.httpApiPort)
-          }
-          settings.httpApiPort = v
-          if (settings.httpApiEnabled) {
-            this.plugin.apiHttpServer.close()
-            this.plugin.apiHttpServer.listen(settings.httpApiPort)
-          }
-          await saveSettings(this.plugin)
-        })
-    })
+      new Setting(containerEl).setName('HTTP Port').addText(component => {
+        component
+          .setValue(settings.httpApiPort)
+          .setPlaceholder('51361')
+          .onChange(async v => {
+            if (parseInt(v) > 65535) {
+              v = settings.httpApiPort
+              component.setValue(settings.httpApiPort)
+            }
+            settings.httpApiPort = v
+            if (settings.httpApiEnabled) {
+              this.plugin.apiHttpServer.close()
+              this.plugin.apiHttpServer.listen(settings.httpApiPort)
+            }
+            await saveSettings(this.plugin)
+          })
+      })
+    }
 
     //#endregion HTTP Server
 

@@ -2,6 +2,7 @@ import * as http from 'http'
 import * as url from 'url'
 import api from './api'
 import { Notice } from 'obsidian'
+import { saveSettings, settings } from 'src/settings'
 
 export function getServer() {
   const server = http.createServer(async function (req, res) {
@@ -26,9 +27,8 @@ export function getServer() {
           res.statusCode = 200
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify(results))
-        }
-        else {
-          res.end()          
+        } else {
+          res.end()
         }
       }
     } catch (e) {
@@ -40,12 +40,23 @@ export function getServer() {
   return {
     listen(port: string) {
       console.log(`Omnisearch - Starting HTTP server on port ${port}`)
-      server.listen({
-        port: parseInt(port),
-        host: 'localhost',
+      server.listen(
+        {
+          port: parseInt(port),
+          host: 'localhost',
+        },
+        () => {
+          console.log(`Omnisearch - Started HTTP server on port ${port}`)
+          new Notice(`Omnisearch - Started HTTP server on port ${port}`)
+        }
+      )
+
+      server.on('error', e => {
+        console.error(e)
+        new Notice(
+          `Omnisearch - Cannot start HTTP server on ${port}. See console for more details.`
+        )
       })
-      console.log(`Omnisearch - Started HTTP server on port ${port}`)
-      new Notice(`Omnisearch - Started HTTP server on port ${port}`)
     },
     close() {
       server.close()
