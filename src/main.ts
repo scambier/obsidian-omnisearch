@@ -101,7 +101,7 @@ export default class OmnisearchPlugin extends Plugin {
       this.registerEvent(
         this.app.metadataCache.on('changed', async file => {
           if (isFileIndexable(file.path)) {
-            logDebug('Updating metadata', file.path)
+            logDebug('Updating file/metadata', file.path)
             await cacheManager.addToLiveCache(file.path)
             NotesIndex.markNoteForReindex(file)
           }
