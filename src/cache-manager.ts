@@ -43,11 +43,9 @@ async function getAndMapIndexedDocument(
   // Just read the file content
   if (isFilePlaintext(path)) {
     content = await app.vault.cachedRead(file)
-    logDebug('Content:', content)
     // Embedded PDFs
     metadata = app.metadataCache.getFileCache(file)
     if (metadata?.embeds) {
-      logDebug('Found embeds')
       const embedFiles = metadata.embeds.map(embed => app.metadataCache.getFirstLinkpathDest(getLinkpath(embed.link), path))
       for (const file of embedFiles) {
         if (file &&
@@ -60,7 +58,6 @@ async function getAndMapIndexedDocument(
         }
       }
     }
-    else logDebug('Found NO embeds')
   }
 
   // ** Canvas **
