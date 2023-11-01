@@ -47,7 +47,9 @@ export function getServer() {
         },
         () => {
           console.log(`Omnisearch - Started HTTP server on port ${port}`)
-          new Notice(`Omnisearch - Started HTTP server on port ${port}`)
+          if (settings.httpApiNotice) {
+            new Notice(`Omnisearch - Started HTTP server on port ${port}`)
+          }
         }
       )
 
@@ -61,7 +63,9 @@ export function getServer() {
     close() {
       server.close()
       console.log(`Omnisearch - Terminated HTTP server`)
-      new Notice(`Omnisearch - Terminated HTTP server`)
+      if (settings.httpApiNotice) {
+        new Notice(`Omnisearch - Terminated HTTP server`)
+      }
     },
   }
 }

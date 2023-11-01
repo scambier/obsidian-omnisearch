@@ -61,6 +61,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   fuzziness: '0' | '1' | '2'
   httpApiEnabled: boolean
   httpApiPort: string
+  httpApiNotice: boolean
 }
 
 /**
@@ -504,6 +505,18 @@ export class SettingsTab extends PluginSettingTab {
             await saveSettings(this.plugin)
           })
       })
+
+      new Setting(containerEl)
+        .setName('Show a notification when the server starts')
+        .setDesc(
+          'Will display a notification if the server is enabled, at Obsidian startup.'
+        )
+        .addToggle(toggle =>
+          toggle.setValue(settings.httpApiNotice).onChange(async v => {
+            settings.httpApiNotice = v
+            await saveSettings(this.plugin)
+          })
+        )
     }
 
     //#endregion HTTP Server
@@ -613,6 +626,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
 
   httpApiEnabled: false,
   httpApiPort: '51361',
+  httpApiNotice: true,
 
   welcomeMessage: '',
   verboseLogging: false,
