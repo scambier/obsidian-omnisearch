@@ -10,7 +10,7 @@
     removeDiacritics,
   } from '../tools/utils'
   import ResultItemContainer from './ResultItemContainer.svelte'
-  import { setIcon } from 'obsidian'
+  import { TFile, setIcon } from 'obsidian'
   import { cloneDeep } from 'lodash-es'
   import { stringsToRegex, getMatches, makeExcerpt, highlightText } from 'src/tools/text-processing'
 
@@ -26,10 +26,8 @@
   $: {
     imagePath = null
     if (isFileImage(note.path)) {
-      // @ts-ignore
-      const file = app.vault.getFiles().find(f => f.path === note.path)
-      if (file) {
-        // @ts-ignore
+      const file = app.vault.getAbstractFileByPath(note.path)
+      if (file instanceof TFile) {
         imagePath = app.vault.getResourcePath(file)
       }
     }
