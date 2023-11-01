@@ -217,6 +217,9 @@ class CacheManager {
     await database.searchHistory.bulkAdd(history)
   }
 
+  /**
+   * @returns The search history, in reverse chronological order
+   */
   public async getSearchHistory(): Promise<ReadonlyArray<string>> {
     const data = (await database.searchHistory.toArray())
       .reverse()

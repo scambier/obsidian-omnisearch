@@ -4,6 +4,7 @@ import ModalVault from './ModalVault.svelte'
 import ModalInFile from './ModalInFile.svelte'
 import { Action, eventBus, EventNames, isInputComposition } from '../globals'
 import { settings } from '../settings'
+import { cacheManager } from 'src/cache-manager'
 
 abstract class OmnisearchModal extends Modal {
   protected constructor(app: App) {
@@ -142,25 +143,37 @@ abstract class OmnisearchModal extends Modal {
 }
 
 export class OmnisearchVaultModal extends OmnisearchModal {
+  /**
+   * Instanciate the Omnisearch vault modal
+   * @param app
+   * @param query The query to pre-fill the search field with
+   */
   constructor(app: App, query?: string) {
     super(app)
 
-    // Get selected text
-    const selection = app.workspace.getActiveViewOfType(MarkdownView)?.editor.getSelection()
+    // Selected text in the editor
+    const selectedText = app.workspace
+      .getActiveViewOfType(MarkdownView)
+      ?.editor.getSelection()
 
-    const cmp = new ModalVault({
-      target: this.modalEl,
-      props: {
-        modal: this,
-        previousQuery: selection ?? query,
-      },
+    cacheManager.getSearchHistory().then(history => {
+      // Previously searched query (if enabled in settings)
+      const previous = settings.showPreviousQueryResults ? history[0] : null
+
+      // Instantiate and display the Svelte component
+      const cmp = new ModalVault({
+        target: this.modalEl,
+        props: {
+          modal: this,
+          previousQuery: query || selectedText || previous || '',
+        },
+      })
+      this.onClose = () => {
+        // Since the component is manually created,
+        // we also need to manually destroy it
+        cmp.$destroy()
+      }
     })
-
-    this.onClose = () => {
-      // Since the component is manually created,
-      // we also need to manually destroy it
-      cmp.$destroy()
-    }
   }
 }
 
