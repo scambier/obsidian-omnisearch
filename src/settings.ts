@@ -220,6 +220,17 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
+    // Show previous query results
+    new Setting(containerEl)
+      .setName('Show previous query results')
+      .setDesc('Re-executes the previous query when opening Omnisearch.')
+      .addToggle(toggle =>
+        toggle.setValue(settings.showPreviousQueryResults).onChange(async v => {
+          settings.showPreviousQueryResults = v
+          await saveSettings(this.plugin)
+        })
+      )
+
     // Respect excluded files
     new Setting(containerEl)
       .setName('Respect Obsidian\'s "Excluded Files"')
@@ -365,17 +376,6 @@ export class SettingsTab extends PluginSettingTab {
             settings.renderLineReturnInExcerpts = v
             await saveSettings(this.plugin)
           })
-      )
-
-    // Show previous query results
-    new Setting(containerEl)
-      .setName('Show previous query results')
-      .setDesc('Re-executes the previous query when opening Omnisearch.')
-      .addToggle(toggle =>
-        toggle.setValue(settings.showPreviousQueryResults).onChange(async v => {
-          settings.showPreviousQueryResults = v
-          await saveSettings(this.plugin)
-        })
       )
 
     // Show "Create note" button
