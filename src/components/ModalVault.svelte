@@ -148,7 +148,8 @@
     searching = false
   }
 
-  const updateResultsDebounced = debounce(updateResults, 100)
+  // Debounce this function to avoid multiple calls caused by Svelte reactivity
+  const updateResultsDebounced = debounce(updateResults, 0)
 
   function onClick(evt?: MouseEvent | KeyboardEvent) {
     if (!selectedNote) return
