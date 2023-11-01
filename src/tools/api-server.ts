@@ -2,7 +2,7 @@ import * as http from 'http'
 import * as url from 'url'
 import api from './api'
 import { Notice } from 'obsidian'
-import { saveSettings, settings } from 'src/settings'
+import { settings } from 'src/settings'
 
 export function getServer() {
   const server = http.createServer(async function (req, res) {

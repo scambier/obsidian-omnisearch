@@ -1,4 +1,4 @@
-import { Notice, Platform, Plugin } from 'obsidian'
+import { App, Notice, Platform, Plugin } from 'obsidian'
 import {
   OmnisearchInFileModal,
   OmnisearchVaultModal,
@@ -46,7 +46,7 @@ export default class OmnisearchPlugin extends Plugin {
       return
     }
 
-    await cleanOldCacheFiles()
+    await cleanOldCacheFiles(this.app)
     await OmnisearchCache.clearOldDatabases()
 
     registerAPI(this)
@@ -66,7 +66,7 @@ export default class OmnisearchPlugin extends Plugin {
       id: 'show-modal',
       name: 'Vault search',
       callback: () => {
-        new OmnisearchVaultModal(app).open()
+        new OmnisearchVaultModal(this.app).open()
       },
     })
 
@@ -75,12 +75,12 @@ export default class OmnisearchPlugin extends Plugin {
       name: 'In-file search',
       editorCallback: (_editor, view) => {
         if (view.file) {
-          new OmnisearchInFileModal(app, view.file).open()
+          new OmnisearchInFileModal(this.app, view.file).open()
         }
       },
     })
 
-    app.workspace.onLayoutReady(async () => {
+    this.app.workspace.onLayoutReady(async () => {
       // Listeners to keep the search index up-to-date
       this.registerEvent(
         this.app.vault.on('create', file => {
@@ -155,7 +155,7 @@ export default class OmnisearchPlugin extends Plugin {
 
   addRibbonButton(): void {
     this.ribbonButton = this.addRibbonIcon('search', 'Omnisearch', _evt => {
-      new OmnisearchVaultModal(app).open()
+      new OmnisearchVaultModal(this.app).open()
     })
   }
 
@@ -168,7 +168,7 @@ export default class OmnisearchPlugin extends Plugin {
   private async populateIndex(): Promise<void> {
     console.time('Omnisearch - Indexing total time')
     indexingStep.set(IndexingStepType.ReadingFiles)
-    const files = app.vault.getFiles().filter(f => isFileIndexable(f.path))
+    const files = this.app.vault.getFiles().filter(f => isFileIndexable(f.path))
     console.log(`Omnisearch - ${files.length} files total`)
     console.log(
       `Omnisearch - Cache is ${isCacheEnabled() ? 'enabled' : 'disabled'}`
@@ -243,7 +243,7 @@ export default class OmnisearchPlugin extends Plugin {
  * Read the files and feed them to Minisearch
  */
 
-async function cleanOldCacheFiles() {
+async function cleanOldCacheFiles(app: App) {
   const toDelete = [
     `${app.vault.configDir}/plugins/omnisearch/searchIndex.json`,
     `${app.vault.configDir}/plugins/omnisearch/notesCache.json`,
@@ -264,12 +264,12 @@ async function cleanOldCacheFiles() {
 function registerAPI(plugin: OmnisearchPlugin): void {
   // Url scheme for obsidian://omnisearch?query=foobar
   plugin.registerObsidianProtocolHandler('omnisearch', params => {
-    new OmnisearchVaultModal(app, params.query).open()
+    new OmnisearchVaultModal(plugin.app, params.query).open()
   })
 
   // Public api
   // @ts-ignore
   globalThis['omnisearch'] = api
   // Deprecated
-  ;(app as any).plugins.plugins.omnisearch.api = api
+  ;(plugin.app as any).plugins.plugins.omnisearch.api = api
 }

@@ -75,7 +75,7 @@ export class SettingsTab extends PluginSettingTab {
   plugin: OmnisearchPlugin
 
   constructor(plugin: OmnisearchPlugin) {
-    super(app, plugin)
+    super(plugin.app, plugin)
     this.plugin = plugin
 
     showExcerpt.subscribe(async v => {
@@ -88,7 +88,7 @@ export class SettingsTab extends PluginSettingTab {
     const { containerEl } = this
     containerEl.empty()
 
-    if (app.loadLocalStorage(K_DISABLE_OMNISEARCH) == '1') {
+    if (this.app.loadLocalStorage(K_DISABLE_OMNISEARCH) == '1') {
       const span = containerEl.createEl('span')
       span.innerHTML = `<strong style="color: var(--text-accent)">⚠️ OMNISEARCH IS DISABLED ⚠️</strong>`
     }
@@ -556,9 +556,9 @@ export class SettingsTab extends PluginSettingTab {
       .addToggle(toggle =>
         toggle.setValue(isPluginDisabled()).onChange(async v => {
           if (v) {
-            app.saveLocalStorage(K_DISABLE_OMNISEARCH, '1')
+            this.app.saveLocalStorage(K_DISABLE_OMNISEARCH, '1')
           } else {
-            app.saveLocalStorage(K_DISABLE_OMNISEARCH) // No value = unset
+            this.app.saveLocalStorage(K_DISABLE_OMNISEARCH) // No value = unset
           }
           new Notice('Omnisearch - Disabled. Please restart Obsidian.')
         })

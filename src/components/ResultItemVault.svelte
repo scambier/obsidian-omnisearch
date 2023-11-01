@@ -10,12 +10,13 @@
     removeDiacritics,
   } from '../tools/utils'
   import ResultItemContainer from './ResultItemContainer.svelte'
-  import { TFile, setIcon } from 'obsidian'
+  import { TFile, setIcon, App } from 'obsidian'
   import { cloneDeep } from 'lodash-es'
   import { stringsToRegex, getMatches, makeExcerpt, highlightText } from 'src/tools/text-processing'
 
   export let selected = false
   export let note: ResultNote
+  export let app: App
 
   let imagePath: string | null = null
   let title = ''

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { MarkdownView, Notice, TFile } from 'obsidian'
+  import { App, MarkdownView, Notice, TFile } from 'obsidian'
   import { onDestroy, onMount, tick } from 'svelte'
   import InputSearch from './InputSearch.svelte'
   import ModalContainer from './ModalContainer.svelte'
@@ -33,6 +33,8 @@
 
   export let modal: OmnisearchVaultModal
   export let previousQuery: string | undefined
+  export let app: App
+
   let selectedIndex = 0
   let historySearchIndex = 0
   let searchQuery: string | undefined
@@ -296,6 +298,7 @@
 <ModalContainer>
   {#each resultNotes as result, i}
     <ResultItemVault
+      app="{app}"
       selected="{i === selectedIndex}"
       note="{result}"
       on:mousemove="{_ => (selectedIndex = i)}"

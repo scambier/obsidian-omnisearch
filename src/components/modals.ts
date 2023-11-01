@@ -164,6 +164,7 @@ export class OmnisearchVaultModal extends OmnisearchModal {
       const cmp = new ModalVault({
         target: this.modalEl,
         props: {
+          app,
           modal: this,
           previousQuery: query || selectedText || previous || '',
         },
@@ -189,6 +190,7 @@ export class OmnisearchInFileModal extends OmnisearchModal {
     const cmp = new ModalInFile({
       target: this.modalEl,
       props: {
+        app,
         modal: this,
         singleFilePath: file.path,
         parent: parent,
