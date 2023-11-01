@@ -29,6 +29,7 @@
   import { cacheManager } from '../cache-manager'
   import { searchEngine } from 'src/search/omnisearch'
   import { cancelable, CancelablePromise } from 'cancelable-promise'
+  import { debounce } from 'lodash-es'
 
   export let modal: OmnisearchVaultModal
   export let previousQuery: string | undefined
@@ -59,10 +60,7 @@
     createInCurrentPaneKey = 'shift ↵'
   }
   $: if (searchQuery) {
-    searching = true
-    updateResults().then(() => {
-      searching = false
-    })
+    updateResultsDebounced()
   } else {
     searching = false
     resultNotes = []
@@ -79,11 +77,11 @@
         indexingStepDesc = 'Indexing files...'
         break
       case IndexingStepType.WritingCache:
-        updateResults()
+        updateResultsDebounced()
         indexingStepDesc = 'Updating cache...'
         break
       default:
-        updateResults()
+        updateResultsDebounced()
         indexingStepDesc = ''
         break
     }
@@ -102,6 +100,7 @@
     eventBus.on('vault', Action.PrevSearchHistory, prevSearchHistory)
     eventBus.on('vault', Action.NextSearchHistory, nextSearchHistory)
     await NotesIndex.refreshIndex()
+    await updateResultsDebounced()
   })
 
   onDestroy(() => {
@@ -129,6 +128,7 @@
 
   let cancelableQuery: CancelablePromise<ResultNote[]> | null = null
   async function updateResults() {
+    searching = true
     // If search is already in progress, cancel it and start a new one
     if (cancelableQuery) {
       cancelableQuery.cancel()
@@ -143,7 +143,10 @@
     resultNotes = await cancelableQuery
     selectedIndex = 0
     await scrollIntoView()
+    searching = false
   }
+
+  const updateResultsDebounced = debounce(updateResults, 100)
 
   function onClick(evt?: MouseEvent | KeyboardEvent) {
     if (!selectedNote) return
