@@ -125,3 +125,4 @@ const separators =
     .slice(1, -1)
 export const SPACE_OR_PUNCTUATION_UNIQUE = new RegExp(`${separators}`, 'u')
 export const SPACE_OR_PUNCTUATION = new RegExp(`${separators}+`, 'u')
+export const BRACKETS_AND_SPACE = /[|\[\]\(\)<>\{\} \t\n\r]/u
