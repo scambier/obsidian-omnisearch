@@ -1,6 +1,7 @@
 <script lang="ts">
   import InputSearch from './InputSearch.svelte'
   import {
+  Action,
     eventBus,
     excerptAfter,
     type ResultNote,

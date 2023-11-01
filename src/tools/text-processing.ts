@@ -10,9 +10,10 @@ import {
   excerptBefore,
 } from 'src/globals'
 import { settings } from 'src/settings'
-import { escapeRegex, warnDebug } from './utils'
+import { warnDebug } from './utils'
 import type { Query } from 'src/search/query'
 import { Notice } from 'obsidian'
+import { escapeRegExp } from 'lodash-es'
 
 export function highlighterGroups(_substring: string, ...args: any[]) {
   // args[0] is the single char preceding args[1], which is the word we want to highlight
@@ -21,39 +22,35 @@ export function highlighterGroups(_substring: string, ...args: any[]) {
   return '&lt;no content&gt;'
 }
 
+/**
+ * Wraps the matches in the text with a <span> element and a highlight class
+ * @param text
+ * @param matches
+ * @returns The html string with the matches highlighted
+ */
 export function highlightText(text: string, matches: SearchMatch[]): string {
-  matches.forEach(matchInfo => {
-    const matchRegex = new RegExp(`\\b${matchInfo.match}\\b`, 'giu')
-    const matchOffsets = []
-
-    let match
-    while ((match = matchRegex.exec(text)) !== null) {
-      matchOffsets.push({ index: match.index, text: match[0] })
-    }
-
-    if (!matchOffsets.length) {
-      return text
-    }
-
-    const closestMatch = matchOffsets.reduce((prev, curr) => {
-      return Math.abs(curr.index - matchInfo.offset) <
-        Math.abs(prev.index - matchInfo.offset)
-        ? curr
-        : prev
-    })
-
-    if (matchOffsets.includes(closestMatch)) {
-      const originalMatch = closestMatch.text
-      text =
-        text.substring(0, closestMatch.index) +
-        `<span class="${highlightClass}">` +
-        originalMatch +
-        '</span>' +
-        text.substring(closestMatch.index + originalMatch.length)
-    }
-  })
-
-  return text
+  try {
+    return text.replace(
+      new RegExp(
+        matches
+          .map(matchInfo => `\\b${escapeRegExp(matchInfo.match)}\\b`)
+          .join('|'),
+        'giu'
+      ),
+      match => {
+        const matchInfo = matches.find(info =>
+          match.match(new RegExp(`\\b${escapeRegExp(info.match)}\\b`, 'giu'))
+        )
+        if (matchInfo) {
+          return `<span class="${highlightClass}">${match}</span>`
+        }
+        return match
+      }
+    )
+  } catch (e) {
+    console.error('Omnisearch - Error in highlightText()', e)
+    return text
+  }
 }
 
 export function escapeHTML(html: string): string {
@@ -94,10 +91,9 @@ export function stringsToRegex(strings: string[]): RegExp {
       ? `^|${SPACE_OR_PUNCTUATION_UNIQUE.source}|\-|[A-Z]`
       : `^|${SPACE_OR_PUNCTUATION_UNIQUE.source}|\-`) +
     ')' +
-    `(${strings.map(s => escapeRegex(s)).join('|')})`
+    `(${strings.map(s => escapeRegExp(s)).join('|')})`
 
-  const reg = new RegExp(`${joined}`, 'gu')
-  return reg
+  return new RegExp(`${joined}`, 'gu')
 }
 
 export function getMatches(
@@ -122,8 +118,8 @@ export function getMatches(
     }
   }
 
-  // If the query can be found "as is" in the text, put this match first
-  if (query) {
+  // If the query is more than 1 token and can be found "as is" in the text, put this match first
+  if (query && query.query.text.length > 1) {
     const best = text.indexOf(query.segmentsToStr())
     if (best > -1 && matches.find(m => m.offset === best)) {
       matches = matches.filter(m => m.offset !== best)

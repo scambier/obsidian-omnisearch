@@ -6,6 +6,7 @@ import { refreshIndex } from '../notes-index'
 
 type ResultNoteApi = {
   score: number
+  vault: string
   path: string
   basename: string
   foundWords: string[]
@@ -33,6 +34,7 @@ function mapResults(results: ResultNote[]): ResultNoteApi[] {
 
     const res: ResultNoteApi = {
       score,
+      vault: app.vault.getName(),
       path,
       basename,
       foundWords,

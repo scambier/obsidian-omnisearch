@@ -1,4 +1,4 @@
-import { Notice } from 'obsidian'
+import { Notice, TFile } from 'obsidian'
 import {
   type DocumentRef,
   getTextExtractor,
@@ -32,8 +32,9 @@ import { settings } from './settings'
 async function getAndMapIndexedDocument(
   path: string
 ): Promise<IndexedDocument> {
-  const file = app.vault.getFiles().find(f => f.path === path)
+  const file = app.vault.getAbstractFileByPath(path)
   if (!file) throw new Error(`Invalid file path: "${path}"`)
+  if (!(file instanceof TFile)) throw new Error(`Not a TFile: "${path}"`)
   let content: string | null = null
 
   const extractor = getTextExtractor()
@@ -74,7 +75,7 @@ async function getAndMapIndexedDocument(
         for (const key in obj) {
           if (typeof obj[key] === 'object') {
             iterate(obj[key])
-          } else if (key === 'markdown') {
+          } else if (key === 'content') {
             texts.push(obj[key])
           }
         }

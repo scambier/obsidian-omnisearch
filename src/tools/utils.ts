@@ -25,12 +25,6 @@ export function wait(ms: number): Promise<void> {
   })
 }
 
-// https://stackoverflow.com/a/3561711
-// but we enclose special chars in brackets to avoid them being interpreted as regex
-export function escapeRegex(str: string): string {
-  return str.replace(/[-/\\^$*+?.()|[\]{}]/g, '[$&]')
-}
-
 /**
  * Returns the positions of all occurences of `val` inside of `text`
  * https://stackoverflow.com/a/58828841
@@ -180,7 +174,7 @@ export function isFileCanvas(path: string): boolean {
 }
 
 export function isFileFromDataloomPlugin(path: string): boolean {
-  return path.endsWith('.loom') || path.endsWith('.dashboard')
+  return path.endsWith('.loom')
 }
 
 export function getExtension(path: string): string {

@@ -28,9 +28,18 @@ import { cacheManager } from './cache-manager'
 export default class OmnisearchPlugin extends Plugin {
   private ribbonButton?: HTMLElement
 
+  // FIXME: fix the type
+  public apiHttpServer: null | any = null
+
   async onload(): Promise<void> {
     await loadSettings(this)
     this.addSettingTab(new SettingsTab(this))
+
+    if (!Platform.isMobile) {
+      import('./tools/api-server').then(m =>
+        this.apiHttpServer = m.getServer()
+      )
+    }
 
     if (isPluginDisabled()) {
       console.log('Omnisearch - Plugin disabled')
@@ -112,6 +121,10 @@ export default class OmnisearchPlugin extends Plugin {
 
       this.executeFirstLaunchTasks()
       await this.populateIndex()
+
+      if (this.apiHttpServer && settings.httpApiEnabled) {
+        this.apiHttpServer.listen(settings.httpApiPort)
+      }
     })
   }
 
@@ -137,6 +150,7 @@ export default class OmnisearchPlugin extends Plugin {
     if (process.env.NODE_ENV === 'production') {
       await database.clearCache()
     }
+    this.apiHttpServer.close()
   }
 
   addRibbonButton(): void {
@@ -259,4 +273,3 @@ function registerAPI(plugin: OmnisearchPlugin): void {
   // Deprecated
   ;(app as any).plugins.plugins.omnisearch.api = api
 }
-
