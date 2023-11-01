@@ -29,24 +29,46 @@ export function highlighterGroups(_substring: string, ...args: any[]) {
  * @returns The html string with the matches highlighted
  */
 export function highlightText(text: string, matches: SearchMatch[]): string {
+  if (!matches.length) {
+    return text
+  }
+  const chsSegmenter = getChsSegmenter()
   try {
-    return text.replace(
-      new RegExp(
-        matches
-          .map(matchInfo => `\\b${escapeRegExp(matchInfo.match)}\\b`)
-          .join('|'),
-        'giu'
-      ),
-      match => {
-        const matchInfo = matches.find(info =>
-          match.match(new RegExp(`\\b${escapeRegExp(info.match)}\\b`, 'giu'))
+    // Text to highlight
+    const src = new RegExp(
+      matches
+        .map(
+          // This regex will match the word (with \b word boundary)
+          // and, if ChsSegmenter is active, the simple string (without word boundary)
+          matchItem =>
+            `\\b${escapeRegExp(matchItem.match)}\\b${
+              chsSegmenter ? `|${escapeRegExp(matchItem.match)}` : ''
+            }`
         )
-        if (matchInfo) {
-          return `<span class="${highlightClass}">${match}</span>`
-        }
-        return match
-      }
+        .join('|'),
+      'giu'
     )
+
+    // Replacer function that will highlight the matches
+    const replacer = (match: string) => {
+      const matchInfo = matches.find(info =>
+        match.match(
+          new RegExp(
+            `\\b${escapeRegExp(info.match)}\\b${
+              chsSegmenter ? `|${escapeRegExp(info.match)}` : ''
+            }`,
+            'giu'
+          )
+        )
+      )
+      if (matchInfo) {
+        return `<span class="${highlightClass}">${match}</span>`
+      }
+      return match
+    }
+
+    // Effectively highlight the text
+    return text.replace(src, replacer)
   } catch (e) {
     console.error('Omnisearch - Error in highlightText()', e)
     return text
