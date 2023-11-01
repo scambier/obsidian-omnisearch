@@ -115,7 +115,7 @@ export function stringsToRegex(strings: string[]): RegExp {
     ')' +
     `(${strings.map(s => escapeRegExp(s)).join('|')})`
 
-  return new RegExp(`${joined}`, 'gu')
+  return new RegExp(`${joined}`, 'gui')
 }
 
 export function getMatches(
