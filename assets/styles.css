@@ -78,8 +78,13 @@
 
 .omnisearch-input-container {
   display: flex;
+  align-items: center;
   flex-direction: row;
   gap: 5px;
+}
+
+.omnisearch-input-container>button {
+  margin-right: var(--size-4-3);
 }
 
 @media only screen and (max-width: 600px) {
