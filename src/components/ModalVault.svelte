@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { App, MarkdownView, Notice, TFile } from 'obsidian'
+  import { App, MarkdownView, Notice, Platform, TFile } from 'obsidian'
   import { onDestroy, onMount, tick } from 'svelte'
   import InputSearch from './InputSearch.svelte'
   import ModalContainer from './ModalContainer.svelte'
@@ -285,9 +285,14 @@
   initialValue="{searchQuery}"
   on:input="{e => (searchQuery = e.detail)}"
   placeholder="Omnisearch - Vault">
-  {#if settings.showCreateButton}
-    <button on:click="{onClickCreateNote}">Create note</button>
-  {/if}
+  <div class="omnisearch-input-container__buttons">
+    {#if settings.showCreateButton}
+      <button on:click="{onClickCreateNote}">Create note</button>
+    {/if}
+    {#if Platform.isMobile}
+      <button on:click="{switchToInFileModal}">In-File search</button>
+    {/if}
+  </div>
 </InputSearch>
 
 {#if indexingStepDesc}

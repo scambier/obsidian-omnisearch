@@ -9,7 +9,7 @@
   } from 'src/globals'
   import { getCtrlKeyLabel, loopIndex } from 'src/tools/utils'
   import { onDestroy, onMount, tick } from 'svelte'
-  import { MarkdownView, App } from 'obsidian'
+  import { MarkdownView, App, Platform } from 'obsidian'
   import ModalContainer from './ModalContainer.svelte'
   import {
     OmnisearchInFileModal,
@@ -151,7 +151,13 @@
 <InputSearch
   on:input="{e => (searchQuery = e.detail)}"
   placeholder="Omnisearch - File"
-  initialValue="{previousQuery}" />
+  initialValue="{previousQuery}">
+  <div class="omnisearch-input-container__buttons">
+    {#if Platform.isMobile}
+      <button on:click="{switchToVaultModal}">Vault search</button>
+    {/if}
+  </div>
+</InputSearch>
 
 <ModalContainer>
   {#if groupedOffsets.length && note}
