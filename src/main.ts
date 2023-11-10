@@ -231,7 +231,7 @@ export default class OmnisearchPlugin extends Plugin {
     }
 
     console.timeEnd('Omnisearch - Indexing total time')
-    if (diff.toAdd.length >= 1000 && !Platform.isIosApp) {
+    if (diff.toAdd.length >= 1000 && isCacheEnabled()) {
       new Notice(`Omnisearch - Your files have been indexed.`)
     }
     indexingStep.set(IndexingStepType.Done)
