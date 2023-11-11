@@ -38,7 +38,7 @@ export async function openNote(
     return
   }
   const pos = view.editor.offsetToPos(offset)
-  pos.ch = 0
+  // pos.ch = 0
 
   view.editor.setCursor(pos)
   view.editor.scrollIntoView({

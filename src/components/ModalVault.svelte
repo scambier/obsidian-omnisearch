@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { MarkdownView, Notice, TFile } from 'obsidian'
+  import { App, MarkdownView, Notice, Platform, TFile } from 'obsidian'
   import { onDestroy, onMount, tick } from 'svelte'
   import InputSearch from './InputSearch.svelte'
   import ModalContainer from './ModalContainer.svelte'
@@ -29,9 +29,12 @@
   import { cacheManager } from '../cache-manager'
   import { searchEngine } from 'src/search/omnisearch'
   import { cancelable, CancelablePromise } from 'cancelable-promise'
+  import { debounce } from 'lodash-es'
 
   export let modal: OmnisearchVaultModal
   export let previousQuery: string | undefined
+  export let app: App
+
   let selectedIndex = 0
   let historySearchIndex = 0
   let searchQuery: string | undefined
@@ -59,10 +62,7 @@
     createInCurrentPaneKey = 'shift ↵'
   }
   $: if (searchQuery) {
-    searching = true
-    updateResults().then(() => {
-      searching = false
-    })
+    updateResultsDebounced()
   } else {
     searching = false
     resultNotes = []
@@ -79,11 +79,11 @@
         indexingStepDesc = 'Indexing files...'
         break
       case IndexingStepType.WritingCache:
-        updateResults()
+        updateResultsDebounced()
         indexingStepDesc = 'Updating cache...'
         break
       default:
-        updateResults()
+        updateResultsDebounced()
         indexingStepDesc = ''
         break
     }
@@ -102,9 +102,7 @@
     eventBus.on('vault', Action.PrevSearchHistory, prevSearchHistory)
     eventBus.on('vault', Action.NextSearchHistory, nextSearchHistory)
     await NotesIndex.refreshIndex()
-    if (settings.showPreviousQueryResults) {
-      previousQuery = (await cacheManager.getSearchHistory())[0]
-    }
+    await updateResultsDebounced()
   })
 
   onDestroy(() => {
@@ -132,6 +130,7 @@
 
   let cancelableQuery: CancelablePromise<ResultNote[]> | null = null
   async function updateResults() {
+    searching = true
     // If search is already in progress, cancel it and start a new one
     if (cancelableQuery) {
       cancelableQuery.cancel()
@@ -146,7 +145,11 @@
     resultNotes = await cancelableQuery
     selectedIndex = 0
     await scrollIntoView()
+    searching = false
   }
+
+  // Debounce this function to avoid multiple calls caused by Svelte reactivity
+  const updateResultsDebounced = debounce(updateResults, 0)
 
   function onClick(evt?: MouseEvent | KeyboardEvent) {
     if (!selectedNote) return
@@ -282,9 +285,14 @@
   initialValue="{searchQuery}"
   on:input="{e => (searchQuery = e.detail)}"
   placeholder="Omnisearch - Vault">
-  {#if settings.showCreateButton}
-    <button on:click="{onClickCreateNote}">Create note</button>
-  {/if}
+  <div class="omnisearch-input-container__buttons">
+    {#if settings.showCreateButton}
+      <button on:click="{onClickCreateNote}">Create note</button>
+    {/if}
+    {#if Platform.isMobile}
+      <button on:click="{switchToInFileModal}">In-File search</button>
+    {/if}
+  </div>
 </InputSearch>
 
 {#if indexingStepDesc}
@@ -296,6 +304,7 @@
 <ModalContainer>
   {#each resultNotes as result, i}
     <ResultItemVault
+      app="{app}"
       selected="{i === selectedIndex}"
       note="{result}"
       on:mousemove="{_ => (selectedIndex = i)}"

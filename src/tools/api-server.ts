@@ -2,7 +2,7 @@ import * as http from 'http'
 import * as url from 'url'
 import api from './api'
 import { Notice } from 'obsidian'
-import { saveSettings, settings } from 'src/settings'
+import { settings } from 'src/settings'
 
 export function getServer() {
   const server = http.createServer(async function (req, res) {
@@ -47,7 +47,9 @@ export function getServer() {
         },
         () => {
           console.log(`Omnisearch - Started HTTP server on port ${port}`)
-          new Notice(`Omnisearch - Started HTTP server on port ${port}`)
+          if (settings.httpApiNotice) {
+            new Notice(`Omnisearch - Started HTTP server on port ${port}`)
+          }
         }
       )
 
@@ -61,7 +63,9 @@ export function getServer() {
     close() {
       server.close()
       console.log(`Omnisearch - Terminated HTTP server`)
-      new Notice(`Omnisearch - Terminated HTTP server`)
+      if (settings.httpApiNotice) {
+        new Notice(`Omnisearch - Terminated HTTP server`)
+      }
     },
   }
 }

@@ -1,7 +1,7 @@
 <script lang="ts">
   import InputSearch from './InputSearch.svelte'
   import {
-  Action,
+    Action,
     eventBus,
     excerptAfter,
     type ResultNote,
@@ -9,7 +9,7 @@
   } from 'src/globals'
   import { getCtrlKeyLabel, loopIndex } from 'src/tools/utils'
   import { onDestroy, onMount, tick } from 'svelte'
-  import { MarkdownView } from 'obsidian'
+  import { MarkdownView, App, Platform } from 'obsidian'
   import ModalContainer from './ModalContainer.svelte'
   import {
     OmnisearchInFileModal,
@@ -24,6 +24,7 @@
   export let parent: OmnisearchVaultModal | null = null
   export let singleFilePath = ''
   export let previousQuery: string | undefined
+  export let app: App
 
   let searchQuery: string
   let groupedOffsets: number[] = []
@@ -150,7 +151,13 @@
 <InputSearch
   on:input="{e => (searchQuery = e.detail)}"
   placeholder="Omnisearch - File"
-  initialValue="{previousQuery}" />
+  initialValue="{previousQuery}">
+  <div class="omnisearch-input-container__buttons">
+    {#if Platform.isMobile}
+      <button on:click="{switchToVaultModal}">Vault search</button>
+    {/if}
+  </div>
+</InputSearch>
 
 <ModalContainer>
   {#if groupedOffsets.length && note}

@@ -61,6 +61,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   fuzziness: '0' | '1' | '2'
   httpApiEnabled: boolean
   httpApiPort: string
+  httpApiNotice: boolean
 }
 
 /**
@@ -74,7 +75,7 @@ export class SettingsTab extends PluginSettingTab {
   plugin: OmnisearchPlugin
 
   constructor(plugin: OmnisearchPlugin) {
-    super(app, plugin)
+    super(plugin.app, plugin)
     this.plugin = plugin
 
     showExcerpt.subscribe(async v => {
@@ -87,7 +88,7 @@ export class SettingsTab extends PluginSettingTab {
     const { containerEl } = this
     containerEl.empty()
 
-    if (app.loadLocalStorage(K_DISABLE_OMNISEARCH) == '1') {
+    if (this.app.loadLocalStorage(K_DISABLE_OMNISEARCH) == '1') {
       const span = containerEl.createEl('span')
       span.innerHTML = `<strong style="color: var(--text-accent)">⚠️ OMNISEARCH IS DISABLED ⚠️</strong>`
     }
@@ -216,6 +217,17 @@ export class SettingsTab extends PluginSettingTab {
       .addToggle(toggle =>
         toggle.setValue(settings.useCache).onChange(async v => {
           settings.useCache = v
+          await saveSettings(this.plugin)
+        })
+      )
+
+    // Show previous query results
+    new Setting(containerEl)
+      .setName('Show previous query results')
+      .setDesc('Re-executes the previous query when opening Omnisearch.')
+      .addToggle(toggle =>
+        toggle.setValue(settings.showPreviousQueryResults).onChange(async v => {
+          settings.showPreviousQueryResults = v
           await saveSettings(this.plugin)
         })
       )
@@ -367,17 +379,6 @@ export class SettingsTab extends PluginSettingTab {
           })
       )
 
-    // Show previous query results
-    new Setting(containerEl)
-      .setName('Show previous query results')
-      .setDesc('Re-executes the previous query when opening Omnisearch.')
-      .addToggle(toggle =>
-        toggle.setValue(settings.showPreviousQueryResults).onChange(async v => {
-          settings.showPreviousQueryResults = v
-          await saveSettings(this.plugin)
-        })
-      )
-
     // Show "Create note" button
     const createBtnDesc = new DocumentFragment()
     createBtnDesc.createSpan({}, span => {
@@ -504,6 +505,18 @@ export class SettingsTab extends PluginSettingTab {
             await saveSettings(this.plugin)
           })
       })
+
+      new Setting(containerEl)
+        .setName('Show a notification when the server starts')
+        .setDesc(
+          'Will display a notification if the server is enabled, at Obsidian startup.'
+        )
+        .addToggle(toggle =>
+          toggle.setValue(settings.httpApiNotice).onChange(async v => {
+            settings.httpApiNotice = v
+            await saveSettings(this.plugin)
+          })
+        )
     }
 
     //#endregion HTTP Server
@@ -543,9 +556,9 @@ export class SettingsTab extends PluginSettingTab {
       .addToggle(toggle =>
         toggle.setValue(isPluginDisabled()).onChange(async v => {
           if (v) {
-            app.saveLocalStorage(K_DISABLE_OMNISEARCH, '1')
+            this.app.saveLocalStorage(K_DISABLE_OMNISEARCH, '1')
           } else {
-            app.saveLocalStorage(K_DISABLE_OMNISEARCH) // No value = unset
+            this.app.saveLocalStorage(K_DISABLE_OMNISEARCH) // No value = unset
           }
           new Notice('Omnisearch - Disabled. Please restart Obsidian.')
         })
@@ -613,6 +626,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
 
   httpApiEnabled: false,
   httpApiPort: '51361',
+  httpApiNotice: true,
 
   welcomeMessage: '',
   verboseLogging: false,

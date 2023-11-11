@@ -1,6 +1,11 @@
 import MiniSearch, { type Options, type SearchResult } from 'minisearch'
 import type { DocumentRef, IndexedDocument, ResultNote } from '../globals'
-import { chsRegex, getChsSegmenter, SPACE_OR_PUNCTUATION } from '../globals'
+import {
+  BRACKETS_AND_SPACE,
+  chsRegex,
+  getChsSegmenter,
+  SPACE_OR_PUNCTUATION,
+} from '../globals'
 import { settings } from '../settings'
 import {
   chunkArray,
@@ -17,6 +22,8 @@ import { sortBy } from 'lodash-es'
 import { getMatches, stringsToRegex } from 'src/tools/text-processing'
 
 const tokenize = (text: string): string[] => {
+  const words = text.split(BRACKETS_AND_SPACE)
+
   let tokens = text.split(SPACE_OR_PUNCTUATION)
 
   // Split hyphenated tokens
@@ -25,14 +32,21 @@ const tokenize = (text: string): string[] => {
   // Split camelCase tokens into "camel" and "case
   tokens = [...tokens, ...tokens.flatMap(splitCamelCase)]
 
+  // Add whole words (aka "not tokens")
+  tokens = [...tokens, ...words]
+
   // When enabled, we only use the chsSegmenter,
   // and not the other custom tokenizers
   const chsSegmenter = getChsSegmenter()
   if (chsSegmenter) {
-    tokens = tokens.flatMap(word =>
+    const chs = tokens.flatMap(word =>
       chsRegex.test(word) ? chsSegmenter.cut(word) : [word]
     )
+    tokens = [...tokens, ...chs]
   }
+
+  // Remove duplicates
+  tokens = [...new Set(tokens)]
 
   return tokens
 }

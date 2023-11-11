@@ -10,12 +10,13 @@
     removeDiacritics,
   } from '../tools/utils'
   import ResultItemContainer from './ResultItemContainer.svelte'
-  import { setIcon } from 'obsidian'
+  import { TFile, setIcon, App } from 'obsidian'
   import { cloneDeep } from 'lodash-es'
   import { stringsToRegex, getMatches, makeExcerpt, highlightText } from 'src/tools/text-processing'
 
   export let selected = false
   export let note: ResultNote
+  export let app: App
 
   let imagePath: string | null = null
   let title = ''
@@ -26,10 +27,8 @@
   $: {
     imagePath = null
     if (isFileImage(note.path)) {
-      // @ts-ignore
-      const file = app.vault.getFiles().find(f => f.path === note.path)
-      if (file) {
-        // @ts-ignore
+      const file = app.vault.getAbstractFileByPath(note.path)
+      if (file instanceof TFile) {
         imagePath = app.vault.getResourcePath(file)
       }
     }
