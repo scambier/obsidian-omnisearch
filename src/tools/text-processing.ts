@@ -89,7 +89,7 @@ export function splitLines(text: string): string[] {
 }
 
 export function removeFrontMatter(text: string): string {
-  // Regex to recognize YAML Front Matter (at beginning of file, 3 hyphens, than any charecter, including newlines, then 3 hyphens).
+  // Regex to recognize YAML Front Matter (at beginning of file, 3 hyphens, than any character, including newlines, then 3 hyphens).
   return text.replace(regexYaml, '')
 }
 
@@ -140,7 +140,10 @@ export function getMatches(
     }
     const matchStartIndex = match.index
     const matchEndIndex = matchStartIndex + match[0].length
-    const originalMatch = originalText.substring(matchStartIndex, matchEndIndex)
+    const originalMatch = originalText
+      .substring(matchStartIndex, matchEndIndex)
+      .trim()
+      .replace(/[.,]/g, '')
     if (originalMatch && match.index >= 0) {
       matches.push({ match: originalMatch, offset: match.index + 1 })
     }
