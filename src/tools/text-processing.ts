@@ -42,7 +42,9 @@ export function highlightText(text: string, matches: SearchMatch[]): string {
           // and, if ChsSegmenter is active, the simple string (without word boundary)
           matchItem =>
             `\\b${escapeRegExp(matchItem.match)}\\b${
-              chsSegmenter ? `|${escapeRegExp(matchItem.match)}` : ''
+              !/[a-zA-Z]/.test(matchItem.match)
+                ? `|${escapeRegExp(matchItem.match)}`
+                : ''
             }`
         )
         .join('|'),
@@ -55,7 +57,7 @@ export function highlightText(text: string, matches: SearchMatch[]): string {
         match.match(
           new RegExp(
             `\\b${escapeRegExp(info.match)}\\b${
-              chsSegmenter ? `|${escapeRegExp(info.match)}` : ''
+              !/[a-zA-Z]/.test(info.match) ? `|${escapeRegExp(info.match)}` : ''
             }`,
             'giu'
           )
