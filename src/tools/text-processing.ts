@@ -10,7 +10,7 @@ import {
   excerptBefore,
 } from 'src/globals'
 import { settings } from 'src/settings'
-import { warnDebug } from './utils'
+import { removeDiacritics, warnDebug } from './utils'
 import type { Query } from 'src/search/query'
 import { Notice } from 'obsidian'
 import { escapeRegExp } from 'lodash-es'
@@ -123,7 +123,11 @@ export function getMatches(
   reg: RegExp,
   query?: Query
 ): SearchMatch[] {
+  const originalText = text
   text = text.toLowerCase()
+  if (settings.ignoreDiacritics) {
+    text = removeDiacritics(text)
+  }
   const startTime = new Date().getTime()
   let match: RegExpExecArray | null = null
   let matches: SearchMatch[] = []
@@ -134,9 +138,11 @@ export function getMatches(
       warnDebug('Stopped getMatches at', count, 'results')
       break
     }
-    const m = match[2]
-    if (m && match.index >= 0) {
-      matches.push({ match: m, offset: match.index + 1 })
+    const matchStartIndex = match.index
+    const matchEndIndex = matchStartIndex + match[0].length
+    const originalMatch = originalText.substring(matchStartIndex, matchEndIndex)
+    if (originalMatch && match.index >= 0) {
+      matches.push({ match: originalMatch, offset: match.index + 1 })
     }
   }
 

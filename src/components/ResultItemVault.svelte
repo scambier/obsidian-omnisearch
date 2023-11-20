@@ -7,12 +7,16 @@
     isFileImage,
     isFilePDF,
     pathWithoutFilename,
-    removeDiacritics,
   } from '../tools/utils'
   import ResultItemContainer from './ResultItemContainer.svelte'
   import { TFile, setIcon, App } from 'obsidian'
   import { cloneDeep } from 'lodash-es'
-  import { stringsToRegex, getMatches, makeExcerpt, highlightText } from 'src/tools/text-processing'
+  import {
+    stringsToRegex,
+    getMatches,
+    makeExcerpt,
+    highlightText,
+  } from 'src/tools/text-processing'
 
   export let selected = false
   export let note: ResultNote
@@ -44,9 +48,6 @@
   $: {
     title = note.basename
     notePath = pathWithoutFilename(note.path)
-    if (settings.ignoreDiacritics) {
-      title = removeDiacritics(title)
-    }
 
     // Icons
     if (elFolderPathIcon) {
