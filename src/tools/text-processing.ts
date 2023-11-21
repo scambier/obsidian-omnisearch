@@ -4,7 +4,6 @@ import {
   regexLineSplit,
   regexYaml,
   getChsSegmenter,
-  SPACE_OR_PUNCTUATION_UNIQUE,
   regexStripQuotes,
   excerptAfter,
   excerptBefore,
@@ -104,18 +103,7 @@ export function stringsToRegex(strings: string[]): RegExp {
   // sort strings by decreasing length, so that longer strings are matched first
   strings.sort((a, b) => b.length - a.length)
 
-  const joined =
-    '(' +
-    // Default word split is not applied if the user uses the cm-chs-patch plugin
-    (getChsSegmenter()
-      ? ''
-      : // Split on start of line, spaces, punctuation, or capital letters (for camelCase)
-      // We also add the hyphen to the list of characters that can split words
-      settings.splitCamelCase
-      ? `^|${SPACE_OR_PUNCTUATION_UNIQUE.source}|\-|[A-Z]`
-      : `^|${SPACE_OR_PUNCTUATION_UNIQUE.source}|\-`) +
-    ')' +
-    `(${strings.map(s => escapeRegExp(s)).join('|')})`
+  const joined =`(${strings.map(s => escapeRegExp(s)).join('|')})`
 
   return new RegExp(`${joined}`, 'gui')
 }
