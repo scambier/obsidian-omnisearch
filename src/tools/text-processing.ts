@@ -36,7 +36,7 @@ export function highlightText(text: string, matches: SearchMatch[]): string {
       matches
         .map(
           // This regex will match the word (with \b word boundary)
-          // and, if ChsSegmenter is active, the simple string (without word boundary)
+          // \b doesn't detect non-alphabetical character's word boundary, so we need to escape it
           matchItem =>
             `\\b${escapeRegExp(matchItem.match)}\\b${
               !/[a-zA-Z]/.test(matchItem.match)
