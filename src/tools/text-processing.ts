@@ -3,7 +3,6 @@ import {
   type SearchMatch,
   regexLineSplit,
   regexYaml,
-  getChsSegmenter,
   regexStripQuotes,
   excerptAfter,
   excerptBefore,
@@ -31,8 +30,7 @@ export function highlightText(text: string, matches: SearchMatch[]): string {
   if (!matches.length) {
     return text
   }
-  const chsSegmenter = getChsSegmenter()
-  try {
+    try {
     // Text to highlight
     const src = new RegExp(
       matches
