@@ -126,9 +126,12 @@ export function removeDiacritics(str: string): string {
   // Keep backticks for code blocks, because otherwise they are removed by the .normalize() function
   // https://stackoverflow.com/a/36100275
   str = str.replaceAll('`', '[__omnisearch__backtick__]')
+  // Keep caret same as above
+  str = str.replaceAll('^', '[__omnisearch__caret__]')
   // To keep right form of Korean character, NFC normalization is necessary
   str = str.normalize('NFD').replace(regexp, '').normalize('NFC')
   str = str.replaceAll('[__omnisearch__backtick__]', '`')
+  str = str.replaceAll('[__omnisearch__caret__]', '^')
   return str
 }
 

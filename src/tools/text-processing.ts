@@ -6,6 +6,7 @@ import {
   regexStripQuotes,
   excerptAfter,
   excerptBefore,
+  SEPARATORS,
 } from 'src/globals'
 import { settings } from 'src/settings'
 import { removeDiacritics, warnDebug } from './utils'
@@ -111,8 +112,9 @@ export function getMatches(
   reg: RegExp,
   query?: Query
 ): SearchMatch[] {
+  const separatorRegExp = new RegExp(SEPARATORS, 'gu')
   const originalText = text
-  text = text.toLowerCase().replace(/[.,]/g, ' ')
+  text = text.toLowerCase().replace(separatorRegExp, ' ')
   if (settings.ignoreDiacritics) {
     text = removeDiacritics(text)
   }
