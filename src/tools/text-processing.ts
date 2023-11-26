@@ -112,7 +112,7 @@ export function getMatches(
   query?: Query
 ): SearchMatch[] {
   const originalText = text
-  text = text.toLowerCase()
+  text = text.toLowerCase().replace(/[.,]/g, ' ')
   if (settings.ignoreDiacritics) {
     text = removeDiacritics(text)
   }
@@ -131,7 +131,6 @@ export function getMatches(
     const originalMatch = originalText
       .substring(matchStartIndex, matchEndIndex)
       .trim()
-      .replace(/[.,]/g, '')
     if (originalMatch && match.index >= 0) {
       matches.push({ match: originalMatch, offset: match.index + 1 })
     }
