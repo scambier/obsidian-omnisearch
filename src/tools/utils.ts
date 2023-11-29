@@ -115,14 +115,23 @@ export function getTagsFromMetadata(metadata: CachedMetadata | null): string[] {
  * https://stackoverflow.com/a/37511463
  */
 export function removeDiacritics(str: string): string {
+  // Japanese diacritics that should be distinguished
+  const excludeDiacritics: string[] = ['\\u30FC', '\\u309A', '\\u3099']
+  const regexpExclude: string = excludeDiacritics.join('|')
+  const regexp: RegExp = new RegExp(`(?!${regexpExclude})\\p{Diacritic}`, 'gu')
+
   if (str === null || str === undefined) {
     return ''
   }
   // Keep backticks for code blocks, because otherwise they are removed by the .normalize() function
   // https://stackoverflow.com/a/36100275
   str = str.replaceAll('`', '[__omnisearch__backtick__]')
-  str = str.normalize('NFD').replace(/\p{Diacritic}/gu, '')
+  // Keep caret same as above
+  str = str.replaceAll('^', '[__omnisearch__caret__]')
+  // To keep right form of Korean character, NFC normalization is necessary
+  str = str.normalize('NFD').replace(regexp, '').normalize('NFC')
   str = str.replaceAll('[__omnisearch__backtick__]', '`')
+  str = str.replaceAll('[__omnisearch__caret__]', '^')
   return str
 }
 
