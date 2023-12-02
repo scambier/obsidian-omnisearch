@@ -17,7 +17,6 @@ import {
   isFilenameIndexable,
   logDebug,
   makeMD5,
-  removeDiacritics,
 } from './tools/utils'
 import type { CanvasData } from 'obsidian/canvas'
 import type { AsPlainObject } from 'minisearch'
@@ -115,7 +114,6 @@ async function getAndMapIndexedDocument(
     console.warn(`Omnisearch: ${content} content for file`, file.path)
     content = ''
   }
-  content = removeDiacritics(content)
   const metadata = app.metadataCache.getFileCache(file)
 
   // Look for links that lead to non-existing files,
@@ -143,7 +141,7 @@ async function getAndMapIndexedDocument(
 
   const tags = getTagsFromMetadata(metadata)
   return {
-    basename: removeDiacritics(file.basename),
+    basename: file.basename,
     content,
     path: file.path,
     mtime: file.stat.mtime,

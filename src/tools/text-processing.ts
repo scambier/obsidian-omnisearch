@@ -3,14 +3,13 @@ import {
   type SearchMatch,
   regexLineSplit,
   regexYaml,
-  getChsSegmenter,
-  SPACE_OR_PUNCTUATION_UNIQUE,
   regexStripQuotes,
   excerptAfter,
   excerptBefore,
+  SEPARATORS,
 } from 'src/globals'
 import { settings } from 'src/settings'
-import { warnDebug } from './utils'
+import { removeDiacritics, warnDebug } from './utils'
 import type { Query } from 'src/search/query'
 import { Notice } from 'obsidian'
 import { escapeRegExp } from 'lodash-es'
@@ -32,17 +31,18 @@ export function highlightText(text: string, matches: SearchMatch[]): string {
   if (!matches.length) {
     return text
   }
-  const chsSegmenter = getChsSegmenter()
-  try {
+    try {
     // Text to highlight
     const src = new RegExp(
       matches
         .map(
           // This regex will match the word (with \b word boundary)
-          // and, if ChsSegmenter is active, the simple string (without word boundary)
+          // \b doesn't detect non-alphabetical character's word boundary, so we need to escape it
           matchItem =>
             `\\b${escapeRegExp(matchItem.match)}\\b${
-              chsSegmenter ? `|${escapeRegExp(matchItem.match)}` : ''
+              !/[a-zA-Z]/.test(matchItem.match)
+                ? `|${escapeRegExp(matchItem.match)}`
+                : ''
             }`
         )
         .join('|'),
@@ -55,7 +55,7 @@ export function highlightText(text: string, matches: SearchMatch[]): string {
         match.match(
           new RegExp(
             `\\b${escapeRegExp(info.match)}\\b${
-              chsSegmenter ? `|${escapeRegExp(info.match)}` : ''
+              !/[a-zA-Z]/.test(info.match) ? `|${escapeRegExp(info.match)}` : ''
             }`,
             'giu'
           )
@@ -89,7 +89,7 @@ export function splitLines(text: string): string[] {
 }
 
 export function removeFrontMatter(text: string): string {
-  // Regex to recognize YAML Front Matter (at beginning of file, 3 hyphens, than any charecter, including newlines, then 3 hyphens).
+  // Regex to recognize YAML Front Matter (at beginning of file, 3 hyphens, than any character, including newlines, then 3 hyphens).
   return text.replace(regexYaml, '')
 }
 
@@ -102,18 +102,7 @@ export function stringsToRegex(strings: string[]): RegExp {
   // sort strings by decreasing length, so that longer strings are matched first
   strings.sort((a, b) => b.length - a.length)
 
-  const joined =
-    '(' +
-    // Default word split is not applied if the user uses the cm-chs-patch plugin
-    (getChsSegmenter()
-      ? ''
-      : // Split on start of line, spaces, punctuation, or capital letters (for camelCase)
-      // We also add the hyphen to the list of characters that can split words
-      settings.splitCamelCase
-      ? `^|${SPACE_OR_PUNCTUATION_UNIQUE.source}|\-|[A-Z]`
-      : `^|${SPACE_OR_PUNCTUATION_UNIQUE.source}|\-`) +
-    ')' +
-    `(${strings.map(s => escapeRegExp(s)).join('|')})`
+  const joined =`(${strings.map(s => escapeRegExp(s)).join('|')})`
 
   return new RegExp(`${joined}`, 'gui')
 }
@@ -123,7 +112,12 @@ export function getMatches(
   reg: RegExp,
   query?: Query
 ): SearchMatch[] {
-  text = text.toLowerCase()
+  const separatorRegExp = new RegExp(SEPARATORS, 'gu')
+  const originalText = text
+  text = text.toLowerCase().replace(separatorRegExp, ' ')
+  if (settings.ignoreDiacritics) {
+    text = removeDiacritics(text)
+  }
   const startTime = new Date().getTime()
   let match: RegExpExecArray | null = null
   let matches: SearchMatch[] = []
@@ -134,9 +128,13 @@ export function getMatches(
       warnDebug('Stopped getMatches at', count, 'results')
       break
     }
-    const m = match[2]
-    if (m && match.index >= 0) {
-      matches.push({ match: m, offset: match.index + 1 })
+    const matchStartIndex = match.index
+    const matchEndIndex = matchStartIndex + match[0].length
+    const originalMatch = originalText
+      .substring(matchStartIndex, matchEndIndex)
+      .trim()
+    if (originalMatch && match.index >= 0) {
+      matches.push({ match: originalMatch, offset: match.index + 1 })
     }
   }
 
