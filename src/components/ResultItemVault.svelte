@@ -39,6 +39,7 @@
   }
   $: reg = stringsToRegex(note.foundWords)
   $: matchesTitle = getMatches(title, reg)
+  $: matchesNotePath = getMatches(notePath, reg)
   $: matchesExcerpt = cloneDeep(note.matches).map(m => {
     m.offset = m.offset - cleanedContent.offset
     return m
@@ -94,7 +95,7 @@
     {#if notePath}
       <div class="omnisearch-result__folder-path">
         <span bind:this="{elFolderPathIcon}"></span>
-        <span>{notePath}</span>
+        <span>{@html highlightText(notePath, matchesNotePath)}</span>
       </div>
     {/if}
 
