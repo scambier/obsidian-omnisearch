@@ -13,7 +13,6 @@ import {
   removeDiacritics,
   splitCamelCase,
   splitHyphens,
-  stripMarkdownCharacters,
 } from '../tools/utils'
 import { Notice } from 'obsidian'
 import type { Query } from './query'
@@ -321,10 +320,10 @@ export class Omnisearch {
       results = results.filter(r => {
         const document = documents.find(d => d.path === r.id)
         const title = document?.path.toLowerCase() ?? ''
-        const content = stripMarkdownCharacters(
-          document?.content ?? ''
-        ).toLowerCase()
-        return exactTerms.every(q => content.includes(q) || title.includes(q))
+        const content = (document?.cleanedContent ?? '').toLowerCase()
+        return exactTerms.every(
+          q => content.includes(q) || removeDiacritics(title).includes(q)
+        )
       })
     }
 
@@ -333,7 +332,7 @@ export class Omnisearch {
     if (exclusions.length) {
       logDebug('Filtering with exclusions')
       results = results.filter(r => {
-        const content = stripMarkdownCharacters(
+        const content = (
           documents.find(d => d.path === r.id)?.content ?? ''
         ).toLowerCase()
         return exclusions.every(q => !content.includes(q))

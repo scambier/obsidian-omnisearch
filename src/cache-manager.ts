@@ -17,6 +17,8 @@ import {
   isFilenameIndexable,
   logDebug,
   makeMD5,
+  removeDiacritics,
+  stripMarkdownCharacters,
 } from './tools/utils'
 import type { CanvasData } from 'obsidian/canvas'
 import type { AsPlainObject } from 'minisearch'
@@ -143,6 +145,8 @@ async function getAndMapIndexedDocument(
   return {
     basename: file.basename,
     content,
+    /** Content without diacritics and markdown chars */
+    cleanedContent: stripMarkdownCharacters(removeDiacritics(content)),
     path: file.path,
     mtime: file.stat.mtime,
 
