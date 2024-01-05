@@ -134,18 +134,18 @@ export function getMatches(
       .substring(matchStartIndex, matchEndIndex)
       .trim()
     if (originalMatch && match.index >= 0) {
-      matches.push({ match: originalMatch, offset: match.index + 1 })
+      matches.push({ match: originalMatch, offset: match.index })
     }
   }
 
   // If the query is more than 1 token and can be found "as is" in the text, put this match first
-  if (query && query.query.text.length > 1) {
-    const best = text.indexOf(query.segmentsToStr())
+  if (query && (query.query.text.length > 1 || query.getExactTerms().length > 0)) {
+    const best = text.indexOf(query.getBestStringForExcerpt())
     if (best > -1 && matches.find(m => m.offset === best)) {
       matches = matches.filter(m => m.offset !== best)
       matches.unshift({
         offset: best,
-        match: query.segmentsToStr(),
+        match: query.getBestStringForExcerpt(),
       })
     }
   }

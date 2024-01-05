@@ -98,4 +98,13 @@ export class Query {
       ),
     ]
   }
+
+  public getBestStringForExcerpt(): string {
+    // If we have quoted expressions, return the longest one
+    if (this.#inQuotes.length) {
+      return this.#inQuotes.sort((a, b) => b.length - a.length)[0] ?? ''
+    }
+    // Otherwise, just return the query as is
+    return this.segmentsToStr()
+  }
 }
