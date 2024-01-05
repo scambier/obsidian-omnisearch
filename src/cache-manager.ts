@@ -131,7 +131,7 @@ async function getAndMapIndexedDocument(
 
     // EXCALIDRAW
     // Remove the json code
-    if (metadata.frontmatter?.['excalidraw-plugin']) {
+    if (settings.excalidrawIndexing && metadata.frontmatter?.['excalidraw-plugin']) {
       const comments =
         metadata.sections?.filter(s => s.type === 'comment') ?? []
       for (const { start, end } of comments.map(c => c.position)) {
