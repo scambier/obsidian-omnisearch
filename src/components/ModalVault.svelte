@@ -186,7 +186,7 @@
 
   function openSearchResult(note: ResultNote, newPane = false) {
     saveCurrentQuery()
-    openNote(note, newPane)
+    openNote(note, note.matches[0].offset, newPane)
   }
 
   async function onClickCreateNote(_e: MouseEvent) {

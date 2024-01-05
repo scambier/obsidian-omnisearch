@@ -19,6 +19,7 @@
   import { Query } from 'src/search/query'
   import { openNote } from 'src/tools/notes'
   import { searchEngine } from 'src/search/omnisearch'
+  import { stringsToRegex } from 'src/tools/text-processing'
 
   export let modal: OmnisearchInFileModal
   export let parent: OmnisearchVaultModal | null = null
@@ -121,7 +122,9 @@
       if (parent) parent.close()
 
       // Open (or switch focus to) the note
-      await openNote(note, newTab)
+      const reg = stringsToRegex(note.foundWords)
+      reg.exec(note.content)
+      await openNote(note, reg.lastIndex, newTab)
 
       // Move cursor to the match
       const view = app.workspace.getActiveViewOfType(MarkdownView)
