@@ -14,6 +14,7 @@ import {
 import {
   eventBus,
   EventNames,
+  getTextExtractor,
   indexingStep,
   IndexingStepType,
   isCacheEnabled,
@@ -36,8 +37,8 @@ export default class OmnisearchPlugin extends Plugin {
     this.addSettingTab(new SettingsTab(this))
 
     if (!Platform.isMobile) {
-      import('./tools/api-server').then(m =>
-        this.apiHttpServer = m.getServer()
+      import('./tools/api-server').then(
+        m => (this.apiHttpServer = m.getServer())
       )
     }
 
@@ -119,7 +120,7 @@ export default class OmnisearchPlugin extends Plugin {
         })
       )
 
-      this.executeFirstLaunchTasks()
+      await this.executeFirstLaunchTasks()
       await this.populateIndex()
 
       if (this.apiHttpServer && settings.httpApiEnabled) {
@@ -128,18 +129,17 @@ export default class OmnisearchPlugin extends Plugin {
     })
   }
 
-  executeFirstLaunchTasks(): void {
-    const code = '1.10.1'
-    if (settings.welcomeMessage !== code) {
-      // const welcome = new DocumentFragment()
-      // welcome.createSpan({}, span => {
-      //   span.innerHTML = `🔎 Omnisearch now requires the <strong>Text Extractor</strong> plugin to index PDF and images. See Omnisearch settings for more information.`
-      // })
-      // new Notice(welcome, 20_000)
+  async executeFirstLaunchTasks(): Promise<void> {
+    const code = '1.21.0'
+    if (settings.welcomeMessage !== code && getTextExtractor()) {
+      const welcome = new DocumentFragment()
+      welcome.createSpan({}, span => {
+        span.innerHTML = `🔎 Omnisearch can now index .docx and .xlsx documents. Don't forget to update Text Extractor and enable the toggle in Omnisearch settings.`
+      })
+      new Notice(welcome, 20_000)
     }
     settings.welcomeMessage = code
-
-    this.saveData(settings)
+    await this.saveData(settings)
   }
 
   async onunload(): Promise<void> {
