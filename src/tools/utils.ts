@@ -174,6 +174,11 @@ export function isFilePDF(path: string): boolean {
   return getExtension(path) === 'pdf'
 }
 
+export function isFileOffice(path: string): boolean {
+  const ext = getExtension(path)
+  return ext === 'docx' || ext === 'xlsx'
+}
+
 export function isFilePlaintext(path: string): boolean {
   return [...settings.indexedFileTypes, 'md'].some(t => path.endsWith(`.${t}`))
 }

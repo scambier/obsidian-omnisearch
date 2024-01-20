@@ -37,6 +37,9 @@ export interface OmnisearchSettings extends WeightingSettings {
   PDFIndexing: boolean
   /** Enable Images indexing */
   imagesIndexing: boolean
+  /** Enable Office documents indexing */
+  officeIndexing: boolean
+
   /** Enable indexing of unknown files */
   unsupportedFilesIndexing: 'yes' | 'no' | 'default'
   /** Activate the small 🔍 button on Obsidian's ribbon */
@@ -158,11 +161,30 @@ export class SettingsTab extends PluginSettingTab {
       )
       .setDisabled(!getTextExtractor())
 
+    // Office Documents Indexing
+    const indexOfficesDesc = new DocumentFragment()
+    indexOfficesDesc.createSpan({}, span => {
+      span.innerHTML = `Omnisearch will use Text Extractor to index the content of your office documents (currently <pre style="display:inline">.docx</pre> and <pre style="display:inline">.xlsx</pre>)`
+    })
+    new Setting(containerEl)
+      .setName(
+        `Documents content indexing ${getTextExtractor() ? '' : '⚠️ Disabled'}`
+      )
+      .setDesc(indexOfficesDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.officeIndexing).onChange(async v => {
+          await database.clearCache()
+          settings.officeIndexing = v
+          await saveSettings(this.plugin)
+        })
+      )
+      .setDisabled(!getTextExtractor())
+
     // Index filenames of unsupported files
     const indexUnsupportedDesc = new DocumentFragment()
     indexUnsupportedDesc.createSpan({}, span => {
       span.innerHTML = `
-      Omnisearch can index file<strong>names</strong> of "unsupported" files, such as e.g. <pre style="display:inline">.mp4</pre>, <pre style="display:inline">.xlsx</pre>, 
+      Omnisearch can index file<strong>names</strong> of "unsupported" files, such as e.g. <pre style="display:inline">.mp4</pre>
       or non-extracted PDFs & images.<br/>
       "Obsidian setting" will respect the value of "Files & Links > Detect all file extensions"`
     })
@@ -175,7 +197,7 @@ export class SettingsTab extends PluginSettingTab {
           .setValue(settings.unsupportedFilesIndexing)
           .onChange(async v => {
             await database.clearCache()
-            ;(settings.unsupportedFilesIndexing as any) = v
+              ; (settings.unsupportedFilesIndexing as any) = v
             await saveSettings(this.plugin)
           })
       })
@@ -185,7 +207,7 @@ export class SettingsTab extends PluginSettingTab {
     indexedFileTypesDesc.createSpan({}, span => {
       span.innerHTML = `In addition to standard <code>md</code> files, Omnisearch can also index other <strong style="color: var(--text-accent)">PLAINTEXT</strong> files.<br/>
       Add extensions separated by a space, without the dot. Example: "<code>txt org csv</code>".<br />
-      ⚠️ <span style="color: var(--text-accent)">Using extensions of non-plaintext files (like .docx or .pptx) WILL cause crashes,
+      ⚠️ <span style="color: var(--text-accent)">Using extensions of non-plaintext files (like .pptx) WILL cause crashes,
       because Omnisearch will try to index their content.</span>`
     })
     new Setting(containerEl)
@@ -602,6 +624,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   ignoreDiacritics: true,
   indexedFileTypes: [] as string[],
   PDFIndexing: false,
+  officeIndexing: false,
   imagesIndexing: false,
   unsupportedFilesIndexing: 'no',
   splitCamelCase: false,

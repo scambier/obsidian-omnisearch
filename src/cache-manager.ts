@@ -13,6 +13,7 @@ import {
   isFileFromDataloomPlugin,
   isFileImage,
   isFilePDF,
+  isFileOffice,
   isFilePlaintext,
   isFilenameIndexable,
   logDebug,
@@ -101,6 +102,15 @@ async function getAndMapIndexedDocument(
   else if (
     isFilePDF(path) &&
     settings.PDFIndexing &&
+    extractor?.canFileBeExtracted(path)
+  ) {
+    content = await extractor.extractText(file)
+  }
+
+  // ** Office document **
+  else if (
+    isFileOffice(path) &&
+    settings.officeIndexing &&
     extractor?.canFileBeExtracted(path)
   ) {
     content = await extractor.extractText(file)
