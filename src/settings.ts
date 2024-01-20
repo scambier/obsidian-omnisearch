@@ -37,8 +37,6 @@ export interface OmnisearchSettings extends WeightingSettings {
   PDFIndexing: boolean
   /** Enable Images indexing */
   imagesIndexing: boolean
-  /** Enable Excalidraw indexing */
-  excalidrawIndexing: boolean
   /** Enable indexing of unknown files */
   unsupportedFilesIndexing: 'yes' | 'no' | 'default'
   /** Activate the small 🔍 button on Obsidian's ribbon */
@@ -605,7 +603,6 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   indexedFileTypes: [] as string[],
   PDFIndexing: false,
   imagesIndexing: false,
-  excalidrawIndexing: true,
   unsupportedFilesIndexing: 'no',
   splitCamelCase: false,
   openInNewPane: false,

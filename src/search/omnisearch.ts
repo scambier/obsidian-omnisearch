@@ -86,6 +86,7 @@ export class Omnisearch {
     },
   }
   private minisearch: MiniSearch
+  /** Map<path, mtime> */
   private indexedDocuments: Map<string, number> = new Map()
   // private previousResults: SearchResult[] = []
   // private previousQuery: Query | null = null
