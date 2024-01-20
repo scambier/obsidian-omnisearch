@@ -1,5 +1,72 @@
 # Omnisearch Changelog
 
+This changelog is not exhaustive.
+
+## 1.21.x
+
+- Added support for .docx and .xlsx
+
+## 1.20.x
+
+- Refactored indexing tokenization process to correctly take diacritics into account
+- Added highlighting in the note's path
+- Improved the selection of the chosen excerpt in the results list
+
+## 1.19.x
+
+- Various bugfixes and improvements
+
+## 1.18.x
+
+- Added a localhost server to use Omnisearch's API from outside Obsidian
+
+## 1.17.x
+
+- Added a shortcut to open files without closing Omnisearch
+- Prefill the search field with selected text
+- Improved highlighting
+
+## 1.16.x
+
+- Various indexing/tokenization improvements
+
+## 1.15.x
+
+- Added support of webp images
+- Configurable fuzziness
+- Added support for DataLoom plugin files
+- Unsupported files are now indexed by their path
+- Unmarked tags are now slightly boosted
+
+## 1.14.x
+
+- Added a `path:` option
+- Bugfixes
+
+## 1.13.x
+
+- CamelCaseWords are now indexed as 3 words
+- Reduced search freezes in some cases
+
+## 1.12.x
+
+- You can filter files by their extension
+- Refreshed UI
+- New API functions
+- Fixed some tokenization issues
+
+## 1.10.x - 1.11.x
+
+- Added support for Text Extractor; Omnisearch no longer extracts text itself
+- Added canvas indexing
+- Improved tags indexing
+
+## 1.9.x
+
+- PDFs are no longer indexed on mobile 
+- Performance improvements
+- Various bugfixes
+
 ## 1.8.x
 
 - Added OCR for images
