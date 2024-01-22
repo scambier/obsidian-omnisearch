@@ -14,13 +14,6 @@ import type { Query } from 'src/search/query'
 import { Notice } from 'obsidian'
 import { escapeRegExp } from 'lodash-es'
 
-export function highlighterGroups(_substring: string, ...args: any[]) {
-  // args[0] is the single char preceding args[1], which is the word we want to highlight
-  if (!!args[1].trim())
-    return `<span>${args[0]}</span><span class="${highlightClass}">${args[1]}</span>`
-  return '&lt;no content&gt;'
-}
-
 /**
  * Wraps the matches in the text with a <span> element and a highlight class
  * @param text
