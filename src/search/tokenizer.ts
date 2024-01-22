@@ -58,24 +58,22 @@ export function tokenizeForIndexing(text: string): string[] {
 export function tokenizeForSearch(text: string): QueryCombination {
   const tokens = tokenizeTokens(text)
 
-  const chsSegmenter = getChsSegmenter()
   let chs: string[] = []
+  const chsSegmenter = getChsSegmenter()
   if (chsSegmenter) {
     chs = tokens.flatMap(word =>
       chsRegex.test(word) ? chsSegmenter.cut(word) : [word]
     )
   }
 
-  const query = {
+  return {
     combineWith: 'OR',
     queries: [
       { combineWith: 'AND', queries: tokens },
+      { combineWith: 'AND', queries: tokenizeWords(text) },
       { combineWith: 'AND', queries: tokens.flatMap(splitHyphens) },
       { combineWith: 'AND', queries: tokens.flatMap(splitCamelCase) },
       { combineWith: 'AND', queries: chs },
-      { combineWith: 'AND', queries: tokenizeWords(text) },
     ],
   }
-  logDebug(JSON.stringify(query, null, 1))
-  return query
 }

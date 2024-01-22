@@ -172,7 +172,9 @@ export class Omnisearch {
         break
     }
 
-    let results = this.minisearch.search(tokenizeForSearch(query.segmentsToStr()), {
+    const searchTokens = tokenizeForSearch(query.segmentsToStr())
+    logDebug(JSON.stringify(searchTokens, null, 1))
+    let results = this.minisearch.search(searchTokens, {
       prefix: term => term.length >= options.prefixLength,
       // length <= 3: no fuzziness
       // length <= 5: fuzziness of 10%
