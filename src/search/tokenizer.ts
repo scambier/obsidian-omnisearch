@@ -35,8 +35,6 @@ export function tokenizeForIndexing(text: string): string[] {
   // Add whole words (aka "not tokens")
   tokens = [...tokens, ...words]
 
-  // When enabled, we only use the chsSegmenter,
-  // and not the other custom tokenizers
   const chsSegmenter = getChsSegmenter()
   if (chsSegmenter) {
     const chs = tokens.flatMap(word =>
@@ -59,12 +57,22 @@ export function tokenizeForIndexing(text: string): string[] {
  */
 export function tokenizeForSearch(text: string): QueryCombination {
   const tokens = tokenizeTokens(text)
+
+  const chsSegmenter = getChsSegmenter()
+  let chs: string[] = []
+  if (chsSegmenter) {
+    chs = tokens.flatMap(word =>
+      chsRegex.test(word) ? chsSegmenter.cut(word) : [word]
+    )
+  }
+
   const query = {
     combineWith: 'OR',
     queries: [
       { combineWith: 'AND', queries: tokens },
       { combineWith: 'AND', queries: tokens.flatMap(splitHyphens) },
       { combineWith: 'AND', queries: tokens.flatMap(splitCamelCase) },
+      { combineWith: 'AND', queries: chs },
       { combineWith: 'AND', queries: tokenizeWords(text) },
     ],
   }
