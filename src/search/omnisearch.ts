@@ -1,58 +1,18 @@
 import MiniSearch, { type Options, type SearchResult } from 'minisearch'
 import type { DocumentRef, IndexedDocument, ResultNote } from '../globals'
-import {
-  BRACKETS_AND_SPACE,
-  chsRegex,
-  getChsSegmenter,
-  SPACE_OR_PUNCTUATION,
-} from '../globals'
+
 import { settings } from '../settings'
-import {
-  chunkArray,
-  logDebug,
-  removeDiacritics,
-  splitCamelCase,
-  splitHyphens,
-} from '../tools/utils'
+import { chunkArray, logDebug, removeDiacritics } from '../tools/utils'
 import { Notice } from 'obsidian'
 import type { Query } from './query'
 import { cacheManager } from '../cache-manager'
 import { sortBy } from 'lodash-es'
 import { getMatches, stringsToRegex } from 'src/tools/text-processing'
-
-const tokenize = (text: string): string[] => {
-  const words = text.split(BRACKETS_AND_SPACE)
-
-  let tokens = text.split(SPACE_OR_PUNCTUATION)
-
-  // Split hyphenated tokens
-  tokens = [...tokens, ...tokens.flatMap(splitHyphens)]
-
-  // Split camelCase tokens into "camel" and "case
-  tokens = [...tokens, ...tokens.flatMap(splitCamelCase)]
-
-  // Add whole words (aka "not tokens")
-  tokens = [...tokens, ...words]
-
-  // When enabled, we only use the chsSegmenter,
-  // and not the other custom tokenizers
-  const chsSegmenter = getChsSegmenter()
-  if (chsSegmenter) {
-    const chs = tokens.flatMap(word =>
-      chsRegex.test(word) ? chsSegmenter.cut(word) : [word]
-    )
-    tokens = [...tokens, ...chs]
-  }
-
-  // Remove duplicates
-  tokens = [...new Set(tokens)]
-
-  return tokens
-}
+import { tokenizeForIndexing, tokenizeForSearch } from './tokenizer'
 
 export class Omnisearch {
   public static readonly options: Options<IndexedDocument> = {
-    tokenize,
+    tokenize: tokenizeForIndexing,
     extractField: (doc, fieldName) => {
       if (fieldName === 'directory') {
         // return path without the filename
@@ -212,14 +172,13 @@ export class Omnisearch {
         break
     }
 
-    let results = this.minisearch.search(query.segmentsToStr(), {
+    let results = this.minisearch.search(tokenizeForSearch(query.segmentsToStr()), {
       prefix: term => term.length >= options.prefixLength,
       // length <= 3: no fuzziness
       // length <= 5: fuzziness of 10%
       // length > 5: fuzziness of 20%
       fuzzy: term =>
         term.length <= 3 ? 0 : term.length <= 5 ? fuzziness / 2 : fuzziness,
-      combineWith: 'AND',
       boost: {
         basename: settings.weightBasename,
         directory: settings.weightDirectory,
