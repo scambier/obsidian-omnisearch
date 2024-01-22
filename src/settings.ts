@@ -466,24 +466,6 @@ export class SettingsTab extends PluginSettingTab {
 
     //#endregion Results Weighting
 
-    //#region Debugging
-
-    new Setting(containerEl).setName('Debugging').setHeading()
-
-    new Setting(containerEl)
-      .setName('Enable verbose logging')
-      .setDesc(
-        "Adds a LOT of logs for debugging purposes. Don't forget to disable it."
-      )
-      .addToggle(toggle =>
-        toggle.setValue(settings.verboseLogging).onChange(async v => {
-          settings.verboseLogging = v
-          await saveSettings(this.plugin)
-        })
-      )
-
-    //#endregion Debugging
-
     //#region HTTP Server
 
     if (!Platform.isMobile) {
@@ -542,6 +524,24 @@ export class SettingsTab extends PluginSettingTab {
     }
 
     //#endregion HTTP Server
+
+    //#region Debugging
+
+    new Setting(containerEl).setName('Debugging').setHeading()
+
+    new Setting(containerEl)
+      .setName('Enable verbose logging')
+      .setDesc(
+        "Adds a LOT of logs for debugging purposes. Don't forget to disable it."
+      )
+      .addToggle(toggle =>
+        toggle.setValue(settings.verboseLogging).onChange(async v => {
+          settings.verboseLogging = v
+          await saveSettings(this.plugin)
+        })
+      )
+
+    //#endregion Debugging
 
     //#region Danger Zone
     new Setting(containerEl).setName('Danger Zone').setHeading()
