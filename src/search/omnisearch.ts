@@ -363,7 +363,7 @@ export class Omnisearch {
       const foundWords = [
         // Matching terms from the result,
         // do not necessarily match the query
-        ...Object.keys(result.match),
+        ...result.terms,
 
         // Quoted expressions
         ...query.getExactTerms(),
