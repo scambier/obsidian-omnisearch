@@ -39,6 +39,7 @@ You can check the [CHANGELOG](./CHANGELOG.md) for more information on the differ
     its filename, and its headings
 - Keyboard first: you never have to use your mouse
 - Workflow similar to the "Quick Switcher" core plugin
+- Opt-in local HTTP server to query Omnisearch from outside of Obsidian
 - Resistance to typos
 - Switch between Vault and In-file search to quickly skim multiple results in a single note
 - Supports `"expressions in quotes"` and `-exclusions`
