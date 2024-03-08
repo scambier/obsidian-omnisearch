@@ -29,6 +29,8 @@ export interface OmnisearchSettings extends WeightingSettings {
   useCache: boolean
   /** Respect the "excluded files" Obsidian setting by downranking results ignored files */
   hideExcluded: boolean
+  /** downrank files in the given folders */
+  downrankedFoldersFilters: string[]
   /** Ignore diacritics when indexing files */
   ignoreDiacritics: boolean
   /** Extensions of plain text files to index, in addition to .md */
@@ -267,6 +269,22 @@ export class SettingsTab extends PluginSettingTab {
           await saveSettings(this.plugin)
         })
       )
+
+    // Downranked files
+    new Setting(containerEl)
+      .setName('Folders to downrank in search results')
+      .setDesc(
+        `Folders to downrank in search results. Files in these folders will be downranked in results.  They will still be indexed for tags, unlike excluded files.  Folders should be comma delimited.`
+      )
+      .addText(component => {
+        component
+          .setValue(settings.downrankedFoldersFilters.join(','))
+          .setPlaceholder('Example: src,p2/dir')
+          .onChange(async v => {
+            settings.downrankedFoldersFilters = v.split(',')
+            await saveSettings(this.plugin)
+          })
+      })
 
     // Split CamelCaseWords
     const camelCaseDesc = new DocumentFragment()
@@ -621,6 +639,7 @@ export class SettingsTab extends PluginSettingTab {
 export const DEFAULT_SETTINGS: OmnisearchSettings = {
   useCache: true,
   hideExcluded: false,
+  downrankedFoldersFilters: [] as string[],
   ignoreDiacritics: true,
   indexedFileTypes: [] as string[],
   PDFIndexing: false,
