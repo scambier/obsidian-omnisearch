@@ -4,12 +4,9 @@ import { stringsToRegex } from './text-processing'
 
 export async function openNote(
   item: ResultNote,
+  offset = 0,
   newPane = false
 ): Promise<void> {
-  const reg = stringsToRegex(item.foundWords)
-  reg.exec(item.content)
-  const offset = reg.lastIndex
-
   // Check if the note is already open,
   // to avoid opening it twice if the first one is pinned
   let alreadyOpenAndPinned = false

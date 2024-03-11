@@ -9,10 +9,6 @@ import { canIndexUnsupportedFiles, settings } from '../settings'
 import { type BinaryLike, createHash } from 'crypto'
 import { md5 } from 'pure-md5'
 
-// export function highlighter(str: string): string {
-//   return `<span class="${highlightClass}">${str}</span>`
-// }
-
 export function pathWithoutFilename(path: string): string {
   const split = path.split('/')
   split.pop()
@@ -172,6 +168,11 @@ export function isFileImage(path: string): boolean {
 
 export function isFilePDF(path: string): boolean {
   return getExtension(path) === 'pdf'
+}
+
+export function isFileOffice(path: string): boolean {
+  const ext = getExtension(path)
+  return ext === 'docx' || ext === 'xlsx'
 }
 
 export function isFilePlaintext(path: string): boolean {

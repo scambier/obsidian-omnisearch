@@ -63,7 +63,7 @@ export function getServer() {
     close() {
       server.close()
       console.log(`Omnisearch - Terminated HTTP server`)
-      if (settings.httpApiNotice) {
+      if (settings.httpApiEnabled && settings.httpApiNotice) {
         new Notice(`Omnisearch - Terminated HTTP server`)
       }
     },

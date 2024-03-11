@@ -19,6 +19,7 @@
   import { Query } from 'src/search/query'
   import { openNote } from 'src/tools/notes'
   import { searchEngine } from 'src/search/omnisearch'
+  import { stringsToRegex } from 'src/tools/text-processing'
 
   export let modal: OmnisearchInFileModal
   export let parent: OmnisearchVaultModal | null = null
@@ -64,10 +65,20 @@
 
   $: {
     if (note) {
-      const groups = getGroups(note.matches)
-      groupedOffsets = groups.map(group =>
-        Math.round((group.first()!.offset + group.last()!.offset) / 2)
-      )
+      let groups = getGroups(note.matches)
+
+      // If there are quotes in the search,
+      // only show results that match at least one of the quotes
+      const exactTerms = query.getExactTerms()
+      if (exactTerms.length) {
+        groups = groups.filter(group =>
+          exactTerms.every(exact =>
+            group.some(match => match.match.includes(exact))
+          )
+        )
+      }
+
+      groupedOffsets = groups.map(group => Math.round(group.first()!.offset))
     }
   }
 
@@ -77,13 +88,12 @@
   function getGroups(matches: SearchMatch[]): SearchMatch[][] {
     const groups: SearchMatch[][] = []
     let lastOffset = -1
-    let count = 0 // TODO: FIXME: this is a hack to avoid infinite loops
-    while (true) {
+    let count = 0 // Avoid infinite loops
+    while (++count < 100) {
       const group = getGroupedMatches(matches, lastOffset, excerptAfter)
       if (!group.length) break
       lastOffset = group.last()!.offset
       groups.push(group)
-      if (++count > 100) break
     }
     return groups
   }
@@ -121,7 +131,9 @@
       if (parent) parent.close()
 
       // Open (or switch focus to) the note
-      await openNote(note, newTab)
+      const reg = stringsToRegex(note.foundWords)
+      reg.exec(note.content)
+      await openNote(note, reg.lastIndex, newTab)
 
       // Move cursor to the match
       const view = app.workspace.getActiveViewOfType(MarkdownView)

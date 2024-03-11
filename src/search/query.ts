@@ -46,6 +46,15 @@ export class Query {
     }
     this.query = parsed
 
+    // Extract keywords starting with a dot...
+    const ext = this.query.text
+      .filter(o => o.startsWith('.'))
+      .map(o => o.slice(1))
+    // add them to the ext field...
+    this.query.ext = [...new Set([...ext, ...(this.query.ext ?? [])])]
+    // and remove them from the text field
+    this.query.text = this.query.text.filter(o => !o.startsWith('.'))
+
     // Get strings in quotes, and remove the quotes
     this.#inQuotes =
       text.match(/"([^"]+)"/g)?.map(o => o.replace(/"/g, '')) ?? []
@@ -76,7 +85,7 @@ export class Query {
   }
 
   /**
-   * 
+   *
    * @returns An array of strings that are in quotes
    */
   public getExactTerms(): string[] {
@@ -88,5 +97,14 @@ export class Query {
         ].map(str => str.toLowerCase())
       ),
     ]
+  }
+
+  public getBestStringForExcerpt(): string {
+    // If we have quoted expressions, return the longest one
+    if (this.#inQuotes.length) {
+      return this.#inQuotes.sort((a, b) => b.length - a.length)[0] ?? ''
+    }
+    // Otherwise, just return the query as is
+    return this.segmentsToStr()
   }
 }

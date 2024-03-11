@@ -13,10 +13,13 @@ import {
   isFileFromDataloomPlugin,
   isFileImage,
   isFilePDF,
+  isFileOffice,
   isFilePlaintext,
   isFilenameIndexable,
   logDebug,
   makeMD5,
+  removeDiacritics,
+  stripMarkdownCharacters,
 } from './tools/utils'
 import type { CanvasData } from 'obsidian/canvas'
 import type { AsPlainObject } from 'minisearch'
@@ -104,6 +107,15 @@ async function getAndMapIndexedDocument(
     content = await extractor.extractText(file)
   }
 
+  // ** Office document **
+  else if (
+    isFileOffice(path) &&
+    settings.officeIndexing &&
+    extractor?.canFileBeExtracted(path)
+  ) {
+    content = await extractor.extractText(file)
+  }
+
   // ** Unsupported files **
   else if (isFilenameIndexable(path)) {
     content = file.path
@@ -143,6 +155,8 @@ async function getAndMapIndexedDocument(
   return {
     basename: file.basename,
     content,
+    /** Content without diacritics and markdown chars */
+    cleanedContent: stripMarkdownCharacters(removeDiacritics(content)),
     path: file.path,
     mtime: file.stat.mtime,
 

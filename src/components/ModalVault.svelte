@@ -116,7 +116,7 @@
       historySearchIndex = 0
     }
     searchQuery = history[historySearchIndex]
-    refInput?.setInputValue(searchQuery)
+    refInput?.setInputValue(searchQuery ?? '')
   }
 
   async function nextSearchHistory() {
@@ -125,7 +125,7 @@
       historySearchIndex = history.length ? history.length - 1 : 0
     }
     searchQuery = history[historySearchIndex]
-    refInput?.setInputValue(searchQuery)
+    refInput?.setInputValue(searchQuery ?? '')
   }
 
   let cancelableQuery: CancelablePromise<ResultNote[]> | null = null
@@ -186,7 +186,8 @@
 
   function openSearchResult(note: ResultNote, newPane = false) {
     saveCurrentQuery()
-    openNote(note, newPane)
+    const offset = note.matches?.[0]?.offset ?? 0
+    openNote(note, offset, newPane)
   }
 
   async function onClickCreateNote(_e: MouseEvent) {

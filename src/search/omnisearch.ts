@@ -1,59 +1,18 @@
 import MiniSearch, { type Options, type SearchResult } from 'minisearch'
 import type { DocumentRef, IndexedDocument, ResultNote } from '../globals'
-import {
-  BRACKETS_AND_SPACE,
-  chsRegex,
-  getChsSegmenter,
-  SPACE_OR_PUNCTUATION,
-} from '../globals'
+
 import { settings } from '../settings'
-import {
-  chunkArray,
-  logDebug,
-  removeDiacritics,
-  splitCamelCase,
-  splitHyphens,
-  stripMarkdownCharacters,
-} from '../tools/utils'
+import { chunkArray, logDebug, removeDiacritics } from '../tools/utils'
 import { Notice } from 'obsidian'
 import type { Query } from './query'
 import { cacheManager } from '../cache-manager'
 import { sortBy } from 'lodash-es'
 import { getMatches, stringsToRegex } from 'src/tools/text-processing'
-
-const tokenize = (text: string): string[] => {
-  const words = text.split(BRACKETS_AND_SPACE)
-
-  let tokens = text.split(SPACE_OR_PUNCTUATION)
-
-  // Split hyphenated tokens
-  tokens = [...tokens, ...tokens.flatMap(splitHyphens)]
-
-  // Split camelCase tokens into "camel" and "case
-  tokens = [...tokens, ...tokens.flatMap(splitCamelCase)]
-
-  // Add whole words (aka "not tokens")
-  tokens = [...tokens, ...words]
-
-  // When enabled, we only use the chsSegmenter,
-  // and not the other custom tokenizers
-  const chsSegmenter = getChsSegmenter()
-  if (chsSegmenter) {
-    const chs = tokens.flatMap(word =>
-      chsRegex.test(word) ? chsSegmenter.cut(word) : [word]
-    )
-    tokens = [...tokens, ...chs]
-  }
-
-  // Remove duplicates
-  tokens = [...new Set(tokens)]
-
-  return tokens
-}
+import { tokenizeForIndexing, tokenizeForSearch } from './tokenizer'
 
 export class Omnisearch {
   public static readonly options: Options<IndexedDocument> = {
-    tokenize,
+    tokenize: tokenizeForIndexing,
     extractField: (doc, fieldName) => {
       if (fieldName === 'directory') {
         // return path without the filename
@@ -87,6 +46,7 @@ export class Omnisearch {
     },
   }
   private minisearch: MiniSearch
+  /** Map<path, mtime> */
   private indexedDocuments: Map<string, number> = new Map()
   // private previousResults: SearchResult[] = []
   // private previousQuery: Query | null = null
@@ -212,14 +172,15 @@ export class Omnisearch {
         break
     }
 
-    let results = this.minisearch.search(query.segmentsToStr(), {
+    const searchTokens = tokenizeForSearch(query.segmentsToStr())
+    logDebug(JSON.stringify(searchTokens, null, 1))
+    let results = this.minisearch.search(searchTokens, {
       prefix: term => term.length >= options.prefixLength,
       // length <= 3: no fuzziness
       // length <= 5: fuzziness of 10%
       // length > 5: fuzziness of 20%
       fuzzy: term =>
         term.length <= 3 ? 0 : term.length <= 5 ? fuzziness / 2 : fuzziness,
-      combineWith: 'AND',
       boost: {
         basename: settings.weightBasename,
         directory: settings.weightDirectory,
@@ -321,10 +282,10 @@ export class Omnisearch {
       results = results.filter(r => {
         const document = documents.find(d => d.path === r.id)
         const title = document?.path.toLowerCase() ?? ''
-        const content = stripMarkdownCharacters(
-          document?.content ?? ''
-        ).toLowerCase()
-        return exactTerms.every(q => content.includes(q) || title.includes(q))
+        const content = (document?.cleanedContent ?? '').toLowerCase()
+        return exactTerms.every(
+          q => content.includes(q) || removeDiacritics(title).includes(q)
+        )
       })
     }
 
@@ -333,7 +294,7 @@ export class Omnisearch {
     if (exclusions.length) {
       logDebug('Filtering with exclusions')
       results = results.filter(r => {
-        const content = stripMarkdownCharacters(
+        const content = (
           documents.find(d => d.path === r.id)?.content ?? ''
         ).toLowerCase()
         return exclusions.every(q => !content.includes(q))
@@ -402,7 +363,7 @@ export class Omnisearch {
       const foundWords = [
         // Matching terms from the result,
         // do not necessarily match the query
-        ...Object.keys(result.match),
+        ...result.terms,
 
         // Quoted expressions
         ...query.getExactTerms(),

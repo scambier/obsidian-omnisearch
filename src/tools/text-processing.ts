@@ -14,13 +14,6 @@ import type { Query } from 'src/search/query'
 import { Notice } from 'obsidian'
 import { escapeRegExp } from 'lodash-es'
 
-export function highlighterGroups(_substring: string, ...args: any[]) {
-  // args[0] is the single char preceding args[1], which is the word we want to highlight
-  if (!!args[1].trim())
-    return `<span>${args[0]}</span><span class="${highlightClass}">${args[1]}</span>`
-  return '&lt;no content&gt;'
-}
-
 /**
  * Wraps the matches in the text with a <span> element and a highlight class
  * @param text
@@ -134,18 +127,18 @@ export function getMatches(
       .substring(matchStartIndex, matchEndIndex)
       .trim()
     if (originalMatch && match.index >= 0) {
-      matches.push({ match: originalMatch, offset: match.index + 1 })
+      matches.push({ match: originalMatch, offset: match.index })
     }
   }
 
   // If the query is more than 1 token and can be found "as is" in the text, put this match first
-  if (query && query.query.text.length > 1) {
-    const best = text.indexOf(query.segmentsToStr())
+  if (query && (query.query.text.length > 1 || query.getExactTerms().length > 0)) {
+    const best = text.indexOf(query.getBestStringForExcerpt())
     if (best > -1 && matches.find(m => m.offset === best)) {
       matches = matches.filter(m => m.offset !== best)
       matches.unshift({
         offset: best,
-        match: query.segmentsToStr(),
+        match: query.getBestStringForExcerpt(),
       })
     }
   }
