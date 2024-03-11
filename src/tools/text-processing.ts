@@ -13,6 +13,8 @@ import { removeDiacritics, warnDebug } from './utils'
 import type { Query } from 'src/search/query'
 import { Notice } from 'obsidian'
 import { escapeRegExp } from 'lodash-es'
+import { tokenizeForSearch } from 'src/search/tokenizer'
+import type { QueryCombination } from 'minisearch'
 
 /**
  * Wraps the matches in the text with a <span> element and a highlight class
@@ -24,19 +26,19 @@ export function highlightText(text: string, matches: SearchMatch[]): string {
   if (!matches.length) {
     return text
   }
-    try {
+  try {
     // Text to highlight
-    const src = new RegExp(
+    const smartMatches = new RegExp(
       matches
         .map(
           // This regex will match the word (with \b word boundary)
           // \b doesn't detect non-alphabetical character's word boundary, so we need to escape it
-          matchItem =>
-            `\\b${escapeRegExp(matchItem.match)}\\b${
-              !/[a-zA-Z]/.test(matchItem.match)
-                ? `|${escapeRegExp(matchItem.match)}`
-                : ''
+          matchItem => {
+            const escaped = escapeRegExp(matchItem.match)
+            return `\\b${escaped}\\b${
+              !/[a-zA-Z]/.test(matchItem.match) ? `|${escaped}` : ''
             }`
+          }
         )
         .join('|'),
       'giu'
@@ -61,7 +63,17 @@ export function highlightText(text: string, matches: SearchMatch[]): string {
     }
 
     // Effectively highlight the text
-    return text.replace(src, replacer)
+    let newText = text.replace(smartMatches, replacer)
+
+    // If the text didn't change (= nothing to highlight), re-run the regex but just replace the matches without the word boundary
+    if (newText === text) {
+      const dumbMatches = new RegExp(
+        matches.map(matchItem => escapeRegExp(matchItem.match)).join('|'),
+        'giu'
+      )
+      newText = text.replace(dumbMatches, replacer)
+    }
+    return newText
   } catch (e) {
     console.error('Omnisearch - Error in highlightText()', e)
     return text
@@ -87,7 +99,8 @@ export function removeFrontMatter(text: string): string {
 }
 
 /**
- * Used to find excerpts in a note body, or select which words to highlight
+ * Converts a list of strings to a list of words, using the \b word boundary.
+ * Used to find excerpts in a note body, or select which words to highlight.
  */
 export function stringsToRegex(strings: string[]): RegExp {
   if (!strings.length) return /^$/g
@@ -95,7 +108,9 @@ export function stringsToRegex(strings: string[]): RegExp {
   // sort strings by decreasing length, so that longer strings are matched first
   strings.sort((a, b) => b.length - a.length)
 
-  const joined =`(${strings.map(s => escapeRegExp(s)).join('|')})`
+  const joined = `(${strings
+    .map(s => `\\b${escapeRegExp(s)}\\b|${escapeRegExp(s)}`)
+    .join('|')})`
 
   return new RegExp(`${joined}`, 'gui')
 }
@@ -132,7 +147,10 @@ export function getMatches(
   }
 
   // If the query is more than 1 token and can be found "as is" in the text, put this match first
-  if (query && (query.query.text.length > 1 || query.getExactTerms().length > 0)) {
+  if (
+    query &&
+    (query.query.text.length > 1 || query.getExactTerms().length > 0)
+  ) {
     const best = text.indexOf(query.getBestStringForExcerpt())
     if (best > -1 && matches.find(m => m.offset === best)) {
       matches = matches.filter(m => m.offset !== best)
