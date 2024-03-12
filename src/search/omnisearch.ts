@@ -257,7 +257,7 @@ export class Omnisearch {
     if (settings.downrankedFoldersFilters.length > 0) {
       results.forEach(result => {
         const path = result.id;
-        var downrankingFolder = false;
+        let downrankingFolder = false;
         logDebug('searching with downranked folders, got path: ', path);
         settings.downrankedFoldersFilters.forEach(filter => {
           if (path.startsWith(filter)) {
