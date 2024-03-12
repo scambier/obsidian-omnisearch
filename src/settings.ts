@@ -281,7 +281,9 @@ export class SettingsTab extends PluginSettingTab {
           .setValue(settings.downrankedFoldersFilters.join(','))
           .setPlaceholder('Example: src,p2/dir')
           .onChange(async v => {
-            settings.downrankedFoldersFilters = v.split(',')
+            let folders = v.split(',')
+            folders = folders.map(f => f.trim())
+            settings.downrankedFoldersFilters = folders;
             await saveSettings(this.plugin)
           })
       })
