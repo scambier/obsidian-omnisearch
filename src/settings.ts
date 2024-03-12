@@ -283,7 +283,7 @@ export class SettingsTab extends PluginSettingTab {
           .onChange(async v => {
             let folders = v.split(',')
             folders = folders.map(f => f.trim())
-            settings.downrankedFoldersFilters = folders;
+            settings.downrankedFoldersFilters = folders
             await saveSettings(this.plugin)
           })
       })

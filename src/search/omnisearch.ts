@@ -252,32 +252,35 @@ export class Omnisearch {
       })
     }
 
-    logDebug('searching with downranked folders', settings.downrankedFoldersFilters);
+    logDebug(
+      'searching with downranked folders',
+      settings.downrankedFoldersFilters
+    )
     // downrank files that are in folders listed in the downrankedFoldersFilters
     if (settings.downrankedFoldersFilters.length > 0) {
       results.forEach(result => {
-        const path = result.id;
-        let downrankingFolder = false;
+        const path = result.id
+        let downrankingFolder = false
         settings.downrankedFoldersFilters.forEach(filter => {
           if (path.startsWith(filter)) {
             // we don't want the filter to match the folder sources, e.g.
             // it needs to match a whole folder name
             if (path === filter || path.startsWith(filter + '/')) {
-              logDebug('searching with downranked folders in path: ', path);
-              downrankingFolder = true;
+              logDebug('searching with downranked folders in path: ', path)
+              downrankingFolder = true
             }
           }
         })
         if (downrankingFolder) {
           result.score /= 10
         }
-        const pathParts = path.split('/');
-        const pathPartsLength = pathParts.length;
+        const pathParts = path.split('/')
+        const pathPartsLength = pathParts.length
         for (let i = 0; i < pathPartsLength; i++) {
-          const pathPart = pathParts[i];
+          const pathPart = pathParts[i]
           if (settings.downrankedFoldersFilters.includes(pathPart)) {
             result.score /= 10
-            break;
+            break
           }
         }
       })
