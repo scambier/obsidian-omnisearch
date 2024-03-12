@@ -373,7 +373,7 @@
     <span>to insert a link</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">ctrl g</span>
+    <span class="prompt-instruction-command">ctrl h</span>
     <span>to toggle excerpts</span>
   </div>
   <div class="prompt-instruction">
