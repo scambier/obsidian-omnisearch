@@ -51,6 +51,14 @@ You can check the [CHANGELOG](./CHANGELOG.md) for more information on the differ
 on [this additional plugin](https://github.com/aidenlx/cm-chs-patch). Please read its documentation for more
 information.
 
+## Projects that use Omnisearch
+
+_Submit a PR to add your own project!_
+
+- [Omnisearch Companion](https://github.com/ALegendsTale/omnisearch-companion), an extension for your browser ([Firefox](https://addons.mozilla.org/en-US/firefox/addon/omnisearch-companion/), [Chrome](https://chromewebstore.google.com/detail/omnisearch-companion/kcjcnnlpfbilodfnnkpioijobpjhokkd))
+- [Actions for Obsidian](https://actions.work/actions-for-obsidian)
+- [Userscripts](https://publish.obsidian.md/omnisearch/Inject+Omnisearch+results+into+your+search+engine) to inject Omnisearch into your favorite web search engine
+
 ## LICENSE
 
 Omnisearch is licensed under [GPL-3](https://tldrlegal.com/license/gnu-general-public-license-v3-(gpl-3)).
