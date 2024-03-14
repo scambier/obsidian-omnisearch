@@ -43,7 +43,7 @@ You can check the [CHANGELOG](./CHANGELOG.md) for more information on the differ
 - Resistance to typos
 - Switch between Vault and In-file search to quickly skim multiple results in a single note
 - Supports `"expressions in quotes"` and `-exclusions`
-- Filters file types with '.jpg' or '.md'
+- Filters file types with `.jpg` or `.md`
 - Directly Insert a `[[link]]` from the search results
 - Supports Vim navigation keys
 
