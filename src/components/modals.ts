@@ -136,7 +136,7 @@ abstract class OmnisearchModal extends Modal {
     })
 
     // Context
-    this.scope.register(['Ctrl'], 'H', _e => {
+    this.scope.register(['Ctrl'], 'G', _e => {
       eventBus.emit(EventNames.ToggleExcerpts)
     })
   }
