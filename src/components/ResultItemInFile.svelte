@@ -10,7 +10,6 @@
   export let selected = false
 
   $: cleanedContent = makeExcerpt(note?.content ?? '', offset)
-  $: matchesExcerpt = cloneDeep(note.matches)
 </script>
 
 <ResultItemContainer
@@ -20,6 +19,6 @@
   on:click
   on:auxclick>
   <div class="omnisearch-result__body">
-    {@html highlightText(cleanedContent, matchesExcerpt)}
+    {@html highlightText(cleanedContent, note.matches)}
   </div>
 </ResultItemContainer>
