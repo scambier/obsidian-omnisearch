@@ -44,7 +44,7 @@ function mapResults(results: ResultNote[]): ResultNoteApi[] {
           offset: match.offset,
         }
       }),
-      excerpt: excerpt.content,
+      excerpt: excerpt,
     }
 
     return res

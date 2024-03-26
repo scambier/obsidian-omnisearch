@@ -1,8 +1,5 @@
 <script lang="ts">
-  import {
-    makeExcerpt,
-    highlightText,
-  } from 'src/tools/text-processing'
+  import { makeExcerpt, highlightText } from 'src/tools/text-processing'
   import type { ResultNote } from '../globals'
   import ResultItemContainer from './ResultItemContainer.svelte'
   import { cloneDeep } from 'lodash-es'
@@ -13,10 +10,7 @@
   export let selected = false
 
   $: cleanedContent = makeExcerpt(note?.content ?? '', offset)
-  $: matchesExcerpt = cloneDeep(note.matches).map(m => {
-    m.offset = m.offset - cleanedContent.offset
-    return m
-  })
+  $: matchesExcerpt = cloneDeep(note.matches)
 </script>
 
 <ResultItemContainer
@@ -26,6 +20,6 @@
   on:click
   on:auxclick>
   <div class="omnisearch-result__body">
-    {@html highlightText(cleanedContent.content, matchesExcerpt)}
+    {@html highlightText(cleanedContent, matchesExcerpt)}
   </div>
 </ResultItemContainer>

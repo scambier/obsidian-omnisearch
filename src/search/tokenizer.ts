@@ -6,6 +6,7 @@ import {
   getChsSegmenter,
 } from 'src/globals'
 import { logDebug, splitCamelCase, splitHyphens } from 'src/tools/utils'
+const markdownLinkExtractor = require('markdown-link-extractor')
 
 function tokenizeWords(text: string): string[] {
   return text.split(BRACKETS_AND_SPACE)
@@ -23,6 +24,7 @@ function tokenizeTokens(text: string): string[] {
  */
 export function tokenizeForIndexing(text: string): string[] {
   const words = tokenizeWords(text)
+  const urls: string[] = markdownLinkExtractor(text)
 
   let tokens = tokenizeTokens(text)
 
@@ -34,6 +36,11 @@ export function tokenizeForIndexing(text: string): string[] {
 
   // Add whole words (aka "not tokens")
   tokens = [...tokens, ...words]
+
+  // Add urls
+  if (urls.length) {
+    tokens = [...tokens, ...urls]
+  }
 
   const chsSegmenter = getChsSegmenter()
   if (chsSegmenter) {
@@ -56,7 +63,12 @@ export function tokenizeForIndexing(text: string): string[] {
  * @returns
  */
 export function tokenizeForSearch(text: string): QueryCombination {
-  const tokens = tokenizeTokens(text)
+
+  // Extract urls and remove them from the query
+  const urls: string[] = markdownLinkExtractor(text)
+  text = urls.reduce((acc, url) => acc.replace(url, ''), text)
+
+  const tokens = [...tokenizeTokens(text), ...urls].filter(Boolean)
 
   let chs: string[] = []
   const chsSegmenter = getChsSegmenter()
@@ -70,7 +82,7 @@ export function tokenizeForSearch(text: string): QueryCombination {
     combineWith: 'OR',
     queries: [
       { combineWith: 'AND', queries: tokens },
-      { combineWith: 'AND', queries: tokenizeWords(text) },
+      { combineWith: 'AND', queries: tokenizeWords(text).filter(Boolean) },
       { combineWith: 'AND', queries: tokens.flatMap(splitHyphens) },
       { combineWith: 'AND', queries: tokens.flatMap(splitCamelCase) },
       { combineWith: 'AND', queries: chs },

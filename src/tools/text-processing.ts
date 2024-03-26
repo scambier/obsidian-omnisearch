@@ -6,15 +6,12 @@ import {
   regexStripQuotes,
   excerptAfter,
   excerptBefore,
-  SEPARATORS,
 } from 'src/globals'
 import { settings } from 'src/settings'
 import { removeDiacritics, warnDebug } from './utils'
 import type { Query } from 'src/search/query'
 import { Notice } from 'obsidian'
 import { escapeRegExp } from 'lodash-es'
-import { tokenizeForSearch } from 'src/search/tokenizer'
-import type { QueryCombination } from 'minisearch'
 
 /**
  * Wraps the matches in the text with a <span> element and a highlight class
@@ -115,14 +112,19 @@ export function stringsToRegex(strings: string[]): RegExp {
   return new RegExp(`${joined}`, 'gui')
 }
 
+/**
+ * Returns an array of matches in the text, using the provided regex
+ * @param text
+ * @param reg
+ * @param query
+ */
 export function getMatches(
   text: string,
   reg: RegExp,
   query?: Query
 ): SearchMatch[] {
-  const separatorRegExp = new RegExp(SEPARATORS, 'gu')
   const originalText = text
-  text = text.toLowerCase().replace(separatorRegExp, ' ')
+  // text = text.toLowerCase().replace(new RegExp(SEPARATORS, 'gu'), ' ')
   if (settings.ignoreDiacritics) {
     text = removeDiacritics(text)
   }
@@ -153,21 +155,16 @@ export function getMatches(
   ) {
     const best = text.indexOf(query.getBestStringForExcerpt())
     if (best > -1 && matches.find(m => m.offset === best)) {
-      matches = matches.filter(m => m.offset !== best)
       matches.unshift({
         offset: best,
         match: query.getBestStringForExcerpt(),
       })
     }
   }
-
   return matches
 }
 
-export function makeExcerpt(
-  content: string,
-  offset: number
-): { content: string; offset: number } {
+export function makeExcerpt(content: string, offset: number): string {
   try {
     const pos = offset ?? -1
     const from = Math.max(0, pos - excerptBefore)
@@ -201,14 +198,14 @@ export function makeExcerpt(
       content = content.trim().replaceAll('\n', '<br>')
     }
 
-    return { content: content, offset: pos }
+    return content
   } catch (e) {
     new Notice(
       'Omnisearch - Error while creating excerpt, see developer console'
     )
     console.error(`Omnisearch - Error while creating excerpt`)
     console.error(e)
-    return { content: '', offset: -1 }
+    return ''
   }
 }
 

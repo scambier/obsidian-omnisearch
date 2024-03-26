@@ -190,6 +190,8 @@ export class Omnisearch {
         headings3: settings.weightH3,
         unmarkedTags: settings.weightUnmarkedTags,
       },
+      // The query is already tokenized, don't tokenize again
+      tokenize: text => [text],
     })
 
     logDebug('Found', results.length, 'results')
@@ -404,7 +406,7 @@ export class Omnisearch {
 
         // Tags, starting with #
         ...query.getTags(),
-      ].filter(w => w.length > 1 || /\p{Emoji}/u.test(w))
+      ]
       logDebug('Matching tokens:', foundWords)
 
       logDebug('Getting matches locations...')
