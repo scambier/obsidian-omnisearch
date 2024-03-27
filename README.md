@@ -6,8 +6,13 @@
 ![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/scambier/obsidian-omnisearch)
 ![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/scambier/obsidian-omnisearch?include_prereleases&label=BRAT%20beta)
 
-> **Omnisearch** is a search engine that "_just works_". It always instantly shows you the most relevant results, thanks
-> to its smart weighting algorithm.
+> 🏆 Winner of the _[2023 Gems of the Year](https://obsidian.md/blog/2023-goty-winners/)_ in the "Existing plugin" category 🏆
+
+
+---
+
+**Omnisearch** is a search engine that "_just works_".  
+It always instantly shows you the most relevant results, thanks to its smart weighting algorithm.
 
 Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/minisearch) library.
 
