@@ -47,6 +47,7 @@
   let openInCurrentPaneKey: string
   let createInNewPaneKey: string
   let createInCurrentPaneKey: string
+  let openInNewLeafKey: string = getCtrlKeyLabel() + ' alt ↵'
 
   $: selectedNote = resultNotes[selectedIndex]
   $: searchQuery = searchQuery ?? previousQuery
@@ -101,6 +102,7 @@
     eventBus.on('vault', Action.ArrowDown, () => moveIndex(1))
     eventBus.on('vault', Action.PrevSearchHistory, prevSearchHistory)
     eventBus.on('vault', Action.NextSearchHistory, nextSearchHistory)
+    eventBus.on('vault', Action.OpenInNewLeaf, openNoteInNewLeaf)
     await NotesIndex.refreshIndex()
     await updateResultsDebounced()
   })
@@ -178,16 +180,26 @@
     modal.close()
   }
 
+  function openNoteInNewLeaf(): void {
+    if (!selectedNote) return
+    openSearchResult(selectedNote, true, true)
+    modal.close()
+  }
+
   function saveCurrentQuery() {
     if (searchQuery) {
       cacheManager.addToSearchHistory(searchQuery)
     }
   }
 
-  function openSearchResult(note: ResultNote, newPane = false) {
+  function openSearchResult(
+    note: ResultNote,
+    newPane = false,
+    newLeaf = false
+  ) {
     saveCurrentQuery()
     const offset = note.matches?.[0]?.offset ?? 0
-    openNote(note, offset, newPane)
+    openNote(note, offset, newPane, newLeaf)
   }
 
   async function onClickCreateNote(_e: MouseEvent) {
@@ -352,6 +364,11 @@
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">{openInNewPaneKey}</span>
     <span>to open in a new pane</span>
+  </div>
+
+  <div class="prompt-instruction">
+    <span class="prompt-instruction-command">{openInNewLeafKey}</span>
+    <span>to open in a new split</span>
   </div>
 
   <div class="prompt-instruction">
