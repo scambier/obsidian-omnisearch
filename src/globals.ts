@@ -43,6 +43,7 @@ export const enum Action {
   ArrowDown = 'arrow-down',
   PrevSearchHistory = 'prev-search-history',
   NextSearchHistory = 'next-search-history',
+  OpenInNewLeaf = 'open-in-new-leaf',
 }
 
 export type DocumentRef = { path: string; mtime: number }

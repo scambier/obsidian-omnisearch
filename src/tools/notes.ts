@@ -5,7 +5,8 @@ import { stringsToRegex } from './text-processing'
 export async function openNote(
   item: ResultNote,
   offset = 0,
-  newPane = false
+  newPane = false,
+  newLeaf = false
 ): Promise<void> {
   // Check if the note is already open,
   // to avoid opening it twice if the first one is pinned
@@ -25,7 +26,7 @@ export async function openNote(
 
   if (!alreadyOpenAndPinned) {
     // Open the note normally
-    await app.workspace.openLinkText(item.path, '', newPane)
+    await app.workspace.openLinkText(item.path, '', newLeaf ? 'split' : newPane)
   }
 
   const view = app.workspace.getActiveViewOfType(MarkdownView)
