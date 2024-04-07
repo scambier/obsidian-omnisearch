@@ -68,6 +68,7 @@ abstract class OmnisearchModal extends Modal {
     let openInNewPaneKey: Modifier[]
     let createInCurrentPaneKey: Modifier[]
     let createInNewPaneKey: Modifier[]
+    let openInNewLeafKey: Modifier[] = ['Mod', 'Alt']
     if (settings.openInNewPane) {
       openInCurrentPaneKey = ['Mod']
       openInNewPaneKey = []
@@ -84,6 +85,12 @@ abstract class OmnisearchModal extends Modal {
     this.scope.register(openInNewPaneKey, 'Enter', e => {
       e.preventDefault()
       eventBus.emit(Action.OpenInNewPane)
+    })
+
+    // Open in a new leaf
+    this.scope.register(openInNewLeafKey, 'Enter', e => {
+      e.preventDefault()
+      eventBus.emit(Action.OpenInNewLeaf)
     })
 
     // Insert link
@@ -136,7 +143,7 @@ abstract class OmnisearchModal extends Modal {
     })
 
     // Context
-    this.scope.register(['Ctrl'], 'H', _e => {
+    this.scope.register(['Ctrl'], 'G', _e => {
       eventBus.emit(EventNames.ToggleExcerpts)
     })
   }

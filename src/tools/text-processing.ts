@@ -6,7 +6,6 @@ import {
   regexStripQuotes,
   excerptAfter,
   excerptBefore,
-  SEPARATORS,
 } from 'src/globals'
 import { settings } from 'src/settings'
 import { removeDiacritics, warnDebug } from './utils'
@@ -24,19 +23,19 @@ export function highlightText(text: string, matches: SearchMatch[]): string {
   if (!matches.length) {
     return text
   }
-    try {
+  try {
     // Text to highlight
-    const src = new RegExp(
+    const smartMatches = new RegExp(
       matches
         .map(
           // This regex will match the word (with \b word boundary)
           // \b doesn't detect non-alphabetical character's word boundary, so we need to escape it
-          matchItem =>
-            `\\b${escapeRegExp(matchItem.match)}\\b${
-              !/[a-zA-Z]/.test(matchItem.match)
-                ? `|${escapeRegExp(matchItem.match)}`
-                : ''
+          matchItem => {
+            const escaped = escapeRegExp(matchItem.match)
+            return `\\b${escaped}\\b${
+              !/[a-zA-Z]/.test(matchItem.match) ? `|${escaped}` : ''
             }`
+          }
         )
         .join('|'),
       'giu'
@@ -61,7 +60,17 @@ export function highlightText(text: string, matches: SearchMatch[]): string {
     }
 
     // Effectively highlight the text
-    return text.replace(src, replacer)
+    let newText = text.replace(smartMatches, replacer)
+
+    // If the text didn't change (= nothing to highlight), re-run the regex but just replace the matches without the word boundary
+    if (newText === text) {
+      const dumbMatches = new RegExp(
+        matches.map(matchItem => escapeRegExp(matchItem.match)).join('|'),
+        'giu'
+      )
+      newText = text.replace(dumbMatches, replacer)
+    }
+    return newText
   } catch (e) {
     console.error('Omnisearch - Error in highlightText()', e)
     return text
@@ -87,7 +96,8 @@ export function removeFrontMatter(text: string): string {
 }
 
 /**
- * Used to find excerpts in a note body, or select which words to highlight
+ * Converts a list of strings to a list of words, using the \b word boundary.
+ * Used to find excerpts in a note body, or select which words to highlight.
  */
 export function stringsToRegex(strings: string[]): RegExp {
   if (!strings.length) return /^$/g
@@ -95,19 +105,26 @@ export function stringsToRegex(strings: string[]): RegExp {
   // sort strings by decreasing length, so that longer strings are matched first
   strings.sort((a, b) => b.length - a.length)
 
-  const joined =`(${strings.map(s => escapeRegExp(s)).join('|')})`
+  const joined = `(${strings
+    .map(s => `\\b${escapeRegExp(s)}\\b|${escapeRegExp(s)}`)
+    .join('|')})`
 
   return new RegExp(`${joined}`, 'gui')
 }
 
+/**
+ * Returns an array of matches in the text, using the provided regex
+ * @param text
+ * @param reg
+ * @param query
+ */
 export function getMatches(
   text: string,
   reg: RegExp,
   query?: Query
 ): SearchMatch[] {
-  const separatorRegExp = new RegExp(SEPARATORS, 'gu')
   const originalText = text
-  text = text.toLowerCase().replace(separatorRegExp, ' ')
+  // text = text.toLowerCase().replace(new RegExp(SEPARATORS, 'gu'), ' ')
   if (settings.ignoreDiacritics) {
     text = removeDiacritics(text)
   }
@@ -132,24 +149,22 @@ export function getMatches(
   }
 
   // If the query is more than 1 token and can be found "as is" in the text, put this match first
-  if (query && (query.query.text.length > 1 || query.getExactTerms().length > 0)) {
+  if (
+    query &&
+    (query.query.text.length > 1 || query.getExactTerms().length > 0)
+  ) {
     const best = text.indexOf(query.getBestStringForExcerpt())
     if (best > -1 && matches.find(m => m.offset === best)) {
-      matches = matches.filter(m => m.offset !== best)
       matches.unshift({
         offset: best,
         match: query.getBestStringForExcerpt(),
       })
     }
   }
-
   return matches
 }
 
-export function makeExcerpt(
-  content: string,
-  offset: number
-): { content: string; offset: number } {
+export function makeExcerpt(content: string, offset: number): string {
   try {
     const pos = offset ?? -1
     const from = Math.max(0, pos - excerptBefore)
@@ -183,14 +198,14 @@ export function makeExcerpt(
       content = content.trim().replaceAll('\n', '<br>')
     }
 
-    return { content: content, offset: pos }
+    return content
   } catch (e) {
     new Notice(
       'Omnisearch - Error while creating excerpt, see developer console'
     )
     console.error(`Omnisearch - Error while creating excerpt`)
     console.error(e)
-    return { content: '', offset: -1 }
+    return ''
   }
 }
 

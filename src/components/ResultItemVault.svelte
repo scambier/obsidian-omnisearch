@@ -40,10 +40,6 @@
   $: reg = stringsToRegex(note.foundWords)
   $: matchesTitle = getMatches(title, reg)
   $: matchesNotePath = getMatches(notePath, reg)
-  $: matchesExcerpt = cloneDeep(note.matches).map(m => {
-    m.offset = m.offset - cleanedContent.offset
-    return m
-  })
   $: cleanedContent = makeExcerpt(note.content, note.matches[0]?.offset ?? -1)
   $: glyph = false //cacheManager.getLiveDocument(note.path)?.doesNotExist
   $: {
@@ -102,7 +98,7 @@
     <div style="display: flex; flex-direction: row;">
       {#if $showExcerpt}
         <div class="omnisearch-result__body">
-          {@html highlightText(cleanedContent.content, matchesExcerpt)}
+          {@html highlightText(cleanedContent, note.matches)}
         </div>
       {/if}
 

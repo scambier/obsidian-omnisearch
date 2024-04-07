@@ -48,13 +48,21 @@ You can check the [CHANGELOG](./CHANGELOG.md) for more information on the differ
 - Resistance to typos
 - Switch between Vault and In-file search to quickly skim multiple results in a single note
 - Supports `"expressions in quotes"` and `-exclusions`
-- Filters file types with '.jpg' or '.md'
+- Filters file types with `.jpg` or `.md`
 - Directly Insert a `[[link]]` from the search results
 - Supports Vim navigation keys
 
 **Note:** support of Chinese, Japanese, Korean, etc. depends
 on [this additional plugin](https://github.com/aidenlx/cm-chs-patch). Please read its documentation for more
 information.
+
+## Projects that use Omnisearch
+
+_Submit a PR to add your own project!_
+
+- [Omnisearch Companion](https://github.com/ALegendsTale/omnisearch-companion), an extension for your browser ([Firefox](https://addons.mozilla.org/en-US/firefox/addon/omnisearch-companion/), [Chrome](https://chromewebstore.google.com/detail/omnisearch-companion/kcjcnnlpfbilodfnnkpioijobpjhokkd))
+- [Actions for Obsidian](https://actions.work/actions-for-obsidian)
+- [Userscripts](https://publish.obsidian.md/omnisearch/Inject+Omnisearch+results+into+your+search+engine) to inject Omnisearch into your favorite web search engine
 
 ## LICENSE
 

@@ -190,6 +190,8 @@ export class Omnisearch {
         headings3: settings.weightH3,
         unmarkedTags: settings.weightUnmarkedTags,
       },
+      // The query is already tokenized, don't tokenize again
+      tokenize: text => [text],
     })
 
     logDebug('Found', results.length, 'results')
@@ -248,6 +250,40 @@ export class Omnisearch {
           app.metadataCache.isUserIgnored(result.id)
         ) {
           result.score /= 10
+        }
+      })
+    }
+
+    logDebug(
+      'searching with downranked folders',
+      settings.downrankedFoldersFilters
+    )
+    // downrank files that are in folders listed in the downrankedFoldersFilters
+    if (settings.downrankedFoldersFilters.length > 0) {
+      results.forEach(result => {
+        const path = result.id
+        let downrankingFolder = false
+        settings.downrankedFoldersFilters.forEach(filter => {
+          if (path.startsWith(filter)) {
+            // we don't want the filter to match the folder sources, e.g.
+            // it needs to match a whole folder name
+            if (path === filter || path.startsWith(filter + '/')) {
+              logDebug('searching with downranked folders in path: ', path)
+              downrankingFolder = true
+            }
+          }
+        })
+        if (downrankingFolder) {
+          result.score /= 10
+        }
+        const pathParts = path.split('/')
+        const pathPartsLength = pathParts.length
+        for (let i = 0; i < pathPartsLength; i++) {
+          const pathPart = pathParts[i]
+          if (settings.downrankedFoldersFilters.includes(pathPart)) {
+            result.score /= 10
+            break
+          }
         }
       })
     }
@@ -370,7 +406,7 @@ export class Omnisearch {
 
         // Tags, starting with #
         ...query.getTags(),
-      ].filter(w => w.length > 1 || /\p{Emoji}/u.test(w))
+      ]
       logDebug('Matching tokens:', foundWords)
 
       logDebug('Getting matches locations...')
