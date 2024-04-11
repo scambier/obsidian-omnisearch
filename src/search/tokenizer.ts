@@ -24,7 +24,12 @@ function tokenizeTokens(text: string): string[] {
  */
 export function tokenizeForIndexing(text: string): string[] {
   const words = tokenizeWords(text)
-  const urls: string[] = markdownLinkExtractor(text)
+  let urls: string[] = []
+  try {
+    urls = markdownLinkExtractor(text)
+  } catch (e) {
+    logDebug('Error extracting urls', e)
+  }
 
   let tokens = tokenizeTokens(text)
 
@@ -63,7 +68,6 @@ export function tokenizeForIndexing(text: string): string[] {
  * @returns
  */
 export function tokenizeForSearch(text: string): QueryCombination {
-
   // Extract urls and remove them from the query
   const urls: string[] = markdownLinkExtractor(text)
   text = urls.reduce((acc, url) => acc.replace(url, ''), text)
