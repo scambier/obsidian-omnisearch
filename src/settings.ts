@@ -327,7 +327,7 @@ export class SettingsTab extends PluginSettingTab {
       .setName('Tokenize URLs')
       .setDesc(
         `Enable this if you want to be able to search for URLs as separate words.
-        This have a strong impact on indexing performance, and can crash Obsidian under certain conditions.`
+        This setting has a strong impact on indexing performance, and can crash Obsidian under certain conditions.`
       )
       .addToggle(toggle =>
         toggle.setValue(settings.tokenizeUrls).onChange(async v => {
