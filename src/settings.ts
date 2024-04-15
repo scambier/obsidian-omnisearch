@@ -58,6 +58,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   welcomeMessage: string
   /** If a query returns 0 result, try again with more relax conditions */
   simpleSearch: boolean
+  tokenizeUrls: boolean
   highlight: boolean
   splitCamelCase: boolean
   openInNewPane: boolean
@@ -199,7 +200,7 @@ export class SettingsTab extends PluginSettingTab {
           .setValue(settings.unsupportedFilesIndexing)
           .onChange(async v => {
             await database.clearCache()
-              ; (settings.unsupportedFilesIndexing as any) = v
+            ;(settings.unsupportedFilesIndexing as any) = v
             await saveSettings(this.plugin)
           })
       })
@@ -317,6 +318,20 @@ export class SettingsTab extends PluginSettingTab {
       .addToggle(toggle =>
         toggle.setValue(settings.simpleSearch).onChange(async v => {
           settings.simpleSearch = v
+          await saveSettings(this.plugin)
+        })
+      )
+
+    // Extract URLs
+    new Setting(containerEl)
+      .setName('Tokenize URLs')
+      .setDesc(
+        `Enable this if you want to be able to search for URLs as separate words.
+        This have a strong impact on indexing performance, and can crash Obsidian under certain conditions.`
+      )
+      .addToggle(toggle =>
+        toggle.setValue(settings.tokenizeUrls).onChange(async v => {
+          settings.tokenizeUrls = v
           await saveSettings(this.plugin)
         })
       )
@@ -659,6 +674,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   highlight: true,
   showPreviousQueryResults: true,
   simpleSearch: false,
+  tokenizeUrls: false,
   fuzziness: '1',
 
   weightBasename: 3,
