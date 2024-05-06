@@ -52,7 +52,7 @@ You can check the [CHANGELOG](./CHANGELOG.md) for more information on the differ
 - Directly Insert a `[[link]]` from the search results
 - Supports Vim navigation keys
 
-**Note:** support of Chinese, Japanese, Korean, etc. depends
+**Note:** support of Chinese depends
 on [this additional plugin](https://github.com/aidenlx/cm-chs-patch). Please read its documentation for more
 information.
 
