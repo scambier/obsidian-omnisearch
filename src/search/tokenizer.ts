@@ -9,12 +9,24 @@ import { settings } from 'src/settings'
 import { logDebug, splitCamelCase, splitHyphens } from 'src/tools/utils'
 const markdownLinkExtractor = require('markdown-link-extractor')
 
-function tokenizeWords(text: string): string[] {
-  return text.split(BRACKETS_AND_SPACE)
+function tokenizeWords(text: string, { skipChs = false } = {}): string[] {
+  const tokens = text.split(BRACKETS_AND_SPACE)
+  if (skipChs) return tokens
+  return tokenizeChsWord(tokens)
 }
 
-function tokenizeTokens(text: string): string[] {
-  return text.split(SPACE_OR_PUNCTUATION)
+function tokenizeTokens(text: string, { skipChs = false } = {}): string[] {
+  const tokens = text.split(SPACE_OR_PUNCTUATION)
+  if (skipChs) return tokens
+  return tokenizeChsWord(tokens)
+}
+
+function tokenizeChsWord(tokens: string[]): string[] {
+  const segmenter = getChsSegmenter()
+  if (!segmenter) return tokens
+  return tokens.flatMap(word =>
+    chsRegex.test(word) ? segmenter.cut(word, { search: true }) : [word]
+  )
 }
 
 /**
@@ -34,7 +46,7 @@ export function tokenizeForIndexing(text: string): string[] {
     }
   }
 
-  let tokens = tokenizeTokens(text)
+  let tokens = tokenizeTokens(text, { skipChs: true })
 
   // Split hyphenated tokens
   tokens = [...tokens, ...tokens.flatMap(splitHyphens)]
@@ -48,14 +60,6 @@ export function tokenizeForIndexing(text: string): string[] {
   // Add urls
   if (urls.length) {
     tokens = [...tokens, ...urls]
-  }
-
-  const chsSegmenter = getChsSegmenter()
-  if (chsSegmenter) {
-    const chs = tokens.flatMap(word =>
-      chsRegex.test(word) ? chsSegmenter.cut(word) : [word]
-    )
-    tokens = [...tokens, ...chs]
   }
 
   // Remove duplicates
@@ -77,14 +81,6 @@ export function tokenizeForSearch(text: string): QueryCombination {
 
   const tokens = [...tokenizeTokens(text), ...urls].filter(Boolean)
 
-  let chs: string[] = []
-  const chsSegmenter = getChsSegmenter()
-  if (chsSegmenter) {
-    chs = tokens.flatMap(word =>
-      chsRegex.test(word) ? chsSegmenter.cut(word) : [word]
-    )
-  }
-
   return {
     combineWith: 'OR',
     queries: [
@@ -92,7 +88,6 @@ export function tokenizeForSearch(text: string): QueryCombination {
       { combineWith: 'AND', queries: tokenizeWords(text).filter(Boolean) },
       { combineWith: 'AND', queries: tokens.flatMap(splitHyphens) },
       { combineWith: 'AND', queries: tokens.flatMap(splitCamelCase) },
-      { combineWith: 'AND', queries: chs },
     ],
   }
 }
