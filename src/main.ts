@@ -131,13 +131,13 @@ export default class OmnisearchPlugin extends Plugin {
 
   async executeFirstLaunchTasks(): Promise<void> {
     const code = '1.21.0'
-    if (settings.welcomeMessage !== code && getTextExtractor()) {
-      const welcome = new DocumentFragment()
-      welcome.createSpan({}, span => {
-        span.innerHTML = `🔎 Omnisearch can now index .docx and .xlsx documents. Don't forget to update Text Extractor and enable the toggle in Omnisearch settings.`
-      })
-      new Notice(welcome, 20_000)
-    }
+    // if (settings.welcomeMessage !== code && getTextExtractor()) {
+    //   const welcome = new DocumentFragment()
+    //   welcome.createSpan({}, span => {
+    //     span.innerHTML = `🔎 Omnisearch can now index .docx and .xlsx documents. Don't forget to update Text Extractor and enable the toggle in Omnisearch settings.`
+    //   })
+    //   new Notice(welcome, 20_000)
+    // }
     settings.welcomeMessage = code
     await this.saveData(settings)
   }
