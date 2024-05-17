@@ -1,3 +1,4 @@
+// noinspection CssUnresolvedCustomProperty
 import {
   Notice,
   Platform,
@@ -25,6 +26,7 @@ interface WeightingSettings {
 }
 
 export interface OmnisearchSettings extends WeightingSettings {
+  weightCustomProperties: { name: string; weight: number }[]
   /** Enables caching to speed up indexing */
   useCache: boolean
   /** Respect the "excluded files" Obsidian setting by downranking results ignored files */
@@ -100,7 +102,7 @@ export class SettingsTab extends PluginSettingTab {
     }
 
     // Settings main title
-    containerEl.createEl('h2', { text: 'Omnisearch' })
+    containerEl.createEl('h1', { text: 'Omnisearch' })
 
     // Sponsor link - Thank you!
     const divSponsor = containerEl.createDiv()
@@ -131,7 +133,7 @@ export class SettingsTab extends PluginSettingTab {
     // PDF Indexing
     const indexPDFsDesc = new DocumentFragment()
     indexPDFsDesc.createSpan({}, span => {
-      span.innerHTML = `Omnisearch will use Text Extractor to index the content of your PDFs`
+      span.innerHTML = `Omnisearch will use Text Extractor to index the content of your PDFs.`
     })
     new Setting(containerEl)
       .setName(
@@ -150,7 +152,7 @@ export class SettingsTab extends PluginSettingTab {
     // Images Indexing
     const indexImagesDesc = new DocumentFragment()
     indexImagesDesc.createSpan({}, span => {
-      span.innerHTML = `Omnisearch will use Text Extractor to OCR your images and index their content`
+      span.innerHTML = `Omnisearch will use Text Extractor to OCR your images and index their content.`
     })
     new Setting(containerEl)
       .setName(`Images OCR indexing ${getTextExtractor() ? '' : '⚠️ Disabled'}`)
@@ -167,7 +169,7 @@ export class SettingsTab extends PluginSettingTab {
     // Office Documents Indexing
     const indexOfficesDesc = new DocumentFragment()
     indexOfficesDesc.createSpan({}, span => {
-      span.innerHTML = `Omnisearch will use Text Extractor to index the content of your office documents (currently <pre style="display:inline">.docx</pre> and <pre style="display:inline">.xlsx</pre>)`
+      span.innerHTML = `Omnisearch will use Text Extractor to index the content of your office documents (currently <pre style="display:inline">.docx</pre> and <pre style="display:inline">.xlsx</pre>).`
     })
     new Setting(containerEl)
       .setName(
@@ -189,7 +191,7 @@ export class SettingsTab extends PluginSettingTab {
       span.innerHTML = `
       Omnisearch can index file<strong>names</strong> of "unsupported" files, such as e.g. <pre style="display:inline">.mp4</pre>
       or non-extracted PDFs & images.<br/>
-      "Obsidian setting" will respect the value of "Files & Links > Detect all file extensions"`
+      "Obsidian setting" will respect the value of "Files & Links > Detect all file extensions".`
     })
     new Setting(containerEl)
       .setName('Index paths of unsupported files')
@@ -262,7 +264,7 @@ export class SettingsTab extends PluginSettingTab {
       .setName('Respect Obsidian\'s "Excluded Files"')
       .setDesc(
         `By default, files that are in Obsidian\'s "Options > Files & Links > Excluded Files" list are downranked in results.
-        Enable this option to completely hide them`
+        Enable this option to completely hide them.`
       )
       .addToggle(toggle =>
         toggle.setValue(settings.hideExcluded).onChange(async v => {
@@ -495,9 +497,62 @@ export class SettingsTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName(
-        `Tags without the # (default: ${DEFAULT_SETTINGS.weightUnmarkedTags})`
+        `Tags (default: ${DEFAULT_SETTINGS.weightUnmarkedTags})`
       )
       .addSlider(cb => this.weightSlider(cb, 'weightUnmarkedTags'))
+
+    //#region Specific tags
+
+    new Setting(containerEl)
+      .setName('Header properties fields')
+      .setDesc('You can set custom weights for values of header properties (e.g. "keywords").')
+
+
+    for (let i = 0; i < settings.weightCustomProperties.length; i++) {
+      const item = settings.weightCustomProperties[i]
+      new Setting(containerEl)
+        .setName((i + 1).toString() + '.')
+        // TODO: add autocompletion from app.metadataCache.getAllPropertyInfos()
+        .addText(text => {
+          text
+            .setPlaceholder('Property name')
+            .setValue(item.name)
+            .onChange(async v => {
+              item.name = v
+              await saveSettings(this.plugin)
+            })
+        })
+        .addSlider(cb => {
+          cb.setLimits(1, 5, 0.1)
+            .setValue(item.weight)
+            .setDynamicTooltip()
+            .onChange(async v => {
+              item.weight = v
+              await saveSettings(this.plugin)
+            })
+        })
+        // Remove the tag
+        .addButton(btn => {
+          btn.setButtonText('Remove')
+          btn.onClick(async () => {
+            settings.weightCustomProperties.splice(i, 1)
+            await saveSettings(this.plugin)
+            this.display()
+          })
+        })
+    }
+
+    // Add a new custom tag
+    new Setting(containerEl)
+      .addButton(btn => {
+        btn.setButtonText('Add a new property')
+        btn.onClick(cb => {
+          settings.weightCustomProperties.push({ name: '', weight: 1 })
+          this.display()
+        })
+      })
+
+    //#endregion Specific tags
 
     //#endregion Results Weighting
 
@@ -632,9 +687,9 @@ export class SettingsTab extends PluginSettingTab {
       new Setting(containerEl)
         .setName('Clear cache data')
         .setDesc(resetCacheDesc)
-        .addButton(cb => {
-          cb.setButtonText('Clear cache')
-          cb.onClick(async () => {
+        .addButton(btn => {
+          btn.setButtonText('Clear cache')
+          btn.onClick(async () => {
             await database.clearCache()
           })
         })
@@ -683,6 +738,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   weightH2: 1.3,
   weightH3: 1.1,
   weightUnmarkedTags: 1.1,
+  weightCustomProperties: [] as { name: string; weight: number }[],
 
   httpApiEnabled: false,
   httpApiPort: '51361',

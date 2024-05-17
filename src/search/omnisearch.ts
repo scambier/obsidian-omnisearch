@@ -188,6 +188,7 @@ export class Omnisearch {
         headings1: settings.weightH1,
         headings2: settings.weightH2,
         headings3: settings.weightH3,
+        tags: settings.weightUnmarkedTags,
         unmarkedTags: settings.weightUnmarkedTags,
       },
       // The query is already tokenized, don't tokenize again
@@ -232,6 +233,11 @@ export class Omnisearch {
       return results.filter(r => r.id === options.singleFilePath)
     }
 
+    logDebug(
+      'searching with downranked folders',
+      settings.downrankedFoldersFilters
+    )
+
     // Hide or downrank files that are in Obsidian's excluded list
     if (settings.hideExcluded) {
       // Filter the files out
@@ -254,14 +260,13 @@ export class Omnisearch {
       })
     }
 
-    logDebug(
-      'searching with downranked folders',
-      settings.downrankedFoldersFilters
-    )
-    // downrank files that are in folders listed in the downrankedFoldersFilters
-    if (settings.downrankedFoldersFilters.length > 0) {
-      results.forEach(result => {
-        const path = result.id
+    // Extract tags from the query
+    const tags = query.getTags()
+
+    for (const result of results) {
+      const path = result.id
+      if (settings.downrankedFoldersFilters.length > 0) {
+        // downrank files that are in folders listed in the downrankedFoldersFilters
         let downrankingFolder = false
         settings.downrankedFoldersFilters.forEach(filter => {
           if (path.startsWith(filter)) {
@@ -285,21 +290,27 @@ export class Omnisearch {
             break
           }
         }
-      })
-    }
+      }
 
-    // Extract tags from the query
-    const tags = query.getTags()
+      // Boost custom properties
+      const metadata = app.metadataCache.getCache(path)
+      if (metadata) {
+        for (const { name, weight } of settings.weightCustomProperties) {
+          const values = metadata?.frontmatter?.[name]
+          if (values && result.terms.some(t => values.includes(t))) {
+            logDebug(`Boosting field "${name}" x${weight} for ${path}`)
+            result.score *= weight
+          }
+        }
+      }
 
-    // Put the results with tags on top
-    for (const tag of tags) {
-      for (const result of results) {
+      // Put the results with tags on top
+      for (const tag of tags) {
         if ((result.tags ?? []).includes(tag)) {
           result.score *= 100
         }
       }
     }
-
     logDebug('Sorting and limiting results')
 
     // Sort results and keep the 50 best
