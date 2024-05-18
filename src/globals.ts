@@ -3,6 +3,7 @@ import { writable } from 'svelte/store'
 import { settings } from './settings'
 import type { TFile } from 'obsidian'
 import { Platform } from 'obsidian'
+import { getObsidianApp } from './stores/obsidian-app'
 
 export const regexLineSplit = /\r?\n|\r|((\.|\?|!)( |\r?\n|\r))/g
 export const regexYaml = /^---\s*\n(.*?)\n?^---\s?/ms
@@ -101,7 +102,7 @@ export function isInputComposition(): boolean {
  * @returns
  */
 export function getChsSegmenter(): any | undefined {
-  return (app as any).plugins.plugins['cm-chs-patch']
+  return (getObsidianApp() as any).plugins.plugins['cm-chs-patch']
 }
 
 export type TextExtractorApi = {
@@ -114,7 +115,7 @@ export type TextExtractorApi = {
  * @returns
  */
 export function getTextExtractor(): TextExtractorApi | undefined {
-  return (app as any).plugins?.plugins?.['text-extractor']?.api
+  return (getObsidianApp() as any).plugins?.plugins?.['text-extractor']?.api
 }
 
 export function isCacheEnabled(): boolean {

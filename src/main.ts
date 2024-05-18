@@ -25,14 +25,15 @@ import { database, OmnisearchCache } from './database'
 import * as NotesIndex from './notes-index'
 import { searchEngine } from './search/omnisearch'
 import { cacheManager } from './cache-manager'
+import { setObsidianApp } from './stores/obsidian-app'
 
 export default class OmnisearchPlugin extends Plugin {
-  private ribbonButton?: HTMLElement
-
   // FIXME: fix the type
   public apiHttpServer: null | any = null
+  private ribbonButton?: HTMLElement
 
   async onload(): Promise<void> {
+    setObsidianApp(this.app)
     await loadSettings(this)
     this.addSettingTab(new SettingsTab(this))
 
@@ -131,13 +132,13 @@ export default class OmnisearchPlugin extends Plugin {
 
   async executeFirstLaunchTasks(): Promise<void> {
     const code = '1.21.0'
-    if (settings.welcomeMessage !== code && getTextExtractor()) {
-      const welcome = new DocumentFragment()
-      welcome.createSpan({}, span => {
-        span.innerHTML = `🔎 Omnisearch can now index .docx and .xlsx documents. Don't forget to update Text Extractor and enable the toggle in Omnisearch settings.`
-      })
-      new Notice(welcome, 20_000)
-    }
+    // if (settings.welcomeMessage !== code && getTextExtractor()) {
+    //   const welcome = new DocumentFragment()
+    //   welcome.createSpan({}, span => {
+    //     span.innerHTML = `🔎 Omnisearch can now index .docx and .xlsx documents. Don't forget to update Text Extractor and enable the toggle in Omnisearch settings.`
+    //   })
+    //   new Notice(welcome, 20_000)
+    // }
     settings.welcomeMessage = code
     await this.saveData(settings)
   }

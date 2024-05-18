@@ -2,10 +2,11 @@ import Dexie from 'dexie'
 import type { AsPlainObject } from 'minisearch'
 import type { DocumentRef } from './globals'
 import { Notice } from 'obsidian'
+import { getObsidianApp } from './stores/obsidian-app'
 
 export class OmnisearchCache extends Dexie {
   public static readonly dbVersion = 8
-  public static readonly dbName = 'omnisearch/cache/' + app.appId
+  public static readonly dbName = 'omnisearch/cache/' + getObsidianApp().appId
 
   private static instance: OmnisearchCache
 

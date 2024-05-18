@@ -3,6 +3,7 @@ import { Query } from '../search/query'
 import { searchEngine } from '../search/omnisearch'
 import { makeExcerpt } from './text-processing'
 import { refreshIndex } from '../notes-index'
+import { getObsidianApp } from '../stores/obsidian-app'
 
 type ResultNoteApi = {
   score: number
@@ -18,6 +19,8 @@ export type SearchMatchApi = {
   match: string
   offset: number
 }
+
+const app = getObsidianApp()
 
 let notified = false
 

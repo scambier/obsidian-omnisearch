@@ -1,6 +1,8 @@
 import { type CachedMetadata, MarkdownView, TFile } from 'obsidian'
 import type { ResultNote } from '../globals'
-import { stringsToRegex } from './text-processing'
+import { getObsidianApp } from '../stores/obsidian-app'
+
+const app = getObsidianApp()
 
 export async function openNote(
   item: ResultNote,
