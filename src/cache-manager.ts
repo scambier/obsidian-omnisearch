@@ -25,6 +25,9 @@ import type { CanvasData } from 'obsidian/canvas'
 import type { AsPlainObject } from 'minisearch'
 import type MiniSearch from 'minisearch'
 import { settings } from './settings'
+import { getObsidianApp } from './stores/obsidian-app'
+
+const app = getObsidianApp()
 
 /**
  * This function is responsible for extracting the text from a file and

@@ -9,8 +9,12 @@ import { cacheManager } from '../cache-manager'
 import { sortBy } from 'lodash-es'
 import { getMatches, stringsToRegex } from 'src/tools/text-processing'
 import { tokenizeForIndexing, tokenizeForSearch } from './tokenizer'
+import { getObsidianApp } from '../stores/obsidian-app'
 
 export class Omnisearch {
+
+  app = getObsidianApp()
+
   public static readonly options: Options<IndexedDocument> = {
     tokenize: tokenizeForIndexing,
     extractField: (doc, fieldName) => {
@@ -244,16 +248,16 @@ export class Omnisearch {
       results = results.filter(
         result =>
           !(
-            app.metadataCache.isUserIgnored &&
-            app.metadataCache.isUserIgnored(result.id)
+            this.app.metadataCache.isUserIgnored &&
+            this.app.metadataCache.isUserIgnored(result.id)
           )
       )
     } else {
       // Just downrank them
       results.forEach(result => {
         if (
-          app.metadataCache.isUserIgnored &&
-          app.metadataCache.isUserIgnored(result.id)
+          this.app.metadataCache.isUserIgnored &&
+          this.app.metadataCache.isUserIgnored(result.id)
         ) {
           result.score /= 10
         }
@@ -293,7 +297,7 @@ export class Omnisearch {
       }
 
       // Boost custom properties
-      const metadata = app.metadataCache.getCache(path)
+      const metadata = this.app.metadataCache.getCache(path)
       if (metadata) {
         for (const { name, weight } of settings.weightCustomProperties) {
           const values = metadata?.frontmatter?.[name]

@@ -15,6 +15,7 @@ import {
   isCacheEnabled,
 } from './globals'
 import type OmnisearchPlugin from './main'
+import { getObsidianApp } from './stores/obsidian-app'
 
 interface WeightingSettings {
   weightBasename: number
@@ -710,6 +711,8 @@ export class SettingsTab extends PluginSettingTab {
       })
   }
 }
+
+const app = getObsidianApp()
 
 export const DEFAULT_SETTINGS: OmnisearchSettings = {
   useCache: true,

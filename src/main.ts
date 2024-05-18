@@ -25,14 +25,15 @@ import { database, OmnisearchCache } from './database'
 import * as NotesIndex from './notes-index'
 import { searchEngine } from './search/omnisearch'
 import { cacheManager } from './cache-manager'
+import { setObsidianApp } from './stores/obsidian-app'
 
 export default class OmnisearchPlugin extends Plugin {
-  private ribbonButton?: HTMLElement
-
   // FIXME: fix the type
   public apiHttpServer: null | any = null
+  private ribbonButton?: HTMLElement
 
   async onload(): Promise<void> {
+    setObsidianApp(this.app)
     await loadSettings(this)
     this.addSettingTab(new SettingsTab(this))
 
