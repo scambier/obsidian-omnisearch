@@ -11,7 +11,9 @@ export function setObsidianApp(app: App) {
  */
 export function getObsidianApp() {
   if (!obsidianApp) {
-    throw new Error('Obsidian app not set')
+    // throw new Error('Obsidian app not set')
+    // console.trace('Obsidian app not set')
+    return app // FIXME: please.
   }
   return obsidianApp as App
 }

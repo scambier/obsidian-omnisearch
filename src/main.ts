@@ -1,4 +1,4 @@
-import { App, Notice, Platform, Plugin } from 'obsidian'
+import { App, Notice, Platform, Plugin, type PluginManifest } from 'obsidian'
 import {
   OmnisearchInFileModal,
   OmnisearchVaultModal,
@@ -14,14 +14,13 @@ import {
 import {
   eventBus,
   EventNames,
-  getTextExtractor,
   indexingStep,
   IndexingStepType,
   isCacheEnabled,
 } from './globals'
 import api, { notifyOnIndexed } from './tools/api'
 import { isFileIndexable, logDebug } from './tools/utils'
-import { database, OmnisearchCache } from './database'
+import { OmnisearchCache, database } from './database'
 import * as NotesIndex from './notes-index'
 import { searchEngine } from './search/omnisearch'
 import { cacheManager } from './cache-manager'
@@ -32,8 +31,12 @@ export default class OmnisearchPlugin extends Plugin {
   public apiHttpServer: null | any = null
   private ribbonButton?: HTMLElement
 
-  async onload(): Promise<void> {
+  constructor(app: App, manifest: PluginManifest) {
+    super(app, manifest)
     setObsidianApp(this.app)
+  }
+
+  async onload(): Promise<void> {
     await loadSettings(this)
     this.addSettingTab(new SettingsTab(this))
 
