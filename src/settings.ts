@@ -325,18 +325,21 @@ export class SettingsTab extends PluginSettingTab {
       )
 
     // Extract URLs
-    new Setting(containerEl)
-      .setName('Tokenize URLs')
-      .setDesc(
-        `Enable this if you want to be able to search for URLs as separate words.
+    // Crashes on iOS
+    if (!Platform.isIosApp) {
+      new Setting(containerEl)
+        .setName('Tokenize URLs')
+        .setDesc(
+          `Enable this if you want to be able to search for URLs as separate words.
         This setting has a strong impact on indexing performance, and can crash Obsidian under certain conditions.`
-      )
-      .addToggle(toggle =>
-        toggle.setValue(settings.tokenizeUrls).onChange(async v => {
-          settings.tokenizeUrls = v
-          await saveSettings(this.plugin)
-        })
-      )
+        )
+        .addToggle(toggle =>
+          toggle.setValue(settings.tokenizeUrls).onChange(async v => {
+            settings.tokenizeUrls = v
+            await saveSettings(this.plugin)
+          })
+        )
+    }
 
     // Open in new pane
     new Setting(containerEl)
@@ -717,7 +720,7 @@ export const DEFAULT_SETTINGS: OmnisearchSettings = {
   PDFIndexing: false,
   officeIndexing: false,
   imagesIndexing: false,
-  unsupportedFilesIndexing: 'no',
+  unsupportedFilesIndexing: 'default',
   splitCamelCase: false,
   openInNewPane: false,
   vimLikeNavigationShortcut: app.vault.getConfig('vimMode') as boolean,
