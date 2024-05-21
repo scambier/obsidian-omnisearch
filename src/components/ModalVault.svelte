@@ -24,12 +24,12 @@
   } from 'src/components/modals'
   import ResultItemVault from './ResultItemVault.svelte'
   import { Query } from 'src/search/query'
-  import { settings } from '../settings'
   import * as NotesIndex from '../notes-index'
   import { cacheManager } from '../cache-manager'
-  import { searchEngine } from 'src/search/omnisearch'
   import { cancelable, CancelablePromise } from 'cancelable-promise'
   import { debounce } from 'lodash-es'
+  import { Omnisearch } from 'src/search/omnisearch'
+  import { getSettings } from 'src/settings'
 
   export let modal: OmnisearchVaultModal
   export let previousQuery: string | undefined
@@ -51,7 +51,7 @@
 
   $: selectedNote = resultNotes[selectedIndex]
   $: searchQuery = searchQuery ?? previousQuery
-  $: if (settings.openInNewPane) {
+  $: if (getSettings().openInNewPane) {
     openInNewPaneKey = '↵'
     openInCurrentPaneKey = getCtrlKeyLabel() + ' ↵'
     createInNewPaneKey = 'shift ↵'
@@ -141,7 +141,7 @@
     query = new Query(searchQuery)
     cancelableQuery = cancelable(
       new Promise(resolve => {
-        resolve(searchEngine.getSuggestions(query))
+        resolve(Omnisearch.getInstance().getSuggestions(query))
       })
     )
     resultNotes = await cancelableQuery
@@ -299,7 +299,7 @@
   on:input="{e => (searchQuery = e.detail)}"
   placeholder="Omnisearch - Vault">
   <div class="omnisearch-input-container__buttons">
-    {#if settings.showCreateButton}
+    {#if getSettings().showCreateButton}
       <button on:click="{onClickCreateNote}">Create note</button>
     {/if}
     {#if Platform.isMobile}
@@ -329,7 +329,7 @@
   <div style="text-align: center;">
     {#if !resultNotes.length && searchQuery && !searching}
       We found 0 result for your search here.
-      {#if settings.simpleSearch && searchQuery
+      {#if getSettings().simpleSearch && searchQuery
           .split(SPACE_OR_PUNCTUATION)
           .some(w => w.length < 3)}
         <br />

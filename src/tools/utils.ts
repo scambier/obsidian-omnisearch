@@ -5,7 +5,7 @@ import {
   Platform,
 } from 'obsidian'
 import { getTextExtractor, isSearchMatch, type SearchMatch } from '../globals'
-import { canIndexUnsupportedFiles, settings } from '../settings'
+import { canIndexUnsupportedFiles, getSettings } from '../settings'
 import { type BinaryLike, createHash } from 'crypto'
 import { md5 } from 'pure-md5'
 
@@ -136,6 +136,7 @@ export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
 }
 
 export function isContentIndexable(path: string): boolean {
+  const settings = getSettings()
   const hasTextExtractor = !!getTextExtractor()
   const canIndexPDF = hasTextExtractor && settings.PDFIndexing
   const canIndexImages = hasTextExtractor && settings.imagesIndexing
@@ -176,7 +177,7 @@ export function isFileOffice(path: string): boolean {
 }
 
 export function isFilePlaintext(path: string): boolean {
-  return [...settings.indexedFileTypes, 'md'].some(t => path.endsWith(`.${t}`))
+  return [...getSettings().indexedFileTypes, 'md'].some(t => path.endsWith(`.${t}`))
 }
 
 export function isFileCanvas(path: string): boolean {
@@ -251,7 +252,7 @@ export function warnDebug(...args: any[]): void {
 }
 
 function printDebug(fn: (...args: any[]) => any, ...args: any[]): void {
-  if (settings.verboseLogging) {
+  if (getSettings().verboseLogging) {
     const t = new Date()
     const ts = `${t.getMinutes()}:${t.getSeconds()}:${t.getMilliseconds()}`
     fn(...['Omnisearch -', ts + ' -', ...args])

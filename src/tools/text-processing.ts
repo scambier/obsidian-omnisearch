@@ -1,5 +1,4 @@
 import {
-  highlightClass,
   type SearchMatch,
   regexLineSplit,
   regexYaml,
@@ -7,11 +6,11 @@ import {
   excerptAfter,
   excerptBefore,
 } from 'src/globals'
-import { settings } from 'src/settings'
 import { removeDiacritics, warnDebug } from './utils'
 import type { Query } from 'src/search/query'
 import { Notice } from 'obsidian'
 import { escapeRegExp } from 'lodash-es'
+import { getSettings } from 'src/settings'
 
 /**
  * Wraps the matches in the text with a <span> element and a highlight class
@@ -20,6 +19,10 @@ import { escapeRegExp } from 'lodash-es'
  * @returns The html string with the matches highlighted
  */
 export function highlightText(text: string, matches: SearchMatch[]): string {
+  const highlightClass = `suggestion-highlight omnisearch-highlight ${
+    getSettings().highlight ? 'omnisearch-default-highlight' : ''
+  }`
+  
   if (!matches.length) {
     return text
   }
@@ -125,7 +128,7 @@ export function getMatches(
 ): SearchMatch[] {
   const originalText = text
   // text = text.toLowerCase().replace(new RegExp(SEPARATORS, 'gu'), ' ')
-  if (settings.ignoreDiacritics) {
+  if (getSettings().ignoreDiacritics) {
     text = removeDiacritics(text)
   }
   const startTime = new Date().getTime()
@@ -165,6 +168,7 @@ export function getMatches(
 }
 
 export function makeExcerpt(content: string, offset: number): string {
+  const settings = getSettings()
   try {
     const pos = offset ?? -1
     const from = Math.max(0, pos - excerptBefore)

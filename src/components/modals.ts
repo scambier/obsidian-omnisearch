@@ -3,12 +3,13 @@ import type { Modifier } from 'obsidian'
 import ModalVault from './ModalVault.svelte'
 import ModalInFile from './ModalInFile.svelte'
 import { Action, eventBus, EventNames, isInputComposition } from '../globals'
-import { settings } from '../settings'
 import { cacheManager } from 'src/cache-manager'
+import { getSettings } from 'src/settings'
 
 abstract class OmnisearchModal extends Modal {
   protected constructor(app: App) {
     super(app)
+    const settings = getSettings()
 
     // Remove all the default modal's children
     // so that we can more easily customize it
@@ -165,7 +166,9 @@ export class OmnisearchVaultModal extends OmnisearchModal {
 
     cacheManager.getSearchHistory().then(history => {
       // Previously searched query (if enabled in settings)
-      const previous = settings.showPreviousQueryResults ? history[0] : null
+      const previous = getSettings().showPreviousQueryResults
+        ? history[0]
+        : null
 
       // Instantiate and display the Svelte component
       const cmp = new ModalVault({

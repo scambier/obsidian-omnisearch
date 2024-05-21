@@ -1,7 +1,6 @@
 import MiniSearch, { type Options, type SearchResult } from 'minisearch'
 import type { DocumentRef, IndexedDocument, ResultNote } from '../globals'
 
-import { settings } from '../settings'
 import { chunkArray, logDebug, removeDiacritics } from '../tools/utils'
 import { Notice } from 'obsidian'
 import type { Query } from './query'
@@ -10,10 +9,21 @@ import { sortBy } from 'lodash-es'
 import { getMatches, stringsToRegex } from 'src/tools/text-processing'
 import { tokenizeForIndexing, tokenizeForSearch } from './tokenizer'
 import { getObsidianApp } from '../stores/obsidian-app'
+import { getSettings } from 'src/settings'
 
 export class Omnisearch {
 
+  private static instance: Omnisearch
+
   app = getObsidianApp()
+  settings = getSettings()
+
+  public static getInstance(): Omnisearch {
+    if (!Omnisearch.instance) {
+      Omnisearch.instance = new Omnisearch();
+    }
+    return Omnisearch.instance;
+  }
 
   public static readonly options: Options<IndexedDocument> = {
     tokenize: tokenizeForIndexing,
@@ -27,7 +37,7 @@ export class Omnisearch {
       return (doc as any)[fieldName]
     },
     processTerm: (term: string) =>
-      (settings.ignoreDiacritics ? removeDiacritics(term) : term).toLowerCase(),
+      (getSettings().ignoreDiacritics ? removeDiacritics(term) : term).toLowerCase(),
     idField: 'path',
     fields: [
       'basename',
@@ -55,7 +65,7 @@ export class Omnisearch {
   // private previousResults: SearchResult[] = []
   // private previousQuery: Query | null = null
 
-  constructor() {
+  private constructor() {
     this.minisearch = new MiniSearch(Omnisearch.options)
   }
 
@@ -164,7 +174,7 @@ export class Omnisearch {
     logDebug('Starting search for', query)
 
     let fuzziness: number
-    switch (settings.fuzziness) {
+    switch (this.settings.fuzziness) {
       case '0':
         fuzziness = 0
         break
@@ -186,14 +196,14 @@ export class Omnisearch {
       fuzzy: term =>
         term.length <= 3 ? 0 : term.length <= 5 ? fuzziness / 2 : fuzziness,
       boost: {
-        basename: settings.weightBasename,
-        directory: settings.weightDirectory,
-        aliases: settings.weightBasename,
-        headings1: settings.weightH1,
-        headings2: settings.weightH2,
-        headings3: settings.weightH3,
-        tags: settings.weightUnmarkedTags,
-        unmarkedTags: settings.weightUnmarkedTags,
+        basename: this.settings.weightBasename,
+        directory: this.settings.weightDirectory,
+        aliases: this.settings.weightBasename,
+        headings1: this.settings.weightH1,
+        headings2: this.settings.weightH2,
+        headings3: this.settings.weightH3,
+        tags: this.settings.weightUnmarkedTags,
+        unmarkedTags: this.settings.weightUnmarkedTags,
       },
       // The query is already tokenized, don't tokenize again
       tokenize: text => [text],
@@ -239,11 +249,11 @@ export class Omnisearch {
 
     logDebug(
       'searching with downranked folders',
-      settings.downrankedFoldersFilters
+      this.settings.downrankedFoldersFilters
     )
 
     // Hide or downrank files that are in Obsidian's excluded list
-    if (settings.hideExcluded) {
+    if (this.settings.hideExcluded) {
       // Filter the files out
       results = results.filter(
         result =>
@@ -269,10 +279,10 @@ export class Omnisearch {
 
     for (const result of results) {
       const path = result.id
-      if (settings.downrankedFoldersFilters.length > 0) {
+      if (this.settings.downrankedFoldersFilters.length > 0) {
         // downrank files that are in folders listed in the downrankedFoldersFilters
         let downrankingFolder = false
-        settings.downrankedFoldersFilters.forEach(filter => {
+        this.settings.downrankedFoldersFilters.forEach(filter => {
           if (path.startsWith(filter)) {
             // we don't want the filter to match the folder sources, e.g.
             // it needs to match a whole folder name
@@ -289,7 +299,7 @@ export class Omnisearch {
         const pathPartsLength = pathParts.length
         for (let i = 0; i < pathPartsLength; i++) {
           const pathPart = pathParts[i]
-          if (settings.downrankedFoldersFilters.includes(pathPart)) {
+          if (this.settings.downrankedFoldersFilters.includes(pathPart)) {
             result.score /= 10
             break
           }
@@ -299,7 +309,7 @@ export class Omnisearch {
       // Boost custom properties
       const metadata = this.app.metadataCache.getCache(path)
       if (metadata) {
-        for (const { name, weight } of settings.weightCustomProperties) {
+        for (const { name, weight } of this.settings.weightCustomProperties) {
           const values = metadata?.frontmatter?.[name]
           if (values && result.terms.some(t => values.includes(t))) {
             logDebug(`Boosting field "${name}" x${weight} for ${path}`)
@@ -379,7 +389,7 @@ export class Omnisearch {
   ): Promise<ResultNote[]> {
     // Get the raw results
     let results: SearchResult[]
-    if (settings.simpleSearch) {
+    if (this.settings.simpleSearch) {
       results = await this.search(query, {
         prefixLength: 3,
         singleFilePath: options?.singleFilePath,
@@ -450,4 +460,3 @@ export class Omnisearch {
   }
 }
 
-export const searchEngine = new Omnisearch()

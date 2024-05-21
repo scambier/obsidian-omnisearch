@@ -1,9 +1,9 @@
 import type { ResultNote } from '../globals'
 import { Query } from '../search/query'
-import { searchEngine } from '../search/omnisearch'
 import { makeExcerpt } from './text-processing'
 import { refreshIndex } from '../notes-index'
 import { getObsidianApp } from '../stores/obsidian-app'
+import { Omnisearch } from 'src/search/omnisearch'
 
 type ResultNoteApi = {
   score: number
@@ -20,7 +20,6 @@ export type SearchMatchApi = {
   offset: number
 }
 
-const app = getObsidianApp()
 
 let notified = false
 
@@ -37,7 +36,7 @@ function mapResults(results: ResultNote[]): ResultNoteApi[] {
 
     const res: ResultNoteApi = {
       score,
-      vault: app.vault.getName(),
+      vault: getObsidianApp().vault.getName(),
       path,
       basename,
       foundWords,
@@ -56,7 +55,7 @@ function mapResults(results: ResultNote[]): ResultNoteApi[] {
 
 async function search(q: string): Promise<ResultNoteApi[]> {
   const query = new Query(q)
-  const raw = await searchEngine.getSuggestions(query)
+  const raw = await Omnisearch.getInstance().getSuggestions(query)
   return mapResults(raw)
 }
 

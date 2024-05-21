@@ -6,7 +6,9 @@ import { getObsidianApp } from './stores/obsidian-app'
 
 export class OmnisearchCache extends Dexie {
   public static readonly dbVersion = 8
-  public static readonly dbName = 'omnisearch/cache/' + getObsidianApp().appId
+  public static getDbName() {
+    return 'omnisearch/cache/' + getObsidianApp().appId
+  }
 
   private static instance: OmnisearchCache
 
@@ -21,7 +23,7 @@ export class OmnisearchCache extends Dexie {
   >
 
   private constructor() {
-    super(OmnisearchCache.dbName)
+    super(OmnisearchCache.getDbName())
     // Database structure
     this.version(OmnisearchCache.dbVersion).stores({
       searchHistory: '++id',
@@ -37,7 +39,7 @@ export class OmnisearchCache extends Dexie {
   public static async clearOldDatabases(): Promise<void> {
     const toDelete = (await indexedDB.databases()).filter(
       db =>
-        db.name === OmnisearchCache.dbName &&
+        db.name === OmnisearchCache.getDbName() &&
         // version multiplied by 10 https://github.com/dexie/Dexie.js/issues/59
         db.version !== OmnisearchCache.dbVersion * 10
     )
@@ -63,5 +65,3 @@ export class OmnisearchCache extends Dexie {
     await this.minisearch.clear()
   }
 }
-
-export const database = OmnisearchCache.getInstance()

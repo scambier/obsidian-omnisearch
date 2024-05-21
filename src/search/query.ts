@@ -1,4 +1,4 @@
-import { settings } from '../settings'
+import { getSettings } from 'src/settings'
 import { removeDiacritics } from '../tools/utils'
 import { parse } from 'search-query-parser'
 
@@ -15,7 +15,7 @@ export class Query {
   #inQuotes: string[]
 
   constructor(text = '') {
-    if (settings.ignoreDiacritics) {
+    if (getSettings().ignoreDiacritics) {
       text = removeDiacritics(text)
     }
     const parsed = parse(text.toLowerCase(), {

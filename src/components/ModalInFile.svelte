@@ -18,8 +18,8 @@
   import ResultItemInFile from './ResultItemInFile.svelte'
   import { Query } from 'src/search/query'
   import { openNote } from 'src/tools/notes'
-  import { searchEngine } from 'src/search/omnisearch'
   import { stringsToRegex } from 'src/tools/text-processing'
+  import { Omnisearch } from 'src/search/omnisearch'
 
   export let modal: OmnisearchInFileModal
   export let parent: OmnisearchVaultModal | null = null
@@ -54,7 +54,7 @@
       query = new Query(searchQuery)
       note =
         (
-          await searchEngine.getSuggestions(query, {
+          await Omnisearch.getInstance().getSuggestions(query, {
             singleFilePath,
           })
         )[0] ?? null

@@ -1,5 +1,5 @@
 import type { TAbstractFile } from 'obsidian'
-import { searchEngine } from './search/omnisearch'
+import { Omnisearch } from './search/omnisearch'
 
 // /**
 //  * Index a non-existing note.
@@ -42,6 +42,7 @@ export function markNoteForReindex(note: TAbstractFile): void {
 export async function refreshIndex(): Promise<void> {
   const paths = [...notesToReindex].map(n => n.path)
   if (paths.length) {
+    const searchEngine = Omnisearch.getInstance()
     searchEngine.removeFromPaths(paths)
     await searchEngine.addFromPaths(paths)
     notesToReindex.clear()

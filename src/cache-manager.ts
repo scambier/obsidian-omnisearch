@@ -4,7 +4,6 @@ import {
   getTextExtractor,
   type IndexedDocument,
 } from './globals'
-import { database } from './database'
 import {
   extractHeadingsFromCache,
   getAliasesFromMetadata,
@@ -24,10 +23,9 @@ import {
 import type { CanvasData } from 'obsidian/canvas'
 import type { AsPlainObject } from 'minisearch'
 import type MiniSearch from 'minisearch'
-import { settings } from './settings'
 import { getObsidianApp } from './stores/obsidian-app'
-
-const app = getObsidianApp()
+import { OmnisearchCache } from './database'
+import { getSettings } from './settings'
 
 /**
  * This function is responsible for extracting the text from a file and
@@ -37,6 +35,8 @@ const app = getObsidianApp()
 async function getAndMapIndexedDocument(
   path: string
 ): Promise<IndexedDocument> {
+  const app = getObsidianApp()
+  const settings = getSettings()
   const file = app.vault.getAbstractFileByPath(path)
   if (!file) throw new Error(`Invalid file path: "${path}"`)
   if (!(file instanceof TFile)) throw new Error(`Not a TFile: "${path}"`)
@@ -224,6 +224,7 @@ class CacheManager {
       return
     }
     this.nextQueryIsEmpty = false
+    const database = OmnisearchCache.getInstance()
     let history = await database.searchHistory.toArray()
     history = history.filter(s => s.query !== query).reverse()
     history.unshift({ query })
@@ -236,7 +237,7 @@ class CacheManager {
    * @returns The search history, in reverse chronological order
    */
   public async getSearchHistory(): Promise<ReadonlyArray<string>> {
-    const data = (await database.searchHistory.toArray())
+    const data = (await OmnisearchCache.getInstance().searchHistory.toArray())
       .reverse()
       .map(o => o.query)
     if (this.nextQueryIsEmpty) {
@@ -267,7 +268,9 @@ class CacheManager {
     data: AsPlainObject
   } | null> {
     try {
-      const cachedIndex = (await database.minisearch.toArray())[0]
+      const cachedIndex = (
+        await OmnisearchCache.getInstance().minisearch.toArray()
+      )[0]
       return cachedIndex
     } catch (e) {
       new Notice(
@@ -284,6 +287,7 @@ class CacheManager {
     indexed: Map<string, number>
   ): Promise<void> {
     const paths = Array.from(indexed).map(([k, v]) => ({ path: k, mtime: v }))
+    const database = OmnisearchCache.getInstance()
     await database.minisearch.clear()
     await database.minisearch.add({
       date: new Date().toISOString(),

@@ -5,7 +5,7 @@ import {
   chsRegex,
   getChsSegmenter,
 } from 'src/globals'
-import { settings } from 'src/settings'
+import { getSettings } from 'src/settings'
 import { logDebug, splitCamelCase, splitHyphens } from 'src/tools/utils'
 const markdownLinkExtractor = require('markdown-link-extractor')
 
@@ -38,7 +38,7 @@ function tokenizeChsWord(tokens: string[]): string[] {
 export function tokenizeForIndexing(text: string): string[] {
   const words = tokenizeWords(text)
   let urls: string[] = []
-  if (settings.tokenizeUrls) {
+  if (getSettings().tokenizeUrls) {
     try {
       urls = markdownLinkExtractor(text)
     } catch (e) {
