@@ -44,7 +44,7 @@
     "dexie": "^3.2.7",
     "lodash-es": "4.17.21",
     "markdown-link-extractor": "^4.0.2",
-    "minisearch": "^6.3.0",
+    "minisearch": "github:scambier/minisearch#async-load-json",
     "pure-md5": "^0.1.14",
     "search-query-parser": "^1.6.0"
   },

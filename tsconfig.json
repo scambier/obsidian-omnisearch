@@ -19,7 +19,10 @@
     "lib": [
       "DOM",
       "ES2021"
-    ]
+    ],
+    "paths": {
+      "minisearch": ["node_modules/minisearch/src/MiniSearch.ts"] 
+    }
   },
   "include": [
     "**/*.ts",

@@ -57,6 +57,14 @@ build({
         to: ['./'],
       },
     }),
+    {
+      name: 'resolve-minisearch',
+      setup(build) {
+        build.onResolve({ filter: /^minisearch$/ }, () => {
+          return { path: path.resolve('node_modules/minisearch/src/MiniSearch.ts') };
+        });
+      },
+    },
   ],
   format: 'cjs',
   watch: !prod,

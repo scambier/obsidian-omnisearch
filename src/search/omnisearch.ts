@@ -59,6 +59,7 @@ export class Omnisearch {
       }
     },
   }
+
   private minisearch: MiniSearch
   /** Map<path, mtime> */
   private indexedDocuments: Map<string, number> = new Map()
@@ -75,8 +76,7 @@ export class Omnisearch {
   async loadCache(): Promise<boolean> {
     const cache = await cacheManager.getMinisearchCache()
     if (cache) {
-      // console.log('Omnisearch - Cache', cache)
-      this.minisearch = MiniSearch.loadJS(cache.data, Omnisearch.options)
+      this.minisearch = await MiniSearch.loadJSAsync(cache.data, Omnisearch.options)
       this.indexedDocuments = new Map(cache.paths.map(o => [o.path, o.mtime]))
       return true
     }
