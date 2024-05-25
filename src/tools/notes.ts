@@ -1,8 +1,8 @@
-import { type CachedMetadata, MarkdownView, TFile } from 'obsidian'
+import { type App, type CachedMetadata, MarkdownView, TFile } from 'obsidian'
 import type { ResultNote } from '../globals'
-import { getObsidianApp } from '../stores/obsidian-app'
 
 export async function openNote(
+  app: App,
   item: ResultNote,
   offset = 0,
   newPane = false,
@@ -10,7 +10,6 @@ export async function openNote(
 ): Promise<void> {
   // Check if the note is already open,
   // to avoid opening it twice if the first one is pinned
-  const app = getObsidianApp()
   let alreadyOpenAndPinned = false
   app.workspace.iterateAllLeaves(leaf => {
     if (leaf.view instanceof MarkdownView) {
@@ -46,8 +45,11 @@ export async function openNote(
   })
 }
 
-export async function createNote(name: string, newLeaf = false): Promise<void> {
-  const app = getObsidianApp()
+export async function createNote(
+  app: App,
+  name: string,
+  newLeaf = false
+): Promise<void> {
   try {
     let pathPrefix: string
     switch (app.vault.getConfig('newFileLocation')) {
@@ -77,13 +79,14 @@ export async function createNote(name: string, newLeaf = false): Promise<void> {
  * @returns
  */
 export function getNonExistingNotes(
+  app: App,
   file: TFile,
   metadata: CachedMetadata
 ): string[] {
   return (metadata.links ?? [])
     .map(l => {
       const path = removeAnchors(l.link)
-      return getObsidianApp().metadataCache.getFirstLinkpathDest(path, file.path)
+      return app.metadataCache.getFirstLinkpathDest(path, file.path)
         ? ''
         : l.link
     })

@@ -4,54 +4,66 @@ import {
   OmnisearchVaultModal,
 } from './components/modals'
 import {
-  getSettings,
+  getDefaultSettings,
   isCacheEnabled,
   isPluginDisabled,
   loadSettings,
+  type OmnisearchSettings,
   saveSettings,
   SettingsTab,
   showExcerpt,
 } from './settings'
-import { eventBus, EventNames, indexingStep, IndexingStepType } from './globals'
-import api, { notifyOnIndexed } from './tools/api'
-import { isFileIndexable, logDebug } from './tools/utils'
+import { eventBus, EventNames, indexingStep, IndexingStepType, type TextExtractorApi } from './globals'
+import { notifyOnIndexed, registerAPI } from './tools/api'
 import { OmnisearchCache } from './database'
-import * as NotesIndex from './notes-index'
-import { cacheManager } from './cache-manager'
-import { setObsidianApp } from './stores/obsidian-app'
 import { Omnisearch } from './search/omnisearch'
+import { CacheManager } from './cache-manager'
+import { logDebug } from './tools/utils'
+import { NotesIndexer } from './notes-index'
+import { TextProcessor } from "./tools/text-processing";
 
 export default class OmnisearchPlugin extends Plugin {
   // FIXME: fix the type
   public apiHttpServer: null | any = null
+  public settings: OmnisearchSettings = getDefaultSettings(this.app)
+
+  // FIXME: merge cache and cacheManager, or find other names
+  public readonly cacheManager: CacheManager
+  public readonly cache = new OmnisearchCache(this)
+
+  public readonly notesIndexer = new NotesIndexer(this)
+  public readonly textProcessor = new TextProcessor(this)
+  // TODO: rename to searchEngine
+  public readonly omnisearch = new Omnisearch(this)
+
   private ribbonButton?: HTMLElement
 
   constructor(app: App, manifest: PluginManifest) {
     super(app, manifest)
-    setObsidianApp(this.app)
+    this.cacheManager = new CacheManager(this)
   }
 
   async onload(): Promise<void> {
-    await loadSettings(this)
+    this.settings = await loadSettings(this)
     this.addSettingTab(new SettingsTab(this))
 
     if (!Platform.isMobile) {
       import('./tools/api-server').then(
-        m => (this.apiHttpServer = m.getServer())
+        m => (this.apiHttpServer = m.getServer(this))
       )
     }
 
-    if (isPluginDisabled()) {
+    if (isPluginDisabled(this.app)) {
       console.log('Omnisearch - Plugin disabled')
       return
     }
 
     await cleanOldCacheFiles(this.app)
-    await OmnisearchCache.clearOldDatabases()
+    await this.cache.clearOldDatabases()
 
     registerAPI(this)
 
-    const settings = getSettings()
+    const settings = this.settings
     if (settings.ribbonIcon) {
       this.addRibbonButton()
     }
@@ -67,7 +79,7 @@ export default class OmnisearchPlugin extends Plugin {
       id: 'show-modal',
       name: 'Vault search',
       callback: () => {
-        new OmnisearchVaultModal(this.app).open()
+        new OmnisearchVaultModal(this).open()
       },
     })
 
@@ -76,18 +88,18 @@ export default class OmnisearchPlugin extends Plugin {
       name: 'In-file search',
       editorCallback: (_editor, view) => {
         if (view.file) {
-          new OmnisearchInFileModal(this.app, view.file).open()
+          new OmnisearchInFileModal(this, view.file).open()
         }
       },
     })
 
-    const searchEngine = Omnisearch.getInstance()
+    const searchEngine = this.omnisearch
 
     this.app.workspace.onLayoutReady(async () => {
       // Listeners to keep the search index up-to-date
       this.registerEvent(
         this.app.vault.on('create', file => {
-          if (isFileIndexable(file.path)) {
+          if (this.cacheManager.isFileIndexable(file.path)) {
             logDebug('Indexing new file', file.path)
             // await cacheManager.addToLiveCache(file.path)
             searchEngine.addFromPaths([file.path])
@@ -97,25 +109,25 @@ export default class OmnisearchPlugin extends Plugin {
       this.registerEvent(
         this.app.vault.on('delete', file => {
           logDebug('Removing file', file.path)
-          cacheManager.removeFromLiveCache(file.path)
+          this.cacheManager.removeFromLiveCache(file.path)
           searchEngine.removeFromPaths([file.path])
         })
       )
       this.registerEvent(
         this.app.vault.on('modify', async file => {
-          if (isFileIndexable(file.path)) {
+          if (this.cacheManager.isFileIndexable(file.path)) {
             logDebug('Updating file', file.path)
-            await cacheManager.addToLiveCache(file.path)
-            NotesIndex.markNoteForReindex(file)
+            await this.cacheManager.addToLiveCache(file.path)
+            this.notesIndexer.markNoteForReindex(file)
           }
         })
       )
       this.registerEvent(
         this.app.vault.on('rename', async (file, oldPath) => {
-          if (isFileIndexable(file.path)) {
+          if (this.cacheManager.isFileIndexable(file.path)) {
             logDebug('Renaming file', file.path)
-            cacheManager.removeFromLiveCache(oldPath)
-            await cacheManager.addToLiveCache(file.path)
+            this.cacheManager.removeFromLiveCache(oldPath)
+            await this.cacheManager.addToLiveCache(file.path)
             searchEngine.removeFromPaths([oldPath])
             await searchEngine.addFromPaths([file.path])
           }
@@ -132,7 +144,6 @@ export default class OmnisearchPlugin extends Plugin {
   }
 
   async executeFirstLaunchTasks(): Promise<void> {
-    const settings = getSettings()
     const code = '1.21.0'
     // if (settings.welcomeMessage !== code && getTextExtractor()) {
     //   const welcome = new DocumentFragment()
@@ -141,8 +152,8 @@ export default class OmnisearchPlugin extends Plugin {
     //   })
     //   new Notice(welcome, 20_000)
     // }
-    settings.welcomeMessage = code
-    await this.saveData(settings)
+    this.settings.welcomeMessage = code
+    await this.saveData(this.settings)
   }
 
   async onunload(): Promise<void> {
@@ -151,14 +162,14 @@ export default class OmnisearchPlugin extends Plugin {
 
     // Clear cache when disabling Omnisearch
     if (process.env.NODE_ENV === 'production') {
-      await OmnisearchCache.getInstance().clearCache()
+      await this.cache.clearCache()
     }
     this.apiHttpServer.close()
   }
 
   addRibbonButton(): void {
     this.ribbonButton = this.addRibbonIcon('search', 'Omnisearch', _evt => {
-      new OmnisearchVaultModal(this.app).open()
+      new OmnisearchVaultModal(this).open()
     })
   }
 
@@ -168,10 +179,28 @@ export default class OmnisearchPlugin extends Plugin {
     }
   }
 
+  /**
+   * Plugin dependency - Chs Patch for Chinese word segmentation
+   * @returns
+   */
+  public getChsSegmenter(): any | undefined {
+    return (this.app as any).plugins.plugins['cm-chs-patch']
+  }
+
+  /**
+   * Plugin dependency - Text Extractor
+   * @returns
+   */
+  public getTextExtractor(): TextExtractorApi | undefined {
+    return (this.app as any).plugins?.plugins?.['text-extractor']?.api
+  }
+
   private async populateIndex(): Promise<void> {
     console.time('Omnisearch - Indexing total time')
     indexingStep.set(IndexingStepType.ReadingFiles)
-    const files = this.app.vault.getFiles().filter(f => isFileIndexable(f.path))
+    const files = this.app.vault
+      .getFiles()
+      .filter(f => this.cacheManager.isFileIndexable(f.path))
     console.log(`Omnisearch - ${files.length} files total`)
     console.log(
       `Omnisearch - Cache is ${isCacheEnabled() ? 'enabled' : 'disabled'}`
@@ -179,7 +208,7 @@ export default class OmnisearchPlugin extends Plugin {
     // Map documents in the background
     // Promise.all(files.map(f => cacheManager.addToLiveCache(f.path)))
 
-    const searchEngine = Omnisearch.getInstance()
+    const searchEngine = this.omnisearch
     if (isCacheEnabled()) {
       console.time('Omnisearch - Loading index from cache')
       indexingStep.set(IndexingStepType.LoadingCache)
@@ -221,17 +250,16 @@ export default class OmnisearchPlugin extends Plugin {
 
     if ((diff.toRemove.length || diff.toAdd.length) && isCacheEnabled()) {
       indexingStep.set(IndexingStepType.WritingCache)
-      const settings = getSettings()
-      
+
       // Disable settings.useCache while writing the cache, in case it freezes
-      settings.useCache = false
+      this.settings.useCache = false
       await saveSettings(this)
 
       // Write the cache
       await searchEngine.writeToCache()
 
       // Re-enable settings.caching
-      settings.useCache = true
+      this.settings.useCache = true
       await saveSettings(this)
     }
 
@@ -264,17 +292,4 @@ async function cleanOldCacheFiles(app: App) {
       } catch (e) {}
     }
   }
-}
-
-function registerAPI(plugin: OmnisearchPlugin): void {
-  // Url scheme for obsidian://omnisearch?query=foobar
-  plugin.registerObsidianProtocolHandler('omnisearch', params => {
-    new OmnisearchVaultModal(plugin.app, params.query).open()
-  })
-
-  // Public api
-  // @ts-ignore
-  globalThis['omnisearch'] = api
-  // Deprecated
-  ;(plugin.app as any).plugins.plugins.omnisearch.api = api
 }

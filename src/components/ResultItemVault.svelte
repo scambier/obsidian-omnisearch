@@ -9,18 +9,12 @@
     pathWithoutFilename,
   } from '../tools/utils'
   import ResultItemContainer from './ResultItemContainer.svelte'
-  import { TFile, setIcon, App } from 'obsidian'
-  import { cloneDeep } from 'lodash-es'
-  import {
-    stringsToRegex,
-    getMatches,
-    makeExcerpt,
-    highlightText,
-  } from 'src/tools/text-processing'
+  import { TFile, setIcon } from 'obsidian'
+  import type OmnisearchPlugin from '../main'
 
   export let selected = false
   export let note: ResultNote
-  export let app: App
+  export let plugin: OmnisearchPlugin
 
   let imagePath: string | null = null
   let title = ''
@@ -31,16 +25,15 @@
   $: {
     imagePath = null
     if (isFileImage(note.path)) {
-      const file = app.vault.getAbstractFileByPath(note.path)
+      const file = plugin.app.vault.getAbstractFileByPath(note.path)
       if (file instanceof TFile) {
-        imagePath = app.vault.getResourcePath(file)
+        imagePath = plugin.app.vault.getResourcePath(file)
       }
     }
   }
-  $: reg = stringsToRegex(note.foundWords)
-  $: matchesTitle = getMatches(title, reg)
-  $: matchesNotePath = getMatches(notePath, reg)
-  $: cleanedContent = makeExcerpt(note.content, note.matches[0]?.offset ?? -1)
+  $: matchesTitle = plugin.textProcessor.getMatches(title, note.foundWords)
+  $: matchesNotePath = plugin.textProcessor.getMatches(notePath, note.foundWords)
+  $: cleanedContent = plugin.textProcessor.makeExcerpt(note.content, note.matches[0]?.offset ?? -1)
   $: glyph = false //cacheManager.getLiveDocument(note.path)?.doesNotExist
   $: {
     title = note.basename
@@ -63,15 +56,15 @@
 <ResultItemContainer
   glyph="{glyph}"
   id="{note.path}"
-  on:click
   on:auxclick
+  on:click
   on:mousemove
   selected="{selected}">
   <div>
     <div class="omnisearch-result__title-container">
       <span class="omnisearch-result__title">
         <span bind:this="{elFilePathIcon}"></span>
-        <span>{@html highlightText(title, matchesTitle)}</span>
+        <span>{@html plugin.textProcessor.highlightText(title, matchesTitle)}</span>
         <span class="omnisearch-result__extension">
           .{getExtension(note.path)}
         </span>
@@ -91,14 +84,14 @@
     {#if notePath}
       <div class="omnisearch-result__folder-path">
         <span bind:this="{elFolderPathIcon}"></span>
-        <span>{@html highlightText(notePath, matchesNotePath)}</span>
+        <span>{@html plugin.textProcessor.highlightText(notePath, matchesNotePath)}</span>
       </div>
     {/if}
 
     <div style="display: flex; flex-direction: row;">
       {#if $showExcerpt}
         <div class="omnisearch-result__body">
-          {@html highlightText(cleanedContent, note.matches)}
+          {@html plugin.textProcessor.highlightText(cleanedContent, note.matches)}
         </div>
       {/if}
 

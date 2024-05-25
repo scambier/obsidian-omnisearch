@@ -2,16 +2,10 @@ import Dexie from 'dexie'
 import type { AsPlainObject } from 'minisearch'
 import type { DocumentRef } from './globals'
 import { Notice } from 'obsidian'
-import { getObsidianApp } from './stores/obsidian-app'
+import type OmnisearchPlugin from './main'
 
 export class OmnisearchCache extends Dexie {
   public static readonly dbVersion = 8
-  public static getDbName() {
-    return 'omnisearch/cache/' + getObsidianApp().appId
-  }
-
-  private static instance: OmnisearchCache
-
   searchHistory!: Dexie.Table<{ id?: number; query: string }, number>
   minisearch!: Dexie.Table<
     {
@@ -22,8 +16,8 @@ export class OmnisearchCache extends Dexie {
     string
   >
 
-  private constructor() {
-    super(OmnisearchCache.getDbName())
+  constructor(private plugin: OmnisearchPlugin) {
+    super(OmnisearchCache.getDbName(plugin.app.appId))
     // Database structure
     this.version(OmnisearchCache.dbVersion).stores({
       searchHistory: '++id',
@@ -31,15 +25,19 @@ export class OmnisearchCache extends Dexie {
     })
   }
 
+  public static getDbName(appId: string) {
+    return 'omnisearch/cache/' + appId
+  }
+
   //#endregion Table declarations
 
   /**
    * Deletes Omnisearch databases that have an older version than the current one
    */
-  public static async clearOldDatabases(): Promise<void> {
+  public async clearOldDatabases(): Promise<void> {
     const toDelete = (await indexedDB.databases()).filter(
       db =>
-        db.name === OmnisearchCache.getDbName() &&
+        db.name === OmnisearchCache.getDbName(this.plugin.app.appId) &&
         // version multiplied by 10 https://github.com/dexie/Dexie.js/issues/59
         db.version !== OmnisearchCache.dbVersion * 10
     )
@@ -51,13 +49,6 @@ export class OmnisearchCache extends Dexie {
         }
       }
     }
-  }
-
-  public static getInstance() {
-    if (!OmnisearchCache.instance) {
-      OmnisearchCache.instance = new OmnisearchCache()
-    }
-    return OmnisearchCache.instance
   }
 
   public async clearCache() {

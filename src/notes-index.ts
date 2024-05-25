@@ -1,5 +1,30 @@
 import type { TAbstractFile } from 'obsidian'
-import { Omnisearch } from './search/omnisearch'
+import type OmnisearchPlugin from './main'
+
+export class NotesIndexer {
+  private notesToReindex = new Set<TAbstractFile>()
+
+  constructor(private plugin: OmnisearchPlugin) {}
+
+  /**
+   * Updated notes are not reindexed immediately for performance reasons.
+   * They're added to a list, and reindex is done the next time we open Omnisearch.
+   */
+  public markNoteForReindex(note: TAbstractFile): void {
+    this.notesToReindex.add(note)
+  }
+
+  public async refreshIndex(): Promise<void> {
+    const paths = [...this.notesToReindex].map(n => n.path)
+    if (paths.length) {
+      const searchEngine = this.plugin.omnisearch
+      searchEngine.removeFromPaths(paths)
+      await searchEngine.addFromPaths(paths)
+      this.notesToReindex.clear()
+      // console.log(`Omnisearch - Reindexed ${paths.length} file(s)`)
+    }
+  }
+}
 
 // /**
 //  * Index a non-existing note.
@@ -28,24 +53,3 @@ import { Omnisearch } from './search/omnisearch'
 //   }
 //   // searchEngine.addDocuments([note])
 // }
-
-const notesToReindex = new Set<TAbstractFile>()
-
-/**
- * Updated notes are not reindexed immediately for performance reasons.
- * They're added to a list, and reindex is done the next time we open Omnisearch.
- */
-export function markNoteForReindex(note: TAbstractFile): void {
-  notesToReindex.add(note)
-}
-
-export async function refreshIndex(): Promise<void> {
-  const paths = [...notesToReindex].map(n => n.path)
-  if (paths.length) {
-    const searchEngine = Omnisearch.getInstance()
-    searchEngine.removeFromPaths(paths)
-    await searchEngine.addFromPaths(paths)
-    notesToReindex.clear()
-    // console.log(`Omnisearch - Reindexed ${paths.length} file(s)`)
-  }
-}

@@ -1,93 +1,96 @@
 import type { QueryCombination } from 'minisearch'
-import {
-  BRACKETS_AND_SPACE,
-  SPACE_OR_PUNCTUATION,
-  chsRegex,
-  getChsSegmenter,
-} from 'src/globals'
-import { getSettings } from 'src/settings'
+import { BRACKETS_AND_SPACE, chsRegex, SPACE_OR_PUNCTUATION } from 'src/globals'
 import { logDebug, splitCamelCase, splitHyphens } from 'src/tools/utils'
+import type OmnisearchPlugin from '../main'
+
 const markdownLinkExtractor = require('markdown-link-extractor')
 
-function tokenizeWords(text: string, { skipChs = false } = {}): string[] {
-  const tokens = text.split(BRACKETS_AND_SPACE)
-  if (skipChs) return tokens
-  return tokenizeChsWord(tokens)
-}
+export class Tokenizer {
+  constructor(private plugin: OmnisearchPlugin) {}
 
-function tokenizeTokens(text: string, { skipChs = false } = {}): string[] {
-  const tokens = text.split(SPACE_OR_PUNCTUATION)
-  if (skipChs) return tokens
-  return tokenizeChsWord(tokens)
-}
+  /**
+   * Tokenization for indexing will possibly return more tokens than the original text.
+   * This is because we combine different methods of tokenization to get the best results.
+   * @param text
+   * @returns
+   */
+  public tokenizeForIndexing(text: string): string[] {
+    const words = this.tokenizeWords(text)
+    let urls: string[] = []
+    if (this.plugin.settings.tokenizeUrls) {
+      try {
+        urls = markdownLinkExtractor(text)
+      } catch (e) {
+        logDebug('Error extracting urls', e)
+      }
+    }
 
-function tokenizeChsWord(tokens: string[]): string[] {
-  const segmenter = getChsSegmenter()
-  if (!segmenter) return tokens
-  return tokens.flatMap(word =>
-    chsRegex.test(word) ? segmenter.cut(word, { search: true }) : [word]
-  )
-}
+    let tokens = this.tokenizeTokens(text, { skipChs: true })
 
-/**
- * Tokenization for indexing will possibly return more tokens than the original text.
- * This is because we combine different methods of tokenization to get the best results.
- * @param text
- * @returns
- */
-export function tokenizeForIndexing(text: string): string[] {
-  const words = tokenizeWords(text)
-  let urls: string[] = []
-  if (getSettings().tokenizeUrls) {
-    try {
-      urls = markdownLinkExtractor(text)
-    } catch (e) {
-      logDebug('Error extracting urls', e)
+    // Split hyphenated tokens
+    tokens = [...tokens, ...tokens.flatMap(splitHyphens)]
+
+    // Split camelCase tokens into "camel" and "case
+    tokens = [...tokens, ...tokens.flatMap(splitCamelCase)]
+
+    // Add whole words (aka "not tokens")
+    tokens = [...tokens, ...words]
+
+    // Add urls
+    if (urls.length) {
+      tokens = [...tokens, ...urls]
+    }
+
+    // Remove duplicates
+    tokens = [...new Set(tokens)]
+
+    return tokens
+  }
+
+  /**
+   * Search tokenization will use the same tokenization methods as indexing,
+   * but will combine each group with "OR" operators
+   * @param text
+   * @returns
+   */
+  public tokenizeForSearch(text: string): QueryCombination {
+    // Extract urls and remove them from the query
+    const urls: string[] = markdownLinkExtractor(text)
+    text = urls.reduce((acc, url) => acc.replace(url, ''), text)
+
+    const tokens = [...this.tokenizeTokens(text), ...urls].filter(Boolean)
+
+    return {
+      combineWith: 'OR',
+      queries: [
+        { combineWith: 'AND', queries: tokens },
+        {
+          combineWith: 'AND',
+          queries: this.tokenizeWords(text).filter(Boolean),
+        },
+        { combineWith: 'AND', queries: tokens.flatMap(splitHyphens) },
+        { combineWith: 'AND', queries: tokens.flatMap(splitCamelCase) },
+      ],
     }
   }
 
-  let tokens = tokenizeTokens(text, { skipChs: true })
-
-  // Split hyphenated tokens
-  tokens = [...tokens, ...tokens.flatMap(splitHyphens)]
-
-  // Split camelCase tokens into "camel" and "case
-  tokens = [...tokens, ...tokens.flatMap(splitCamelCase)]
-
-  // Add whole words (aka "not tokens")
-  tokens = [...tokens, ...words]
-
-  // Add urls
-  if (urls.length) {
-    tokens = [...tokens, ...urls]
+  private tokenizeWords(text: string, { skipChs = false } = {}): string[] {
+    const tokens = text.split(BRACKETS_AND_SPACE)
+    if (skipChs) return tokens
+    return this.tokenizeChsWord(tokens)
   }
 
-  // Remove duplicates
-  tokens = [...new Set(tokens)]
+  private tokenizeTokens(text: string, { skipChs = false } = {}): string[] {
+    const tokens = text.split(SPACE_OR_PUNCTUATION)
+    if (skipChs) return tokens
+    return this.tokenizeChsWord(tokens)
+  }
 
-  return tokens
-}
-
-/**
- * Search tokenization will use the same tokenization methods as indexing,
- * but will combine each group with "OR" operators
- * @param text
- * @returns
- */
-export function tokenizeForSearch(text: string): QueryCombination {
-  // Extract urls and remove them from the query
-  const urls: string[] = markdownLinkExtractor(text)
-  text = urls.reduce((acc, url) => acc.replace(url, ''), text)
-
-  const tokens = [...tokenizeTokens(text), ...urls].filter(Boolean)
-
-  return {
-    combineWith: 'OR',
-    queries: [
-      { combineWith: 'AND', queries: tokens },
-      { combineWith: 'AND', queries: tokenizeWords(text).filter(Boolean) },
-      { combineWith: 'AND', queries: tokens.flatMap(splitHyphens) },
-      { combineWith: 'AND', queries: tokens.flatMap(splitCamelCase) },
-    ],
+  private tokenizeChsWord(tokens: string[]): string[] {
+    const segmenter = this.plugin.getChsSegmenter()
+    if (!segmenter) return tokens
+    return tokens.flatMap(word =>
+      chsRegex.test(word) ? segmenter.cut(word, { search: true }) : [word]
+    )
   }
 }

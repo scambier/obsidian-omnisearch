@@ -4,8 +4,7 @@ import {
   parseFrontMatterAliases,
   Platform,
 } from 'obsidian'
-import { getTextExtractor, isSearchMatch, type SearchMatch } from '../globals'
-import { canIndexUnsupportedFiles, getSettings } from '../settings'
+import { isSearchMatch, type SearchMatch } from '../globals'
 import { type BinaryLike, createHash } from 'crypto'
 import { md5 } from 'pure-md5'
 
@@ -135,33 +134,6 @@ export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
   return Platform.isMacOS ? '⌘' : 'ctrl'
 }
 
-export function isContentIndexable(path: string): boolean {
-  const settings = getSettings()
-  const hasTextExtractor = !!getTextExtractor()
-  const canIndexPDF = hasTextExtractor && settings.PDFIndexing
-  const canIndexImages = hasTextExtractor && settings.imagesIndexing
-  return (
-    isFilePlaintext(path) ||
-    isFileCanvas(path) ||
-    isFileFromDataloomPlugin(path) ||
-    (canIndexPDF && isFilePDF(path)) ||
-    (canIndexImages && isFileImage(path))
-  )
-}
-
-export function isFilenameIndexable(path: string): boolean {
-  return (
-    canIndexUnsupportedFiles() ||
-    isFilePlaintext(path) ||
-    isFileCanvas(path) ||
-    isFileFromDataloomPlugin(path)
-  )
-}
-
-export function isFileIndexable(path: string): boolean {
-  return isFilenameIndexable(path) || isContentIndexable(path)
-}
-
 export function isFileImage(path: string): boolean {
   const ext = getExtension(path)
   return ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'webp'
@@ -174,10 +146,6 @@ export function isFilePDF(path: string): boolean {
 export function isFileOffice(path: string): boolean {
   const ext = getExtension(path)
   return ext === 'docx' || ext === 'xlsx'
-}
-
-export function isFilePlaintext(path: string): boolean {
-  return [...getSettings().indexedFileTypes, 'md'].some(t => path.endsWith(`.${t}`))
 }
 
 export function isFileCanvas(path: string): boolean {
@@ -251,8 +219,13 @@ export function warnDebug(...args: any[]): void {
   printDebug(console.warn, ...args)
 }
 
+let printDebugEnabled= false
+export function enablePrintDebug(enable: boolean): void {
+  printDebugEnabled = enable
+}
+
 function printDebug(fn: (...args: any[]) => any, ...args: any[]): void {
-  if (getSettings().verboseLogging) {
+  if (printDebugEnabled) {
     const t = new Date()
     const ts = `${t.getMinutes()}:${t.getSeconds()}:${t.getMilliseconds()}`
     fn(...['Omnisearch -', ts + ' -', ...args])

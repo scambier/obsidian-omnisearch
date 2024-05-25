@@ -1,7 +1,6 @@
 import { EventBus } from './tools/event-bus'
 import { writable } from 'svelte/store'
 import type { TFile } from 'obsidian'
-import { getObsidianApp } from './stores/obsidian-app'
 
 export const regexLineSplit = /\r?\n|\r|((\.|\?|!)( |\r?\n|\r))/g
 export const regexYaml = /^---\s*\n(.*?)\n?^---\s?/ms
@@ -92,25 +91,9 @@ export function isInputComposition(): boolean {
   return inComposition
 }
 
-/**
- * Plugin dependency - Chs Patch for Chinese word segmentation
- * @returns
- */
-export function getChsSegmenter(): any | undefined {
-  return (getObsidianApp() as any).plugins.plugins['cm-chs-patch']
-}
-
 export type TextExtractorApi = {
   extractText: (file: TFile) => Promise<string>
   canFileBeExtracted: (filePath: string) => boolean
-}
-
-/**
- * Plugin dependency - Text Extractor
- * @returns
- */
-export function getTextExtractor(): TextExtractorApi | undefined {
-  return (getObsidianApp() as any).plugins?.plugins?.['text-extractor']?.api
 }
 
 export const SEPARATORS =

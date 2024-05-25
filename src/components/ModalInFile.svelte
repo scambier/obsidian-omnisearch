@@ -9,7 +9,7 @@
   } from 'src/globals'
   import { getCtrlKeyLabel, loopIndex } from 'src/tools/utils'
   import { onDestroy, onMount, tick } from 'svelte'
-  import { MarkdownView, App, Platform } from 'obsidian'
+  import { MarkdownView, Platform } from 'obsidian'
   import ModalContainer from './ModalContainer.svelte'
   import {
     OmnisearchInFileModal,
@@ -18,14 +18,13 @@
   import ResultItemInFile from './ResultItemInFile.svelte'
   import { Query } from 'src/search/query'
   import { openNote } from 'src/tools/notes'
-  import { stringsToRegex } from 'src/tools/text-processing'
-  import { Omnisearch } from 'src/search/omnisearch'
+  import type OmnisearchPlugin from '../main'
 
+  export let plugin: OmnisearchPlugin
   export let modal: OmnisearchInFileModal
   export let parent: OmnisearchVaultModal | null = null
   export let singleFilePath = ''
   export let previousQuery: string | undefined
-  export let app: App
 
   let searchQuery: string
   let groupedOffsets: number[] = []
@@ -51,10 +50,12 @@
 
   $: (async () => {
     if (searchQuery) {
-      query = new Query(searchQuery)
+      query = new Query(searchQuery, {
+        ignoreDiacritics: plugin.settings.ignoreDiacritics,
+      })
       note =
         (
-          await Omnisearch.getInstance().getSuggestions(query, {
+          await plugin.omnisearch.getSuggestions(query, {
             singleFilePath,
           })
         )[0] ?? null
@@ -131,12 +132,12 @@
       if (parent) parent.close()
 
       // Open (or switch focus to) the note
-      const reg = stringsToRegex(note.foundWords)
+      const reg = plugin.textProcessor.stringsToRegex(note.foundWords)
       reg.exec(note.content)
-      await openNote(note, reg.lastIndex, newTab)
+      await openNote(plugin.app, note, reg.lastIndex, newTab)
 
       // Move cursor to the match
-      const view = app.workspace.getActiveViewOfType(MarkdownView)
+      const view = plugin.app.workspace.getActiveViewOfType(MarkdownView)
       if (!view) {
         // Not an editable document, so no cursor to place
         return
@@ -155,12 +156,13 @@
   }
 
   function switchToVaultModal(): void {
-    new OmnisearchVaultModal(app, searchQuery ?? previousQuery).open()
+    new OmnisearchVaultModal(plugin, searchQuery ?? previousQuery).open()
     modal.close()
   }
 </script>
 
 <InputSearch
+  plugin="{plugin}"
   on:input="{e => (searchQuery = e.detail)}"
   placeholder="Omnisearch - File"
   initialValue="{previousQuery}">
@@ -175,6 +177,7 @@
   {#if groupedOffsets.length && note}
     {#each groupedOffsets as offset, i}
       <ResultItemInFile
+        {plugin}
         offset="{offset}"
         note="{note}"
         index="{i}"

@@ -1,5 +1,6 @@
 // noinspection CssUnresolvedCustomProperty
 import {
+  App,
   Notice,
   Platform,
   Plugin,
@@ -8,10 +9,9 @@ import {
   SliderComponent,
 } from 'obsidian'
 import { writable } from 'svelte/store'
-import { K_DISABLE_OMNISEARCH, getTextExtractor } from './globals'
+import { K_DISABLE_OMNISEARCH } from './globals'
 import type OmnisearchPlugin from './main'
-import { getObsidianApp } from './stores/obsidian-app'
-import { OmnisearchCache } from './database'
+import { enablePrintDebug } from "./tools/utils";
 
 interface WeightingSettings {
   weightBasename: number
@@ -91,7 +91,9 @@ export class SettingsTab extends PluginSettingTab {
 
   display(): void {
     const { containerEl } = this
-    const database = OmnisearchCache.getInstance()
+    // TODO: rename
+    const database = this.plugin.cache
+    const textExtractor = this.plugin.getTextExtractor()
     containerEl.empty()
 
     if (this.app.loadLocalStorage(K_DISABLE_OMNISEARCH) == '1') {
@@ -114,7 +116,7 @@ export class SettingsTab extends PluginSettingTab {
     const indexingDesc = new DocumentFragment()
     indexingDesc.createSpan({}, span => {
       span.innerHTML = `⚠️ <span style="color: var(--text-accent)">Changing indexing settings will clear the cache, and requires a restart of Obsidian.</span><br/><br/>`
-      if (getTextExtractor()) {
+      if (textExtractor) {
         span.innerHTML += `
         👍 You have installed <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a>, Omnisearch can use it to index PDFs and images contents.
             <br />Text extraction only works on desktop, but the cache can be synchronized with your mobile device.`
@@ -135,7 +137,7 @@ export class SettingsTab extends PluginSettingTab {
     })
     new Setting(containerEl)
       .setName(
-        `PDFs content indexing ${getTextExtractor() ? '' : '⚠️ Disabled'}`
+        `PDFs content indexing ${textExtractor ? '' : '⚠️ Disabled'}`
       )
       .setDesc(indexPDFsDesc)
       .addToggle(toggle =>
@@ -145,7 +147,7 @@ export class SettingsTab extends PluginSettingTab {
           await saveSettings(this.plugin)
         })
       )
-      .setDisabled(!getTextExtractor())
+      .setDisabled(!textExtractor)
 
     // Images Indexing
     const indexImagesDesc = new DocumentFragment()
@@ -153,7 +155,7 @@ export class SettingsTab extends PluginSettingTab {
       span.innerHTML = `Omnisearch will use Text Extractor to OCR your images and index their content.`
     })
     new Setting(containerEl)
-      .setName(`Images OCR indexing ${getTextExtractor() ? '' : '⚠️ Disabled'}`)
+      .setName(`Images OCR indexing ${textExtractor ? '' : '⚠️ Disabled'}`)
       .setDesc(indexImagesDesc)
       .addToggle(toggle =>
         toggle.setValue(settings.imagesIndexing).onChange(async v => {
@@ -162,7 +164,7 @@ export class SettingsTab extends PluginSettingTab {
           await saveSettings(this.plugin)
         })
       )
-      .setDisabled(!getTextExtractor())
+      .setDisabled(!textExtractor)
 
     // Office Documents Indexing
     const indexOfficesDesc = new DocumentFragment()
@@ -171,7 +173,7 @@ export class SettingsTab extends PluginSettingTab {
     })
     new Setting(containerEl)
       .setName(
-        `Documents content indexing ${getTextExtractor() ? '' : '⚠️ Disabled'}`
+        `Documents content indexing ${textExtractor ? '' : '⚠️ Disabled'}`
       )
       .setDesc(indexOfficesDesc)
       .addToggle(toggle =>
@@ -181,7 +183,7 @@ export class SettingsTab extends PluginSettingTab {
           await saveSettings(this.plugin)
         })
       )
-      .setDisabled(!getTextExtractor())
+      .setDisabled(!textExtractor)
 
     // Index filenames of unsupported files
     const indexUnsupportedDesc = new DocumentFragment()
@@ -472,32 +474,34 @@ export class SettingsTab extends PluginSettingTab {
 
     //#region Results Weighting
 
+    const defaultSettings = getDefaultSettings(this.app)
+
     new Setting(containerEl).setName('Results weighting').setHeading()
 
     new Setting(containerEl)
       .setName(
-        `File name & declared aliases (default: ${getDefaultSettings().weightBasename})`
+        `File name & declared aliases (default: ${defaultSettings.weightBasename})`
       )
       .addSlider(cb => this.weightSlider(cb, 'weightBasename'))
 
     new Setting(containerEl)
-      .setName(`File directory (default: ${getDefaultSettings().weightDirectory})`)
+      .setName(`File directory (default: ${defaultSettings.weightDirectory})`)
       .addSlider(cb => this.weightSlider(cb, 'weightDirectory'))
 
     new Setting(containerEl)
-      .setName(`Headings level 1 (default: ${getDefaultSettings().weightH1})`)
+      .setName(`Headings level 1 (default: ${defaultSettings.weightH1})`)
       .addSlider(cb => this.weightSlider(cb, 'weightH1'))
 
     new Setting(containerEl)
-      .setName(`Headings level 2 (default: ${getDefaultSettings().weightH2})`)
+      .setName(`Headings level 2 (default: ${defaultSettings.weightH2})`)
       .addSlider(cb => this.weightSlider(cb, 'weightH2'))
 
     new Setting(containerEl)
-      .setName(`Headings level 3 (default: ${getDefaultSettings().weightH3})`)
+      .setName(`Headings level 3 (default: ${defaultSettings.weightH3})`)
       .addSlider(cb => this.weightSlider(cb, 'weightH3'))
 
     new Setting(containerEl)
-      .setName(`Tags (default: ${getDefaultSettings().weightUnmarkedTags})`)
+      .setName(`Tags (default: ${defaultSettings.weightUnmarkedTags})`)
       .addSlider(cb => this.weightSlider(cb, 'weightUnmarkedTags'))
 
     //#region Specific tags
@@ -545,7 +549,7 @@ export class SettingsTab extends PluginSettingTab {
     // Add a new custom tag
     new Setting(containerEl).addButton(btn => {
       btn.setButtonText('Add a new property')
-      btn.onClick(cb => {
+      btn.onClick(_cb => {
         settings.weightCustomProperties.push({ name: '', weight: 1 })
         this.display()
       })
@@ -626,6 +630,7 @@ export class SettingsTab extends PluginSettingTab {
       .addToggle(toggle =>
         toggle.setValue(settings.verboseLogging).onChange(async v => {
           settings.verboseLogging = v
+          enablePrintDebug(v)
           await saveSettings(this.plugin)
         })
       )
@@ -665,7 +670,7 @@ export class SettingsTab extends PluginSettingTab {
       .setName('Disable on this device')
       .setDesc(disableDesc)
       .addToggle(toggle =>
-        toggle.setValue(isPluginDisabled()).onChange(async v => {
+        toggle.setValue(isPluginDisabled(this.app)).onChange(async v => {
           if (v) {
             this.app.saveLocalStorage(K_DISABLE_OMNISEARCH, '1')
           } else {
@@ -707,8 +712,7 @@ export class SettingsTab extends PluginSettingTab {
   }
 }
 
-function getDefaultSettings(): OmnisearchSettings {
-  const app = getObsidianApp()
+export function getDefaultSettings(app: App): OmnisearchSettings {
   return {
     useCache: true,
     hideExcluded: false,
@@ -752,32 +756,35 @@ function getDefaultSettings(): OmnisearchSettings {
 
 let settings: OmnisearchSettings
 
-export function getSettings(): OmnisearchSettings {
-  if (!settings) {
-    settings  = Object.assign({}, getDefaultSettings()) as OmnisearchSettings
-  }
-  return settings
-}
+// /**
+//  * @deprecated
+//  */
+// export function getSettings(): OmnisearchSettings {
+//   if (!settings) {
+//     settings = Object.assign({}, getDefaultSettings()) as OmnisearchSettings
+//   }
+//   return settings
+// }
 
-export async function loadSettings(plugin: Plugin): Promise<void> {
-  settings = Object.assign({}, getDefaultSettings(), await plugin.loadData())
+export async function loadSettings(
+  plugin: Plugin
+): Promise<OmnisearchSettings> {
+  settings = Object.assign(
+    {},
+    getDefaultSettings(plugin.app),
+    await plugin.loadData()
+  )
   showExcerpt.set(settings.showExcerpt)
+  enablePrintDebug(settings.verboseLogging)
+  return settings
 }
 
 export async function saveSettings(plugin: Plugin): Promise<void> {
   await plugin.saveData(settings)
 }
 
-export function isPluginDisabled(): boolean {
-  return getObsidianApp().loadLocalStorage(K_DISABLE_OMNISEARCH) === '1'
-}
-
-export function canIndexUnsupportedFiles(): boolean {
-  return (
-    settings.unsupportedFilesIndexing === 'yes' ||
-    (settings.unsupportedFilesIndexing === 'default' &&
-      !!getObsidianApp().vault.getConfig('showUnsupportedFiles'))
-  )
+export function isPluginDisabled(app: App): boolean {
+  return app.loadLocalStorage(K_DISABLE_OMNISEARCH) === '1'
 }
 
 export function isCacheEnabled(): boolean {

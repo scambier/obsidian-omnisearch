@@ -4,79 +4,34 @@ import type { DocumentRef, IndexedDocument, ResultNote } from '../globals'
 import { chunkArray, logDebug, removeDiacritics } from '../tools/utils'
 import { Notice } from 'obsidian'
 import type { Query } from './query'
-import { cacheManager } from '../cache-manager'
 import { sortBy } from 'lodash-es'
-import { getMatches, stringsToRegex } from 'src/tools/text-processing'
-import { tokenizeForIndexing, tokenizeForSearch } from './tokenizer'
-import { getObsidianApp } from '../stores/obsidian-app'
-import { getSettings } from 'src/settings'
+import type OmnisearchPlugin from '../main'
+import { Tokenizer } from './tokenizer'
 
+// TODO: rename to SearchEngine
 export class Omnisearch {
-
-  private static instance: Omnisearch
-
-  app = getObsidianApp()
-  settings = getSettings()
-
-  public static getInstance(): Omnisearch {
-    if (!Omnisearch.instance) {
-      Omnisearch.instance = new Omnisearch();
-    }
-    return Omnisearch.instance;
-  }
-
-  public static readonly options: Options<IndexedDocument> = {
-    tokenize: tokenizeForIndexing,
-    extractField: (doc, fieldName) => {
-      if (fieldName === 'directory') {
-        // return path without the filename
-        const parts = doc.path.split('/')
-        parts.pop()
-        return parts.join('/')
-      }
-      return (doc as any)[fieldName]
-    },
-    processTerm: (term: string) =>
-      (getSettings().ignoreDiacritics ? removeDiacritics(term) : term).toLowerCase(),
-    idField: 'path',
-    fields: [
-      'basename',
-      // Different from `path`, since `path` is the unique index and needs to include the filename
-      'directory',
-      'aliases',
-      'content',
-      'headings1',
-      'headings2',
-      'headings3',
-    ],
-    storeFields: ['tags'],
-    logger(_level, _message, code) {
-      if (code === 'version_conflict') {
-        new Notice(
-          'Omnisearch - Your index cache may be incorrect or corrupted. If this message keeps appearing, go to Settings to clear the cache.',
-          5000
-        )
-      }
-    },
-  }
-
+  private tokenizer: Tokenizer
   private minisearch: MiniSearch
   /** Map<path, mtime> */
   private indexedDocuments: Map<string, number> = new Map()
   // private previousResults: SearchResult[] = []
   // private previousQuery: Query | null = null
 
-  private constructor() {
-    this.minisearch = new MiniSearch(Omnisearch.options)
+  constructor(protected plugin: OmnisearchPlugin) {
+    this.tokenizer = new Tokenizer(plugin)
+    this.minisearch = new MiniSearch(this.getOptions())
   }
 
   /**
    * Return true if the cache is valid
    */
   async loadCache(): Promise<boolean> {
-    const cache = await cacheManager.getMinisearchCache()
+    const cache = await this.plugin.cacheManager.getMinisearchCache()
     if (cache) {
-      this.minisearch = await MiniSearch.loadJSAsync(cache.data, Omnisearch.options)
+      this.minisearch = await MiniSearch.loadJSAsync(
+        cache.data,
+        this.getOptions()
+      )
       this.indexedDocuments = new Map(cache.paths.map(o => [o.path, o.mtime]))
       return true
     }
@@ -117,7 +72,9 @@ export class Omnisearch {
     logDebug('Adding files', paths)
     let documents = (
       await Promise.all(
-        paths.map(async path => await cacheManager.getDocument(path))
+        paths.map(
+          async path => await this.plugin.cacheManager.getDocument(path)
+        )
       )
     ).filter(d => !!d?.path)
     logDebug('Sorting documents to first index markdown')
@@ -164,6 +121,7 @@ export class Omnisearch {
     query: Query,
     options: { prefixLength: number; singleFilePath?: string }
   ): Promise<SearchResult[]> {
+    const settings = this.plugin.settings
     if (query.isEmpty()) {
       // this.previousResults = []
       // this.previousQuery = null
@@ -174,7 +132,7 @@ export class Omnisearch {
     logDebug('Starting search for', query)
 
     let fuzziness: number
-    switch (this.settings.fuzziness) {
+    switch (settings.fuzziness) {
       case '0':
         fuzziness = 0
         break
@@ -186,7 +144,7 @@ export class Omnisearch {
         break
     }
 
-    const searchTokens = tokenizeForSearch(query.segmentsToStr())
+    const searchTokens = this.tokenizer.tokenizeForSearch(query.segmentsToStr())
     logDebug(JSON.stringify(searchTokens, null, 1))
     let results = this.minisearch.search(searchTokens, {
       prefix: term => term.length >= options.prefixLength,
@@ -196,14 +154,14 @@ export class Omnisearch {
       fuzzy: term =>
         term.length <= 3 ? 0 : term.length <= 5 ? fuzziness / 2 : fuzziness,
       boost: {
-        basename: this.settings.weightBasename,
-        directory: this.settings.weightDirectory,
-        aliases: this.settings.weightBasename,
-        headings1: this.settings.weightH1,
-        headings2: this.settings.weightH2,
-        headings3: this.settings.weightH3,
-        tags: this.settings.weightUnmarkedTags,
-        unmarkedTags: this.settings.weightUnmarkedTags,
+        basename: settings.weightBasename,
+        directory: settings.weightDirectory,
+        aliases: settings.weightBasename,
+        headings1: settings.weightH1,
+        headings2: settings.weightH2,
+        headings3: settings.weightH3,
+        tags: settings.weightUnmarkedTags,
+        unmarkedTags: settings.weightUnmarkedTags,
       },
       // The query is already tokenized, don't tokenize again
       tokenize: text => [text],
@@ -249,25 +207,25 @@ export class Omnisearch {
 
     logDebug(
       'searching with downranked folders',
-      this.settings.downrankedFoldersFilters
+      settings.downrankedFoldersFilters
     )
 
     // Hide or downrank files that are in Obsidian's excluded list
-    if (this.settings.hideExcluded) {
+    if (settings.hideExcluded) {
       // Filter the files out
       results = results.filter(
         result =>
           !(
-            this.app.metadataCache.isUserIgnored &&
-            this.app.metadataCache.isUserIgnored(result.id)
+            this.plugin.app.metadataCache.isUserIgnored &&
+            this.plugin.app.metadataCache.isUserIgnored(result.id)
           )
       )
     } else {
       // Just downrank them
       results.forEach(result => {
         if (
-          this.app.metadataCache.isUserIgnored &&
-          this.app.metadataCache.isUserIgnored(result.id)
+          this.plugin.app.metadataCache.isUserIgnored &&
+          this.plugin.app.metadataCache.isUserIgnored(result.id)
         ) {
           result.score /= 10
         }
@@ -279,10 +237,10 @@ export class Omnisearch {
 
     for (const result of results) {
       const path = result.id
-      if (this.settings.downrankedFoldersFilters.length > 0) {
+      if (settings.downrankedFoldersFilters.length > 0) {
         // downrank files that are in folders listed in the downrankedFoldersFilters
         let downrankingFolder = false
-        this.settings.downrankedFoldersFilters.forEach(filter => {
+        settings.downrankedFoldersFilters.forEach(filter => {
           if (path.startsWith(filter)) {
             // we don't want the filter to match the folder sources, e.g.
             // it needs to match a whole folder name
@@ -299,7 +257,7 @@ export class Omnisearch {
         const pathPartsLength = pathParts.length
         for (let i = 0; i < pathPartsLength; i++) {
           const pathPart = pathParts[i]
-          if (this.settings.downrankedFoldersFilters.includes(pathPart)) {
+          if (settings.downrankedFoldersFilters.includes(pathPart)) {
             result.score /= 10
             break
           }
@@ -307,9 +265,9 @@ export class Omnisearch {
       }
 
       // Boost custom properties
-      const metadata = this.app.metadataCache.getCache(path)
+      const metadata = this.plugin.app.metadataCache.getCache(path)
       if (metadata) {
-        for (const { name, weight } of this.settings.weightCustomProperties) {
+        for (const { name, weight } of settings.weightCustomProperties) {
           const values = metadata?.frontmatter?.[name]
           if (values && result.terms.some(t => values.includes(t))) {
             logDebug(`Boosting field "${name}" x${weight} for ${path}`)
@@ -333,7 +291,9 @@ export class Omnisearch {
     if (results.length) logDebug('First result:', results[0])
 
     const documents = await Promise.all(
-      results.map(async result => await cacheManager.getDocument(result.id))
+      results.map(
+        async result => await this.plugin.cacheManager.getDocument(result.id)
+      )
     )
 
     // If the search query contains quotes, filter out results that don't have the exact match
@@ -389,7 +349,7 @@ export class Omnisearch {
   ): Promise<ResultNote[]> {
     // Get the raw results
     let results: SearchResult[]
-    if (this.settings.simpleSearch) {
+    if (this.plugin.settings.simpleSearch) {
       results = await this.search(query, {
         prefixLength: 3,
         singleFilePath: options?.singleFilePath,
@@ -402,7 +362,9 @@ export class Omnisearch {
     }
 
     const documents = await Promise.all(
-      results.map(async result => await cacheManager.getDocument(result.id))
+      results.map(
+        async result => await this.plugin.cacheManager.getDocument(result.id)
+      )
     )
 
     // Map the raw results to get usable suggestions
@@ -435,9 +397,9 @@ export class Omnisearch {
       logDebug('Matching tokens:', foundWords)
 
       logDebug('Getting matches locations...')
-      const matches = getMatches(
+      const matches = this.plugin.textProcessor.getMatches(
         note.content,
-        stringsToRegex(foundWords),
+        foundWords,
         query
       )
       logDebug(`Matches for ${note.basename}`, matches)
@@ -453,10 +415,49 @@ export class Omnisearch {
   }
 
   public async writeToCache(): Promise<void> {
-    await cacheManager.writeMinisearchCache(
+    await this.plugin.cacheManager.writeMinisearchCache(
       this.minisearch,
       this.indexedDocuments
     )
   }
-}
 
+  private getOptions(): Options<IndexedDocument> {
+    return {
+      tokenize: this.tokenizer.tokenizeForIndexing,
+      extractField: (doc, fieldName) => {
+        if (fieldName === 'directory') {
+          // return path without the filename
+          const parts = doc.path.split('/')
+          parts.pop()
+          return parts.join('/')
+        }
+        return (doc as any)[fieldName]
+      },
+      processTerm: (term: string) =>
+        (this.plugin.settings.ignoreDiacritics
+          ? removeDiacritics(term)
+          : term
+        ).toLowerCase(),
+      idField: 'path',
+      fields: [
+        'basename',
+        // Different from `path`, since `path` is the unique index and needs to include the filename
+        'directory',
+        'aliases',
+        'content',
+        'headings1',
+        'headings2',
+        'headings3',
+      ],
+      storeFields: ['tags'],
+      logger(_level, _message, code) {
+        if (code === 'version_conflict') {
+          new Notice(
+            'Omnisearch - Your index cache may be incorrect or corrupted. If this message keeps appearing, go to Settings to clear the cache.',
+            5000
+          )
+        }
+      },
+    }
+  }
+}

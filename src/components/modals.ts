@@ -1,15 +1,14 @@
-import { App, MarkdownView, Modal, TFile } from 'obsidian'
+import { MarkdownView, Modal, TFile } from 'obsidian'
 import type { Modifier } from 'obsidian'
 import ModalVault from './ModalVault.svelte'
 import ModalInFile from './ModalInFile.svelte'
 import { Action, eventBus, EventNames, isInputComposition } from '../globals'
-import { cacheManager } from 'src/cache-manager'
-import { getSettings } from 'src/settings'
+import type OmnisearchPlugin from 'src/main'
 
 abstract class OmnisearchModal extends Modal {
-  protected constructor(app: App) {
-    super(app)
-    const settings = getSettings()
+  protected constructor(plugin: OmnisearchPlugin) {
+    super(plugin.app)
+    const settings = plugin.settings
 
     // Remove all the default modal's children
     // so that we can more easily customize it
@@ -153,20 +152,20 @@ abstract class OmnisearchModal extends Modal {
 export class OmnisearchVaultModal extends OmnisearchModal {
   /**
    * Instanciate the Omnisearch vault modal
-   * @param app
+   * @param plugin
    * @param query The query to pre-fill the search field with
    */
-  constructor(app: App, query?: string) {
-    super(app)
+  constructor(plugin: OmnisearchPlugin, query?: string) {
+    super(plugin)
 
     // Selected text in the editor
-    const selectedText = app.workspace
+    const selectedText = plugin.app.workspace
       .getActiveViewOfType(MarkdownView)
       ?.editor.getSelection()
 
-    cacheManager.getSearchHistory().then(history => {
+    plugin.cacheManager.getSearchHistory().then(history => {
       // Previously searched query (if enabled in settings)
-      const previous = getSettings().showPreviousQueryResults
+      const previous = plugin.settings.showPreviousQueryResults
         ? history[0]
         : null
 
@@ -174,7 +173,7 @@ export class OmnisearchVaultModal extends OmnisearchModal {
       const cmp = new ModalVault({
         target: this.modalEl,
         props: {
-          app,
+          plugin,
           modal: this,
           previousQuery: query || selectedText || previous || '',
         },
@@ -190,17 +189,17 @@ export class OmnisearchVaultModal extends OmnisearchModal {
 
 export class OmnisearchInFileModal extends OmnisearchModal {
   constructor(
-    app: App,
+    plugin: OmnisearchPlugin,
     file: TFile,
     searchQuery: string = '',
     parent?: OmnisearchModal
   ) {
-    super(app)
+    super(plugin)
 
     const cmp = new ModalInFile({
       target: this.modalEl,
       props: {
-        app,
+        plugin,
         modal: this,
         singleFilePath: file.path,
         parent: parent,
