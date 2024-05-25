@@ -44,11 +44,14 @@ export function getServer(plugin: OmnisearchPlugin) {
       server.listen(
         {
           port: parseInt(port),
-          host: 'localhost',
+          host: plugin.settings.DANGER_httpHost ?? 'localhost',
         },
         () => {
           console.log(`Omnisearch - Started HTTP server on port ${port}`)
-          if (plugin.settings.httpApiNotice) {
+          if (plugin.settings.DANGER_httpHost && plugin.settings.DANGER_httpHost !== 'localhost') {
+            new Notice(`Omnisearch - Started non-localhost HTTP server at ${plugin.settings.DANGER_httpHost}:${port}`, 120_000)
+          }
+          else if (plugin.settings.httpApiNotice) {
             new Notice(`Omnisearch - Started HTTP server on port ${port}`)
           }
         }

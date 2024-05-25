@@ -67,6 +67,8 @@ export interface OmnisearchSettings extends WeightingSettings {
   httpApiEnabled: boolean
   httpApiPort: string
   httpApiNotice: boolean
+
+  DANGER_httpHost: string | null
 }
 
 /**
@@ -751,6 +753,8 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
 
     welcomeMessage: '',
     verboseLogging: false,
+
+    DANGER_httpHost: null,
   }
 }
 
