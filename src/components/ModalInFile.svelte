@@ -55,7 +55,7 @@
       })
       note =
         (
-          await plugin.omnisearch.getSuggestions(query, {
+          await plugin.searchEngine.getSuggestions(query, {
             singleFilePath,
           })
         )[0] ?? null

@@ -16,7 +16,7 @@ import {
 import { eventBus, EventNames, indexingStep, IndexingStepType, type TextExtractorApi } from './globals'
 import { notifyOnIndexed, registerAPI } from './tools/api'
 import { OmnisearchCache } from './database'
-import { Omnisearch } from './search/omnisearch'
+import { SearchEngine } from './search/search-engine'
 import { CacheManager } from './cache-manager'
 import { logDebug } from './tools/utils'
 import { NotesIndexer } from './notes-index'
@@ -33,8 +33,7 @@ export default class OmnisearchPlugin extends Plugin {
 
   public readonly notesIndexer = new NotesIndexer(this)
   public readonly textProcessor = new TextProcessor(this)
-  // TODO: rename to searchEngine
-  public readonly omnisearch = new Omnisearch(this)
+  public readonly searchEngine = new SearchEngine(this)
 
   private ribbonButton?: HTMLElement
 
@@ -93,7 +92,7 @@ export default class OmnisearchPlugin extends Plugin {
       },
     })
 
-    const searchEngine = this.omnisearch
+    const searchEngine = this.searchEngine
 
     this.app.workspace.onLayoutReady(async () => {
       // Listeners to keep the search index up-to-date
@@ -208,7 +207,7 @@ export default class OmnisearchPlugin extends Plugin {
     // Map documents in the background
     // Promise.all(files.map(f => cacheManager.addToLiveCache(f.path)))
 
-    const searchEngine = this.omnisearch
+    const searchEngine = this.searchEngine
     if (isCacheEnabled()) {
       console.time('Omnisearch - Loading index from cache')
       indexingStep.set(IndexingStepType.LoadingCache)

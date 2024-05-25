@@ -17,7 +17,7 @@ export class NotesIndexer {
   public async refreshIndex(): Promise<void> {
     const paths = [...this.notesToReindex].map(n => n.path)
     if (paths.length) {
-      const searchEngine = this.plugin.omnisearch
+      const searchEngine = this.plugin.searchEngine
       searchEngine.removeFromPaths(paths)
       await searchEngine.addFromPaths(paths)
       this.notesToReindex.clear()

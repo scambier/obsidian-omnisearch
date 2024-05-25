@@ -144,7 +144,7 @@
     })
     cancelableQuery = cancelable(
       new Promise(resolve => {
-        resolve(plugin.omnisearch.getSuggestions(query))
+        resolve(plugin.searchEngine.getSuggestions(query))
       })
     )
     resultNotes = await cancelableQuery

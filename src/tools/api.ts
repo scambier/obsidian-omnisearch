@@ -89,7 +89,7 @@ export function getApi(plugin: OmnisearchPlugin) {
       const query = new Query(q, {
         ignoreDiacritics: plugin.settings.ignoreDiacritics,
       })
-      const raw = await plugin.omnisearch.getSuggestions(query)
+      const raw = await plugin.searchEngine.getSuggestions(query)
       return mapResults(plugin, raw)
     },
     registerOnIndexed(cb: () => void): void {

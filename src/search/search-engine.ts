@@ -8,8 +8,7 @@ import { sortBy } from 'lodash-es'
 import type OmnisearchPlugin from '../main'
 import { Tokenizer } from './tokenizer'
 
-// TODO: rename to SearchEngine
-export class Omnisearch {
+export class SearchEngine {
   private tokenizer: Tokenizer
   private minisearch: MiniSearch
   /** Map<path, mtime> */
