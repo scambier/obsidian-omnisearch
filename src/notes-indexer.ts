@@ -18,16 +18,15 @@ export class NotesIndexer {
    * Updated notes are not reindexed immediately for performance reasons.
    * They're added to a list, and reindex is done the next time we open Omnisearch.
    */
-  public markNoteForReindex(note: TAbstractFile): void {
+  public flagNoteForReindex(note: TAbstractFile): void {
     this.notesToReindex.add(note)
   }
 
   public async refreshIndex(): Promise<void> {
     const paths = [...this.notesToReindex].map(n => n.path)
     if (paths.length) {
-      const searchEngine = this.plugin.searchEngine
-      searchEngine.removeFromPaths(paths)
-      await searchEngine.addFromPaths(paths)
+      this.plugin.searchEngine.removeFromPaths(paths)
+      await this.plugin.searchEngine.addFromPaths(paths)
       this.notesToReindex.clear()
     }
   }
@@ -73,11 +72,14 @@ export class NotesIndexer {
    * @param name
    * @param parent The note referencing the
    */
-  public addNonExistingToIndex(name: string, parent: string): void {
+  public generateIndexableNonexistingDocument(
+    name: string,
+    parent: string
+  ): IndexedDocument {
     name = removeAnchors(name)
     const filename = name + (name.endsWith('.md') ? '' : '.md')
 
-    const note: IndexedDocument = {
+    return {
       path: filename,
       basename: name,
       mtime: 0,
@@ -94,7 +96,6 @@ export class NotesIndexer {
       doesNotExist: true,
       parent,
     }
-    // searchEngine.addDocuments([note])
   }
 
   public isFilePlaintext(path: string): boolean {

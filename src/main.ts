@@ -117,7 +117,7 @@ export default class OmnisearchPlugin extends Plugin {
           if (this.notesIndexer.isFileIndexable(file.path)) {
             logDebug('Updating file', file.path)
             await this.cacheManager.addToLiveCache(file.path)
-            this.notesIndexer.markNoteForReindex(file)
+            this.notesIndexer.flagNoteForReindex(file)
           }
         })
       )

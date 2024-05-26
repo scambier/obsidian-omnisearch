@@ -199,12 +199,15 @@ export class CacheManager {
     // Look for links that lead to non-existing files,
     // and add them to the index.
     if (metadata) {
-      // const nonExisting = getNonExistingNotes(this.plugin.app, file, metadata)
-      // for (const name of nonExisting.filter(
-      //   o => !this.getLiveDocument(o)
-      // )) {
-      //   NotesIndex.addNonExistingToIndex(name, file.path)
-      // }
+      const nonExisting = getNonExistingNotes(this.plugin.app, file, metadata)
+      for (const name of nonExisting.filter(o => !this.documents.has(o))) {
+        const doc =
+          this.plugin.notesIndexer.generateIndexableNonexistingDocument(
+            name,
+            file.path
+          )
+        // TODO: index non-existing note
+      }
 
       // EXCALIDRAW
       // Remove the json code
