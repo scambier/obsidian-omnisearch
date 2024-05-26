@@ -422,7 +422,7 @@ export class SearchEngine {
 
   private getOptions(): Options<IndexedDocument> {
     return {
-      tokenize: this.tokenizer.tokenizeForIndexing,
+      tokenize: this.tokenizer.tokenizeForIndexing.bind(this.tokenizer),
       extractField: (doc, fieldName) => {
         if (fieldName === 'directory') {
           // return path without the filename
