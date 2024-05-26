@@ -25,7 +25,7 @@ export class SearchEngine {
    * Return true if the cache is valid
    */
   async loadCache(): Promise<boolean> {
-    const cache = await this.plugin.cacheManager.getMinisearchCache()
+    const cache = await this.plugin.database.getMinisearchCache()
     if (cache) {
       this.minisearch = await MiniSearch.loadJSAsync(
         cache.data,
@@ -414,7 +414,7 @@ export class SearchEngine {
   }
 
   public async writeToCache(): Promise<void> {
-    await this.plugin.cacheManager.writeMinisearchCache(
+    await this.plugin.database.writeMinisearchCache(
       this.minisearch,
       this.indexedDocuments
     )

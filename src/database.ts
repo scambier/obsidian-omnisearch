@@ -1,10 +1,11 @@
 import Dexie from 'dexie'
+import type MiniSearch from 'minisearch'
 import type { AsPlainObject } from 'minisearch'
 import type { DocumentRef } from './globals'
 import { Notice } from 'obsidian'
 import type OmnisearchPlugin from './main'
 
-export class OmnisearchCache extends Dexie {
+export class Database extends Dexie {
   public static readonly dbVersion = 8
   searchHistory!: Dexie.Table<{ id?: number; query: string }, number>
   minisearch!: Dexie.Table<
@@ -17,19 +18,51 @@ export class OmnisearchCache extends Dexie {
   >
 
   constructor(private plugin: OmnisearchPlugin) {
-    super(OmnisearchCache.getDbName(plugin.app.appId))
+    super(Database.getDbName(plugin.app.appId))
     // Database structure
-    this.version(OmnisearchCache.dbVersion).stores({
+    this.version(Database.dbVersion).stores({
       searchHistory: '++id',
       minisearch: 'date',
     })
   }
 
-  public static getDbName(appId: string) {
+  private static getDbName(appId: string) {
     return 'omnisearch/cache/' + appId
   }
 
   //#endregion Table declarations
+
+  public async getMinisearchCache(): Promise<{
+    paths: DocumentRef[]
+    data: AsPlainObject
+  } | null> {
+    try {
+      const cachedIndex = (await this.plugin.database.minisearch.toArray())[0]
+      return cachedIndex
+    } catch (e) {
+      new Notice(
+        'Omnisearch - Cache missing or invalid. Some freezes may occur while Omnisearch indexes your vault.'
+      )
+      console.error('Omnisearch - Error while loading Minisearch cache')
+      console.error(e)
+      return null
+    }
+  }
+
+  public async writeMinisearchCache(
+    minisearch: MiniSearch,
+    indexed: Map<string, number>
+  ): Promise<void> {
+    const paths = Array.from(indexed).map(([k, v]) => ({ path: k, mtime: v }))
+    const database = this.plugin.database
+    await database.minisearch.clear()
+    await database.minisearch.add({
+      date: new Date().toISOString(),
+      paths,
+      data: minisearch.toJSON(),
+    })
+    console.log('Omnisearch - Search cache written')
+  }
 
   /**
    * Deletes Omnisearch databases that have an older version than the current one
@@ -37,9 +70,9 @@ export class OmnisearchCache extends Dexie {
   public async clearOldDatabases(): Promise<void> {
     const toDelete = (await indexedDB.databases()).filter(
       db =>
-        db.name === OmnisearchCache.getDbName(this.plugin.app.appId) &&
+        db.name === Database.getDbName(this.plugin.app.appId) &&
         // version multiplied by 10 https://github.com/dexie/Dexie.js/issues/59
-        db.version !== OmnisearchCache.dbVersion * 10
+        db.version !== Database.dbVersion * 10
     )
     if (toDelete.length) {
       console.log('Omnisearch - Those IndexedDb databases will be deleted:')

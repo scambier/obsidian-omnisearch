@@ -93,8 +93,7 @@ export class SettingsTab extends PluginSettingTab {
 
   display(): void {
     const { containerEl } = this
-    // TODO: rename
-    const database = this.plugin.cache
+    const database = this.plugin.database
     const textExtractor = this.plugin.getTextExtractor()
     containerEl.empty()
 

@@ -1,5 +1,5 @@
-import { Notice, TFile } from 'obsidian'
-import type { DocumentRef, IndexedDocument } from './globals'
+import { TFile } from 'obsidian'
+import type { IndexedDocument } from './globals'
 import {
   extractHeadingsFromCache,
   getAliasesFromMetadata,
@@ -10,14 +10,12 @@ import {
   isFileOffice,
   isFilePDF,
   logDebug,
-  makeMD5,
   removeDiacritics,
   stripMarkdownCharacters,
 } from './tools/utils'
 import type { CanvasData } from 'obsidian/canvas'
-import type MiniSearch from 'minisearch'
-import type { AsPlainObject } from 'minisearch'
 import type OmnisearchPlugin from './main'
+import { getNonExistingNotes } from './tools/notes'
 
 export class CacheManager {
   /**
@@ -73,8 +71,7 @@ export class CacheManager {
       return
     }
     this.nextQueryIsEmpty = false
-    // TODO: rename
-    const database = this.plugin.cache
+    const database = this.plugin.database
     let history = await database.searchHistory.toArray()
     history = history.filter(s => s.query !== query).reverse()
     history.unshift({ query })
@@ -87,108 +84,13 @@ export class CacheManager {
    * @returns The search history, in reverse chronological order
    */
   public async getSearchHistory(): Promise<ReadonlyArray<string>> {
-    const data = (await this.plugin.cache.searchHistory.toArray())
+    const data = (await this.plugin.database.searchHistory.toArray())
       .reverse()
       .map(o => o.query)
     if (this.nextQueryIsEmpty) {
       data.unshift('')
     }
     return data
-  }
-
-  public getDocumentsChecksum(documents: IndexedDocument[]): string {
-    return makeMD5(
-      JSON.stringify(
-        documents.sort((a, b) => {
-          if (a.path < b.path) {
-            return -1
-          } else if (a.path > b.path) {
-            return 1
-          }
-          return 0
-        })
-      )
-    )
-  }
-
-  //#region Minisearch
-
-  public async getMinisearchCache(): Promise<{
-    paths: DocumentRef[]
-    data: AsPlainObject
-  } | null> {
-    try {
-      const cachedIndex = (
-        await this.plugin.cache.minisearch.toArray()
-      )[0]
-      return cachedIndex
-    } catch (e) {
-      new Notice(
-        'Omnisearch - Cache missing or invalid. Some freezes may occur while Omnisearch indexes your vault.'
-      )
-      console.error('Omnisearch - Error while loading Minisearch cache')
-      console.error(e)
-      return null
-    }
-  }
-
-  public async writeMinisearchCache(
-    minisearch: MiniSearch,
-    indexed: Map<string, number>
-  ): Promise<void> {
-    const paths = Array.from(indexed).map(([k, v]) => ({ path: k, mtime: v }))
-    // TODO: rename
-    const database = this.plugin.cache
-    await database.minisearch.clear()
-    await database.minisearch.add({
-      date: new Date().toISOString(),
-      paths,
-      data: minisearch.toJSON(),
-    })
-    console.log('Omnisearch - Search cache written')
-  }
-
-  public isFileIndexable(path: string): boolean {
-    return this.isFilenameIndexable(path) || this.isContentIndexable(path)
-  }
-
-  //#endregion Minisearch
-
-  public isContentIndexable(path: string): boolean {
-    const settings = this.plugin.settings
-    const hasTextExtractor = !!this.plugin.getTextExtractor()
-    const canIndexPDF = hasTextExtractor && settings.PDFIndexing
-    const canIndexImages = hasTextExtractor && settings.imagesIndexing
-    return (
-      this.isFilePlaintext(path) ||
-      isFileCanvas(path) ||
-      isFileFromDataloomPlugin(path) ||
-      (canIndexPDF && isFilePDF(path)) ||
-      (canIndexImages && isFileImage(path))
-    )
-  }
-
-  public isFilenameIndexable(path: string): boolean {
-    return (
-      this.canIndexUnsupportedFiles() ||
-      this.isFilePlaintext(path) ||
-      isFileCanvas(path) ||
-      isFileFromDataloomPlugin(path)
-    )
-  }
-
-  public canIndexUnsupportedFiles(): boolean {
-    return (
-      this.plugin.settings.unsupportedFilesIndexing === 'yes' ||
-      (this.plugin.settings.unsupportedFilesIndexing === 'default' &&
-        !!this.plugin.app.vault.getConfig('showUnsupportedFiles'))
-    )
-  }
-
-  private isFilePlaintext(path: string): boolean {
-    return [...this.plugin.settings.indexedFileTypes, 'md'].some(t =>
-      path.endsWith(`.${t}`)
-    )
   }
 
   /**
@@ -209,7 +111,7 @@ export class CacheManager {
 
     // ** Plain text **
     // Just read the file content
-    if (this.isFilePlaintext(path)) {
+    if (this.plugin.notesIndexer.isFilePlaintext(path)) {
       content = await app.vault.cachedRead(file)
     }
 
@@ -283,7 +185,7 @@ export class CacheManager {
     }
 
     // ** Unsupported files **
-    else if (this.isFilenameIndexable(path)) {
+    else if (this.plugin.notesIndexer.isFilenameIndexable(path)) {
       content = file.path
     }
 
@@ -297,10 +199,9 @@ export class CacheManager {
     // Look for links that lead to non-existing files,
     // and add them to the index.
     if (metadata) {
-      // // FIXME: https://github.com/scambier/obsidian-omnisearch/issues/129
-      // const nonExisting = getNonExistingNotes(file, metadata)
+      // const nonExisting = getNonExistingNotes(this.plugin.app, file, metadata)
       // for (const name of nonExisting.filter(
-      //   o => !cacheManager.getLiveDocument(o)
+      //   o => !this.getLiveDocument(o)
       // )) {
       //   NotesIndex.addNonExistingToIndex(name, file.path)
       // }

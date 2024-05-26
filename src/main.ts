@@ -15,11 +15,11 @@ import {
 } from './settings'
 import { eventBus, EventNames, indexingStep, IndexingStepType, type TextExtractorApi } from './globals'
 import { notifyOnIndexed, registerAPI } from './tools/api'
-import { OmnisearchCache } from './database'
+import { Database } from './database'
 import { SearchEngine } from './search/search-engine'
 import { CacheManager } from './cache-manager'
 import { logDebug } from './tools/utils'
-import { NotesIndexer } from './notes-index'
+import { NotesIndexer } from './notes-indexer'
 import { TextProcessor } from "./tools/text-processing";
 
 export default class OmnisearchPlugin extends Plugin {
@@ -29,7 +29,7 @@ export default class OmnisearchPlugin extends Plugin {
 
   // FIXME: merge cache and cacheManager, or find other names
   public readonly cacheManager: CacheManager
-  public readonly cache = new OmnisearchCache(this)
+  public readonly database = new Database(this)
 
   public readonly notesIndexer = new NotesIndexer(this)
   public readonly textProcessor = new TextProcessor(this)
@@ -58,7 +58,7 @@ export default class OmnisearchPlugin extends Plugin {
     }
 
     await cleanOldCacheFiles(this.app)
-    await this.cache.clearOldDatabases()
+    await this.database.clearOldDatabases()
 
     registerAPI(this)
 
@@ -98,7 +98,7 @@ export default class OmnisearchPlugin extends Plugin {
       // Listeners to keep the search index up-to-date
       this.registerEvent(
         this.app.vault.on('create', file => {
-          if (this.cacheManager.isFileIndexable(file.path)) {
+          if (this.notesIndexer.isFileIndexable(file.path)) {
             logDebug('Indexing new file', file.path)
             // await cacheManager.addToLiveCache(file.path)
             searchEngine.addFromPaths([file.path])
@@ -114,7 +114,7 @@ export default class OmnisearchPlugin extends Plugin {
       )
       this.registerEvent(
         this.app.vault.on('modify', async file => {
-          if (this.cacheManager.isFileIndexable(file.path)) {
+          if (this.notesIndexer.isFileIndexable(file.path)) {
             logDebug('Updating file', file.path)
             await this.cacheManager.addToLiveCache(file.path)
             this.notesIndexer.markNoteForReindex(file)
@@ -123,7 +123,7 @@ export default class OmnisearchPlugin extends Plugin {
       )
       this.registerEvent(
         this.app.vault.on('rename', async (file, oldPath) => {
-          if (this.cacheManager.isFileIndexable(file.path)) {
+          if (this.notesIndexer.isFileIndexable(file.path)) {
             logDebug('Renaming file', file.path)
             this.cacheManager.removeFromLiveCache(oldPath)
             await this.cacheManager.addToLiveCache(file.path)
@@ -161,7 +161,7 @@ export default class OmnisearchPlugin extends Plugin {
 
     // Clear cache when disabling Omnisearch
     if (process.env.NODE_ENV === 'production') {
-      await this.cache.clearCache()
+      await this.database.clearCache()
     }
     this.apiHttpServer.close()
   }
@@ -199,7 +199,7 @@ export default class OmnisearchPlugin extends Plugin {
     indexingStep.set(IndexingStepType.ReadingFiles)
     const files = this.app.vault
       .getFiles()
-      .filter(f => this.cacheManager.isFileIndexable(f.path))
+      .filter(f => this.notesIndexer.isFileIndexable(f.path))
     console.log(`Omnisearch - ${files.length} files total`)
     console.log(
       `Omnisearch - Cache is ${isCacheEnabled() ? 'enabled' : 'disabled'}`
