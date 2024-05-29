@@ -1,72 +1,36 @@
 import MiniSearch, { type Options, type SearchResult } from 'minisearch'
 import type { DocumentRef, IndexedDocument, ResultNote } from '../globals'
 
-import { settings } from '../settings'
 import { chunkArray, logDebug, removeDiacritics } from '../tools/utils'
 import { Notice } from 'obsidian'
 import type { Query } from './query'
-import { cacheManager } from '../cache-manager'
 import { sortBy } from 'lodash-es'
-import { getMatches, stringsToRegex } from 'src/tools/text-processing'
-import { tokenizeForIndexing, tokenizeForSearch } from './tokenizer'
-import { getObsidianApp } from '../stores/obsidian-app'
+import type OmnisearchPlugin from '../main'
+import { Tokenizer } from './tokenizer'
 
-export class Omnisearch {
-
-  app = getObsidianApp()
-
-  public static readonly options: Options<IndexedDocument> = {
-    tokenize: tokenizeForIndexing,
-    extractField: (doc, fieldName) => {
-      if (fieldName === 'directory') {
-        // return path without the filename
-        const parts = doc.path.split('/')
-        parts.pop()
-        return parts.join('/')
-      }
-      return (doc as any)[fieldName]
-    },
-    processTerm: (term: string) =>
-      (settings.ignoreDiacritics ? removeDiacritics(term) : term).toLowerCase(),
-    idField: 'path',
-    fields: [
-      'basename',
-      // Different from `path`, since `path` is the unique index and needs to include the filename
-      'directory',
-      'aliases',
-      'content',
-      'headings1',
-      'headings2',
-      'headings3',
-    ],
-    storeFields: ['tags'],
-    logger(_level, _message, code) {
-      if (code === 'version_conflict') {
-        new Notice(
-          'Omnisearch - Your index cache may be incorrect or corrupted. If this message keeps appearing, go to Settings to clear the cache.',
-          5000
-        )
-      }
-    },
-  }
+export class SearchEngine {
+  private tokenizer: Tokenizer
   private minisearch: MiniSearch
   /** Map<path, mtime> */
   private indexedDocuments: Map<string, number> = new Map()
   // private previousResults: SearchResult[] = []
   // private previousQuery: Query | null = null
 
-  constructor() {
-    this.minisearch = new MiniSearch(Omnisearch.options)
+  constructor(protected plugin: OmnisearchPlugin) {
+    this.tokenizer = new Tokenizer(plugin)
+    this.minisearch = new MiniSearch(this.getOptions())
   }
 
   /**
    * Return true if the cache is valid
    */
   async loadCache(): Promise<boolean> {
-    const cache = await cacheManager.getMinisearchCache()
+    const cache = await this.plugin.database.getMinisearchCache()
     if (cache) {
-      // console.log('Omnisearch - Cache', cache)
-      this.minisearch = MiniSearch.loadJS(cache.data, Omnisearch.options)
+      this.minisearch = await MiniSearch.loadJSAsync(
+        cache.data,
+        this.getOptions()
+      )
       this.indexedDocuments = new Map(cache.paths.map(o => [o.path, o.mtime]))
       return true
     }
@@ -107,7 +71,9 @@ export class Omnisearch {
     logDebug('Adding files', paths)
     let documents = (
       await Promise.all(
-        paths.map(async path => await cacheManager.getDocument(path))
+        paths.map(
+          async path => await this.plugin.cacheManager.getDocument(path)
+        )
       )
     ).filter(d => !!d?.path)
     logDebug('Sorting documents to first index markdown')
@@ -154,6 +120,7 @@ export class Omnisearch {
     query: Query,
     options: { prefixLength: number; singleFilePath?: string }
   ): Promise<SearchResult[]> {
+    const settings = this.plugin.settings
     if (query.isEmpty()) {
       // this.previousResults = []
       // this.previousQuery = null
@@ -176,7 +143,7 @@ export class Omnisearch {
         break
     }
 
-    const searchTokens = tokenizeForSearch(query.segmentsToStr())
+    const searchTokens = this.tokenizer.tokenizeForSearch(query.segmentsToStr())
     logDebug(JSON.stringify(searchTokens, null, 1))
     let results = this.minisearch.search(searchTokens, {
       prefix: term => term.length >= options.prefixLength,
@@ -248,16 +215,16 @@ export class Omnisearch {
       results = results.filter(
         result =>
           !(
-            this.app.metadataCache.isUserIgnored &&
-            this.app.metadataCache.isUserIgnored(result.id)
+            this.plugin.app.metadataCache.isUserIgnored &&
+            this.plugin.app.metadataCache.isUserIgnored(result.id)
           )
       )
     } else {
       // Just downrank them
       results.forEach(result => {
         if (
-          this.app.metadataCache.isUserIgnored &&
-          this.app.metadataCache.isUserIgnored(result.id)
+          this.plugin.app.metadataCache.isUserIgnored &&
+          this.plugin.app.metadataCache.isUserIgnored(result.id)
         ) {
           result.score /= 10
         }
@@ -297,7 +264,7 @@ export class Omnisearch {
       }
 
       // Boost custom properties
-      const metadata = this.app.metadataCache.getCache(path)
+      const metadata = this.plugin.app.metadataCache.getCache(path)
       if (metadata) {
         for (const { name, weight } of settings.weightCustomProperties) {
           const values = metadata?.frontmatter?.[name]
@@ -323,7 +290,9 @@ export class Omnisearch {
     if (results.length) logDebug('First result:', results[0])
 
     const documents = await Promise.all(
-      results.map(async result => await cacheManager.getDocument(result.id))
+      results.map(
+        async result => await this.plugin.cacheManager.getDocument(result.id)
+      )
     )
 
     // If the search query contains quotes, filter out results that don't have the exact match
@@ -379,7 +348,7 @@ export class Omnisearch {
   ): Promise<ResultNote[]> {
     // Get the raw results
     let results: SearchResult[]
-    if (settings.simpleSearch) {
+    if (this.plugin.settings.simpleSearch) {
       results = await this.search(query, {
         prefixLength: 3,
         singleFilePath: options?.singleFilePath,
@@ -392,7 +361,9 @@ export class Omnisearch {
     }
 
     const documents = await Promise.all(
-      results.map(async result => await cacheManager.getDocument(result.id))
+      results.map(
+        async result => await this.plugin.cacheManager.getDocument(result.id)
+      )
     )
 
     // Map the raw results to get usable suggestions
@@ -425,9 +396,9 @@ export class Omnisearch {
       logDebug('Matching tokens:', foundWords)
 
       logDebug('Getting matches locations...')
-      const matches = getMatches(
+      const matches = this.plugin.textProcessor.getMatches(
         note.content,
-        stringsToRegex(foundWords),
+        foundWords,
         query
       )
       logDebug(`Matches for ${note.basename}`, matches)
@@ -443,11 +414,49 @@ export class Omnisearch {
   }
 
   public async writeToCache(): Promise<void> {
-    await cacheManager.writeMinisearchCache(
+    await this.plugin.database.writeMinisearchCache(
       this.minisearch,
       this.indexedDocuments
     )
   }
-}
 
-export const searchEngine = new Omnisearch()
+  private getOptions(): Options<IndexedDocument> {
+    return {
+      tokenize: this.tokenizer.tokenizeForIndexing.bind(this.tokenizer),
+      extractField: (doc, fieldName) => {
+        if (fieldName === 'directory') {
+          // return path without the filename
+          const parts = doc.path.split('/')
+          parts.pop()
+          return parts.join('/')
+        }
+        return (doc as any)[fieldName]
+      },
+      processTerm: (term: string) =>
+        (this.plugin.settings.ignoreDiacritics
+          ? removeDiacritics(term)
+          : term
+        ).toLowerCase(),
+      idField: 'path',
+      fields: [
+        'basename',
+        // Different from `path`, since `path` is the unique index and needs to include the filename
+        'directory',
+        'aliases',
+        'content',
+        'headings1',
+        'headings2',
+        'headings3',
+      ],
+      storeFields: ['tags'],
+      logger(_level, _message, code) {
+        if (code === 'version_conflict') {
+          new Notice(
+            'Omnisearch - Your index cache may be incorrect or corrupted. If this message keeps appearing, go to Settings to clear the cache.',
+            5000
+          )
+        }
+      },
+    }
+  }
+}

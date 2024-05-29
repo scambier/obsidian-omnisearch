@@ -1,9 +1,6 @@
 import { EventBus } from './tools/event-bus'
 import { writable } from 'svelte/store'
-import { settings } from './settings'
 import type { TFile } from 'obsidian'
-import { Platform } from 'obsidian'
-import { getObsidianApp } from './stores/obsidian-app'
 
 export const regexLineSplit = /\r?\n|\r|((\.|\?|!)( |\r?\n|\r))/g
 export const regexYaml = /^---\s*\n(.*?)\n?^---\s?/ms
@@ -14,9 +11,6 @@ export const regexExtensions = /(?:^|\s)\.(\w+)/g
 export const excerptBefore = 100
 export const excerptAfter = 300
 
-export const highlightClass = `suggestion-highlight omnisearch-highlight ${
-  settings.highlight ? 'omnisearch-default-highlight' : ''
-}`
 export const K_DISABLE_OMNISEARCH = 'omnisearch-disabled'
 
 export const eventBus = new EventBus()
@@ -97,29 +91,9 @@ export function isInputComposition(): boolean {
   return inComposition
 }
 
-/**
- * Plugin dependency - Chs Patch for Chinese word segmentation
- * @returns
- */
-export function getChsSegmenter(): any | undefined {
-  return (getObsidianApp() as any).plugins.plugins['cm-chs-patch']
-}
-
 export type TextExtractorApi = {
   extractText: (file: TFile) => Promise<string>
   canFileBeExtracted: (filePath: string) => boolean
-}
-
-/**
- * Plugin dependency - Text Extractor
- * @returns
- */
-export function getTextExtractor(): TextExtractorApi | undefined {
-  return (getObsidianApp() as any).plugins?.plugins?.['text-extractor']?.api
-}
-
-export function isCacheEnabled(): boolean {
-  return !Platform.isIosApp && settings.useCache
 }
 
 export const SEPARATORS =

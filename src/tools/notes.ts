@@ -1,10 +1,8 @@
-import { type CachedMetadata, MarkdownView, TFile } from 'obsidian'
+import { type App, type CachedMetadata, MarkdownView, TFile } from 'obsidian'
 import type { ResultNote } from '../globals'
-import { getObsidianApp } from '../stores/obsidian-app'
-
-const app = getObsidianApp()
 
 export async function openNote(
+  app: App,
   item: ResultNote,
   offset = 0,
   newPane = false,
@@ -47,7 +45,11 @@ export async function openNote(
   })
 }
 
-export async function createNote(name: string, newLeaf = false): Promise<void> {
+export async function createNote(
+  app: App,
+  name: string,
+  newLeaf = false
+): Promise<void> {
   try {
     let pathPrefix: string
     switch (app.vault.getConfig('newFileLocation')) {
@@ -77,6 +79,7 @@ export async function createNote(name: string, newLeaf = false): Promise<void> {
  * @returns
  */
 export function getNonExistingNotes(
+  app: App,
   file: TFile,
   metadata: CachedMetadata
 ): string[] {
