@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { App, MarkdownView, Notice, Platform, TFile } from 'obsidian'
+  import { MarkdownView, Notice, Platform, TFile } from 'obsidian'
   import { onDestroy, onMount, tick } from 'svelte'
   import InputSearch from './InputSearch.svelte'
   import ModalContainer from './ModalContainer.svelte'
@@ -24,16 +24,13 @@
   } from 'src/components/modals'
   import ResultItemVault from './ResultItemVault.svelte'
   import { Query } from 'src/search/query'
-  import { settings } from '../settings'
-  import * as NotesIndex from '../notes-index'
-  import { cacheManager } from '../cache-manager'
-  import { searchEngine } from 'src/search/omnisearch'
   import { cancelable, CancelablePromise } from 'cancelable-promise'
   import { debounce } from 'lodash-es'
+  import type OmnisearchPlugin from '../main'
 
   export let modal: OmnisearchVaultModal
   export let previousQuery: string | undefined
-  export let app: App
+  export let plugin: OmnisearchPlugin
 
   let selectedIndex = 0
   let historySearchIndex = 0
@@ -51,7 +48,7 @@
 
   $: selectedNote = resultNotes[selectedIndex]
   $: searchQuery = searchQuery ?? previousQuery
-  $: if (settings.openInNewPane) {
+  $: if (plugin.settings.openInNewPane) {
     openInNewPaneKey = '↵'
     openInCurrentPaneKey = getCtrlKeyLabel() + ' ↵'
     createInNewPaneKey = 'shift ↵'
@@ -103,7 +100,7 @@
     eventBus.on('vault', Action.PrevSearchHistory, prevSearchHistory)
     eventBus.on('vault', Action.NextSearchHistory, nextSearchHistory)
     eventBus.on('vault', Action.OpenInNewLeaf, openNoteInNewLeaf)
-    await NotesIndex.refreshIndex()
+    await plugin.notesIndexer.refreshIndex()
     await updateResultsDebounced()
   })
 
@@ -113,7 +110,9 @@
 
   async function prevSearchHistory() {
     // Filter out the empty string, if it's there
-    const history = (await cacheManager.getSearchHistory()).filter(s => s)
+    const history = (await plugin.cacheManager.getSearchHistory()).filter(
+      s => s
+    )
     if (++historySearchIndex >= history.length) {
       historySearchIndex = 0
     }
@@ -122,7 +121,9 @@
   }
 
   async function nextSearchHistory() {
-    const history = (await cacheManager.getSearchHistory()).filter(s => s)
+    const history = (await plugin.cacheManager.getSearchHistory()).filter(
+      s => s
+    )
     if (--historySearchIndex < 0) {
       historySearchIndex = history.length ? history.length - 1 : 0
     }
@@ -138,10 +139,12 @@
       cancelableQuery.cancel()
       cancelableQuery = null
     }
-    query = new Query(searchQuery)
+    query = new Query(searchQuery, {
+      ignoreDiacritics: plugin.settings.ignoreDiacritics,
+    })
     cancelableQuery = cancelable(
       new Promise(resolve => {
-        resolve(searchEngine.getSuggestions(query))
+        resolve(plugin.searchEngine.getSuggestions(query))
       })
     )
     resultNotes = await cancelableQuery
@@ -188,7 +191,7 @@
 
   function saveCurrentQuery() {
     if (searchQuery) {
-      cacheManager.addToSearchHistory(searchQuery)
+      plugin.cacheManager.addToSearchHistory(searchQuery)
     }
   }
 
@@ -199,7 +202,7 @@
   ) {
     saveCurrentQuery()
     const offset = note.matches?.[0]?.offset ?? 0
-    openNote(note, offset, newPane, newLeaf)
+    openNote(plugin.app, note, offset, newPane, newLeaf)
   }
 
   async function onClickCreateNote(_e: MouseEvent) {
@@ -211,7 +214,7 @@
   }): Promise<void> {
     if (searchQuery) {
       try {
-        await createNote(searchQuery, opt?.newLeaf)
+        await createNote(plugin.app, searchQuery, opt?.newLeaf)
       } catch (e) {
         new Notice((e as Error).message)
         return
@@ -222,11 +225,11 @@
 
   function insertLink(): void {
     if (!selectedNote) return
-    const file = app.vault
+    const file = plugin.app.vault
       .getMarkdownFiles()
       .find(f => f.path === selectedNote.path)
-    const active = app.workspace.getActiveFile()
-    const view = app.workspace.getActiveViewOfType(MarkdownView)
+    const active = plugin.app.workspace.getActiveFile()
+    const view = plugin.app.workspace.getActiveViewOfType(MarkdownView)
     if (!view?.editor) {
       new Notice('Omnisearch - Error - No active editor', 3000)
       return
@@ -235,7 +238,7 @@
     // Generate link
     let link: string
     if (file && active) {
-      link = app.fileManager.generateMarkdownLink(file, active.path)
+      link = plugin.app.fileManager.generateMarkdownLink(file, active.path)
     } else {
       link = `[[${selectedNote.basename}.${getExtension(selectedNote.path)}]]`
     }
@@ -249,7 +252,7 @@
     modal.close()
   }
 
-  function switchToInFileModal(): void {
+  function      switchToInFileModal(): void {
     // Do nothing if the selectedNote is a PDF,
     // or if there is 0 match (e.g indexing in progress)
     if (
@@ -264,15 +267,15 @@
 
     if (selectedNote) {
       // Open in-file modal for selected search result
-      const file = app.vault.getAbstractFileByPath(selectedNote.path)
+      const file = plugin.app.vault.getAbstractFileByPath(selectedNote.path)
       if (file && file instanceof TFile) {
-        new OmnisearchInFileModal(app, file, searchQuery).open()
+        new OmnisearchInFileModal(plugin, file, searchQuery).open()
       }
     } else {
       // Open in-file modal for active file
-      const view = app.workspace.getActiveViewOfType(MarkdownView)
+      const view = plugin.app.workspace.getActiveViewOfType(MarkdownView)
       if (view?.file) {
-        new OmnisearchInFileModal(app, view.file, searchQuery).open()
+        new OmnisearchInFileModal(plugin, view.file, searchQuery).open()
       }
     }
   }
@@ -295,11 +298,12 @@
 
 <InputSearch
   bind:this="{refInput}"
+  plugin="{plugin}"
   initialValue="{searchQuery}"
   on:input="{e => (searchQuery = e.detail)}"
   placeholder="Omnisearch - Vault">
   <div class="omnisearch-input-container__buttons">
-    {#if settings.showCreateButton}
+    {#if plugin.settings.showCreateButton}
       <button on:click="{onClickCreateNote}">Create note</button>
     {/if}
     {#if Platform.isMobile}
@@ -317,7 +321,7 @@
 <ModalContainer>
   {#each resultNotes as result, i}
     <ResultItemVault
-      app="{app}"
+      {plugin}
       selected="{i === selectedIndex}"
       note="{result}"
       on:mousemove="{_ => (selectedIndex = i)}"
@@ -329,7 +333,7 @@
   <div style="text-align: center;">
     {#if !resultNotes.length && searchQuery && !searching}
       We found 0 result for your search here.
-      {#if settings.simpleSearch && searchQuery
+      {#if plugin.settings.simpleSearch && searchQuery
           .split(SPACE_OR_PUNCTUATION)
           .some(w => w.length < 3)}
         <br />

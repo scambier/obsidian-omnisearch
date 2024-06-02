@@ -14,10 +14,9 @@
 **Omnisearch** is a search engine that "_just works_".  
 It always instantly shows you the most relevant results, thanks to its smart weighting algorithm.
 
-Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/minisearch) library.
+Under the hood, it uses the excellent [MiniSearch](https://github.com/lucaong/minisearch) library. This free plugin is totally unrelated to the omnisearch.ai paid product.
 
 ![](https://raw.githubusercontent.com/scambier/obsidian-omnisearch/master/images/omnisearch.gif)
-
 
 ## Documentation
 

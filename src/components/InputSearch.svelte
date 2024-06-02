@@ -2,10 +2,11 @@
   import { debounce } from 'obsidian'
   import { toggleInputComposition } from 'src/globals'
   import { createEventDispatcher, tick } from 'svelte'
-  import { cacheManager } from '../cache-manager'
+  import type OmnisearchPlugin from '../main'
 
   export let initialValue = ''
   export let placeholder = ''
+  export let plugin: OmnisearchPlugin
   let initialSet = false
   let value = ''
   let elInput: HTMLInputElement
@@ -39,7 +40,7 @@
   const debouncedOnInput = debounce(() => {
     // If typing a query and not executing it,
     // the next time we open the modal, the search field will be empty
-    cacheManager.addToSearchHistory('')
+    plugin.cacheManager.addToSearchHistory('')
     dispatch('input', value)
   }, 300)
 </script>
@@ -50,13 +51,13 @@
       bind:this="{elInput}"
       bind:value="{value}"
       class="prompt-input"
-      use:selectInput
       on:compositionend="{_ => toggleInputComposition(false)}"
       on:compositionstart="{_ => toggleInputComposition(true)}"
       on:input="{debouncedOnInput}"
       placeholder="{placeholder}"
       spellcheck="false"
-      type="text" />
+      type="text"
+      use:selectInput />
   </div>
   <slot />
 </div>

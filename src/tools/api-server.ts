@@ -1,10 +1,11 @@
 import * as http from 'http'
 import * as url from 'url'
-import api from './api'
 import { Notice } from 'obsidian'
-import { settings } from 'src/settings'
+import type OmnisearchPlugin from '../main'
+import { getApi } from './api'
 
-export function getServer() {
+export function getServer(plugin: OmnisearchPlugin) {
+  const api = getApi(plugin)
   const server = http.createServer(async function (req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.setHeader(
@@ -43,11 +44,14 @@ export function getServer() {
       server.listen(
         {
           port: parseInt(port),
-          host: 'localhost',
+          host: plugin.settings.DANGER_httpHost ?? 'localhost',
         },
         () => {
           console.log(`Omnisearch - Started HTTP server on port ${port}`)
-          if (settings.httpApiNotice) {
+          if (plugin.settings.DANGER_httpHost && plugin.settings.DANGER_httpHost !== 'localhost') {
+            new Notice(`Omnisearch - Started non-localhost HTTP server at ${plugin.settings.DANGER_httpHost}:${port}`, 120_000)
+          }
+          else if (plugin.settings.httpApiNotice) {
             new Notice(`Omnisearch - Started HTTP server on port ${port}`)
           }
         }
@@ -63,7 +67,7 @@ export function getServer() {
     close() {
       server.close()
       console.log(`Omnisearch - Terminated HTTP server`)
-      if (settings.httpApiEnabled && settings.httpApiNotice) {
+      if (plugin.settings.httpApiEnabled && plugin.settings.httpApiNotice) {
         new Notice(`Omnisearch - Terminated HTTP server`)
       }
     },
