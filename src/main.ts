@@ -13,14 +13,20 @@ import {
   SettingsTab,
   showExcerpt,
 } from './settings'
-import { eventBus, EventNames, indexingStep, IndexingStepType, type TextExtractorApi } from './globals'
+import {
+  eventBus,
+  EventNames,
+  indexingStep,
+  IndexingStepType,
+  type TextExtractorApi,
+} from './globals'
 import { notifyOnIndexed, registerAPI } from './tools/api'
 import { Database } from './database'
 import { SearchEngine } from './search/search-engine'
 import { CacheManager } from './cache-manager'
 import { logDebug } from './tools/utils'
 import { NotesIndexer } from './notes-indexer'
-import { TextProcessor } from "./tools/text-processing";
+import { TextProcessor } from './tools/text-processing'
 
 export default class OmnisearchPlugin extends Plugin {
   // FIXME: fix the type

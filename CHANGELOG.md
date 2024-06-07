@@ -2,6 +2,17 @@
 
 This changelog is not exhaustive.
 
+## 1.23.x
+
+- Updated Chinese tokenizer
+- Added user-defined boosted fields
+- No more freezes when loading large caches (hopefully)
+- Large refactoring to properly clean up several older warnings
+
+## 1.22.x
+
+- Improved highlighting
+
 ## 1.21.x
 
 - Added support for .docx and .xlsx

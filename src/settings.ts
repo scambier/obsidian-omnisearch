@@ -510,7 +510,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Header properties fields')
       .setDesc(
-        'You can set custom weights for values of header properties (e.g. "keywords").'
+        'You can set custom weights for values of header properties (e.g. "keywords"). Weights under 1.0 will downrank the results.'
       )
 
     for (let i = 0; i < settings.weightCustomProperties.length; i++) {
@@ -528,7 +528,7 @@ export class SettingsTab extends PluginSettingTab {
             })
         })
         .addSlider(cb => {
-          cb.setLimits(1, 5, 0.1)
+          cb.setLimits(0.1, 5, 0.1)
             .setValue(item.weight)
             .setDynamicTooltip()
             .onChange(async v => {
