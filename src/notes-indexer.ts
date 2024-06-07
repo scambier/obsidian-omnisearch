@@ -7,6 +7,7 @@ import {
   isFileFromDataloomPlugin,
   isFileImage,
   isFilePDF,
+  logDebug,
 } from './tools/utils'
 
 export class NotesIndexer {
@@ -23,6 +24,11 @@ export class NotesIndexer {
   }
 
   public async refreshIndex(): Promise<void> {
+    for (const file of this.notesToReindex) {
+      logDebug('Updating file', file.path)
+      await this.plugin.cacheManager.addToLiveCache(file.path)
+    }
+
     const paths = [...this.notesToReindex].map(n => n.path)
     if (paths.length) {
       this.plugin.searchEngine.removeFromPaths(paths)

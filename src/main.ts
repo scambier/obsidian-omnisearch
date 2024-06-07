@@ -42,6 +42,7 @@ export default class OmnisearchPlugin extends Plugin {
   public readonly searchEngine = new SearchEngine(this)
 
   private ribbonButton?: HTMLElement
+  private refreshIndexCallback?: () => void
 
   constructor(app: App, manifest: PluginManifest) {
     super(app, manifest)
@@ -106,7 +107,6 @@ export default class OmnisearchPlugin extends Plugin {
         this.app.vault.on('create', file => {
           if (this.notesIndexer.isFileIndexable(file.path)) {
             logDebug('Indexing new file', file.path)
-            // await cacheManager.addToLiveCache(file.path)
             searchEngine.addFromPaths([file.path])
           }
         })
@@ -121,8 +121,6 @@ export default class OmnisearchPlugin extends Plugin {
       this.registerEvent(
         this.app.vault.on('modify', async file => {
           if (this.notesIndexer.isFileIndexable(file.path)) {
-            logDebug('Updating file', file.path)
-            await this.cacheManager.addToLiveCache(file.path)
             this.notesIndexer.flagNoteForReindex(file)
           }
         })
@@ -138,6 +136,10 @@ export default class OmnisearchPlugin extends Plugin {
           }
         })
       )
+
+      this.refreshIndexCallback = this.notesIndexer.refreshIndex.bind(this.notesIndexer)
+      addEventListener('blur', this.refreshIndexCallback)
+      removeEventListener
 
       await this.executeFirstLaunchTasks()
       await this.populateIndex()
@@ -164,6 +166,10 @@ export default class OmnisearchPlugin extends Plugin {
   async onunload(): Promise<void> {
     // @ts-ignore
     delete globalThis['omnisearch']
+
+    if (this.refreshIndexCallback) {
+      removeEventListener('blur', this.refreshIndexCallback)
+    }
 
     // Clear cache when disabling Omnisearch
     if (process.env.NODE_ENV === 'production') {
