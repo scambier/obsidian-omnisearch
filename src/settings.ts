@@ -674,10 +674,11 @@ export class SettingsTab extends PluginSettingTab {
         toggle.setValue(isPluginDisabled(this.app)).onChange(async v => {
           if (v) {
             this.app.saveLocalStorage(K_DISABLE_OMNISEARCH, '1')
+            new Notice('Omnisearch - Disabled. Please restart Obsidian.')
           } else {
             this.app.saveLocalStorage(K_DISABLE_OMNISEARCH) // No value = unset
+            new Notice('Omnisearch - Enabled. Please restart Obsidian.')
           }
-          new Notice('Omnisearch - Disabled. Please restart Obsidian.')
         })
       )
 
