@@ -152,7 +152,11 @@ export function isFileCanvas(path: string): boolean {
   return path.endsWith('.canvas')
 }
 
-export function isFileFromDataloomPlugin(path: string): boolean {
+export function isFileExcalidraw(path: string): boolean {
+  return path.endsWith('.excalidraw')
+}
+
+export function isFileFromDataloom(path: string): boolean {
   return path.endsWith('.loom')
 }
 

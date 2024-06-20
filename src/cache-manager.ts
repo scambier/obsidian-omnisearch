@@ -5,7 +5,7 @@ import {
   getAliasesFromMetadata,
   getTagsFromMetadata,
   isFileCanvas,
-  isFileFromDataloomPlugin,
+  isFileFromDataloom,
   isFileImage,
   isFileOffice,
   isFilePDF,
@@ -135,7 +135,7 @@ export class CacheManager {
     }
 
     // ** Dataloom plugin **
-    else if (isFileFromDataloomPlugin(path)) {
+    else if (isFileFromDataloom(path)) {
       try {
         const data = JSON.parse(await app.vault.cachedRead(file))
         // data is a json object, we recursively iterate the keys

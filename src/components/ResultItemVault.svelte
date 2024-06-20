@@ -3,7 +3,7 @@
   import type { ResultNote } from '../globals'
   import {
     getExtension,
-    isFileCanvas,
+    isFileCanvas, isFileExcalidraw,
     isFileImage,
     isFilePDF,
     pathWithoutFilename,
@@ -44,11 +44,18 @@
       setIcon(elFolderPathIcon, 'folder-open')
     }
     if (elFilePathIcon) {
-      if (isFileImage(note.path)) setIcon(elFilePathIcon, 'image')
-      else if (isFilePDF(note.path)) setIcon(elFilePathIcon, 'file-text')
-      else if (isFileCanvas(note.path))
+      if (isFileImage(note.path)) {
+        setIcon(elFilePathIcon, 'image')
+      }
+      else if (isFilePDF(note.path)) {
+        setIcon(elFilePathIcon, 'file-text')
+      }
+      else if (isFileCanvas(note.path) || isFileExcalidraw(note.path)) {
         setIcon(elFilePathIcon, 'layout-dashboard')
-      else setIcon(elFilePathIcon, 'file')
+      }
+      else {
+        setIcon(elFilePathIcon, 'file')
+      }
     }
   }
 </script>

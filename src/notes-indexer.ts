@@ -4,7 +4,7 @@ import { removeAnchors } from './tools/notes'
 import type { IndexedDocument } from './globals'
 import {
   isFileCanvas,
-  isFileFromDataloomPlugin,
+  isFileFromDataloom,
   isFileImage,
   isFilePDF,
   logDebug,
@@ -49,7 +49,7 @@ export class NotesIndexer {
     return (
       this.isFilePlaintext(path) ||
       isFileCanvas(path) ||
-      isFileFromDataloomPlugin(path) ||
+      isFileFromDataloom(path) ||
       (canIndexPDF && isFilePDF(path)) ||
       (canIndexImages && isFileImage(path))
     )
@@ -60,7 +60,7 @@ export class NotesIndexer {
       this.canIndexUnsupportedFiles() ||
       this.isFilePlaintext(path) ||
       isFileCanvas(path) ||
-      isFileFromDataloomPlugin(path)
+      isFileFromDataloom(path)
     )
   }
 
