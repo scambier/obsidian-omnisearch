@@ -119,7 +119,7 @@ abstract class OmnisearchModal extends Modal {
     })
 
     // Open in background
-    this.scope.register(['Alt'], 'O', e => {
+    this.scope.register(['Ctrl'], 'O', e => {
       if (!isInputComposition()) {
         // Check if the user is still typing
         e.preventDefault()
