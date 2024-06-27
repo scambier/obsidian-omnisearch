@@ -32,6 +32,8 @@ export interface OmnisearchSettings extends WeightingSettings {
   downrankedFoldersFilters: string[]
   /** Ignore diacritics when indexing files */
   ignoreDiacritics: boolean
+  ignoreArabicDiacritics: boolean
+
   /** Extensions of plain text files to index, in addition to .md */
   indexedFileTypes: string[]
   /** Enable PDF indexing */
@@ -661,6 +663,17 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
+      new Setting(containerEl)
+      .setName('Ignore Arabic diacritics (beta)')
+      .setDesc(diacriticsDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.ignoreArabicDiacritics).onChange(async v => {
+          await database.clearCache()
+          settings.ignoreArabicDiacritics = v
+          await saveSettings(this.plugin)
+        })
+      )
+
     // Disable Omnisearch
     const disableDesc = new DocumentFragment()
     disableDesc.createSpan({}, span => {
@@ -720,6 +733,7 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
     hideExcluded: false,
     downrankedFoldersFilters: [] as string[],
     ignoreDiacritics: true,
+    ignoreArabicDiacritics: false,
     indexedFileTypes: [] as string[],
     PDFIndexing: false,
     officeIndexing: false,

@@ -304,7 +304,12 @@ export class SearchEngine {
         const title = document?.path.toLowerCase() ?? ''
         const content = (document?.cleanedContent ?? '').toLowerCase()
         return exactTerms.every(
-          q => content.includes(q) || removeDiacritics(title).includes(q)
+          q =>
+            content.includes(q) ||
+            removeDiacritics(
+              title,
+              this.plugin.settings.ignoreArabicDiacritics
+            ).includes(q)
         )
       })
     }
@@ -434,7 +439,7 @@ export class SearchEngine {
       },
       processTerm: (term: string) =>
         (this.plugin.settings.ignoreDiacritics
-          ? removeDiacritics(term)
+          ? removeDiacritics(term, this.plugin.settings.ignoreArabicDiacritics)
           : term
         ).toLowerCase(),
       idField: 'path',
