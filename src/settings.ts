@@ -11,7 +11,7 @@ import {
 import { writable } from 'svelte/store'
 import { K_DISABLE_OMNISEARCH } from './globals'
 import type OmnisearchPlugin from './main'
-import { enablePrintDebug } from "./tools/utils";
+import { enablePrintDebug } from './tools/utils'
 
 interface WeightingSettings {
   weightBasename: number
@@ -71,6 +71,7 @@ export interface OmnisearchSettings extends WeightingSettings {
   httpApiNotice: boolean
 
   DANGER_httpHost: string | null
+  DANGER_forceSaveCache: boolean
 }
 
 /**
@@ -139,9 +140,7 @@ export class SettingsTab extends PluginSettingTab {
       span.innerHTML = `Omnisearch will use Text Extractor to index the content of your PDFs.`
     })
     new Setting(containerEl)
-      .setName(
-        `PDFs content indexing ${textExtractor ? '' : '⚠️ Disabled'}`
-      )
+      .setName(`PDFs content indexing ${textExtractor ? '' : '⚠️ Disabled'}`)
       .setDesc(indexPDFsDesc)
       .addToggle(toggle =>
         toggle.setValue(settings.PDFIndexing).onChange(async v => {
@@ -663,7 +662,7 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
-      new Setting(containerEl)
+    new Setting(containerEl)
       .setName('Ignore Arabic diacritics (beta)')
       .setDesc(diacriticsDesc)
       .addToggle(toggle =>
@@ -695,6 +694,23 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
+    // Force save cache
+    const forceSaveCacheDesc = new DocumentFragment()
+    forceSaveCacheDesc.createSpan({}, span => {
+      span.innerHTML = `Omnisearch has a security feature that automatically disables cache writing if it cannot fully perform the operation.<br>
+        Use this option to force the cache to be saved, even if it causes a crash.<br>
+        ⚠️ <span style="color: var(--text-accent)">Enabling this setting could lead to crash loops</span>`
+    })
+    new Setting(containerEl)
+      .setName('Force save the cache')
+      .setDesc(forceSaveCacheDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.DANGER_forceSaveCache).onChange(async v => {
+          settings.DANGER_forceSaveCache = v
+          await saveSettings(this.plugin)
+        })
+      )
+
     // Clear cache data
     if (isCacheEnabled()) {
       const resetCacheDesc = new DocumentFragment()
@@ -713,6 +729,7 @@ export class SettingsTab extends PluginSettingTab {
           })
         })
     }
+
     //#endregion Danger Zone
   }
 
@@ -769,6 +786,7 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
     verboseLogging: false,
 
     DANGER_httpHost: null,
+    DANGER_forceSaveCache: false,
   }
 }
 

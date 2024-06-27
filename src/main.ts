@@ -137,7 +137,9 @@ export default class OmnisearchPlugin extends Plugin {
         })
       )
 
-      this.refreshIndexCallback = this.notesIndexer.refreshIndex.bind(this.notesIndexer)
+      this.refreshIndexCallback = this.notesIndexer.refreshIndex.bind(
+        this.notesIndexer
+      )
       addEventListener('blur', this.refreshIndexCallback)
       removeEventListener
 
@@ -263,15 +265,20 @@ export default class OmnisearchPlugin extends Plugin {
       indexingStep.set(IndexingStepType.WritingCache)
 
       // Disable settings.useCache while writing the cache, in case it freezes
-      this.settings.useCache = false
-      await saveSettings(this)
+      const cacheEnabled = this.settings.useCache
+      if (cacheEnabled && !this.settings.DANGER_forceSaveCache) {
+        this.settings.useCache = false
+        await saveSettings(this)
+      }
 
       // Write the cache
       await searchEngine.writeToCache()
 
       // Re-enable settings.caching
-      this.settings.useCache = true
-      await saveSettings(this)
+      if (cacheEnabled) {
+        this.settings.useCache = true
+        await saveSettings(this)
+      }
     }
 
     console.timeEnd('Omnisearch - Indexing total time')
