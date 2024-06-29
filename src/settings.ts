@@ -12,6 +12,7 @@ import { writable } from 'svelte/store'
 import { K_DISABLE_OMNISEARCH } from './globals'
 import type OmnisearchPlugin from './main'
 import { enablePrintDebug } from './tools/utils'
+import { debounce } from 'lodash-es'
 
 interface WeightingSettings {
   weightBasename: number
@@ -98,6 +99,11 @@ export class SettingsTab extends PluginSettingTab {
     const { containerEl } = this
     const database = this.plugin.database
     const textExtractor = this.plugin.getTextExtractor()
+
+    const clearCacheDebounced = debounce(async () => {
+      await database.clearCache()
+    }, 1000)
+
     containerEl.empty()
 
     if (this.app.loadLocalStorage(K_DISABLE_OMNISEARCH) == '1') {
@@ -197,7 +203,7 @@ export class SettingsTab extends PluginSettingTab {
           .addOptions({ yes: 'Yes', no: 'No', default: 'Obsidian setting' })
           .setValue(settings.unsupportedFilesIndexing)
           .onChange(async v => {
-            await database.clearCache()
+            await clearCacheDebounced()
             ;(settings.unsupportedFilesIndexing as any) = v
             await saveSettings(this.plugin)
           })
