@@ -14,17 +14,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v2.1.0
+      - uses: pnpm/action-setup@v4
         with:
-          version: 7.17.0
+          version: 9.3.0
           run_install: true
 
       - name: Use Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
-          node-version: "18.x"
+          cache: 'pnpm'
+          node-version: "20.x"
 
       - name: Build
         id: build
@@ -37,6 +38,13 @@ jobs:
           ls
           echo "::set-output name=tag_name::$(git tag --sort version:refname | tail -n 1)"
 
+      - name: Generate a changelog
+        uses: orhun/git-cliff-action@v3
+        id: git-cliff
+        with:
+          config: cliff.toml
+          args: --verbose
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -46,7 +54,8 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: ${{ github.ref }}
-          draft: false
+          body: ${{ steps.git-cliff.outputs.changelog }}
+          draft: true
           prerelease: false
 
       - name: Upload zip file
