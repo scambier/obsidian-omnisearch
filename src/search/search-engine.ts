@@ -154,8 +154,9 @@ export class SearchEngine {
         term.length <= 3 ? 0 : term.length <= 5 ? fuzziness / 2 : fuzziness,
       boost: {
         basename: settings.weightBasename,
-        directory: settings.weightDirectory,
         aliases: settings.weightBasename,
+        displayTitle: settings.weightBasename,
+        directory: settings.weightDirectory,
         headings1: settings.weightH1,
         headings2: settings.weightH2,
         headings3: settings.weightH3,

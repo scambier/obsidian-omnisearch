@@ -221,10 +221,11 @@ export class CacheManager {
         }
       }
     }
-
+    const displayTitle = metadata?.frontmatter?.[this.plugin.settings.displayTitle] ?? ''
     const tags = getTagsFromMetadata(metadata)
     return {
       basename: file.basename,
+      displayTitle,
       content,
       /** Content without diacritics and markdown chars */
       cleanedContent: stripMarkdownCharacters(removeDiacritics(content)),

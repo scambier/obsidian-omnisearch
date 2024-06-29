@@ -37,6 +37,8 @@ export interface OmnisearchSettings extends WeightingSettings {
 
   /** Extensions of plain text files to index, in addition to .md */
   indexedFileTypes: string[]
+  /** Custom title field */
+  displayTitle: string
   /** Enable PDF indexing */
   PDFIndexing: boolean
   /** Enable Images indexing */
@@ -207,6 +209,21 @@ export class SettingsTab extends PluginSettingTab {
             ;(settings.unsupportedFilesIndexing as any) = v
             await saveSettings(this.plugin)
           })
+      })
+
+    // Custom display title
+    new Setting(containerEl)
+      .setName('Set frontmatter property key as title')
+      .setDesc(
+        htmlDescription(`If you have a custom property in your notes that you want to use as the title in search results.<br>
+          Leave empty to disable.`)
+      )
+      .addText(component => {
+        component.setValue(settings.displayTitle).onChange(async v => {
+          await clearCacheDebounced()
+          settings.displayTitle = v
+          await saveSettings(this.plugin)
+        })
       })
 
     // Additional text files to index
@@ -737,6 +754,7 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
     ignoreDiacritics: true,
     ignoreArabicDiacritics: false,
     indexedFileTypes: [] as string[],
+    displayTitle: '',
     PDFIndexing: false,
     officeIndexing: false,
     imagesIndexing: false,

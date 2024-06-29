@@ -36,7 +36,7 @@
   $: cleanedContent = plugin.textProcessor.makeExcerpt(note.content, note.matches[0]?.offset ?? -1)
   $: glyph = false //cacheManager.getLiveDocument(note.path)?.doesNotExist
   $: {
-    title = note.basename
+    title = note.displayTitle || note.basename
     notePath = pathWithoutFilename(note.path)
 
     // Icons

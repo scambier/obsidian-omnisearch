@@ -88,6 +88,7 @@ export class NotesIndexer {
     return {
       path: filename,
       basename: name,
+      displayTitle: '',
       mtime: 0,
 
       content: '',
