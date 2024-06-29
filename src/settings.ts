@@ -117,31 +117,27 @@ export class SettingsTab extends PluginSettingTab {
 
     //#region Indexing
 
-    const indexingDesc = new DocumentFragment()
-    indexingDesc.createSpan({}, span => {
-      span.innerHTML = `⚠️ <span style="color: var(--text-accent)">Changing indexing settings will clear the cache, and requires a restart of Obsidian.</span><br/><br/>`
-      if (textExtractor) {
-        span.innerHTML += `
-        👍 You have installed <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a>, Omnisearch can use it to index PDFs and images contents.
-            <br />Text extraction only works on desktop, but the cache can be synchronized with your mobile device.`
-      } else {
-        span.innerHTML += `⚠️ Omnisearch requires <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a> to index PDFs and images.`
-      }
-    })
-
     new Setting(containerEl)
       .setName('Indexing')
       .setHeading()
-      .setDesc(indexingDesc)
+      .setDesc(
+        htmlDescription(`⚠️ <span style="color: var(--text-accent)">Changing indexing settings will clear the cache, and requires a restart of Obsidian.</span><br/><br/>
+        ${
+          textExtractor
+            ? `👍 You have installed <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a>, Omnisearch can use it to index PDFs and images contents.
+            <br />Text extraction only works on desktop, but the cache can be synchronized with your mobile device.`
+            : `⚠️ Omnisearch requires <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a> to index PDFs and images.`
+        }`)
+      )
 
     // PDF Indexing
-    const indexPDFsDesc = new DocumentFragment()
-    indexPDFsDesc.createSpan({}, span => {
-      span.innerHTML = `Omnisearch will use Text Extractor to index the content of your PDFs.`
-    })
     new Setting(containerEl)
       .setName(`PDFs content indexing ${textExtractor ? '' : '⚠️ Disabled'}`)
-      .setDesc(indexPDFsDesc)
+      .setDesc(
+        htmlDescription(
+          `Omnisearch will use Text Extractor to index the content of your PDFs.`
+        )
+      )
       .addToggle(toggle =>
         toggle.setValue(settings.PDFIndexing).onChange(async v => {
           await database.clearCache()
@@ -152,13 +148,13 @@ export class SettingsTab extends PluginSettingTab {
       .setDisabled(!textExtractor)
 
     // Images Indexing
-    const indexImagesDesc = new DocumentFragment()
-    indexImagesDesc.createSpan({}, span => {
-      span.innerHTML = `Omnisearch will use Text Extractor to OCR your images and index their content.`
-    })
     new Setting(containerEl)
       .setName(`Images OCR indexing ${textExtractor ? '' : '⚠️ Disabled'}`)
-      .setDesc(indexImagesDesc)
+      .setDesc(
+        htmlDescription(
+          `Omnisearch will use Text Extractor to OCR your images and index their content.`
+        )
+      )
       .addToggle(toggle =>
         toggle.setValue(settings.imagesIndexing).onChange(async v => {
           await database.clearCache()
@@ -188,16 +184,14 @@ export class SettingsTab extends PluginSettingTab {
       .setDisabled(!textExtractor)
 
     // Index filenames of unsupported files
-    const indexUnsupportedDesc = new DocumentFragment()
-    indexUnsupportedDesc.createSpan({}, span => {
-      span.innerHTML = `
-      Omnisearch can index file<strong>names</strong> of "unsupported" files, such as e.g. <pre style="display:inline">.mp4</pre>
-      or non-extracted PDFs & images.<br/>
-      "Obsidian setting" will respect the value of "Files & Links > Detect all file extensions".`
-    })
     new Setting(containerEl)
       .setName('Index paths of unsupported files')
-      .setDesc(indexUnsupportedDesc)
+      .setDesc(
+        htmlDescription(`
+      Omnisearch can index file<strong>names</strong> of "unsupported" files, such as e.g. <pre style="display:inline">.mp4</pre>
+      or non-extracted PDFs & images.<br/>
+      "Obsidian setting" will respect the value of "Files & Links > Detect all file extensions".`)
+      )
       .addDropdown(dropdown => {
         dropdown
           .addOptions({ yes: 'Yes', no: 'No', default: 'Obsidian setting' })
@@ -210,16 +204,14 @@ export class SettingsTab extends PluginSettingTab {
       })
 
     // Additional text files to index
-    const indexedFileTypesDesc = new DocumentFragment()
-    indexedFileTypesDesc.createSpan({}, span => {
-      span.innerHTML = `In addition to standard <code>md</code> files, Omnisearch can also index other <strong style="color: var(--text-accent)">PLAINTEXT</strong> files.<br/>
-      Add extensions separated by a space, without the dot. Example: "<code>txt org csv</code>".<br />
-      ⚠️ <span style="color: var(--text-accent)">Using extensions of non-plaintext files (like .pptx) WILL cause crashes,
-      because Omnisearch will try to index their content.</span>`
-    })
     new Setting(containerEl)
       .setName('Additional TEXT files to index')
-      .setDesc(indexedFileTypesDesc)
+      .setDesc(
+        htmlDescription(`In addition to standard <code>md</code> files, Omnisearch can also index other <strong style="color: var(--text-accent)">PLAINTEXT</strong> files.<br/>
+      Add extensions separated by a space, without the dot. Example: "<code>txt org csv</code>".<br />
+      ⚠️ <span style="color: var(--text-accent)">Using extensions of non-plaintext files (like .pptx) WILL cause crashes,
+      because Omnisearch will try to index their content.</span>`)
+      )
       .addText(component => {
         component
           .setValue(settings.indexedFileTypes.join(' '))
@@ -294,16 +286,13 @@ export class SettingsTab extends PluginSettingTab {
       })
 
     // Split CamelCaseWords
-    const camelCaseDesc = new DocumentFragment()
-    camelCaseDesc.createSpan({}, span => {
-      span.innerHTML = `Enable this if you want to be able to search for CamelCaseWords as separate words.<br/>        
-        ⚠️ <span style="color: var(--text-accent)">Changing this setting will clear the cache.</span><br>
-        ${needsARestart}
-        `
-    })
     new Setting(containerEl)
       .setName('Split CamelCaseWords')
-      .setDesc(camelCaseDesc)
+      .setDesc(
+        htmlDescription(`Enable this if you want to be able to search for CamelCaseWords as separate words.<br/>        
+        ⚠️ <span style="color: var(--text-accent)">Changing this setting will clear the cache.</span><br>
+        ${needsARestart}`)
+      )
       .addToggle(toggle =>
         toggle.setValue(settings.splitCamelCase).onChange(async v => {
           await database.clearCache()
@@ -444,14 +433,12 @@ export class SettingsTab extends PluginSettingTab {
       )
 
     // Show "Create note" button
-    const createBtnDesc = new DocumentFragment()
-    createBtnDesc.createSpan({}, span => {
-      span.innerHTML = `Shows a button next to the search input, to create a note.
-        Acts the same as the <code>shift ↵</code> shortcut, can be useful for mobile device users.`
-    })
     new Setting(containerEl)
       .setName('Show "Create note" button')
-      .setDesc(createBtnDesc)
+      .setDesc(
+        htmlDescription(`Shows a button next to the search input, to create a note.
+        Acts the same as the <code>shift ↵</code> shortcut, can be useful for mobile device users.`)
+      )
       .addToggle(toggle =>
         toggle.setValue(settings.showCreateButton).onChange(async v => {
           settings.showCreateButton = v
@@ -564,14 +551,14 @@ export class SettingsTab extends PluginSettingTab {
     //#region HTTP Server
 
     if (!Platform.isMobile) {
-      const httpServerDesc = new DocumentFragment()
-      httpServerDesc.createSpan({}, span => {
-        span.innerHTML = `Omnisearch can be used through a simple HTTP server (<a href="https://publish.obsidian.md/omnisearch/Public+API+%26+URL+Scheme#HTTP+Server">more information</a>).`
-      })
       new Setting(containerEl)
         .setName('API Access Through HTTP')
         .setHeading()
-        .setDesc(httpServerDesc)
+        .setDesc(
+          htmlDescription(
+            `Omnisearch can be used through a simple HTTP server (<a href="https://publish.obsidian.md/omnisearch/Public+API+%26+URL+Scheme#HTTP+Server">more information</a>).`
+          )
+        )
 
       new Setting(containerEl)
         .setName('Enable the HTTP server')
@@ -643,17 +630,14 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl).setName('Danger Zone').setHeading()
 
     // Ignore diacritics
-    const diacriticsDesc = new DocumentFragment()
-    diacriticsDesc.createSpan({}, span => {
-      span.innerHTML = `Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky".<br/>
-        ⚠️ <span style="color: var(--text-accent)">You probably should <strong>NOT</strong> disable this.</span><br>
-        ⚠️ <span style="color: var(--text-accent)">Changing this setting will clear the cache.</span><br>
-        ${needsARestart}
-        `
-    })
     new Setting(containerEl)
       .setName('Ignore diacritics')
-      .setDesc(diacriticsDesc)
+      .setDesc(
+        htmlDescription(`Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky".<br/>
+        ⚠️ <span style="color: var(--text-accent)">You probably should <strong>NOT</strong> disable this.</span><br>
+        ⚠️ <span style="color: var(--text-accent)">Changing this setting will clear the cache.</span><br>
+        ${needsARestart}`)
+      )
       .addToggle(toggle =>
         toggle.setValue(settings.ignoreDiacritics).onChange(async v => {
           await database.clearCache()
@@ -664,7 +648,6 @@ export class SettingsTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('Ignore Arabic diacritics (beta)')
-      .setDesc(diacriticsDesc)
       .addToggle(toggle =>
         toggle.setValue(settings.ignoreArabicDiacritics).onChange(async v => {
           await database.clearCache()
@@ -695,15 +678,13 @@ export class SettingsTab extends PluginSettingTab {
       )
 
     // Force save cache
-    const forceSaveCacheDesc = new DocumentFragment()
-    forceSaveCacheDesc.createSpan({}, span => {
-      span.innerHTML = `Omnisearch has a security feature that automatically disables cache writing if it cannot fully perform the operation.<br>
-        Use this option to force the cache to be saved, even if it causes a crash.<br>
-        ⚠️ <span style="color: var(--text-accent)">Enabling this setting could lead to crash loops</span>`
-    })
     new Setting(containerEl)
       .setName('Force save the cache')
-      .setDesc(forceSaveCacheDesc)
+      .setDesc(
+        htmlDescription(`Omnisearch has a security feature that automatically disables cache writing if it cannot fully perform the operation.<br>
+        Use this option to force the cache to be saved, even if it causes a crash.<br>
+        ⚠️ <span style="color: var(--text-accent)">Enabling this setting could lead to crash loops</span>`)
+      )
       .addToggle(toggle =>
         toggle.setValue(settings.DANGER_forceSaveCache).onChange(async v => {
           settings.DANGER_forceSaveCache = v
@@ -713,15 +694,13 @@ export class SettingsTab extends PluginSettingTab {
 
     // Clear cache data
     if (isCacheEnabled()) {
-      const resetCacheDesc = new DocumentFragment()
-      resetCacheDesc.createSpan({}, span => {
-        span.innerHTML = `Erase all Omnisearch cache data.
-          Use this if Omnisearch results are inconsistent, missing, or appear outdated.<br>
-          ${needsARestart}`
-      })
       new Setting(containerEl)
         .setName('Clear cache data')
-        .setDesc(resetCacheDesc)
+        .setDesc(
+          htmlDescription(`Erase all Omnisearch cache data.
+          Use this if Omnisearch results are inconsistent, missing, or appear outdated.<br>
+          ${needsARestart}`)
+        )
         .addButton(btn => {
           btn.setButtonText('Clear cache')
           btn.onClick(async () => {
@@ -791,6 +770,14 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
 }
 
 let settings: OmnisearchSettings
+
+function htmlDescription(innerHTML: string): DocumentFragment {
+  const desc = new DocumentFragment()
+  desc.createSpan({}, span => {
+    span.innerHTML = innerHTML
+  })
+  return desc
+}
 
 // /**
 //  * @deprecated
