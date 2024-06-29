@@ -88,6 +88,7 @@ export function getApi(plugin: OmnisearchPlugin) {
     async search(q: string): Promise<ResultNoteApi[]> {
       const query = new Query(q, {
         ignoreDiacritics: plugin.settings.ignoreDiacritics,
+        ignoreArabicDiacritics: plugin.settings.ignoreArabicDiacritics,
       })
       const raw = await plugin.searchEngine.getSuggestions(query)
       return mapResults(plugin, raw)

@@ -141,6 +141,7 @@
     }
     query = new Query(searchQuery, {
       ignoreDiacritics: plugin.settings.ignoreDiacritics,
+      ignoreArabicDiacritics: plugin.settings.ignoreArabicDiacritics,
     })
     cancelableQuery = cancelable(
       new Promise(resolve => {
