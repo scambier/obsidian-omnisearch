@@ -168,7 +168,7 @@ export class CacheManager {
       aiImageAnalyzer?.canBeAnalyzed(file)))
     ) {
       if (this.plugin.settings.imagesIndexing && extractor?.canFileBeExtracted(path)){
-        content = content + await extractor.extractText(file)
+        content = await extractor.extractText(file)
       }
 
       if (this.plugin.settings.aiImageIndexing && aiImageAnalyzer?.canBeAnalyzed(file)) {
