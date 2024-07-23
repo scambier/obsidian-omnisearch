@@ -108,6 +108,7 @@ export class CacheManager {
     let content: string | null = null
 
     const extractor = this.plugin.getTextExtractor()
+    const aiImageAnalyzer = this.plugin.getAIImageAnalyzer()
 
     // ** Plain text **
     // Just read the file content
@@ -161,10 +162,18 @@ export class CacheManager {
     // ** Image **
     else if (
       isFileImage(path) &&
-      this.plugin.settings.imagesIndexing &&
-      extractor?.canFileBeExtracted(path)
+      ((this.plugin.settings.imagesIndexing &&
+      extractor?.canFileBeExtracted(path)) ||
+      (this.plugin.settings.aiImageIndexing &&
+      aiImageAnalyzer?.canBeAnalyzed(file)))
     ) {
-      content = await extractor.extractText(file)
+      if (this.plugin.settings.imagesIndexing && extractor?.canFileBeExtracted(path)){
+        content = await extractor.extractText(file)
+      }
+
+      if (this.plugin.settings.aiImageIndexing && aiImageAnalyzer?.canBeAnalyzed(file)) {
+        content = await aiImageAnalyzer.analyzeImage(file) + (content ?? '')
+      }
     }
     // ** PDF **
     else if (
