@@ -19,6 +19,7 @@ import {
   indexingStep,
   IndexingStepType,
   type TextExtractorApi,
+  type AIImageAnalyzerAPI,
 } from './globals'
 import { notifyOnIndexed, registerAPI } from './tools/api'
 import { Database } from './database'
@@ -206,6 +207,14 @@ export default class OmnisearchPlugin extends Plugin {
    */
   public getTextExtractor(): TextExtractorApi | undefined {
     return (this.app as any).plugins?.plugins?.['text-extractor']?.api
+  }
+
+  /**
+   * Plugin dependency - Ai Image Analyzer
+   * @returns
+   */
+  public getAIImageAnalyzer(): AIImageAnalyzerAPI | undefined {
+    return (this.app as any).plugins?.plugins?.['ai-image-analyzer']?.api
   }
 
   private async populateIndex(): Promise<void> {

@@ -52,7 +52,7 @@ You can check the [CHANGELOG](./CHANGELOG.md) for more information on the differ
 - Supports Vim navigation keys
 
 **Note:** support of Chinese depends
-on [this additional plugin](https://github.com/aidenlx/cm-chs-patch). Please read its documentation for more
+on [this additional plugin](https://github.com/aidenlx/cm-chs-patch) (also you may need to clear search cache data to apply new Chinese index). Please read its documentation for more
 information.
 
 ## Projects that use Omnisearch

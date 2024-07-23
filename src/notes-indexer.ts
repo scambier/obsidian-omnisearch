@@ -44,14 +44,17 @@ export class NotesIndexer {
   public isContentIndexable(path: string): boolean {
     const settings = this.plugin.settings
     const hasTextExtractor = !!this.plugin.getTextExtractor()
+    const hasAIImageAnalyzer = !!this.plugin.getAIImageAnalyzer()
     const canIndexPDF = hasTextExtractor && settings.PDFIndexing
     const canIndexImages = hasTextExtractor && settings.imagesIndexing
+    const canIndexImagesAI = hasAIImageAnalyzer && settings.aiImageIndexing
     return (
       this.isFilePlaintext(path) ||
       isFileCanvas(path) ||
       isFileFromDataloom(path) ||
       (canIndexPDF && isFilePDF(path)) ||
-      (canIndexImages && isFileImage(path))
+      (canIndexImages && isFileImage(path)) ||
+      (canIndexImagesAI && isFileImage(path))
     )
   }
 

@@ -45,6 +45,8 @@ export interface OmnisearchSettings extends WeightingSettings {
   imagesIndexing: boolean
   /** Enable Office documents indexing */
   officeIndexing: boolean
+  /** Enable image ai indexing */
+  aiImageIndexing: boolean
 
   /** Enable indexing of unknown files */
   unsupportedFilesIndexing: 'yes' | 'no' | 'default'
@@ -106,6 +108,7 @@ export class SettingsTab extends PluginSettingTab {
       await database.clearCache()
     }, 1000)
 
+    const aiImageAnalyzer = this.plugin.getAIImageAnalyzer()
     containerEl.empty()
 
     if (this.app.loadLocalStorage(K_DISABLE_OMNISEARCH) == '1') {
@@ -124,6 +127,24 @@ export class SettingsTab extends PluginSettingTab {
     `
 
     //#region Indexing
+
+    const indexingDesc = new DocumentFragment()
+    indexingDesc.createSpan({}, span => {
+      span.innerHTML = `⚠️ <span style="color: var(--text-accent)">Changing indexing settings will clear the cache, and requires a restart of Obsidian.</span><br/><br/>`
+      if (textExtractor) {
+        span.innerHTML += `
+        👍 You have installed <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a>, Omnisearch can use it to index PDFs and images contents.
+            <br />Text extraction only works on desktop, but the cache can be synchronized with your mobile device.`
+      } else {
+        span.innerHTML += `⚠️ Omnisearch requires <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a> to index PDFs and images.`
+      }
+
+      if (aiImageAnalyzer) {
+        span.innerHTML += `<br/>👍 You have installed <a href="https://github.com/Swaggeroo/obsidian-ai-image-analyzer">AI Image Analyzer</a>, Omnisearch can use it to index images contents with ai.`
+      }else {
+        span.innerHTML += `<br/>⚠️ Omnisearch requires <a href="https://github.com/Swaggeroo/obsidian-ai-image-analyzer">AI Image Analyzer</a> to index images with ai.`
+      }
+    })
 
     new Setting(containerEl)
       .setName('Indexing')
@@ -190,6 +211,23 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
       .setDisabled(!textExtractor)
+
+    // AI Images Indexing
+    const aiIndexImagesDesc = new DocumentFragment()
+    aiIndexImagesDesc.createSpan({}, span => {
+      span.innerHTML = `Omnisearch will use AI Image Analyzer to index the content of your images with ai.`
+    })
+    new Setting(containerEl)
+      .setName(`Images AI indexing ${aiImageAnalyzer ? '' : '⚠️ Disabled'}`)
+      .setDesc(aiIndexImagesDesc)
+      .addToggle(toggle =>
+        toggle.setValue(settings.aiImageIndexing).onChange(async v => {
+          await database.clearCache()
+          settings.aiImageIndexing = v
+          await saveSettings(this.plugin)
+        })
+      )
+      .setDisabled(!aiImageAnalyzer)
 
     // Index filenames of unsupported files
     new Setting(containerEl)
@@ -758,6 +796,7 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
     PDFIndexing: false,
     officeIndexing: false,
     imagesIndexing: false,
+    aiImageIndexing: false,
     unsupportedFilesIndexing: 'default',
     splitCamelCase: false,
     openInNewPane: false,
