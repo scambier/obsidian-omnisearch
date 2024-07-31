@@ -6,7 +6,10 @@ describe('The Query class', () => {
 
   it('should correctly parse string queries', () => {
     // Act
-    const query = new Query(stringQuery, { ignoreDiacritics: true })
+    const query = new Query(stringQuery, {
+      ignoreDiacritics: true,
+      ignoreArabicDiacritics: true,
+    })
 
     // Assert
     const segments = query.query.text
@@ -25,7 +28,10 @@ describe('The Query class', () => {
 
   it('should not exclude words when there is no space before', () => {
     // Act
-    const query = new Query('foo bar-baz', { ignoreDiacritics: true })
+    const query = new Query('foo bar-baz', {
+      ignoreDiacritics: true,
+      ignoreArabicDiacritics: true,
+    })
 
     // Assert
     expect(query.query.exclude.text).toHaveLength(0)
@@ -34,7 +40,10 @@ describe('The Query class', () => {
   describe('.getExactTerms()', () => {
     it('should an array of strings containg "exact" values', () => {
       // Act
-      const query = new Query(stringQuery, { ignoreDiacritics: true })
+      const query = new Query(stringQuery, {
+        ignoreDiacritics: true,
+        ignoreArabicDiacritics: true,
+      })
 
       // Assert
       expect(query.getExactTerms()).toEqual(['lorem ipsum', 'sit amet'])

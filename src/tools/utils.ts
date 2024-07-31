@@ -109,15 +109,30 @@ export function getTagsFromMetadata(metadata: CachedMetadata | null): string[] {
 /**
  * https://stackoverflow.com/a/37511463
  */
-export function removeDiacritics(str: string): string {
-  // Japanese diacritics that should be distinguished
-  const excludeDiacritics: string[] = ['\\u30FC', '\\u309A', '\\u3099']
-  const regexpExclude: string = excludeDiacritics.join('|')
-  const regexp: RegExp = new RegExp(`(?!${regexpExclude})\\p{Diacritic}`, 'gu')
-
+export function removeDiacritics(str: string, arabic = false): string {
   if (str === null || str === undefined) {
     return ''
   }
+
+  // Japanese diacritics that should be distinguished
+  const japaneseDiacritics: string[] = ['\\u30FC', '\\u309A', '\\u3099']
+  const regexpExclude: string = japaneseDiacritics.join('|')
+  const regexp: RegExp = new RegExp(`(?!${regexpExclude})\\p{Diacritic}`, 'gu')
+
+  if (arabic) {
+    // Arabic diacritics
+    // https://stackoverflow.com/a/40959537
+    str = str
+      .replace(/([^\u0621-\u063A\u0641-\u064A\u0660-\u0669a-zA-Z 0-9])/g, '')
+      .replace(/(آ|إ|أ)/g, 'ا')
+      .replace(/(ة)/g, 'ه')
+      .replace(/(ئ|ؤ)/g, 'ء')
+      .replace(/(ى)/g, 'ي')
+    for (let i = 0; i < 10; i++) {
+      str.replace(String.fromCharCode(0x660 + i), String.fromCharCode(48 + i))
+    }
+  }
+
   // Keep backticks for code blocks, because otherwise they are removed by the .normalize() function
   // https://stackoverflow.com/a/36100275
   str = str.replaceAll('`', '[__omnisearch__backtick__]')
@@ -152,7 +167,11 @@ export function isFileCanvas(path: string): boolean {
   return path.endsWith('.canvas')
 }
 
-export function isFileFromDataloomPlugin(path: string): boolean {
+export function isFileExcalidraw(path: string): boolean {
+  return path.endsWith('.excalidraw')
+}
+
+export function isFileFromDataloom(path: string): boolean {
   return path.endsWith('.loom')
 }
 
@@ -219,7 +238,7 @@ export function warnDebug(...args: any[]): void {
   printDebug(console.warn, ...args)
 }
 
-let printDebugEnabled= false
+let printDebugEnabled = false
 export function enablePrintDebug(enable: boolean): void {
   printDebugEnabled = enable
 }

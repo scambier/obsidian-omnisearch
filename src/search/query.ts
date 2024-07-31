@@ -13,9 +13,9 @@ export class Query {
   }
   #inQuotes: string[]
 
-  constructor(text = '', options: { ignoreDiacritics: boolean }) {
+  constructor(text = '', options: { ignoreDiacritics: boolean, ignoreArabicDiacritics: boolean}) {
     if (options.ignoreDiacritics) {
-      text = removeDiacritics(text)
+      text = removeDiacritics(text, options.ignoreArabicDiacritics)
     }
     const parsed = parse(text.toLowerCase(), {
       tokenize: true,

@@ -154,8 +154,9 @@ export class SearchEngine {
         term.length <= 3 ? 0 : term.length <= 5 ? fuzziness / 2 : fuzziness,
       boost: {
         basename: settings.weightBasename,
-        directory: settings.weightDirectory,
         aliases: settings.weightBasename,
+        displayTitle: settings.weightBasename,
+        directory: settings.weightDirectory,
         headings1: settings.weightH1,
         headings2: settings.weightH2,
         headings3: settings.weightH3,
@@ -304,7 +305,12 @@ export class SearchEngine {
         const title = document?.path.toLowerCase() ?? ''
         const content = (document?.cleanedContent ?? '').toLowerCase()
         return exactTerms.every(
-          q => content.includes(q) || removeDiacritics(title).includes(q)
+          q =>
+            content.includes(q) ||
+            removeDiacritics(
+              title,
+              this.plugin.settings.ignoreArabicDiacritics
+            ).includes(q)
         )
       })
     }
@@ -434,7 +440,7 @@ export class SearchEngine {
       },
       processTerm: (term: string) =>
         (this.plugin.settings.ignoreDiacritics
-          ? removeDiacritics(term)
+          ? removeDiacritics(term, this.plugin.settings.ignoreArabicDiacritics)
           : term
         ).toLowerCase(),
       idField: 'path',

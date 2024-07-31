@@ -46,6 +46,7 @@ export type DocumentRef = { path: string; mtime: number }
 export type IndexedDocument = {
   path: string
   basename: string
+  displayTitle: string
   mtime: number
 
   content: string
@@ -76,6 +77,7 @@ export type ResultNote = {
   score: number
   path: string
   basename: string
+  displayTitle: string
   content: string
   foundWords: string[]
   matches: SearchMatch[]

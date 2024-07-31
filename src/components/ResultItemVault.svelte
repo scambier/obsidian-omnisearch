@@ -3,7 +3,7 @@
   import type { ResultNote } from '../globals'
   import {
     getExtension,
-    isFileCanvas,
+    isFileCanvas, isFileExcalidraw,
     isFileImage,
     isFilePDF,
     pathWithoutFilename,
@@ -36,7 +36,7 @@
   $: cleanedContent = plugin.textProcessor.makeExcerpt(note.content, note.matches[0]?.offset ?? -1)
   $: glyph = false //cacheManager.getLiveDocument(note.path)?.doesNotExist
   $: {
-    title = note.basename
+    title = note.displayTitle || note.basename
     notePath = pathWithoutFilename(note.path)
 
     // Icons
@@ -44,11 +44,18 @@
       setIcon(elFolderPathIcon, 'folder-open')
     }
     if (elFilePathIcon) {
-      if (isFileImage(note.path)) setIcon(elFilePathIcon, 'image')
-      else if (isFilePDF(note.path)) setIcon(elFilePathIcon, 'file-text')
-      else if (isFileCanvas(note.path))
+      if (isFileImage(note.path)) {
+        setIcon(elFilePathIcon, 'image')
+      }
+      else if (isFilePDF(note.path)) {
+        setIcon(elFilePathIcon, 'file-text')
+      }
+      else if (isFileCanvas(note.path) || isFileExcalidraw(note.path)) {
         setIcon(elFilePathIcon, 'layout-dashboard')
-      else setIcon(elFilePathIcon, 'file')
+      }
+      else {
+        setIcon(elFilePathIcon, 'file')
+      }
     }
   }
 </script>

@@ -115,7 +115,7 @@ export class TextProcessor {
     const originalText = text
     // text = text.toLowerCase().replace(new RegExp(SEPARATORS, 'gu'), ' ')
     if (this.plugin.settings.ignoreDiacritics) {
-      text = removeDiacritics(text)
+      text = removeDiacritics(text, this.plugin.settings.ignoreArabicDiacritics)
     }
     const startTime = new Date().getTime()
     let match: RegExpExecArray | null = null
