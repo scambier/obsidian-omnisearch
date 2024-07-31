@@ -128,24 +128,6 @@ export class SettingsTab extends PluginSettingTab {
 
     //#region Indexing
 
-    const indexingDesc = new DocumentFragment()
-    indexingDesc.createSpan({}, span => {
-      span.innerHTML = `⚠️ <span style="color: var(--text-accent)">Changing indexing settings will clear the cache, and requires a restart of Obsidian.</span><br/><br/>`
-      if (textExtractor) {
-        span.innerHTML += `
-        👍 You have installed <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a>, Omnisearch can use it to index PDFs and images contents.
-            <br />Text extraction only works on desktop, but the cache can be synchronized with your mobile device.`
-      } else {
-        span.innerHTML += `⚠️ Omnisearch requires <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a> to index PDFs and images.`
-      }
-
-      if (aiImageAnalyzer) {
-        span.innerHTML += `<br/>👍 You have installed <a href="https://github.com/Swaggeroo/obsidian-ai-image-analyzer">AI Image Analyzer</a>, Omnisearch can use it to index images contents with ai.`
-      }else {
-        span.innerHTML += `<br/>⚠️ Omnisearch requires <a href="https://github.com/Swaggeroo/obsidian-ai-image-analyzer">AI Image Analyzer</a> to index images with ai.`
-      }
-    })
-
     new Setting(containerEl)
       .setName('Indexing')
       .setHeading()
@@ -156,6 +138,11 @@ export class SettingsTab extends PluginSettingTab {
             ? `👍 You have installed <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a>, Omnisearch can use it to index PDFs and images contents.
             <br />Text extraction only works on desktop, but the cache can be synchronized with your mobile device.`
             : `⚠️ Omnisearch requires <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a> to index PDFs and images.`
+        }
+        ${
+          aiImageAnalyzer
+            ? `<br/>👍 You have installed <a href="https://github.com/Swaggeroo/obsidian-ai-image-analyzer">AI Image Analyzer</a>, Omnisearch can use it to index images contents with ai.`
+            : `<br/>⚠️ Omnisearch requires <a href="https://github.com/Swaggeroo/obsidian-ai-image-analyzer">AI Image Analyzer</a> to index images with ai.`
         }`)
       )
 
