@@ -15,36 +15,41 @@ export class Tokenizer {
    * @returns
    */
   public tokenizeForIndexing(text: string): string[] {
-    const words = this.tokenizeWords(text)
-    let urls: string[] = []
-    if (this.plugin.settings.tokenizeUrls) {
-      try {
-        urls = markdownLinkExtractor(text)
-      } catch (e) {
-        logDebug('Error extracting urls', e)
+    try {
+      const words = this.tokenizeWords(text)
+      let urls: string[] = []
+      if (this.plugin.settings.tokenizeUrls) {
+        try {
+          urls = markdownLinkExtractor(text)
+        } catch (e) {
+          logDebug('Error extracting urls', e)
+        }
       }
+
+      let tokens = this.tokenizeTokens(text, { skipChs: true })
+
+      // Split hyphenated tokens
+      tokens = [...tokens, ...tokens.flatMap(splitHyphens)]
+
+      // Split camelCase tokens into "camel" and "case
+      tokens = [...tokens, ...tokens.flatMap(splitCamelCase)]
+
+      // Add whole words (aka "not tokens")
+      tokens = [...tokens, ...words]
+
+      // Add urls
+      if (urls.length) {
+        tokens = [...tokens, ...urls]
+      }
+
+      // Remove duplicates
+      tokens = [...new Set(tokens)]
+
+      return tokens
+    } catch (e) {
+      console.error('Error tokenizing text, skipping document', e)
+      return []
     }
-
-    let tokens = this.tokenizeTokens(text, { skipChs: true })
-
-    // Split hyphenated tokens
-    tokens = [...tokens, ...tokens.flatMap(splitHyphens)]
-
-    // Split camelCase tokens into "camel" and "case
-    tokens = [...tokens, ...tokens.flatMap(splitCamelCase)]
-
-    // Add whole words (aka "not tokens")
-    tokens = [...tokens, ...words]
-
-    // Add urls
-    if (urls.length) {
-      tokens = [...tokens, ...urls]
-    }
-
-    // Remove duplicates
-    tokens = [...new Set(tokens)]
-
-    return tokens
   }
 
   /**
