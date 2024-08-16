@@ -169,12 +169,14 @@
             ></span>
           {/if}
         {/if}
-        <span>
-          {@html plugin.textProcessor.highlightText(title, matchesTitle)}
-        </span>
+        {#if note.displayTitle}
+        <span>{@html plugin.textProcessor.highlightText(title, matchesTitle)}</span>
+        {:else}
+        <span>{@html plugin.textProcessor.highlightText(title, matchesTitle)}</span>
         <span class="omnisearch-result__extension">
           .{getExtension(note.path)}
         </span>
+        {/if}
 
         <!-- Counter -->
         {#if note.matches.length > 0}

@@ -242,7 +242,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Set frontmatter property key as title')
       .setDesc(
-        htmlDescription(`If you have a custom property in your notes that you want to use as the title in search results.<br>
+        htmlDescription(`If you have a custom property in your notes that you want to use as the title in search results. Also you can use #heading to use the first Heading from a file.<br>
           Leave empty to disable.`)
       )
       .addText(component => {
