@@ -240,9 +240,10 @@
     // Generate link
     let link: string
     if (file && active) {
-      link = plugin.app.fileManager.generateMarkdownLink(file, active.path)
+      link = plugin.app.fileManager.generateMarkdownLink(file, active.path, "", selectedNote.displayTitle)
     } else {
-      link = `[[${selectedNote.basename}.${getExtension(selectedNote.path)}]]`
+      let maybeDisplayTitle = selectedNote.displayTitle === "" ? "" : `|${selectedNote.displayTitle}`
+      link = `[[${selectedNote.basename}.${getExtension(selectedNote.path)}${maybeDisplayTitle}]]`
     }
 
     // Inject link
