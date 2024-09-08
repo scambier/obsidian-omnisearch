@@ -72,4 +72,4 @@ Omnisearch is licensed under [GPL-3](https://tldrlegal.com/license/gnu-general-p
 To all people who donate through [Ko-Fi](https://ko-fi.com/scambier)
 or [Github Sponsors](https://github.com/sponsors/scambier) ❤
 
-![JetBrains Logo (Main) logo](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)
+![JetBrains logo](https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg)
