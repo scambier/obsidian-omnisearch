@@ -34,8 +34,8 @@ You can check the [CHANGELOG](./CHANGELOG.md) for more information on the differ
 
 > Omnisearch's first goal is to _locate_ files instantly. You can see it as a _Quick Switcher_ on steroids.
 
-- Find your **📝notes, 📄PDFs, and 🖼images** faster than ever
-  - Images and PDF indexing is available
+- Find your **📝notes, 📄Office documents, 📄PDFs, and 🖼images** faster than ever
+  - Images, documents, and PDF indexing is available
     through [Text Extractor](https://github.com/scambier/obsidian-text-extractor)
 - Automatic document scoring using
   the [BM25 algorithm](https://github.com/lucaong/minisearch/issues/129#issuecomment-1046257399)
