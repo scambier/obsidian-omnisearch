@@ -13,6 +13,7 @@ export class SearchEngine {
   private minisearch: MiniSearch
   /** Map<path, mtime> */
   private indexedDocuments: Map<string, number> = new Map()
+
   // private previousResults: SearchResult[] = []
   // private previousQuery: Query | null = null
 
@@ -39,10 +40,11 @@ export class SearchEngine {
   }
 
   /**
-   * Returns the list of documents that need to be reindexed
+   * Returns the list of documents that need to be reindexed or removed,
+   * either because they are new, have been modified, or have been deleted
    * @param docs
    */
-  getDiff(docs: DocumentRef[]): {
+  getDocumentsToReindex(docs: DocumentRef[]): {
     toAdd: DocumentRef[]
     toRemove: DocumentRef[]
   } {
@@ -264,9 +266,9 @@ export class SearchEngine {
         }
       }
 
-      // Boost custom properties
       const metadata = this.plugin.app.metadataCache.getCache(path)
       if (metadata) {
+        // Boost custom properties
         for (const { name, weight } of settings.weightCustomProperties) {
           const values = metadata?.frontmatter?.[name]
           if (values && result.terms.some(t => values.includes(t))) {

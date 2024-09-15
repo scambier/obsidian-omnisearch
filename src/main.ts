@@ -240,7 +240,7 @@ export default class OmnisearchPlugin extends Plugin {
       }
     }
 
-    const diff = searchEngine.getDiff(
+    const diff = searchEngine.getDocumentsToReindex(
       files.map(f => ({ path: f.path, mtime: f.stat.mtime }))
     )
 
