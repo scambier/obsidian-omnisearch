@@ -1,6 +1,6 @@
 import type { QueryCombination } from 'minisearch'
-import { BRACKETS_AND_SPACE, chsRegex, SPACE_OR_PUNCTUATION } from 'src/globals'
-import { logDebug, splitCamelCase, splitHyphens } from 'src/tools/utils'
+import { BRACKETS_AND_SPACE, chsRegex, SPACE_OR_PUNCTUATION } from '../globals'
+import { logDebug, splitCamelCase, splitHyphens } from '../tools/utils'
 import type OmnisearchPlugin from '../main'
 
 const markdownLinkExtractor = require('markdown-link-extractor')

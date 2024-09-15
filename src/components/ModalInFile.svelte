@@ -6,18 +6,18 @@
     excerptAfter,
     type ResultNote,
     type SearchMatch,
-  } from 'src/globals'
-  import { getCtrlKeyLabel, loopIndex } from 'src/tools/utils'
+  } from '../globals'
+  import { getCtrlKeyLabel, loopIndex } from '../tools/utils'
   import { onDestroy, onMount, tick } from 'svelte'
   import { MarkdownView, Platform } from 'obsidian'
   import ModalContainer from './ModalContainer.svelte'
   import {
     OmnisearchInFileModal,
     OmnisearchVaultModal,
-  } from 'src/components/modals'
+  } from '../components/modals'
   import ResultItemInFile from './ResultItemInFile.svelte'
-  import { Query } from 'src/search/query'
-  import { openNote } from 'src/tools/notes'
+  import { Query } from '../search/query'
+  import { openNote } from '../tools/notes'
   import type OmnisearchPlugin from '../main'
 
   export let plugin: OmnisearchPlugin
@@ -52,6 +52,7 @@
     if (searchQuery) {
       query = new Query(searchQuery, {
         ignoreDiacritics: plugin.settings.ignoreDiacritics,
+        ignoreArabicDiacritics: plugin.settings.ignoreArabicDiacritics,
       })
       note =
         (

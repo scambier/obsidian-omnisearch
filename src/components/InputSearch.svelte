@@ -1,9 +1,9 @@
 <script lang="ts">
   import { debounce, Platform } from 'obsidian'
-  import { toggleInputComposition } from 'src/globals'
+  import { toggleInputComposition } from '../globals'
   import { createEventDispatcher, tick } from 'svelte'
   import type OmnisearchPlugin from '../main'
-  import { wait } from "../tools/utils";
+  import { wait } from '../tools/utils'
 
   export let initialValue = ''
   export let placeholder = ''
@@ -60,7 +60,7 @@
       placeholder="{placeholder}"
       spellcheck="false"
       type="text"
-      use:selectInput/>
+      use:selectInput />
   </div>
-  <slot/>
+  <slot />
 </div>
