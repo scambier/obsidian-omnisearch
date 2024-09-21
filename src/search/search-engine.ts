@@ -1,4 +1,4 @@
-import MiniSearch, { type Options, type SearchResult } from 'minisearch'
+import MiniSearch, { type AsPlainObject, type Options, type SearchResult } from 'minisearch'
 import type { DocumentRef, IndexedDocument, ResultNote } from '../globals'
 
 import { chunkArray, logDebug, removeDiacritics } from '../tools/utils'
@@ -26,6 +26,7 @@ export class SearchEngine {
    * Return true if the cache is valid
    */
   async loadCache(): Promise<boolean> {
+    await this.plugin.embedsRepository.loadFromCache()
     const cache = await this.plugin.database.getMinisearchCache()
     if (cache) {
       this.minisearch = await MiniSearch.loadJSAsync(
@@ -374,6 +375,26 @@ export class SearchEngine {
       )
     )
 
+    // Inject embeds for images, documents, and PDFs
+    for (let i = 0; i < documents.length; i++) {
+      const doc = documents[i]
+      const embeds = this.plugin.embedsRepository.getEmbeds(doc.path)
+      console.log(embeds)
+      for (const embed of embeds) {
+        // Inject the embed in the content after index i
+        documents[++i] = await this.plugin.cacheManager.getDocument(embed)
+        results[i] = {
+          id: documents[i].path,
+          score: 0,
+          terms: [],
+          queryTerms: [],
+          match: {},
+          isEmbed: true,
+        }
+        // console.log(documents[i])
+      }
+    }
+
     // Map the raw results to get usable suggestions
     const resultNotes = results.map(result => {
       logDebug('Locating matches for', result.id)
@@ -414,6 +435,7 @@ export class SearchEngine {
         score: result.score,
         foundWords,
         matches,
+        isEmbed: result.isEmbed,
         ...note,
       }
       return resultNote
@@ -421,11 +443,18 @@ export class SearchEngine {
     return resultNotes
   }
 
-  public async writeToCache(): Promise<void> {
-    await this.plugin.database.writeMinisearchCache(
-      this.minisearch,
-      this.indexedDocuments
-    )
+  /**
+   * For cache saving
+   */
+  public getSerializedMiniSearch(): AsPlainObject {
+    return this.minisearch.toJSON()
+  }
+
+  /**
+   * For cache saving
+   */
+  public getSerializedIndexedDocuments(): {path:string, mtime:number}[] {
+    return Array.from(this.indexedDocuments).map(([path, mtime]) => ({path, mtime}))
   }
 
   private getOptions(): Options<IndexedDocument> {

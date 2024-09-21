@@ -1,4 +1,4 @@
-import { TAbstractFile, TFile } from 'obsidian'
+import { TFile } from 'obsidian'
 import type { IndexedDocument } from './globals'
 import {
   extractHeadingsFromCache,
@@ -22,15 +22,11 @@ export class CacheManager {
    * Show an empty input field next time the user opens Omnisearch modal
    */
   private nextQueryIsEmpty = false
-
   /**
    * The "live cache", containing all indexed vault files
    * in the form of IndexedDocuments
    */
   private documents: Map<string, IndexedDocument> = new Map()
-
-  /** Map<image or pdf, notes where embedded> */
-  private embeds: Map<string, string[]> = new Map()
 
   constructor(private plugin: OmnisearchPlugin) {}
 
@@ -48,14 +44,7 @@ export class CacheManager {
         return
       }
       this.documents.set(path, doc)
-
-      const embeds = this.plugin.app.metadataCache.getCache(path)?.embeds ?? []
-      for (const embed of embeds) {
-        if (!this.embeds.has(embed.link)) {
-          this.embeds.set(embed.link, [])
-        }
-        this.embeds.get(embed.link)!.push(path)
-      }
+      this.plugin.embedsRepository.addEmbeds(path)
     } catch (e) {
       console.warn(`Omnisearch: Error while adding "${path}" to live cache`, e)
       // Shouldn't be needed, but...
@@ -65,10 +54,6 @@ export class CacheManager {
 
   public removeFromLiveCache(path: string): void {
     this.documents.delete(path)
-  }
-
-  public getEmbeds(path: string): string[] {
-    return this.embeds.get(path) ?? []
   }
 
   public async getDocument(path: string): Promise<IndexedDocument> {
