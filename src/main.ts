@@ -28,7 +28,7 @@ import { CacheManager } from './cache-manager'
 import { logDebug } from './tools/utils'
 import { NotesIndexer } from './notes-indexer'
 import { TextProcessor } from './tools/text-processing'
-import { EmbedsRepository } from "./repositories/embeds-repository";
+import { EmbedsRepository } from './repositories/embeds-repository'
 
 export default class OmnisearchPlugin extends Plugin {
   // FIXME: fix the type

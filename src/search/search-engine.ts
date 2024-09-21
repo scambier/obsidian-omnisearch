@@ -1,4 +1,8 @@
-import MiniSearch, { type AsPlainObject, type Options, type SearchResult } from 'minisearch'
+import MiniSearch, {
+  type AsPlainObject,
+  type Options,
+  type SearchResult,
+} from 'minisearch'
 import type { DocumentRef, IndexedDocument, ResultNote } from '../globals'
 
 import { chunkArray, logDebug, removeDiacritics } from '../tools/utils'
@@ -378,8 +382,10 @@ export class SearchEngine {
     // Inject embeds for images, documents, and PDFs
     for (let i = 0; i < documents.length; i++) {
       const doc = documents[i]
-      const embeds = this.plugin.embedsRepository.getEmbeds(doc.path)
-      console.log(embeds)
+      const embeds = this.plugin.embedsRepository
+        .getEmbeds(doc.path)
+        // Limit to 5 embeds
+        .slice(0, 5)
       for (const embed of embeds) {
         // Inject the embed in the content after index i
         documents[++i] = await this.plugin.cacheManager.getDocument(embed)
@@ -453,8 +459,11 @@ export class SearchEngine {
   /**
    * For cache saving
    */
-  public getSerializedIndexedDocuments(): {path:string, mtime:number}[] {
-    return Array.from(this.indexedDocuments).map(([path, mtime]) => ({path, mtime}))
+  public getSerializedIndexedDocuments(): { path: string; mtime: number }[] {
+    return Array.from(this.indexedDocuments).map(([path, mtime]) => ({
+      path,
+      mtime,
+    }))
   }
 
   private getOptions(): Options<IndexedDocument> {

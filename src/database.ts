@@ -84,7 +84,8 @@ export class Database extends Dexie {
   }
 
   public async clearCache() {
-    new Notice('Omnisearch - Cache cleared. Please restart Obsidian.')
     await this.minisearch.clear()
+    await this.embeds.clear()
+    new Notice('Omnisearch - Cache cleared. Please restart Obsidian.')
   }
 }
