@@ -71,7 +71,7 @@ export class EmbedsRepository {
       )
       .filter(o => !!o)
     for (const embed of embeds) {
-      this.addEmbed(embed.path, notePath)
+      this.addEmbed(embed!.path, notePath)
     }
   }
 }
