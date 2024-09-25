@@ -22,7 +22,6 @@ export class CacheManager {
    * Show an empty input field next time the user opens Omnisearch modal
    */
   private nextQueryIsEmpty = false
-
   /**
    * The "live cache", containing all indexed vault files
    * in the form of IndexedDocuments
@@ -45,6 +44,7 @@ export class CacheManager {
         return
       }
       this.documents.set(path, doc)
+      this.plugin.embedsRepository.refreshEmbeds(path)
     } catch (e) {
       console.warn(`Omnisearch: Error while adding "${path}" to live cache`, e)
       // Shouldn't be needed, but...
@@ -163,16 +163,22 @@ export class CacheManager {
     else if (
       isFileImage(path) &&
       ((this.plugin.settings.imagesIndexing &&
-      extractor?.canFileBeExtracted(path)) ||
-      (this.plugin.settings.aiImageIndexing &&
-      aiImageAnalyzer?.canBeAnalyzed(file)))
+        extractor?.canFileBeExtracted(path)) ||
+        (this.plugin.settings.aiImageIndexing &&
+          aiImageAnalyzer?.canBeAnalyzed(file)))
     ) {
-      if (this.plugin.settings.imagesIndexing && extractor?.canFileBeExtracted(path)){
+      if (
+        this.plugin.settings.imagesIndexing &&
+        extractor?.canFileBeExtracted(path)
+      ) {
         content = await extractor.extractText(file)
       }
 
-      if (this.plugin.settings.aiImageIndexing && aiImageAnalyzer?.canBeAnalyzed(file)) {
-        content = await aiImageAnalyzer.analyzeImage(file) + (content ?? '')
+      if (
+        this.plugin.settings.aiImageIndexing &&
+        aiImageAnalyzer?.canBeAnalyzed(file)
+      ) {
+        content = (await aiImageAnalyzer.analyzeImage(file)) + (content ?? '')
       }
     }
     // ** PDF **
@@ -230,7 +236,8 @@ export class CacheManager {
         }
       }
     }
-    const displayTitle = metadata?.frontmatter?.[this.plugin.settings.displayTitle] ?? ''
+    const displayTitle =
+      metadata?.frontmatter?.[this.plugin.settings.displayTitle] ?? ''
     const tags = getTagsFromMetadata(metadata)
     return {
       basename: file.basename,
