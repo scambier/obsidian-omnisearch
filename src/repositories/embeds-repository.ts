@@ -8,7 +8,56 @@ export class EmbedsRepository {
 
   constructor(private plugin: OmnisearchPlugin) {}
 
-  public addEmbeds(notePath: string): void {
+  public addEmbed(embed: string, notePath: string): void {
+    if (!this.embeds.has(embed)) {
+      this.embeds.set(embed, new Set())
+    }
+    this.embeds.get(embed)!.add(notePath)
+  }
+
+  public refreshEmbeds(notePath: string): void {
+    this.embeds.forEach((value, key) => {
+      if (value.has(notePath)) {
+        value.delete(notePath)
+      }
+    })
+    this.addEmbeds(notePath)
+  }
+
+  public getEmbeds(pathEmbedded: string): string[] {
+    const embeds = this.embeds.has(pathEmbedded)
+      ? [...this.embeds.get(pathEmbedded)!]
+      : []
+    return embeds
+  }
+
+  public async writeToCache(): Promise<void> {
+    logDebug('Writing embeds to cache')
+    const database = this.plugin.database
+    const data: { embedded: string; references: string[] }[] = []
+    for (const [path, embedsList] of this.embeds) {
+      data.push({ embedded: path, references: [...embedsList] })
+    }
+    await database.embeds.clear()
+    await database.embeds.bulkAdd(data)
+  }
+
+  public async loadFromCache(): Promise<void> {
+    const database = this.plugin.database
+    if (!database.embeds) {
+      logDebug('No embeds in cache')
+      return
+    }
+    logDebug('Loading embeds from cache')
+    const embedsArr = await database.embeds.toArray()
+    for (const { embedded: path, references: embeds } of embedsArr) {
+      for (const embed of embeds) {
+        this.addEmbed(path, embed)
+      }
+    }
+  }
+
+  private addEmbeds(notePath: string): void {
     // Get all embeds from the note
     // and map them to TFiles to get the real path
     const embeds = (
@@ -23,50 +72,6 @@ export class EmbedsRepository {
       .filter(o => !!o)
     for (const embed of embeds) {
       this.addEmbed(embed.path, notePath)
-    }
-  }
-
-  public addEmbed(embed: string, notePath: string): void {
-    if (!this.embeds.has(embed)) {
-      this.embeds.set(embed, new Set())
-    }
-    this.embeds.get(embed)!.add(notePath)
-  }
-
-  public getEmbeds(pathEmbedded: string): string[] {
-    const embeds = this.embeds.has(pathEmbedded)
-      ? [...this.embeds.get(pathEmbedded)!]
-      : []
-    return embeds
-  }
-
-  public removeEmbed(embed: string): void {
-    this.embeds.delete(embed)
-  }
-
-  public async writeToCache(): Promise<void> {
-    logDebug('Writing embeds to cache')
-    const database = this.plugin.database
-    const data: { path: string; embeds: string[] }[] = []
-    for (const [path, embedsList] of this.embeds) {
-      data.push({ path, embeds: [...embedsList] })
-    }
-    await database.embeds.clear()
-    await database.embeds.bulkAdd(data)
-  }
-
-  public async loadFromCache(): Promise<void> {
-    const database = this.plugin.database
-    if (!database.embeds) {
-      logDebug('No embeds in cache')
-      return
-    }
-    logDebug('Loading embeds from cache')
-    const embedsArr = await database.embeds.toArray()
-    for (const { path, embeds } of embedsArr) {
-      for (const embed of embeds) {
-        this.addEmbed(embed, path)
-      }
     }
   }
 }

@@ -15,7 +15,7 @@ export class Database extends Dexie {
     },
     string
   >
-  embeds!: Dexie.Table<{ path: string; embeds: string[] }, string>
+  embeds!: Dexie.Table<{ embedded: string; references: string[] }, string>
 
   constructor(private plugin: OmnisearchPlugin) {
     super(Database.getDbName(plugin.app.appId))
@@ -23,7 +23,7 @@ export class Database extends Dexie {
     this.version(Database.dbVersion).stores({
       searchHistory: '++id',
       minisearch: 'date',
-      embeds: 'path',
+      embeds: 'embedded',
     })
   }
 

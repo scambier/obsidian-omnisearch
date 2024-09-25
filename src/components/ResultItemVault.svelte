@@ -77,13 +77,14 @@
   on:click
   on:mousemove
   selected="{selected}">
-  {#if note.isEmbed}
-    <div title="The document above is embedded in this note" class="omnisearch-result__embed-icon" bind:this="{elEmbedIcon}"></div>
-  {/if}
   <div>
     <div class="omnisearch-result__title-container">
       <span class="omnisearch-result__title">
-        <span bind:this="{elFilePathIcon}"></span>
+        {#if note.isEmbed}
+          <span bind:this="{elEmbedIcon}" title="The document above is embedded in this note"></span>
+        {:else}
+          <span bind:this="{elFilePathIcon}"></span>
+        {/if}
         <span>
           {@html plugin.textProcessor.highlightText(title, matchesTitle)}
         </span>
@@ -114,22 +115,25 @@
       </div>
     {/if}
 
-    <div style="display: flex; flex-direction: row;">
-      {#if $showExcerpt}
-        <div class="omnisearch-result__body">
-          {@html plugin.textProcessor.highlightText(
-            cleanedContent,
-            note.matches
-          )}
-        </div>
-      {/if}
+    <!-- Do not display the excerpt for embedding references -->
+    {#if !note.isEmbed}
+      <div style="display: flex; flex-direction: row;">
+        {#if $showExcerpt}
+          <div class="omnisearch-result__body">
+            {@html plugin.textProcessor.highlightText(
+              cleanedContent,
+              note.matches
+            )}
+          </div>
+        {/if}
 
-      <!-- Image -->
-      {#if imagePath}
-        <div class="omnisearch-result__image-container">
-          <img style="width: 100px" src="{imagePath}" alt="" />
-        </div>
-      {/if}
-    </div>
+        <!-- Image -->
+        {#if imagePath}
+          <div class="omnisearch-result__image-container">
+            <img style="width: 100px" src="{imagePath}" alt="" />
+          </div>
+        {/if}
+      </div>
+    {/if}
   </div>
 </ResultItemContainer>

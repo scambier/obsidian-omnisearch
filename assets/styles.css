@@ -60,13 +60,9 @@
 }
 
 .omnisearch-result__embed {
+  margin-left: 1em;
 }
 
-.omnisearch-result__embed-icon {
-  margin-right: 0.5em;
-  display: flex;
-  align-items: center;
-}
 
 .omnisearch-result__image-container {
   flex-basis: 20%;

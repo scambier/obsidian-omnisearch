@@ -112,6 +112,7 @@ export default class OmnisearchPlugin extends Plugin {
           if (this.notesIndexer.isFileIndexable(file.path)) {
             logDebug('Indexing new file', file.path)
             searchEngine.addFromPaths([file.path])
+            this.embedsRepository.refreshEmbeds(file.path)
           }
         })
       )
@@ -120,6 +121,7 @@ export default class OmnisearchPlugin extends Plugin {
           logDebug('Removing file', file.path)
           this.cacheManager.removeFromLiveCache(file.path)
           searchEngine.removeFromPaths([file.path])
+          this.embedsRepository.refreshEmbeds(file.path)
         })
       )
       this.registerEvent(
@@ -127,6 +129,7 @@ export default class OmnisearchPlugin extends Plugin {
           if (this.notesIndexer.isFileIndexable(file.path)) {
             this.notesIndexer.flagNoteForReindex(file)
           }
+          this.embedsRepository.refreshEmbeds(file.path)
         })
       )
       this.registerEvent(
