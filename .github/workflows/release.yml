@@ -20,7 +20,6 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 9.3.0
           run_install: true
 
       - name: Use Node.js
@@ -61,7 +60,7 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: ${{ github.ref }}
-          body: ${{ steps.git-cliff.outputs.changelog }}
+          body: ${{ steps.git-cliff.outputs.content }}
           draft: true
           prerelease: false
 

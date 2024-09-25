@@ -10,20 +10,20 @@
     type ResultNote,
     SPACE_OR_PUNCTUATION,
     Action,
-  } from 'src/globals'
-  import { createNote, openNote } from 'src/tools/notes'
+  } from '../globals'
+  import { createNote, openNote } from '../tools/notes'
   import {
     getCtrlKeyLabel,
     getExtension,
     isFilePDF,
     loopIndex,
-  } from 'src/tools/utils'
+  } from '../tools/utils'
   import {
     OmnisearchInFileModal,
     type OmnisearchVaultModal,
-  } from 'src/components/modals'
+  } from '../components/modals'
   import ResultItemVault from './ResultItemVault.svelte'
-  import { Query } from 'src/search/query'
+  import { Query } from '../search/query'
   import { cancelable, CancelablePromise } from 'cancelable-promise'
   import { debounce } from 'lodash-es'
   import type OmnisearchPlugin from '../main'

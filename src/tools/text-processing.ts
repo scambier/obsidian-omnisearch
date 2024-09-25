@@ -1,6 +1,6 @@
-import { excerptAfter, excerptBefore, type SearchMatch } from 'src/globals'
+import { excerptAfter, excerptBefore, type SearchMatch } from '../globals'
 import { removeDiacritics, warnDebug } from './utils'
-import type { Query } from 'src/search/query'
+import type { Query } from '../search/query'
 import { Notice } from 'obsidian'
 import { escapeRegExp } from 'lodash-es'
 import type OmnisearchPlugin from '../main'

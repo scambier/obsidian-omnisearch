@@ -3,7 +3,7 @@ import type { Modifier } from 'obsidian'
 import ModalVault from './ModalVault.svelte'
 import ModalInFile from './ModalInFile.svelte'
 import { Action, eventBus, EventNames, isInputComposition } from '../globals'
-import type OmnisearchPlugin from 'src/main'
+import type OmnisearchPlugin from '../main'
 
 abstract class OmnisearchModal extends Modal {
   protected constructor(plugin: OmnisearchPlugin) {

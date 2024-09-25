@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { debounce } from 'obsidian'
-  import { toggleInputComposition } from 'src/globals'
+  import { debounce, Platform } from 'obsidian'
+  import { toggleInputComposition } from '../globals'
   import { createEventDispatcher, tick } from 'svelte'
   import type OmnisearchPlugin from '../main'
+  import { wait } from '../tools/utils'
 
   export let initialValue = ''
   export let placeholder = ''
@@ -28,11 +29,13 @@
 
   function selectInput(_?: HTMLElement): void {
     tick()
-      .then(() => {
+      .then(async () => {
+        if (Platform.isMobileApp) await wait(200)
         elInput.focus()
         return tick()
       })
-      .then(() => {
+      .then(async () => {
+        if (Platform.isMobileApp) await wait(200)
         elInput.select()
       })
   }
