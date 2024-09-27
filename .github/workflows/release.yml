@@ -44,7 +44,7 @@ jobs:
         id: git-cliff
         with:
           config: cliff.toml
-          args: --verbose
+          args: -vv --latest --strip header
         env:
           GITHUB_REPO: ${{ github.repository }}
 
