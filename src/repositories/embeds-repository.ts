@@ -1,9 +1,9 @@
-import { getLinkpath } from 'obsidian'
+import { getLinkpath, Notice } from 'obsidian'
 import type OmnisearchPlugin from '../main'
 import { logDebug } from '../tools/utils'
 
 export class EmbedsRepository {
-  /** Map<image or pdf, notes where embedded> */
+  /** Map<embedded file, notes where the embed is referenced> */
   private embeds: Map<string, Set<string>> = new Map()
 
   constructor(private plugin: OmnisearchPlugin) {}
@@ -15,13 +15,36 @@ export class EmbedsRepository {
     this.embeds.get(embed)!.add(notePath)
   }
 
-  public refreshEmbeds(notePath: string): void {
-    this.embeds.forEach((value, key) => {
-      if (value.has(notePath)) {
-        value.delete(notePath)
+  public removeFile(filePath: string): void {
+    // If the file is embedded
+    this.embeds.delete(filePath)
+    // If the file is a note referencing other files
+    this.refreshEmbedsForNote(filePath)
+  }
+
+  public renameFile(oldPath: string, newPath: string): void {
+    // If the file is embedded
+    if (this.embeds.has(oldPath)) {
+      this.embeds.set(newPath, this.embeds.get(oldPath)!)
+      this.embeds.delete(oldPath)
+    }
+    // If the file is a note referencing other files
+    this.embeds.forEach((referencedBy, key) => {
+      if (referencedBy.has(oldPath)) {
+        referencedBy.delete(oldPath)
+        referencedBy.add(newPath)
       }
     })
-    this.addEmbeds(notePath)
+  }
+
+  public refreshEmbedsForNote(filePath: string): void {
+    this.embeds.forEach((referencedBy, key) => {
+      if (referencedBy.has(filePath)) {
+        referencedBy.delete(filePath)
+      }
+    })
+
+    this.addEmbedsForNote(filePath)
   }
 
   public getEmbeds(pathEmbedded: string): string[] {
@@ -34,30 +57,36 @@ export class EmbedsRepository {
   public async writeToCache(): Promise<void> {
     logDebug('Writing embeds to cache')
     const database = this.plugin.database
-    const data: { embedded: string; references: string[] }[] = []
+    const data: { embedded: string; referencedBy: string[] }[] = []
     for (const [path, embedsList] of this.embeds) {
-      data.push({ embedded: path, references: [...embedsList] })
+      data.push({ embedded: path, referencedBy: [...embedsList] })
     }
     await database.embeds.clear()
     await database.embeds.bulkAdd(data)
   }
 
   public async loadFromCache(): Promise<void> {
-    const database = this.plugin.database
-    if (!database.embeds) {
-      logDebug('No embeds in cache')
-      return
-    }
-    logDebug('Loading embeds from cache')
-    const embedsArr = await database.embeds.toArray()
-    for (const { embedded: path, references: embeds } of embedsArr) {
-      for (const embed of embeds) {
-        this.addEmbed(path, embed)
+    try {
+      const database = this.plugin.database
+      if (!database.embeds) {
+        logDebug('No embeds in cache')
+        return
       }
+      logDebug('Loading embeds from cache')
+      const embedsArr = await database.embeds.toArray()
+      for (const { embedded: path, referencedBy: embeds } of embedsArr) {
+        for (const embed of embeds) {
+          this.addEmbed(path, embed)
+        }
+      }
+    } catch (e) {
+      this.plugin.database.clearCache()
+      console.error('Omnisearch - Error while loading embeds cache')
+      new Notice('Omnisearch - There was an error while loading the cache. Please restart Obsidian.')
     }
   }
 
-  private addEmbeds(notePath: string): void {
+  private addEmbedsForNote(notePath: string): void {
     // Get all embeds from the note
     // and map them to TFiles to get the real path
     const embeds = (

@@ -44,7 +44,7 @@ export class CacheManager {
         return
       }
       this.documents.set(path, doc)
-      this.plugin.embedsRepository.refreshEmbeds(path)
+      this.plugin.embedsRepository.refreshEmbedsForNote(path)
     } catch (e) {
       console.warn(`Omnisearch: Error while adding "${path}" to live cache`, e)
       // Shouldn't be needed, but...

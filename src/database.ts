@@ -5,7 +5,7 @@ import { Notice } from 'obsidian'
 import type OmnisearchPlugin from './main'
 
 export class Database extends Dexie {
-  public static readonly dbVersion = 9
+  public static readonly dbVersion = 10
   searchHistory!: Dexie.Table<{ id?: number; query: string }, number>
   minisearch!: Dexie.Table<
     {
@@ -15,7 +15,7 @@ export class Database extends Dexie {
     },
     string
   >
-  embeds!: Dexie.Table<{ embedded: string; references: string[] }, string>
+  embeds!: Dexie.Table<{ embedded: string; referencedBy: string[] }, string>
 
   constructor(private plugin: OmnisearchPlugin) {
     super(Database.getDbName(plugin.app.appId))
