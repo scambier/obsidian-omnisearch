@@ -54,6 +54,8 @@ export interface OmnisearchSettings extends WeightingSettings {
   ribbonIcon: boolean
   /** Display the small contextual excerpt in search results */
   showExcerpt: boolean
+  /** Number of embeds references to display in search results */
+  maxEmbeds: number
   /** Render line returns with <br> in excerpts */
   renderLineReturnInExcerpts: boolean
   /** Enable a "create note" button in the Vault Search modal */
@@ -465,6 +467,24 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
+    // Show embeds
+    new Setting(containerEl)
+      .setName('Show embed references')
+      .setDesc(
+        htmlDescription(`Some results are <a href="https://help.obsidian.md/Linking+notes+and+files/Embed+files">embedded</a> in other notes.<br>
+          This setting controls the maximum number of embeds to show in the search results. Set to 0 to disable.<br>
+          Also works with Text Extractor for embedded images and documents.`)
+      )
+      .addSlider(cb => {
+        cb.setLimits(0, 10, 1)
+          .setValue(settings.maxEmbeds)
+          .setDynamicTooltip()
+          .onChange(async v => {
+            settings.maxEmbeds = v
+            await saveSettings(this.plugin)
+          })
+      })
+
     // Keep line returns in excerpts
     new Setting(containerEl)
       .setName('Render line return in excerpts')
@@ -791,6 +811,7 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
 
     ribbonIcon: true,
     showExcerpt: true,
+    maxEmbeds: 5,
     renderLineReturnInExcerpts: true,
     showCreateButton: false,
     highlight: true,

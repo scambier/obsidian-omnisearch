@@ -385,7 +385,7 @@ export class SearchEngine {
       const embeds = this.plugin.embedsRepository
         .getEmbeds(doc.path)
         // Limit to 5 embeds
-        .slice(0, 5)
+        .slice(0, this.plugin.settings.maxEmbeds)
       for (const embed of embeds) {
         // Inject the embed in the content after index i
         documents[++i] = await this.plugin.cacheManager.getDocument(embed)
