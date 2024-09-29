@@ -1,3 +1,4 @@
+<!-- src/components/ResultItemVault.svelte -->
 <script lang="ts">
   import { showExcerpt } from '../settings'
   import type { ResultNote } from '../globals'
@@ -26,21 +27,43 @@
   let fileIconSVG: string | null = null
   let prefixToIconPack: { [prefix: string]: string } = {}
   let iconsPath: string
+  let iconDataLoaded = false // Flag to indicate iconData is loaded
 
-  // Read and parse data.json
+  function normalizePath(path: string): string {
+    // Normalize slashes and remove leading/trailing slashes, convert to lowercase
+    return path.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').toLowerCase()
+  }
+
+  // Initialize icon packs once when the component mounts
   onMount(async () => {
     const dataJsonPath = `${plugin.app.vault.configDir}/plugins/obsidian-icon-folder/data.json`
     try {
       const dataJsonContent = await plugin.app.vault.adapter.read(dataJsonPath)
-      iconData = JSON.parse(dataJsonContent)
+      const rawIconData = JSON.parse(dataJsonContent)
+      // Normalize keys in iconData
+      iconData = {}
+      for (const key in rawIconData) {
+        const normalizedKey = normalizePath(key)
+        iconData[normalizedKey] = rawIconData[key]
+      }
     } catch (e) {
       console.error('Failed to read data.json:', e)
       iconData = {}
     }
 
     await initializeIconPacks()
-    await loadIcons()
+    iconDataLoaded = true // Set the flag after iconData is loaded
   })
+
+  // Reactive statement to call loadIcons() whenever the note changes and iconData is loaded
+  $: if (note && note.path && iconDataLoaded) {
+    (async () => {
+      // Ensure title and notePath are updated before calling loadIcons()
+      title = note.displayTitle || note.basename
+      notePath = pathWithoutFilename(note.path)
+      await loadIcons()
+    })()
+  }
 
   async function initializeIconPacks() {
     // Access the obsidian-icon-folder plugin
@@ -69,17 +92,17 @@
     }
 
     // Add 'Li' prefix for Lucide icons
-    prefixToIconPack['Li'] = 'lucide-icons' // We can assign a placeholder name
+    prefixToIconPack['Li'] = 'lucide-icons' // Assign a placeholder name
   }
 
   function createIconPackPrefix(iconPackName: string): string {
     if (iconPackName.includes('-')) {
-      const splitted = iconPackName.split('-');
-      let result = splitted[0].charAt(0).toUpperCase();
+      const splitted = iconPackName.split('-')
+      let result = splitted[0].charAt(0).toUpperCase()
       for (let i = 1; i < splitted.length; i++) {
-        result += splitted[i].charAt(0).toLowerCase();
+        result += splitted[i].charAt(0).toLowerCase()
       }
-      return result;
+      return result
     }
     return iconPackName.charAt(0).toUpperCase() + iconPackName.charAt(1).toLowerCase()
   }
@@ -106,7 +129,8 @@
   }
 
   function getIconNameForPath(path: string): string | null {
-    const iconEntry = iconData[path]
+    const normalizedPath = normalizePath(path)
+    const iconEntry = iconData[normalizedPath]
     if (iconEntry) {
       if (typeof iconEntry === 'string') {
         return iconEntry
@@ -160,7 +184,7 @@
         const svgContent = await plugin.app.vault.adapter.read(iconPath)
         return svgContent
       } catch (e) {
-        console.error(`Failed to load icon SVG for ${iconName}:`, e)
+        console.error(`Failed to load icon SVG for ${iconName} at ${iconPath}:`, e)
         return null
       }
     }
@@ -184,6 +208,9 @@
   function renderSVG(node: HTMLElement, svgContent: string) {
     node.innerHTML = svgContent
     return {
+      update(newSvgContent: string) {
+        node.innerHTML = newSvgContent
+      },
       destroy() {
         node.innerHTML = ''
       }
@@ -199,14 +226,11 @@
       }
     }
   }
+
   $: matchesTitle = plugin.textProcessor.getMatches(title, note.foundWords)
   $: matchesNotePath = plugin.textProcessor.getMatches(notePath, note.foundWords)
   $: cleanedContent = plugin.textProcessor.makeExcerpt(note.content, note.matches[0]?.offset ?? -1)
   $: glyph = false // cacheManager.getLiveDocument(note.path)?.doesNotExist
-  $: {
-    title = note.displayTitle || note.basename
-    notePath = pathWithoutFilename(note.path)
-  }
 </script>
 
 <ResultItemContainer
