@@ -10,7 +10,7 @@
     pathWithoutFilename,
   } from '../tools/utils'
   import ResultItemContainer from './ResultItemContainer.svelte'
-  import { TFile } from 'obsidian'
+  import { TFile, getIcon } from 'obsidian'
   import type OmnisearchPlugin from '../main'
   import { onMount } from 'svelte'
 
@@ -21,8 +21,6 @@
   let imagePath: string | null = null
   let title = ''
   let notePath = ''
-  let elFolderPathIcon: HTMLElement
-  let elFilePathIcon: HTMLElement
   let iconData = {}
   let folderIconSVG: string | null = null
   let fileIconSVG: string | null = null
@@ -69,6 +67,9 @@
     } catch (e) {
       console.error('Failed to list icon packs:', e)
     }
+
+    // Add 'Li' prefix for Lucide icons
+    prefixToIconPack['Li'] = 'lucide-icons' // We can assign a placeholder name
   }
 
   function createIconPackPrefix(iconPackName: string): string {
@@ -88,6 +89,10 @@
     const folderIconName = getIconNameForPath(notePath)
     if (folderIconName) {
       folderIconSVG = await loadIconSVG(folderIconName)
+    } else {
+      // Fallback to default folder icon
+      const folderIconEl = getIcon('folder')
+      folderIconSVG = folderIconEl ? folderIconEl.outerHTML : ''
     }
 
     // Load file icon
@@ -95,7 +100,7 @@
     if (fileIconName) {
       fileIconSVG = await loadIconSVG(fileIconName)
     } else {
-      // Fallback to default icons
+      // Fallback to default icons based on file type
       fileIconSVG = getDefaultIconSVG()
     }
   }
@@ -130,24 +135,45 @@
     }
     const { prefix, name } = parsed
     const iconPackName = prefixToIconPack[prefix]
+
     if (!iconPackName) {
       console.error(`No icon pack found for prefix: ${prefix}`)
       return null
     }
-    const iconPath = `${plugin.app.vault.configDir}/${iconsPath}/${iconPackName}/${name}.svg`
-    try {
-      const svgContent = await plugin.app.vault.adapter.read(iconPath)
-      return svgContent
-    } catch (e) {
-      console.error(`Failed to load icon SVG for ${iconName}:`, e)
-      return null
+
+    if (iconPackName === 'lucide-icons') {
+      // Load Lucide icon using Obsidian's API
+      const iconEl = getIcon(name.toLowerCase())
+      if (iconEl) {
+        return iconEl.outerHTML
+      } else {
+        console.error(`Lucide icon not found: ${name}`)
+        return null
+      }
+    } else {
+      const iconPath = `${plugin.app.vault.configDir}/${iconsPath}/${iconPackName}/${name}.svg`
+      try {
+        const svgContent = await plugin.app.vault.adapter.read(iconPath)
+        return svgContent
+      } catch (e) {
+        console.error(`Failed to load icon SVG for ${iconName}:`, e)
+        return null
+      }
     }
   }
 
   function getDefaultIconSVG(): string {
-    // Return SVG content for default icons
-    // You can provide default SVG content here
-    return ''
+    // Return SVG content for default icons based on file type
+    let iconName = 'file'
+    if (isFileImage(note.path)) {
+      iconName = 'image'
+    } else if (isFilePDF(note.path)) {
+      iconName = 'file-text'
+    } else if (isFileCanvas(note.path) || isFileExcalidraw(note.path)) {
+      iconName = 'layout-dashboard'
+    }
+    const iconEl = getIcon(iconName)
+    return iconEl ? iconEl.outerHTML : ''
   }
 
   // Svelte action to render SVG content
