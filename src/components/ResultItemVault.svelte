@@ -117,23 +117,27 @@
     return null
   }
 
-  function parseIconName(iconName: string): { prefix: string, name: string } | null {
+  function parseIconName(iconName: string): { prefix: string, name: string } {
     const prefixMatch = iconName.match(/^[A-Z][a-z]*/)
     if (prefixMatch) {
       const prefix = prefixMatch[0]
       const name = iconName.substring(prefix.length)
       return { prefix, name }
+    } else {
+      // No prefix, treat the entire iconName as the name
+      return { prefix: '', name: iconName }
     }
-    return null
   }
 
   async function loadIconSVG(iconName: string): Promise<string | null> {
     const parsed = parseIconName(iconName)
-    if (!parsed) {
-      console.error(`Failed to parse icon name: ${iconName}`)
-      return null
-    }
     const { prefix, name } = parsed
+
+    if (!prefix) {
+      // No prefix, assume it's an emoji or text
+      return `<span class="icon-emoji">${name}</span>`
+    }
+
     const iconPackName = prefixToIconPack[prefix]
 
     if (!iconPackName) {
@@ -272,5 +276,10 @@
   .icon svg {
     width: 100%;
     height: 100%;
+  }
+  .icon-emoji {
+    font-size: 16px;
+    vertical-align: middle;
+    margin-right: 4px;
   }
 </style>
