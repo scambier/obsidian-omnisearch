@@ -1,236 +1,109 @@
 <!-- src/components/ResultItemVault.svelte -->
 <script lang="ts">
-  import { showExcerpt } from '../settings'
-  import type { ResultNote } from '../globals'
+  import { showExcerpt } from '../settings';
+  import type { ResultNote } from '../globals';
   import {
     getExtension,
-    isFileCanvas,
-    isFileExcalidraw,
     isFileImage,
-    isFilePDF,
     pathWithoutFilename,
-  } from '../tools/utils'
-  import ResultItemContainer from './ResultItemContainer.svelte'
-  import { TFile, getIcon } from 'obsidian'
-  import type OmnisearchPlugin from '../main'
-  import { onMount } from 'svelte'
+  } from '../tools/utils';
+  import ResultItemContainer from './ResultItemContainer.svelte';
+  import type OmnisearchPlugin from '../main';
+  import { TFile } from 'obsidian';
+  import { onMount } from 'svelte';
 
-  export let selected = false
-  export let note: ResultNote
-  export let plugin: OmnisearchPlugin
+  // Import icon utility functions
+  import {
+    loadIconData,
+    initializeIconPacks,
+    getIconNameForPath,
+    loadIconSVG,
+    getDefaultIconSVG,
+  } from '../tools/iconUtils';
 
-  let imagePath: string | null = null
-  let title = ''
-  let notePath = ''
-  let iconData = {}
-  let folderIconSVG: string | null = null
-  let fileIconSVG: string | null = null
-  let prefixToIconPack: { [prefix: string]: string } = {}
-  let iconsPath: string
-  let iconDataLoaded = false // Flag to indicate iconData is loaded
+  export let selected = false;
+  export let note: ResultNote;
+  export let plugin: OmnisearchPlugin;
 
-  function normalizePath(path: string): string {
-    // Normalize slashes and remove leading/trailing slashes, convert to lowercase
-    return path.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').toLowerCase()
-  }
+  let imagePath: string | null = null;
+  let title = '';
+  let notePath = '';
+  let iconData = {};
+  let folderIconSVG: string | null = null;
+  let fileIconSVG: string | null = null;
+  let prefixToIconPack: { [prefix: string]: string } = {};
+  let iconsPath: string;
+  let iconDataLoaded = false; // Flag to indicate iconData is loaded
 
-  // Initialize icon packs once when the component mounts
+  // Initialize icon data and icon packs once when the component mounts
   onMount(async () => {
-    const dataJsonPath = `${plugin.app.vault.configDir}/plugins/obsidian-icon-folder/data.json`
-    try {
-      const dataJsonContent = await plugin.app.vault.adapter.read(dataJsonPath)
-      const rawIconData = JSON.parse(dataJsonContent)
-      // Normalize keys in iconData
-      iconData = {}
-      for (const key in rawIconData) {
-        const normalizedKey = normalizePath(key)
-        iconData[normalizedKey] = rawIconData[key]
-      }
-    } catch (e) {
-      console.error('Failed to read data.json:', e)
-      iconData = {}
-    }
-
-    await initializeIconPacks()
-    iconDataLoaded = true // Set the flag after iconData is loaded
-  })
+    iconData = await loadIconData(plugin);
+    const iconPacks = await initializeIconPacks(plugin);
+    prefixToIconPack = iconPacks.prefixToIconPack;
+    iconsPath = iconPacks.iconsPath;
+    iconDataLoaded = true; // Set the flag after iconData is loaded
+  });
 
   // Reactive statement to call loadIcons() whenever the note changes and iconData is loaded
   $: if (note && note.path && iconDataLoaded) {
     (async () => {
-      // Ensure title and notePath are updated before calling loadIcons()
-      title = note.displayTitle || note.basename
-      notePath = pathWithoutFilename(note.path)
-      await loadIcons()
-    })()
-  }
-
-  async function initializeIconPacks() {
-    // Access the obsidian-icon-folder plugin
-    const iconFolderPlugin = (window as any).app.plugins.plugins['obsidian-icon-folder']
-    if (!iconFolderPlugin) {
-      console.error('obsidian-icon-folder plugin not found')
-      return
-    }
-    // Get the icons path from the plugin's settings
-    const iconFolderSettings = iconFolderPlugin.settings
-    iconsPath = iconFolderSettings?.iconPacksPath || 'icons'
-    const iconsDir = `${plugin.app.vault.configDir}/${iconsPath}`
-
-    try {
-      const iconPackDirs = await plugin.app.vault.adapter.list(iconsDir)
-      if (iconPackDirs.folders && iconPackDirs.folders.length > 0) {
-        for (const folderPath of iconPackDirs.folders) {
-          const pathParts = folderPath.split('/')
-          const iconPackName = pathParts[pathParts.length - 1]
-          const prefix = createIconPackPrefix(iconPackName)
-          prefixToIconPack[prefix] = iconPackName
-        }
-      }
-    } catch (e) {
-      console.error('Failed to list icon packs:', e)
-    }
-
-    // Add 'Li' prefix for Lucide icons
-    prefixToIconPack['Li'] = 'lucide-icons' // Assign a placeholder name
-  }
-
-  function createIconPackPrefix(iconPackName: string): string {
-    if (iconPackName.includes('-')) {
-      const splitted = iconPackName.split('-')
-      let result = splitted[0].charAt(0).toUpperCase()
-      for (let i = 1; i < splitted.length; i++) {
-        result += splitted[i].charAt(0).toLowerCase()
-      }
-      return result
-    }
-    return iconPackName.charAt(0).toUpperCase() + iconPackName.charAt(1).toLowerCase()
+      // Update title and notePath before loading icons
+      title = note.displayTitle || note.basename;
+      notePath = pathWithoutFilename(note.path);
+      await loadIcons();
+    })();
   }
 
   async function loadIcons() {
     // Load folder icon
-    const folderIconName = getIconNameForPath(notePath)
+    const folderIconName = getIconNameForPath(notePath, iconData);
     if (folderIconName) {
-      folderIconSVG = await loadIconSVG(folderIconName)
+      folderIconSVG = await loadIconSVG(folderIconName, plugin, iconsPath, prefixToIconPack);
     } else {
       // Fallback to default folder icon
-      const folderIconEl = getIcon('folder')
-      folderIconSVG = folderIconEl ? folderIconEl.outerHTML : ''
+      folderIconSVG = getDefaultIconSVG('folder', plugin);
     }
 
     // Load file icon
-    const fileIconName = getIconNameForPath(note.path)
+    const fileIconName = getIconNameForPath(note.path, iconData);
     if (fileIconName) {
-      fileIconSVG = await loadIconSVG(fileIconName)
+      fileIconSVG = await loadIconSVG(fileIconName, plugin, iconsPath, prefixToIconPack);
     } else {
       // Fallback to default icons based on file type
-      fileIconSVG = getDefaultIconSVG()
+      fileIconSVG = getDefaultIconSVG(note.path, plugin);
     }
   }
 
-  function getIconNameForPath(path: string): string | null {
-    const normalizedPath = normalizePath(path)
-    const iconEntry = iconData[normalizedPath]
-    if (iconEntry) {
-      if (typeof iconEntry === 'string') {
-        return iconEntry
-      } else if (typeof iconEntry === 'object' && iconEntry.iconName) {
-        return iconEntry.iconName
-      }
-    }
-    return null
-  }
-
-  function parseIconName(iconName: string): { prefix: string, name: string } {
-    const prefixMatch = iconName.match(/^[A-Z][a-z]*/)
-    if (prefixMatch) {
-      const prefix = prefixMatch[0]
-      const name = iconName.substring(prefix.length)
-      return { prefix, name }
-    } else {
-      // No prefix, treat the entire iconName as the name
-      return { prefix: '', name: iconName }
-    }
-  }
-
-  async function loadIconSVG(iconName: string): Promise<string | null> {
-    const parsed = parseIconName(iconName)
-    const { prefix, name } = parsed
-
-    if (!prefix) {
-      // No prefix, assume it's an emoji or text
-      return `<span class="icon-emoji">${name}</span>`
-    }
-
-    const iconPackName = prefixToIconPack[prefix]
-
-    if (!iconPackName) {
-      console.error(`No icon pack found for prefix: ${prefix}`)
-      return null
-    }
-
-    if (iconPackName === 'lucide-icons') {
-      // Load Lucide icon using Obsidian's API
-      const iconEl = getIcon(name.toLowerCase())
-      if (iconEl) {
-        return iconEl.outerHTML
-      } else {
-        console.error(`Lucide icon not found: ${name}`)
-        return null
-      }
-    } else {
-      const iconPath = `${plugin.app.vault.configDir}/${iconsPath}/${iconPackName}/${name}.svg`
-      try {
-        const svgContent = await plugin.app.vault.adapter.read(iconPath)
-        return svgContent
-      } catch (e) {
-        console.error(`Failed to load icon SVG for ${iconName} at ${iconPath}:`, e)
-        return null
-      }
-    }
-  }
-
-  function getDefaultIconSVG(): string {
-    // Return SVG content for default icons based on file type
-    let iconName = 'file'
-    if (isFileImage(note.path)) {
-      iconName = 'image'
-    } else if (isFilePDF(note.path)) {
-      iconName = 'file-text'
-    } else if (isFileCanvas(note.path) || isFileExcalidraw(note.path)) {
-      iconName = 'layout-dashboard'
-    }
-    const iconEl = getIcon(iconName)
-    return iconEl ? iconEl.outerHTML : ''
-  }
-
-  // Svelte action to render SVG content
+  // Svelte action to render SVG content with dynamic updates
   function renderSVG(node: HTMLElement, svgContent: string) {
-    node.innerHTML = svgContent
+    node.innerHTML = svgContent;
     return {
       update(newSvgContent: string) {
-        node.innerHTML = newSvgContent
+        node.innerHTML = newSvgContent;
       },
       destroy() {
-        node.innerHTML = ''
-      }
-    }
+        node.innerHTML = '';
+      },
+    };
   }
 
   $: {
-    imagePath = null
+    imagePath = null;
     if (isFileImage(note.path)) {
-      const file = plugin.app.vault.getAbstractFileByPath(note.path)
+      const file = plugin.app.vault.getAbstractFileByPath(note.path);
       if (file instanceof TFile) {
-        imagePath = plugin.app.vault.getResourcePath(file)
+        imagePath = plugin.app.vault.getResourcePath(file);
       }
     }
   }
 
-  $: matchesTitle = plugin.textProcessor.getMatches(title, note.foundWords)
-  $: matchesNotePath = plugin.textProcessor.getMatches(notePath, note.foundWords)
-  $: cleanedContent = plugin.textProcessor.makeExcerpt(note.content, note.matches[0]?.offset ?? -1)
-  $: glyph = false // cacheManager.getLiveDocument(note.path)?.doesNotExist
+  $: matchesTitle = plugin.textProcessor.getMatches(title, note.foundWords);
+  $: matchesNotePath = plugin.textProcessor.getMatches(notePath, note.foundWords);
+  $: cleanedContent = plugin.textProcessor.makeExcerpt(
+    note.content,
+    note.matches[0]?.offset ?? -1
+  );
+  $: glyph = false; // cacheManager.getLiveDocument(note.path)?.doesNotExist
 </script>
 
 <ResultItemContainer
@@ -239,7 +112,8 @@
   on:auxclick
   on:click
   on:mousemove
-  selected="{selected}">
+  selected="{selected}"
+>
   <div>
     <div class="omnisearch-result__title-container">
       <span class="omnisearch-result__title">
