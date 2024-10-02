@@ -781,7 +781,7 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   weightSlider(cb: SliderComponent, key: keyof WeightingSettings): void {
-    cb.setLimits(1, 5, 0.1)
+    cb.setLimits(1, 10, 0.5)
       .setValue(settings[key])
       .setDynamicTooltip()
       .onChange(async v => {
@@ -820,12 +820,12 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
     tokenizeUrls: false,
     fuzziness: '1',
 
-    weightBasename: 3,
-    weightDirectory: 2,
-    weightH1: 1.5,
-    weightH2: 1.3,
-    weightH3: 1.1,
-    weightUnmarkedTags: 1.1,
+    weightBasename: 10,
+    weightDirectory: 7,
+    weightH1: 6,
+    weightH2: 5,
+    weightH3: 4,
+    weightUnmarkedTags: 2,
     weightCustomProperties: [] as { name: string; weight: number }[],
 
     httpApiEnabled: false,
