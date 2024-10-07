@@ -1,4 +1,3 @@
-<!-- src/components/ResultItemVault.svelte -->
 <script lang="ts">
   import { showExcerpt } from '../settings'
   import type { ResultNote } from '../globals'
@@ -19,7 +18,7 @@
     getIconNameForPath,
     loadIconSVG,
     getDefaultIconSVG,
-  } from '../tools/iconUtils'
+  } from '../tools/icon-utils'
 
   export let selected = false
   export let note: ResultNote
@@ -187,22 +186,3 @@
     </div>
   </div>
 </ResultItemContainer>
-
-<style>
-  .icon {
-    display: inline-block;
-    vertical-align: middle;
-    width: 16px;
-    height: 16px;
-    margin-right: 4px;
-  }
-  .icon svg {
-    width: 100%;
-    height: 100%;
-  }
-  .icon-emoji {
-    font-size: 16px;
-    vertical-align: middle;
-    margin-right: 4px;
-  }
-</style>

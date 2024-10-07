@@ -1,6 +1,12 @@
-import { TFile, getIcon } from 'obsidian'
+import { TFile, getIcon, normalizePath } from 'obsidian'
 import type OmnisearchPlugin from '../main'
-import { isFileImage, isFilePDF, isFileCanvas, isFileExcalidraw } from './utils'
+import {
+  isFileImage,
+  isFilePDF,
+  isFileCanvas,
+  isFileExcalidraw,
+  warnDebug,
+} from './utils'
 
 export interface IconPacks {
   prefixToIconPack: { [prefix: string]: string }
@@ -8,9 +14,21 @@ export interface IconPacks {
 }
 
 export async function loadIconData(plugin: OmnisearchPlugin): Promise<any> {
-  const dataJsonPath = `${plugin.app.vault.configDir}/plugins/obsidian-icon-folder/data.json`
+  const app = plugin.app
+
+  // Check if the 'obsidian-icon-folder' plugin is installed and enabled
+  // Casting 'app' to 'any' here to avoid TypeScript errors since 'plugins' might not be defined on 'App'
+  const iconFolderPlugin = (app as any).plugins.getPlugin(
+    'obsidian-icon-folder'
+  )
+  if (!iconFolderPlugin) {
+    warnDebug('Icon Folder plugin is not installed or not enabled.')
+    return {}
+  }
+
+  const dataJsonPath = `${app.vault.configDir}/plugins/obsidian-icon-folder/data.json`
   try {
-    const dataJsonContent = await plugin.app.vault.adapter.read(dataJsonPath)
+    const dataJsonContent = await app.vault.adapter.read(dataJsonPath)
     const rawIconData = JSON.parse(dataJsonContent)
     // Normalize keys
     const iconData: any = {}
@@ -20,51 +38,47 @@ export async function loadIconData(plugin: OmnisearchPlugin): Promise<any> {
     }
     return iconData
   } catch (e) {
-    console.error('Failed to read data.json:', e)
+    warnDebug('Failed to read data.json:', e)
     return {}
   }
-}
-
-export function normalizePath(path: string): string {
-  // Normalize slashes and remove leading/trailing slashes, convert to lowercase
-  return path
-    .replace(/\\/g, '/')
-    .replace(/^\/+|\/+$/g, '')
-    .toLowerCase()
 }
 
 export async function initializeIconPacks(
   plugin: OmnisearchPlugin
 ): Promise<IconPacks> {
   const prefixToIconPack: { [prefix: string]: string } = {}
-  let iconsPath: string = 'icons'
+  let iconsPath = 'icons'
+
+  const app = plugin.app
 
   // Access the obsidian-icon-folder plugin
-  const iconFolderPlugin = (window as any).app.plugins.plugins[
+  const iconFolderPlugin = (app as any).plugins.getPlugin(
     'obsidian-icon-folder'
-  ]
-  if (!iconFolderPlugin) {
-    console.error('obsidian-icon-folder plugin not found')
-    return { prefixToIconPack, iconsPath }
-  }
+  )
 
-  // Get the icons path from the plugin's settings
-  const iconFolderSettings = iconFolderPlugin.settings
-  iconsPath = iconFolderSettings?.iconPacksPath || 'icons'
-  const iconsDir = `${plugin.app.vault.configDir}/${iconsPath}`
+  if (iconFolderPlugin) {
+    // Get the icons path from the plugin's settings
+    const iconFolderSettings = iconFolderPlugin.settings
+    iconsPath = iconFolderSettings?.iconPacksPath || 'icons'
+    const iconsDir = `${app.vault.configDir}/${iconsPath}`
 
-  try {
-    const iconPackDirs = await plugin.app.vault.adapter.list(iconsDir)
-    if (iconPackDirs.folders && iconPackDirs.folders.length > 0) {
-      for (const folderPath of iconPackDirs.folders) {
-        const pathParts = folderPath.split('/')
-        const iconPackName = pathParts[pathParts.length - 1]
-        const prefix = createIconPackPrefix(iconPackName)
-        prefixToIconPack[prefix] = iconPackName
+    try {
+      const iconPackDirs = await app.vault.adapter.list(iconsDir)
+      if (iconPackDirs.folders && iconPackDirs.folders.length > 0) {
+        for (const folderPath of iconPackDirs.folders) {
+          const pathParts = folderPath.split('/')
+          const iconPackName = pathParts[pathParts.length - 1]
+          const prefix = createIconPackPrefix(iconPackName)
+          prefixToIconPack[prefix] = iconPackName
+        }
       }
+    } catch (e) {
+      warnDebug('Failed to list icon packs:', e)
     }
-  } catch (e) {
-    console.error('Failed to list icon packs:', e)
+  } else {
+    warnDebug('Icon Folder plugin is not installed or not enabled.')
+    // Since the plugin is not installed, we won't attempt to load custom icon packs
+    // The iconsPath remains as default, but there might be no icon packs to load
   }
 
   // Add 'Li' prefix for Lucide icons
@@ -132,7 +146,7 @@ export async function loadIconSVG(
   const iconPackName = prefixToIconPack[prefix]
 
   if (!iconPackName) {
-    console.error(`No icon pack found for prefix: ${prefix}`)
+    warnDebug(`No icon pack found for prefix: ${prefix}`)
     return null
   }
 
@@ -143,19 +157,20 @@ export async function loadIconSVG(
     if (iconEl) {
       return iconEl.outerHTML
     } else {
-      console.error(`Lucide icon not found: ${dashedName}`)
+      warnDebug(`Lucide icon not found: ${dashedName}`)
       return null
     }
   } else {
+    if (!iconsPath) {
+      warnDebug('Icons path is not set. Cannot load icon SVG.')
+      return null
+    }
     const iconPath = `${plugin.app.vault.configDir}/${iconsPath}/${iconPackName}/${name}.svg`
     try {
       const svgContent = await plugin.app.vault.adapter.read(iconPath)
       return svgContent
     } catch (e) {
-      console.error(
-        `Failed to load icon SVG for ${iconName} at ${iconPath}:`,
-        e
-      )
+      warnDebug(`Failed to load icon SVG for ${iconName} at ${iconPath}:`, e)
       return null
     }
   }
