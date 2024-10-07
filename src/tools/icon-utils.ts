@@ -16,16 +16,6 @@ export interface IconPacks {
 export async function loadIconData(plugin: OmnisearchPlugin): Promise<any> {
   const app = plugin.app
 
-  // Check if the 'obsidian-icon-folder' plugin is installed and enabled
-  // Casting 'app' to 'any' here to avoid TypeScript errors since 'plugins' might not be defined on 'App'
-  const iconFolderPlugin = (app as any).plugins.getPlugin(
-    'obsidian-icon-folder'
-  )
-  if (!iconFolderPlugin) {
-    warnDebug('Icon Folder plugin is not installed or not enabled.')
-    return {}
-  }
-
   const dataJsonPath = `${app.vault.configDir}/plugins/obsidian-icon-folder/data.json`
   try {
     const dataJsonContent = await app.vault.adapter.read(dataJsonPath)
@@ -46,7 +36,8 @@ export async function loadIconData(plugin: OmnisearchPlugin): Promise<any> {
 export async function initializeIconPacks(
   plugin: OmnisearchPlugin
 ): Promise<IconPacks> {
-  const prefixToIconPack: { [prefix: string]: string } = {}
+  // Add 'Li' prefix for Lucide icons
+  const prefixToIconPack: { [prefix: string]: string } = { Li: 'lucide-icons' }
   let iconsPath = 'icons'
 
   const app = plugin.app
@@ -75,14 +66,7 @@ export async function initializeIconPacks(
     } catch (e) {
       warnDebug('Failed to list icon packs:', e)
     }
-  } else {
-    warnDebug('Icon Folder plugin is not installed or not enabled.')
-    // Since the plugin is not installed, we won't attempt to load custom icon packs
-    // The iconsPath remains as default, but there might be no icon packs to load
   }
-
-  // Add 'Li' prefix for Lucide icons
-  prefixToIconPack['Li'] = 'lucide-icons' // Assign a placeholder name
 
   return { prefixToIconPack, iconsPath }
 }
