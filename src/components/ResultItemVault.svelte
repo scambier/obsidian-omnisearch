@@ -10,9 +10,18 @@
     pathWithoutFilename,
   } from '../tools/utils'
   import ResultItemContainer from './ResultItemContainer.svelte'
-  import { TFile, setIcon } from 'obsidian'
   import type OmnisearchPlugin from '../main'
-  import { SvelteComponent } from 'svelte'
+  import { setIcon, TFile } from 'obsidian'
+  import { onMount, SvelteComponent } from 'svelte'
+
+  // Import icon utility functions
+  import {
+    loadIconData,
+    initializeIconPacks,
+    getIconNameForPath,
+    loadIconSVG,
+    getDefaultIconSVG,
+  } from '../tools/icon-utils'
 
   export let selected = false
   export let note: ResultNote
@@ -21,6 +30,74 @@
   let imagePath: string | null = null
   let title = ''
   let notePath = ''
+  let iconData = {}
+  let folderIconSVG: string | null = null
+  let fileIconSVG: string | null = null
+  let prefixToIconPack: { [prefix: string]: string } = {}
+  let iconsPath: string
+  let iconDataLoaded = false // Flag to indicate iconData is loaded
+
+  // Initialize icon data and icon packs once when the component mounts
+  onMount(async () => {
+    iconData = await loadIconData(plugin)
+    const iconPacks = await initializeIconPacks(plugin)
+    prefixToIconPack = iconPacks.prefixToIconPack
+    iconsPath = iconPacks.iconsPath
+    iconDataLoaded = true // Set the flag after iconData is loaded
+  })
+
+  // Reactive statement to call loadIcons() whenever the note changes and iconData is loaded
+  $: if (note && note.path && iconDataLoaded) {
+    ;(async () => {
+      // Update title and notePath before loading icons
+      title = note.displayTitle || note.basename
+      notePath = pathWithoutFilename(note.path)
+      await loadIcons()
+    })()
+  }
+
+  async function loadIcons() {
+    // Load folder icon
+    const folderIconName = getIconNameForPath(notePath, iconData)
+    if (folderIconName) {
+      folderIconSVG = await loadIconSVG(
+        folderIconName,
+        plugin,
+        iconsPath,
+        prefixToIconPack
+      )
+    } else {
+      // Fallback to default folder icon
+      folderIconSVG = getDefaultIconSVG('folder', plugin)
+    }
+
+    // Load file icon
+    const fileIconName = getIconNameForPath(note.path, iconData)
+    if (fileIconName) {
+      fileIconSVG = await loadIconSVG(
+        fileIconName,
+        plugin,
+        iconsPath,
+        prefixToIconPack
+      )
+    } else {
+      // Fallback to default icons based on file type
+      fileIconSVG = getDefaultIconSVG(note.path, plugin)
+    }
+  }
+
+  // Svelte action to render SVG content with dynamic updates
+  function renderSVG(node: HTMLElement, svgContent: string) {
+    node.innerHTML = svgContent
+    return {
+      update(newSvgContent: string) {
+        node.innerHTML = newSvgContent
+      },
+      destroy() {
+        node.innerHTML = ''
+      },
+    }
+  }
   let elFolderPathIcon: HTMLElement
   let elFilePathIcon: HTMLElement
   let elEmbedIcon: HTMLElement
@@ -34,6 +111,7 @@
       }
     }
   }
+
   $: matchesTitle = plugin.textProcessor.getMatches(title, note.foundWords)
   $: matchesNotePath = plugin.textProcessor.getMatches(
     notePath,
@@ -81,9 +159,14 @@
     <div class="omnisearch-result__title-container">
       <span class="omnisearch-result__title">
         {#if note.isEmbed}
-          <span bind:this="{elEmbedIcon}" title="The document above is embedded in this note"></span>
+          <span
+            bind:this="{elEmbedIcon}"
+            title="The document above is embedded in this note"></span>
         {:else}
-          <span bind:this="{elFilePathIcon}"></span>
+          <!-- File Icon -->
+          {#if fileIconSVG}
+            <span class="icon" use:renderSVG="{fileIconSVG}"></span>
+          {/if}
         {/if}
         <span>
           {@html plugin.textProcessor.highlightText(title, matchesTitle)}
@@ -106,12 +189,13 @@
     <!-- Folder path -->
     {#if notePath}
       <div class="omnisearch-result__folder-path">
-        <span bind:this="{elFolderPathIcon}"></span>
+        <!-- Folder Icon -->
+        {#if folderIconSVG}
+          <span class="icon" use:renderSVG="{folderIconSVG}"></span>
+        {/if}
         <span>
-          {@html plugin.textProcessor.highlightText(
-            notePath,
-            matchesNotePath
-          )}</span>
+          {@html plugin.textProcessor.highlightText(notePath, matchesNotePath)}
+        </span>
       </div>
     {/if}
 
