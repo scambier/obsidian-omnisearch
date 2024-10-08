@@ -16,6 +16,15 @@ export interface IconPacks {
 export async function loadIconData(plugin: OmnisearchPlugin): Promise<any> {
   const app = plugin.app
 
+  // Check if the 'obsidian-icon-folder' plugin is installed and enabled
+  // Casting 'app' to 'any' here to avoid TypeScript errors since 'plugins' might not be defined on 'App'
+  const iconFolderPlugin = (app as any).plugins.getPlugin(
+    'obsidian-icon-folder'
+  )
+  if (!iconFolderPlugin) {
+    return {}
+  }
+
   const dataJsonPath = `${app.vault.configDir}/plugins/obsidian-icon-folder/data.json`
   try {
     const dataJsonContent = await app.vault.adapter.read(dataJsonPath)
