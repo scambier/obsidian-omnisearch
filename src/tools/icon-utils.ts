@@ -7,6 +7,7 @@ import {
   isFileExcalidraw,
   warnDebug,
 } from './utils'
+import { escapeHTML } from './text-processing'
 
 export interface IconPacks {
   prefixToIconPack: { [prefix: string]: string }
@@ -133,7 +134,7 @@ export async function loadIconSVG(
 
   if (!prefix) {
     // No prefix, assume it's an emoji or text
-    return `<span class="omnisearch-result__icon--emoji">${name}</span>`
+    return `<span class="omnisearch-result__icon--emoji">${escapeHTML(name)}</span>`
   }
 
   const iconPackName = prefixToIconPack[prefix]
