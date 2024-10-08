@@ -133,7 +133,7 @@ export async function loadIconSVG(
 
   if (!prefix) {
     // No prefix, assume it's an emoji or text
-    return `<span class="icon-emoji">${name}</span>`
+    return `<span class="omnisearch-result__icon--emoji">${name}</span>`
   }
 
   const iconPackName = prefixToIconPack[prefix]
