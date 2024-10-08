@@ -28,6 +28,7 @@ import { CacheManager } from './cache-manager'
 import { logDebug } from './tools/utils'
 import { NotesIndexer } from './notes-indexer'
 import { TextProcessor } from './tools/text-processing'
+import { EmbedsRepository } from './repositories/embeds-repository'
 
 export default class OmnisearchPlugin extends Plugin {
   // FIXME: fix the type
@@ -41,6 +42,8 @@ export default class OmnisearchPlugin extends Plugin {
   public readonly notesIndexer = new NotesIndexer(this)
   public readonly textProcessor = new TextProcessor(this)
   public readonly searchEngine = new SearchEngine(this)
+
+  public readonly embedsRepository = new EmbedsRepository(this)
 
   private ribbonButton?: HTMLElement
   private refreshIndexCallback?: () => void
@@ -109,6 +112,7 @@ export default class OmnisearchPlugin extends Plugin {
           if (this.notesIndexer.isFileIndexable(file.path)) {
             logDebug('Indexing new file', file.path)
             searchEngine.addFromPaths([file.path])
+            this.embedsRepository.refreshEmbedsForNote(file.path)
           }
         })
       )
@@ -117,6 +121,7 @@ export default class OmnisearchPlugin extends Plugin {
           logDebug('Removing file', file.path)
           this.cacheManager.removeFromLiveCache(file.path)
           searchEngine.removeFromPaths([file.path])
+          this.embedsRepository.removeFile(file.path)
         })
       )
       this.registerEvent(
@@ -124,6 +129,7 @@ export default class OmnisearchPlugin extends Plugin {
           if (this.notesIndexer.isFileIndexable(file.path)) {
             this.notesIndexer.flagNoteForReindex(file)
           }
+          this.embedsRepository.refreshEmbedsForNote(file.path)
         })
       )
       this.registerEvent(
@@ -132,8 +138,11 @@ export default class OmnisearchPlugin extends Plugin {
             logDebug('Renaming file', file.path)
             this.cacheManager.removeFromLiveCache(oldPath)
             await this.cacheManager.addToLiveCache(file.path)
+
             searchEngine.removeFromPaths([oldPath])
             await searchEngine.addFromPaths([file.path])
+
+            this.embedsRepository.renameFile(oldPath, file.path)
           }
         })
       )
@@ -240,7 +249,7 @@ export default class OmnisearchPlugin extends Plugin {
       }
     }
 
-    const diff = searchEngine.getDiff(
+    const diff = searchEngine.getDocumentsToReindex(
       files.map(f => ({ path: f.path, mtime: f.stat.mtime }))
     )
 
@@ -281,7 +290,8 @@ export default class OmnisearchPlugin extends Plugin {
       }
 
       // Write the cache
-      await searchEngine.writeToCache()
+      await this.database.writeMinisearchCache()
+      await this.embedsRepository.writeToCache()
 
       // Re-enable settings.caching
       if (cacheEnabled) {

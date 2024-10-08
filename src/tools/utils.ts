@@ -151,7 +151,7 @@ export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
 
 export function isFileImage(path: string): boolean {
   const ext = getExtension(path)
-  return ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'webp'
+  return ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'webp' || ext === 'gif'
 }
 
 export function isFilePDF(path: string): boolean {

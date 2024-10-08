@@ -1,4 +1,8 @@
-import MiniSearch, { type Options, type SearchResult } from 'minisearch'
+import MiniSearch, {
+  type AsPlainObject,
+  type Options,
+  type SearchResult,
+} from 'minisearch'
 import type { DocumentRef, IndexedDocument, ResultNote } from '../globals'
 
 import { chunkArray, logDebug, removeDiacritics } from '../tools/utils'
@@ -13,6 +17,7 @@ export class SearchEngine {
   private minisearch: MiniSearch
   /** Map<path, mtime> */
   private indexedDocuments: Map<string, number> = new Map()
+
   // private previousResults: SearchResult[] = []
   // private previousQuery: Query | null = null
 
@@ -25,6 +30,7 @@ export class SearchEngine {
    * Return true if the cache is valid
    */
   async loadCache(): Promise<boolean> {
+    await this.plugin.embedsRepository.loadFromCache()
     const cache = await this.plugin.database.getMinisearchCache()
     if (cache) {
       this.minisearch = await MiniSearch.loadJSAsync(
@@ -39,10 +45,11 @@ export class SearchEngine {
   }
 
   /**
-   * Returns the list of documents that need to be reindexed
+   * Returns the list of documents that need to be reindexed or removed,
+   * either because they are new, have been modified, or have been deleted
    * @param docs
    */
-  getDiff(docs: DocumentRef[]): {
+  getDocumentsToReindex(docs: DocumentRef[]): {
     toAdd: DocumentRef[]
     toRemove: DocumentRef[]
   } {
@@ -167,7 +174,7 @@ export class SearchEngine {
       tokenize: text => [text],
     })
 
-    logDebug('Found', results.length, 'results')
+    logDebug(`Found ${results.length} results`, results)
 
     // Filter query results to only keep files that match query.query.ext (if any)
     if (query.query.ext?.length) {
@@ -264,9 +271,9 @@ export class SearchEngine {
         }
       }
 
-      // Boost custom properties
       const metadata = this.plugin.app.metadataCache.getCache(path)
       if (metadata) {
+        // Boost custom properties
         for (const { name, weight } of settings.weightCustomProperties) {
           const values = metadata?.frontmatter?.[name]
           if (values && result.terms.some(t => values.includes(t))) {
@@ -287,6 +294,8 @@ export class SearchEngine {
 
     // Sort results and keep the 50 best
     results = results.sort((a, b) => b.score - a.score).slice(0, 50)
+
+    logDebug('Filtered results:', results)
 
     if (results.length) logDebug('First result:', results[0])
 
@@ -372,6 +381,33 @@ export class SearchEngine {
       )
     )
 
+    // Inject embeds for images, documents, and PDFs
+    let total = documents.length
+    for (let i = 0; i < total; i++) {
+      const doc = documents[i]
+      if (!doc) continue
+
+      const embeds = this.plugin.embedsRepository
+        .getEmbeds(doc.path)
+        .slice(0, this.plugin.settings.maxEmbeds)
+
+      // Inject embeds in the results
+      for (const embed of embeds) {
+        total++
+        const newDoc = await this.plugin.cacheManager.getDocument(embed)
+        documents.splice(i + 1, 0, newDoc)
+        results.splice(i + 1, 0, {
+          id: newDoc.path,
+          score: 0,
+          terms: [],
+          queryTerms: [],
+          match: {},
+          isEmbed: true,
+        })
+        i++ // Increment i to skip the newly inserted document
+      }
+    }
+
     // Map the raw results to get usable suggestions
     const resultNotes = results.map(result => {
       logDebug('Locating matches for', result.id)
@@ -407,23 +443,37 @@ export class SearchEngine {
         foundWords,
         query
       )
-      logDebug(`Matches for ${note.basename}`, matches)
+      logDebug(`Matches for note "${note.path}"`, matches)
       const resultNote: ResultNote = {
         score: result.score,
         foundWords,
         matches,
+        isEmbed: result.isEmbed,
         ...note,
       }
       return resultNote
     })
+
+    logDebug('Suggestions:', resultNotes)
+
     return resultNotes
   }
 
-  public async writeToCache(): Promise<void> {
-    await this.plugin.database.writeMinisearchCache(
-      this.minisearch,
-      this.indexedDocuments
-    )
+  /**
+   * For cache saving
+   */
+  public getSerializedMiniSearch(): AsPlainObject {
+    return this.minisearch.toJSON()
+  }
+
+  /**
+   * For cache saving
+   */
+  public getSerializedIndexedDocuments(): { path: string; mtime: number }[] {
+    return Array.from(this.indexedDocuments).map(([path, mtime]) => ({
+      path,
+      mtime,
+    }))
   }
 
   private getOptions(): Options<IndexedDocument> {

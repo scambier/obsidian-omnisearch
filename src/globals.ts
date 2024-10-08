@@ -81,6 +81,7 @@ export type ResultNote = {
   content: string
   foundWords: string[]
   matches: SearchMatch[]
+  isEmbed: boolean
 }
 
 let inComposition = false

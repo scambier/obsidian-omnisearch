@@ -3,13 +3,16 @@
   import type { ResultNote } from '../globals'
   import {
     getExtension,
+    isFileCanvas,
+    isFileExcalidraw,
     isFileImage,
+    isFilePDF,
     pathWithoutFilename,
   } from '../tools/utils'
   import ResultItemContainer from './ResultItemContainer.svelte'
   import type OmnisearchPlugin from '../main'
-  import { TFile } from 'obsidian'
-  import { onMount } from 'svelte'
+  import { setIcon, TFile } from 'obsidian'
+  import { onMount, SvelteComponent } from 'svelte'
 
   // Import icon utility functions
   import {
@@ -95,6 +98,9 @@
       },
     }
   }
+  let elFolderPathIcon: HTMLElement
+  let elFilePathIcon: HTMLElement
+  let elEmbedIcon: HTMLElement
 
   $: {
     imagePath = null
@@ -115,12 +121,36 @@
     note.content,
     note.matches[0]?.offset ?? -1
   )
-  $: glyph = false // cacheManager.getLiveDocument(note.path)?.doesNotExist
+  $: glyph = false //cacheManager.getLiveDocument(note.path)?.doesNotExist
+  $: {
+    title = note.displayTitle || note.basename
+    notePath = pathWithoutFilename(note.path)
+
+    // Icons
+    if (elFolderPathIcon) {
+      setIcon(elFolderPathIcon, 'folder-open')
+    }
+    if (elFilePathIcon) {
+      if (isFileImage(note.path)) {
+        setIcon(elFilePathIcon, 'image')
+      } else if (isFilePDF(note.path)) {
+        setIcon(elFilePathIcon, 'file-text')
+      } else if (isFileCanvas(note.path) || isFileExcalidraw(note.path)) {
+        setIcon(elFilePathIcon, 'layout-dashboard')
+      } else {
+        setIcon(elFilePathIcon, 'file')
+      }
+    }
+    if (elEmbedIcon) {
+      setIcon(elEmbedIcon, 'corner-down-right')
+    }
+  }
 </script>
 
 <ResultItemContainer
   glyph="{glyph}"
   id="{note.path}"
+  cssClass=" {note.isEmbed ? 'omnisearch-result__embed' : ''}"
   on:auxclick
   on:click
   on:mousemove
@@ -128,15 +158,19 @@
   <div>
     <div class="omnisearch-result__title-container">
       <span class="omnisearch-result__title">
-        <!-- File Icon -->
-        {#if fileIconSVG}
-          <span class="icon" use:renderSVG="{fileIconSVG}"></span>
+        {#if note.isEmbed}
+          <span
+            bind:this="{elEmbedIcon}"
+            title="The document above is embedded in this note"></span>
+        {:else}
+          <!-- File Icon -->
+          {#if fileIconSVG}
+            <span class="icon" use:renderSVG="{fileIconSVG}"></span>
+          {/if}
         {/if}
-        <span
-          >{@html plugin.textProcessor.highlightText(
-            title,
-            matchesTitle
-          )}</span>
+        <span>
+          {@html plugin.textProcessor.highlightText(title, matchesTitle)}
+        </span>
         <span class="omnisearch-result__extension">
           .{getExtension(note.path)}
         </span>
@@ -159,30 +193,31 @@
         {#if folderIconSVG}
           <span class="icon" use:renderSVG="{folderIconSVG}"></span>
         {/if}
-        <span
-          >{@html plugin.textProcessor.highlightText(
-            notePath,
-            matchesNotePath
-          )}</span>
+        <span>
+          {@html plugin.textProcessor.highlightText(notePath, matchesNotePath)}
+        </span>
       </div>
     {/if}
 
-    <div style="display: flex; flex-direction: row;">
-      {#if $showExcerpt}
-        <div class="omnisearch-result__body">
-          {@html plugin.textProcessor.highlightText(
-            cleanedContent,
-            note.matches
-          )}
-        </div>
-      {/if}
+    <!-- Do not display the excerpt for embedding references -->
+    {#if !note.isEmbed}
+      <div style="display: flex; flex-direction: row;">
+        {#if $showExcerpt}
+          <div class="omnisearch-result__body">
+            {@html plugin.textProcessor.highlightText(
+              cleanedContent,
+              note.matches
+            )}
+          </div>
+        {/if}
 
-      <!-- Image -->
-      {#if imagePath}
-        <div class="omnisearch-result__image-container">
-          <img style="width: 100px" src="{imagePath}" alt="" />
-        </div>
-      {/if}
-    </div>
+        <!-- Image -->
+        {#if imagePath}
+          <div class="omnisearch-result__image-container">
+            <img style="width: 100px" src="{imagePath}" alt="" />
+          </div>
+        {/if}
+      </div>
+    {/if}
   </div>
 </ResultItemContainer>

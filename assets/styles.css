@@ -5,7 +5,7 @@
   white-space: normal;
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  /* justify-content: space-between; */
   flex-wrap: nowrap;
 }
 
@@ -58,6 +58,11 @@
   color: var(--text-muted);
   margin-inline-start: 0.5em;
 }
+
+.omnisearch-result__embed {
+  margin-left: 1em;
+}
+
 
 .omnisearch-result__image-container {
   flex-basis: 20%;
