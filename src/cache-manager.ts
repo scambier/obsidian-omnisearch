@@ -1,4 +1,4 @@
-import { TFile } from 'obsidian'
+import { normalizePath, TFile } from 'obsidian'
 import type { IndexedDocument } from './globals'
 import {
   extractHeadingsFromCache,
@@ -49,6 +49,7 @@ export class CacheManager {
       console.warn(`Omnisearch: Error while adding "${path}" to live cache`, e)
       // Shouldn't be needed, but...
       this.removeFromLiveCache(path)
+      // TODO: increment errors counter
     }
   }
 
@@ -101,6 +102,7 @@ export class CacheManager {
   private async getAndMapIndexedDocument(
     path: string
   ): Promise<IndexedDocument> {
+    path = normalizePath(path)
     const app = this.plugin.app
     const file = app.vault.getAbstractFileByPath(path)
     if (!file) throw new Error(`Invalid file path: "${path}"`)

@@ -174,7 +174,7 @@ export class SearchEngine {
       tokenize: text => [text],
     })
 
-    logDebug('Found', results.length, 'results')
+    logDebug(`Found ${results.length} results`, results)
 
     // Filter query results to only keep files that match query.query.ext (if any)
     if (query.query.ext?.length) {
@@ -295,6 +295,8 @@ export class SearchEngine {
     // Sort results and keep the 50 best
     results = results.sort((a, b) => b.score - a.score).slice(0, 50)
 
+    logDebug('Filtered results:', results)
+
     if (results.length) logDebug('First result:', results[0])
 
     const documents = await Promise.all(
@@ -380,24 +382,29 @@ export class SearchEngine {
     )
 
     // Inject embeds for images, documents, and PDFs
-    for (let i = 0; i < documents.length; i++) {
+    let total = documents.length
+    for (let i = 0; i < total; i++) {
       const doc = documents[i]
+      if (!doc) continue
+
       const embeds = this.plugin.embedsRepository
         .getEmbeds(doc.path)
-        // Limit to 5 embeds
         .slice(0, this.plugin.settings.maxEmbeds)
+
+      // Inject embeds in the results
       for (const embed of embeds) {
-        // Inject the embed in the content after index i
-        documents[++i] = await this.plugin.cacheManager.getDocument(embed)
-        results[i] = {
-          id: documents[i].path,
+        total++
+        const newDoc = await this.plugin.cacheManager.getDocument(embed)
+        documents.splice(i + 1, 0, newDoc)
+        results.splice(i + 1, 0, {
+          id: newDoc.path,
           score: 0,
           terms: [],
           queryTerms: [],
           match: {},
           isEmbed: true,
-        }
-        // console.log(documents[i])
+        })
+        i++ // Increment i to skip the newly inserted document
       }
     }
 
@@ -436,7 +443,7 @@ export class SearchEngine {
         foundWords,
         query
       )
-      logDebug(`Matches for ${note.basename}`, matches)
+      logDebug(`Matches for note "${note.path}"`, matches)
       const resultNote: ResultNote = {
         score: result.score,
         foundWords,
@@ -446,6 +453,9 @@ export class SearchEngine {
       }
       return resultNote
     })
+
+    logDebug('Suggestions:', resultNotes)
+
     return resultNotes
   }
 
