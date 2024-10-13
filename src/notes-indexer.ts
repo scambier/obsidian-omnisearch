@@ -26,7 +26,7 @@ export class NotesIndexer {
   public async refreshIndex(): Promise<void> {
     for (const file of this.notesToReindex) {
       logDebug('Updating file', file.path)
-      await this.plugin.cacheManager.addToLiveCache(file.path)
+      await this.plugin.documentsRepository.addDocument(file.path)
     }
 
     const paths = [...this.notesToReindex].map(n => n.path)

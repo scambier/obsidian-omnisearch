@@ -1,5 +1,5 @@
 import { normalizePath, TFile } from 'obsidian'
-import type { IndexedDocument } from './globals'
+import type { IndexedDocument } from '../globals'
 import {
   extractHeadingsFromCache,
   getAliasesFromMetadata,
@@ -12,12 +12,12 @@ import {
   logDebug,
   removeDiacritics,
   stripMarkdownCharacters,
-} from './tools/utils'
+} from '../tools/utils'
 import type { CanvasData } from 'obsidian/canvas'
-import type OmnisearchPlugin from './main'
-import { getNonExistingNotes } from './tools/notes'
+import type OmnisearchPlugin from '../main'
+import { getNonExistingNotes } from '../tools/notes'
 
-export class CacheManager {
+export class DocumentsRepository {
 
   /**
    * The "live cache", containing all indexed vault files
@@ -31,7 +31,7 @@ export class CacheManager {
    * Set or update the live cache with the content of the given file.
    * @param path
    */
-  public async addToLiveCache(path: string): Promise<void> {
+  public async addDocument(path: string): Promise<void> {
     try {
       const doc = await this.getAndMapIndexedDocument(path)
       if (!doc.path) {
@@ -45,12 +45,12 @@ export class CacheManager {
     } catch (e) {
       console.warn(`Omnisearch: Error while adding "${path}" to live cache`, e)
       // Shouldn't be needed, but...
-      this.removeFromLiveCache(path)
+      this.removeDocument(path)
       // TODO: increment errors counter
     }
   }
 
-  public removeFromLiveCache(path: string): void {
+  public removeDocument(path: string): void {
     this.documents.delete(path)
   }
 
@@ -59,7 +59,7 @@ export class CacheManager {
       return this.documents.get(path)!
     }
     logDebug('Generating IndexedDocument from', path)
-    await this.addToLiveCache(path)
+    await this.addDocument(path)
     return this.documents.get(path)!
   }
 

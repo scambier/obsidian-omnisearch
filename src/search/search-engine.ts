@@ -79,7 +79,7 @@ export class SearchEngine {
     let documents = (
       await Promise.all(
         paths.map(
-          async path => await this.plugin.cacheManager.getDocument(path)
+          async path => await this.plugin.documentsRepository.getDocument(path)
         )
       )
     ).filter(d => !!d?.path)
@@ -301,7 +301,7 @@ export class SearchEngine {
 
     const documents = await Promise.all(
       results.map(
-        async result => await this.plugin.cacheManager.getDocument(result.id)
+        async result => await this.plugin.documentsRepository.getDocument(result.id)
       )
     )
 
@@ -377,7 +377,7 @@ export class SearchEngine {
 
     const documents = await Promise.all(
       results.map(
-        async result => await this.plugin.cacheManager.getDocument(result.id)
+        async result => await this.plugin.documentsRepository.getDocument(result.id)
       )
     )
 
@@ -394,7 +394,7 @@ export class SearchEngine {
       // Inject embeds in the results
       for (const embed of embeds) {
         total++
-        const newDoc = await this.plugin.cacheManager.getDocument(embed)
+        const newDoc = await this.plugin.documentsRepository.getDocument(embed)
         documents.splice(i + 1, 0, newDoc)
         results.splice(i + 1, 0, {
           id: newDoc.path,
