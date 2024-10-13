@@ -43,7 +43,7 @@
   const debouncedOnInput = debounce(() => {
     // If typing a query and not executing it,
     // the next time we open the modal, the search field will be empty
-    plugin.cacheManager.addToSearchHistory('')
+    plugin.searchHistory.addToHistory('')
     dispatch('input', value)
   }, 300)
 </script>

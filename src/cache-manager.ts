@@ -18,10 +18,7 @@ import type OmnisearchPlugin from './main'
 import { getNonExistingNotes } from './tools/notes'
 
 export class CacheManager {
-  /**
-   * Show an empty input field next time the user opens Omnisearch modal
-   */
-  private nextQueryIsEmpty = false
+
   /**
    * The "live cache", containing all indexed vault files
    * in the form of IndexedDocuments
@@ -64,34 +61,6 @@ export class CacheManager {
     logDebug('Generating IndexedDocument from', path)
     await this.addToLiveCache(path)
     return this.documents.get(path)!
-  }
-
-  public async addToSearchHistory(query: string): Promise<void> {
-    if (!query) {
-      this.nextQueryIsEmpty = true
-      return
-    }
-    this.nextQueryIsEmpty = false
-    const database = this.plugin.database
-    let history = await database.searchHistory.toArray()
-    history = history.filter(s => s.query !== query).reverse()
-    history.unshift({ query })
-    history = history.slice(0, 10)
-    await database.searchHistory.clear()
-    await database.searchHistory.bulkAdd(history)
-  }
-
-  /**
-   * @returns The search history, in reverse chronological order
-   */
-  public async getSearchHistory(): Promise<ReadonlyArray<string>> {
-    const data = (await this.plugin.database.searchHistory.toArray())
-      .reverse()
-      .map(o => o.query)
-    if (this.nextQueryIsEmpty) {
-      data.unshift('')
-    }
-    return data
   }
 
   /**

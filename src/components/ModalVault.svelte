@@ -110,7 +110,7 @@
 
   async function prevSearchHistory() {
     // Filter out the empty string, if it's there
-    const history = (await plugin.cacheManager.getSearchHistory()).filter(
+    const history = (await plugin.searchHistory.getHistory()).filter(
       s => s
     )
     if (++historySearchIndex >= history.length) {
@@ -121,7 +121,7 @@
   }
 
   async function nextSearchHistory() {
-    const history = (await plugin.cacheManager.getSearchHistory()).filter(
+    const history = (await plugin.searchHistory.getHistory()).filter(
       s => s
     )
     if (--historySearchIndex < 0) {
@@ -192,7 +192,7 @@
 
   function saveCurrentQuery() {
     if (searchQuery) {
-      plugin.cacheManager.addToSearchHistory(searchQuery)
+      plugin.searchHistory.addToHistory(searchQuery)
     }
   }
 

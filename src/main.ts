@@ -29,6 +29,7 @@ import { logDebug } from './tools/utils'
 import { NotesIndexer } from './notes-indexer'
 import { TextProcessor } from './tools/text-processing'
 import { EmbedsRepository } from './repositories/embeds-repository'
+import { SearchHistory } from "./search/search-history";
 
 export default class OmnisearchPlugin extends Plugin {
   // FIXME: fix the type
@@ -42,6 +43,7 @@ export default class OmnisearchPlugin extends Plugin {
   public readonly notesIndexer = new NotesIndexer(this)
   public readonly textProcessor = new TextProcessor(this)
   public readonly searchEngine = new SearchEngine(this)
+  public readonly searchHistory = new SearchHistory(this)
 
   public readonly embedsRepository = new EmbedsRepository(this)
 
