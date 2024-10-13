@@ -2,6 +2,16 @@
 
 This changelog is not exhaustive.
 
+## 1.25.x
+
+- Added basic support for embed references in Vault Search results
+- Added support for [Iconize](https://github.com/FlorianWoelki/obsidian-iconize)
+- Weights are now 1-10 (instead of 1-5)
+
+## 1.24.x
+
+- Added support for [AI Image Analyzer](https://github.com/Swaggeroo/obsidian-ai-image-analyzer)
+
 ## 1.23.x
 
 - Updated Chinese tokenizer
