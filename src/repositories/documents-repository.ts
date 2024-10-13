@@ -1,4 +1,4 @@
-import { normalizePath, TFile } from 'obsidian'
+import { normalizePath, Notice, TFile } from 'obsidian'
 import type { IndexedDocument } from '../globals'
 import {
   extractHeadingsFromCache,
@@ -18,14 +18,21 @@ import type OmnisearchPlugin from '../main'
 import { getNonExistingNotes } from '../tools/notes'
 
 export class DocumentsRepository {
-
   /**
    * The "live cache", containing all indexed vault files
    * in the form of IndexedDocuments
    */
   private documents: Map<string, IndexedDocument> = new Map()
+  private errorsCount = 0
+  private errorsWarned = false
 
-  constructor(private plugin: OmnisearchPlugin) {}
+  constructor(private plugin: OmnisearchPlugin) {
+    setInterval(() => {
+      if (this.errorsCount > 0) {
+        --this.errorsCount
+      }
+    }, 1000)
+  }
 
   /**
    * Set or update the live cache with the content of the given file.
@@ -46,7 +53,7 @@ export class DocumentsRepository {
       console.warn(`Omnisearch: Error while adding "${path}" to live cache`, e)
       // Shouldn't be needed, but...
       this.removeDocument(path)
-      // TODO: increment errors counter
+      this.countError()
     }
   }
 
@@ -231,6 +238,15 @@ export class DocumentsRepository {
       headings3: metadata
         ? extractHeadingsFromCache(metadata, 3).join(' ')
         : '',
+    }
+  }
+
+  private countError(): void {
+    if (++this.errorsCount > 5 && !this.errorsWarned) {
+      this.errorsWarned = true
+      new Notice(
+        'Omnisearch ⚠️ There might be an issue with your cache. You should clean it in Omnisearch settings and restart Obsidian.'
+      )
     }
   }
 }
