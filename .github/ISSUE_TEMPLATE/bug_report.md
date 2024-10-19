@@ -4,8 +4,10 @@ about: Create a report to help us improve
 title: "[BUG] "
 labels: ''
 assignees: ''
-
 ---
+
+<!-- PLEASE FILL THIS TEMPLATE -->
+<!-- If you don't fill it, I'll ask you to fill it before looking at your issue -->
 
 **Problem description:**
 
