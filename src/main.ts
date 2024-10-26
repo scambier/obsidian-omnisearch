@@ -24,30 +24,33 @@ import {
 import { notifyOnIndexed, registerAPI } from './tools/api'
 import { Database } from './database'
 import { SearchEngine } from './search/search-engine'
-import { CacheManager } from './cache-manager'
+import { DocumentsRepository } from './repositories/documents-repository'
 import { logDebug } from './tools/utils'
 import { NotesIndexer } from './notes-indexer'
 import { TextProcessor } from './tools/text-processing'
+import { EmbedsRepository } from './repositories/embeds-repository'
+import { SearchHistory } from "./search/search-history";
 
 export default class OmnisearchPlugin extends Plugin {
   // FIXME: fix the type
   public apiHttpServer: null | any = null
   public settings: OmnisearchSettings = getDefaultSettings(this.app)
 
-  // FIXME: merge cache and cacheManager, or find other names
-  public readonly cacheManager: CacheManager
+  public readonly documentsRepository: DocumentsRepository
+  public readonly embedsRepository = new EmbedsRepository(this)
   public readonly database = new Database(this)
 
   public readonly notesIndexer = new NotesIndexer(this)
   public readonly textProcessor = new TextProcessor(this)
   public readonly searchEngine = new SearchEngine(this)
+  public readonly searchHistory = new SearchHistory(this)
 
   private ribbonButton?: HTMLElement
   private refreshIndexCallback?: () => void
 
   constructor(app: App, manifest: PluginManifest) {
     super(app, manifest)
-    this.cacheManager = new CacheManager(this)
+    this.documentsRepository = new DocumentsRepository(this)
   }
 
   async onload(): Promise<void> {
@@ -109,14 +112,16 @@ export default class OmnisearchPlugin extends Plugin {
           if (this.notesIndexer.isFileIndexable(file.path)) {
             logDebug('Indexing new file', file.path)
             searchEngine.addFromPaths([file.path])
+            this.embedsRepository.refreshEmbedsForNote(file.path)
           }
         })
       )
       this.registerEvent(
         this.app.vault.on('delete', file => {
           logDebug('Removing file', file.path)
-          this.cacheManager.removeFromLiveCache(file.path)
+          this.documentsRepository.removeDocument(file.path)
           searchEngine.removeFromPaths([file.path])
+          this.embedsRepository.removeFile(file.path)
         })
       )
       this.registerEvent(
@@ -124,16 +129,20 @@ export default class OmnisearchPlugin extends Plugin {
           if (this.notesIndexer.isFileIndexable(file.path)) {
             this.notesIndexer.flagNoteForReindex(file)
           }
+          this.embedsRepository.refreshEmbedsForNote(file.path)
         })
       )
       this.registerEvent(
         this.app.vault.on('rename', async (file, oldPath) => {
           if (this.notesIndexer.isFileIndexable(file.path)) {
             logDebug('Renaming file', file.path)
-            this.cacheManager.removeFromLiveCache(oldPath)
-            await this.cacheManager.addToLiveCache(file.path)
+            this.documentsRepository.removeDocument(oldPath)
+            await this.documentsRepository.addDocument(file.path)
+
             searchEngine.removeFromPaths([oldPath])
             await searchEngine.addFromPaths([file.path])
+
+            this.embedsRepository.renameFile(oldPath, file.path)
           }
         })
       )
@@ -240,7 +249,7 @@ export default class OmnisearchPlugin extends Plugin {
       }
     }
 
-    const diff = searchEngine.getDiff(
+    const diff = searchEngine.getDocumentsToReindex(
       files.map(f => ({ path: f.path, mtime: f.stat.mtime }))
     )
 
@@ -281,7 +290,8 @@ export default class OmnisearchPlugin extends Plugin {
       }
 
       // Write the cache
-      await searchEngine.writeToCache()
+      await this.database.writeMinisearchCache()
+      await this.embedsRepository.writeToCache()
 
       // Re-enable settings.caching
       if (cacheEnabled) {

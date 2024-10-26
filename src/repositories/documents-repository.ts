@@ -1,5 +1,5 @@
-import { TFile } from 'obsidian'
-import type { IndexedDocument } from './globals'
+import { normalizePath, Notice, TFile } from 'obsidian'
+import type { IndexedDocument } from '../globals'
 import {
   extractHeadingsFromCache,
   getAliasesFromMetadata,
@@ -12,30 +12,33 @@ import {
   logDebug,
   removeDiacritics,
   stripMarkdownCharacters,
-} from './tools/utils'
+} from '../tools/utils'
 import type { CanvasData } from 'obsidian/canvas'
-import type OmnisearchPlugin from './main'
-import { getNonExistingNotes } from './tools/notes'
+import type OmnisearchPlugin from '../main'
+import { getNonExistingNotes } from '../tools/notes'
 
-export class CacheManager {
-  /**
-   * Show an empty input field next time the user opens Omnisearch modal
-   */
-  private nextQueryIsEmpty = false
-
+export class DocumentsRepository {
   /**
    * The "live cache", containing all indexed vault files
    * in the form of IndexedDocuments
    */
   private documents: Map<string, IndexedDocument> = new Map()
+  private errorsCount = 0
+  private errorsWarned = false
 
-  constructor(private plugin: OmnisearchPlugin) {}
+  constructor(private plugin: OmnisearchPlugin) {
+    setInterval(() => {
+      if (this.errorsCount > 0) {
+        --this.errorsCount
+      }
+    }, 1000)
+  }
 
   /**
    * Set or update the live cache with the content of the given file.
    * @param path
    */
-  public async addToLiveCache(path: string): Promise<void> {
+  public async addDocument(path: string): Promise<void> {
     try {
       const doc = await this.getAndMapIndexedDocument(path)
       if (!doc.path) {
@@ -45,14 +48,16 @@ export class CacheManager {
         return
       }
       this.documents.set(path, doc)
+      this.plugin.embedsRepository.refreshEmbedsForNote(path)
     } catch (e) {
       console.warn(`Omnisearch: Error while adding "${path}" to live cache`, e)
       // Shouldn't be needed, but...
-      this.removeFromLiveCache(path)
+      this.removeDocument(path)
+      this.countError()
     }
   }
 
-  public removeFromLiveCache(path: string): void {
+  public removeDocument(path: string): void {
     this.documents.delete(path)
   }
 
@@ -61,36 +66,8 @@ export class CacheManager {
       return this.documents.get(path)!
     }
     logDebug('Generating IndexedDocument from', path)
-    await this.addToLiveCache(path)
+    await this.addDocument(path)
     return this.documents.get(path)!
-  }
-
-  public async addToSearchHistory(query: string): Promise<void> {
-    if (!query) {
-      this.nextQueryIsEmpty = true
-      return
-    }
-    this.nextQueryIsEmpty = false
-    const database = this.plugin.database
-    let history = await database.searchHistory.toArray()
-    history = history.filter(s => s.query !== query).reverse()
-    history.unshift({ query })
-    history = history.slice(0, 10)
-    await database.searchHistory.clear()
-    await database.searchHistory.bulkAdd(history)
-  }
-
-  /**
-   * @returns The search history, in reverse chronological order
-   */
-  public async getSearchHistory(): Promise<ReadonlyArray<string>> {
-    const data = (await this.plugin.database.searchHistory.toArray())
-      .reverse()
-      .map(o => o.query)
-    if (this.nextQueryIsEmpty) {
-      data.unshift('')
-    }
-    return data
   }
 
   /**
@@ -101,6 +78,7 @@ export class CacheManager {
   private async getAndMapIndexedDocument(
     path: string
   ): Promise<IndexedDocument> {
+    path = normalizePath(path)
     const app = this.plugin.app
     const file = app.vault.getAbstractFileByPath(path)
     if (!file) throw new Error(`Invalid file path: "${path}"`)
@@ -163,16 +141,22 @@ export class CacheManager {
     else if (
       isFileImage(path) &&
       ((this.plugin.settings.imagesIndexing &&
-      extractor?.canFileBeExtracted(path)) ||
-      (this.plugin.settings.aiImageIndexing &&
-      aiImageAnalyzer?.canBeAnalyzed(file)))
+        extractor?.canFileBeExtracted(path)) ||
+        (this.plugin.settings.aiImageIndexing &&
+          aiImageAnalyzer?.canBeAnalyzed(file)))
     ) {
-      if (this.plugin.settings.imagesIndexing && extractor?.canFileBeExtracted(path)){
+      if (
+        this.plugin.settings.imagesIndexing &&
+        extractor?.canFileBeExtracted(path)
+      ) {
         content = await extractor.extractText(file)
       }
 
-      if (this.plugin.settings.aiImageIndexing && aiImageAnalyzer?.canBeAnalyzed(file)) {
-        content = await aiImageAnalyzer.analyzeImage(file) + (content ?? '')
+      if (
+        this.plugin.settings.aiImageIndexing &&
+        aiImageAnalyzer?.canBeAnalyzed(file)
+      ) {
+        content = (await aiImageAnalyzer.analyzeImage(file)) + (content ?? '')
       }
     }
     // ** PDF **
@@ -230,7 +214,8 @@ export class CacheManager {
         }
       }
     }
-    const displayTitle = metadata?.frontmatter?.[this.plugin.settings.displayTitle] ?? ''
+    const displayTitle =
+      metadata?.frontmatter?.[this.plugin.settings.displayTitle] ?? ''
     const tags = getTagsFromMetadata(metadata)
     return {
       basename: file.basename,
@@ -253,6 +238,15 @@ export class CacheManager {
       headings3: metadata
         ? extractHeadingsFromCache(metadata, 3).join(' ')
         : '',
+    }
+  }
+
+  private countError(): void {
+    if (++this.errorsCount > 5 && !this.errorsWarned) {
+      this.errorsWarned = true
+      new Notice(
+        'Omnisearch ⚠️ There might be an issue with your cache. You should clean it in Omnisearch settings and restart Obsidian.'
+      )
     }
   }
 }

@@ -163,7 +163,7 @@ export class OmnisearchVaultModal extends OmnisearchModal {
       .getActiveViewOfType(MarkdownView)
       ?.editor.getSelection()
 
-    plugin.cacheManager.getSearchHistory().then(history => {
+    plugin.searchHistory.getHistory().then(history => {
       // Previously searched query (if enabled in settings)
       const previous = plugin.settings.showPreviousQueryResults
         ? history[0]

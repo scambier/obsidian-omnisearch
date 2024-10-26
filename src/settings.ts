@@ -54,6 +54,8 @@ export interface OmnisearchSettings extends WeightingSettings {
   ribbonIcon: boolean
   /** Display the small contextual excerpt in search results */
   showExcerpt: boolean
+  /** Number of embeds references to display in search results */
+  maxEmbeds: number
   /** Render line returns with <br> in excerpts */
   renderLineReturnInExcerpts: boolean
   /** Enable a "create note" button in the Vault Search modal */
@@ -465,6 +467,24 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
+    // Show embeds
+    new Setting(containerEl)
+      .setName('Show embed references')
+      .setDesc(
+        htmlDescription(`Some results are <a href="https://help.obsidian.md/Linking+notes+and+files/Embed+files">embedded</a> in other notes.<br>
+          This setting controls the maximum number of embeds to show in the search results. Set to 0 to disable.<br>
+          Also works with Text Extractor for embedded images and documents.`)
+      )
+      .addSlider(cb => {
+        cb.setLimits(0, 10, 1)
+          .setValue(settings.maxEmbeds)
+          .setDynamicTooltip()
+          .onChange(async v => {
+            settings.maxEmbeds = v
+            await saveSettings(this.plugin)
+          })
+      })
+
     // Keep line returns in excerpts
     new Setting(containerEl)
       .setName('Render line return in excerpts')
@@ -761,7 +781,7 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   weightSlider(cb: SliderComponent, key: keyof WeightingSettings): void {
-    cb.setLimits(1, 5, 0.1)
+    cb.setLimits(1, 10, 0.5)
       .setValue(settings[key])
       .setDynamicTooltip()
       .onChange(async v => {
@@ -791,6 +811,7 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
 
     ribbonIcon: true,
     showExcerpt: true,
+    maxEmbeds: 5,
     renderLineReturnInExcerpts: true,
     showCreateButton: false,
     highlight: true,
@@ -799,12 +820,12 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
     tokenizeUrls: false,
     fuzziness: '1',
 
-    weightBasename: 3,
-    weightDirectory: 2,
-    weightH1: 1.5,
-    weightH2: 1.3,
-    weightH3: 1.1,
-    weightUnmarkedTags: 1.1,
+    weightBasename: 10,
+    weightDirectory: 7,
+    weightH1: 6,
+    weightH2: 5,
+    weightH3: 4,
+    weightUnmarkedTags: 2,
     weightCustomProperties: [] as { name: string; weight: number }[],
 
     httpApiEnabled: false,

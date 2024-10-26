@@ -78,15 +78,6 @@ export class TextProcessor {
     }
   }
 
-  escapeHTML(html: string): string {
-    return html
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;')
-  }
-
   /**
    * Converts a list of strings to a list of words, using the \b word boundary.
    * Used to find excerpts in a note body, or select which words to highlight.
@@ -200,7 +191,7 @@ export class TextProcessor {
   }
 }
 
-function escapeHTML(html: string): string {
+export function escapeHTML(html: string): string {
   return html
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
