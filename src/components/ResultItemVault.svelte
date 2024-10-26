@@ -12,7 +12,7 @@
   import ResultItemContainer from './ResultItemContainer.svelte'
   import type OmnisearchPlugin from '../main'
   import { setIcon, TFile } from 'obsidian'
-  import { onMount, SvelteComponent } from 'svelte'
+  import { onMount } from 'svelte'
 
   // Import icon utility functions
   import {
@@ -165,7 +165,8 @@
         {:else}
           <!-- File Icon -->
           {#if fileIconSVG}
-            <span class="omnisearch-result__icon" use:renderSVG="{fileIconSVG}"></span>
+            <span class="omnisearch-result__icon" use:renderSVG="{fileIconSVG}"
+            ></span>
           {/if}
         {/if}
         <span>
@@ -191,7 +192,8 @@
       <div class="omnisearch-result__folder-path">
         <!-- Folder Icon -->
         {#if folderIconSVG}
-          <span class="omnisearch-result__icon" use:renderSVG="{folderIconSVG}"></span>
+          <span class="omnisearch-result__icon" use:renderSVG="{folderIconSVG}"
+          ></span>
         {/if}
         <span>
           {@html plugin.textProcessor.highlightText(notePath, matchesNotePath)}

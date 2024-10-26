@@ -29,7 +29,7 @@ export class EmbedsRepository {
       this.embeds.delete(oldPath)
     }
     // If the file is a note referencing other files
-    this.embeds.forEach((referencedBy, key) => {
+    this.embeds.forEach((referencedBy, _key) => {
       if (referencedBy.has(oldPath)) {
         referencedBy.delete(oldPath)
         referencedBy.add(newPath)
@@ -38,7 +38,7 @@ export class EmbedsRepository {
   }
 
   public refreshEmbedsForNote(filePath: string): void {
-    this.embeds.forEach((referencedBy, key) => {
+    this.embeds.forEach((referencedBy, _key) => {
       if (referencedBy.has(filePath)) {
         referencedBy.delete(filePath)
       }

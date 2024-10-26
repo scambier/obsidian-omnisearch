@@ -1,4 +1,4 @@
-import { TFile, getIcon, normalizePath } from 'obsidian'
+import { getIcon, normalizePath } from 'obsidian'
 import type OmnisearchPlugin from '../main'
 import {
   isFileImage,
@@ -134,7 +134,9 @@ export async function loadIconSVG(
 
   if (!prefix) {
     // No prefix, assume it's an emoji or text
-    return `<span class="omnisearch-result__icon--emoji">${escapeHTML(name)}</span>`
+    return `<span class="omnisearch-result__icon--emoji">${escapeHTML(
+      name
+    )}</span>`
   }
 
   const iconPackName = prefixToIconPack[prefix]
