@@ -1,4 +1,11 @@
-import { App, Notice, Platform, Plugin, type PluginManifest } from 'obsidian'
+import {
+  App,
+  Notice,
+  Platform,
+  Plugin,
+  type PluginManifest,
+  TFile,
+} from 'obsidian'
 import {
   OmnisearchInFileModal,
   OmnisearchVaultModal,
@@ -109,7 +116,10 @@ export default class OmnisearchPlugin extends Plugin {
       // Listeners to keep the search index up-to-date
       this.registerEvent(
         this.app.vault.on('create', file => {
-          if (this.notesIndexer.isFileIndexable(file.path)) {
+          if (
+            file instanceof TFile &&
+            this.notesIndexer.isFileIndexable(file.path)
+          ) {
             logDebug('Indexing new file', file.path)
             searchEngine.addFromPaths([file.path])
             this.embedsRepository.refreshEmbedsForNote(file.path)

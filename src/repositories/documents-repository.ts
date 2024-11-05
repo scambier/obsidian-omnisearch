@@ -97,17 +97,18 @@ export class DocumentsRepository {
     // ** Canvas **
     // Extract the text fields from the json
     else if (isFileCanvas(path)) {
-      const canvas = JSON.parse(await app.vault.cachedRead(file)) as CanvasData
+      const fileContents = await app.vault.cachedRead(file)
+      const canvas: CanvasData = fileContents ? JSON.parse(fileContents) : {}
       let texts: string[] = []
       // Concatenate text from the canvas fields
-      for (const node of canvas.nodes) {
+      for (const node of canvas.nodes ?? []) {
         if (node.type === 'text') {
           texts.push(node.text)
         } else if (node.type === 'file') {
           texts.push(node.file)
         }
       }
-      for (const edge of canvas.edges.filter(e => !!e.label)) {
+      for (const edge of (canvas.edges ?? []).filter(e => !!e.label)) {
         texts.push(edge.label!)
       }
       content = texts.join('\r\n')
