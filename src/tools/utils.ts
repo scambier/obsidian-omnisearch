@@ -230,23 +230,21 @@ export function splitHyphens(text: string): string[] {
   return text.split('-').filter(t => t)
 }
 
-export function logDebug(...args: any[]): void {
-  printDebug(console.log, ...args)
+export function logVerbose(...args: any[]): void {
+  printVerbose(console.debug, ...args)
 }
 
-export function warnDebug(...args: any[]): void {
-  printDebug(console.warn, ...args)
+export function warnVerbose(...args: any[]): void {
+  printVerbose(console.warn, ...args)
 }
 
-let printDebugEnabled = false
-export function enablePrintDebug(enable: boolean): void {
-  printDebugEnabled = enable
+let verboseLoggingEnabled = false
+export function enableVerboseLogging(enable: boolean): void {
+  verboseLoggingEnabled = enable
 }
 
-function printDebug(fn: (...args: any[]) => any, ...args: any[]): void {
-  if (printDebugEnabled) {
-    const t = new Date()
-    const ts = `${t.getMinutes()}:${t.getSeconds()}:${t.getMilliseconds()}`
-    fn(...['Omnisearch -', ts + ' -', ...args])
+function printVerbose(fn: (...args: any[]) => any, ...args: any[]): void {
+  if (verboseLoggingEnabled) {
+    fn(...args)
   }
 }

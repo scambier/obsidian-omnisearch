@@ -5,7 +5,7 @@ import MiniSearch, {
 } from 'minisearch'
 import type { DocumentRef, IndexedDocument, ResultNote } from '../globals'
 
-import { chunkArray, logDebug, removeDiacritics } from '../tools/utils'
+import { chunkArray, logVerbose, removeDiacritics } from '../tools/utils'
 import { Notice } from 'obsidian'
 import type { Query } from './query'
 import { sortBy } from 'lodash-es'
@@ -55,13 +55,12 @@ export class SearchEngine {
   } {
     const docsMap = new Map(docs.map(d => [d.path, d.mtime]))
 
-    // console.log(this.indexedDocuments)
     const toAdd = docs.filter(
       d =>
         !this.indexedDocuments.has(d.path) ||
         this.indexedDocuments.get(d.path) !== d.mtime
     )
-    // console.log(toAdd)
+    
     const toRemove = [...this.indexedDocuments]
       .filter(
         ([path, mtime]) => !docsMap.has(path) || docsMap.get(path) !== mtime
@@ -75,7 +74,7 @@ export class SearchEngine {
    * @param paths
    */
   public async addFromPaths(paths: string[]): Promise<void> {
-    logDebug('Adding files', paths)
+    logVerbose('Adding files', paths)
     let documents = (
       await Promise.all(
         paths.map(
@@ -83,7 +82,7 @@ export class SearchEngine {
         )
       )
     ).filter(d => !!d?.path)
-    logDebug('Sorting documents to first index markdown')
+    logVerbose('Sorting documents to first index markdown')
     // Index markdown files first
     documents = sortBy(documents, d => (d.path.endsWith('.md') ? 0 : 1))
 
@@ -95,7 +94,7 @@ export class SearchEngine {
     // Split the documents in smaller chunks to add them to minisearch
     const chunkedDocs = chunkArray(documents, 500)
     for (const docs of chunkedDocs) {
-      logDebug('Indexing into search engine', docs)
+      logVerbose('Indexing into search engine', docs)
       // Update the list of indexed docs
       docs.forEach(doc => this.indexedDocuments.set(doc.path, doc.mtime))
 
@@ -134,8 +133,8 @@ export class SearchEngine {
       return []
     }
 
-    logDebug('=== New search ===')
-    logDebug('Starting search for', query)
+    logVerbose('=== New search ===')
+    logVerbose('Starting search for', query)
 
     let fuzziness: number
     switch (settings.fuzziness) {
@@ -151,7 +150,7 @@ export class SearchEngine {
     }
 
     const searchTokens = this.tokenizer.tokenizeForSearch(query.segmentsToStr())
-    logDebug(JSON.stringify(searchTokens, null, 1))
+    logVerbose(JSON.stringify(searchTokens, null, 1))
     let results = this.minisearch.search(searchTokens, {
       prefix: term => term.length >= options.prefixLength,
       // length <= 3: no fuzziness
@@ -174,7 +173,7 @@ export class SearchEngine {
       tokenize: text => [text],
     })
 
-    logDebug(`Found ${results.length} results`, results)
+    logVerbose(`Found ${results.length} results`, results)
 
     // Filter query results to only keep files that match query.query.ext (if any)
     if (query.query.ext?.length) {
@@ -212,7 +211,7 @@ export class SearchEngine {
       return results.filter(r => r.id === options.singleFilePath)
     }
 
-    logDebug(
+    logVerbose(
       'searching with downranked folders',
       settings.downrankedFoldersFilters
     )
@@ -252,7 +251,7 @@ export class SearchEngine {
             // we don't want the filter to match the folder sources, e.g.
             // it needs to match a whole folder name
             if (path === filter || path.startsWith(filter + '/')) {
-              logDebug('searching with downranked folders in path: ', path)
+              logVerbose('searching with downranked folders in path: ', path)
               downrankingFolder = true
             }
           }
@@ -277,7 +276,7 @@ export class SearchEngine {
         for (const { name, weight } of settings.weightCustomProperties) {
           const values = metadata?.frontmatter?.[name]
           if (values && result.terms.some(t => values.includes(t))) {
-            logDebug(`Boosting field "${name}" x${weight} for ${path}`)
+            logVerbose(`Boosting field "${name}" x${weight} for ${path}`)
             result.score *= weight
           }
         }
@@ -290,14 +289,14 @@ export class SearchEngine {
         }
       }
     }
-    logDebug('Sorting and limiting results')
+    logVerbose('Sorting and limiting results')
 
     // Sort results and keep the 50 best
     results = results.sort((a, b) => b.score - a.score).slice(0, 50)
 
-    logDebug('Filtered results:', results)
+    logVerbose('Filtered results:', results)
 
-    if (results.length) logDebug('First result:', results[0])
+    if (results.length) logVerbose('First result:', results[0])
 
     const documents = await Promise.all(
       results.map(
@@ -308,7 +307,7 @@ export class SearchEngine {
     // If the search query contains quotes, filter out results that don't have the exact match
     const exactTerms = query.getExactTerms()
     if (exactTerms.length) {
-      logDebug('Filtering with quoted terms: ', exactTerms)
+      logVerbose('Filtering with quoted terms: ', exactTerms)
       results = results.filter(r => {
         const document = documents.find(d => d.path === r.id)
         const title = document?.path.toLowerCase() ?? ''
@@ -327,7 +326,7 @@ export class SearchEngine {
     // If the search query contains exclude terms, filter out results that have them
     const exclusions = query.query.exclude.text
     if (exclusions.length) {
-      logDebug('Filtering with exclusions')
+      logVerbose('Filtering with exclusions')
       results = results.filter(r => {
         const content = (
           documents.find(d => d.path === r.id)?.content ?? ''
@@ -336,7 +335,7 @@ export class SearchEngine {
       })
     }
 
-    logDebug('Deduping')
+    logVerbose('Deduping')
     // FIXME:
     // Dedupe results - clutch for https://github.com/scambier/obsidian-omnisearch/issues/129
     results = results.filter(
@@ -410,7 +409,7 @@ export class SearchEngine {
 
     // Map the raw results to get usable suggestions
     const resultNotes = results.map(result => {
-      logDebug('Locating matches for', result.id)
+      logVerbose('Locating matches for', result.id)
       let note = documents.find(d => d.path === result.id)
       if (!note) {
         // throw new Error(`Omnisearch - Note "${result.id}" not indexed`)
@@ -435,15 +434,15 @@ export class SearchEngine {
         // Tags, starting with #
         ...query.getTags(),
       ]
-      logDebug('Matching tokens:', foundWords)
+      logVerbose('Matching tokens:', foundWords)
 
-      logDebug('Getting matches locations...')
+      logVerbose('Getting matches locations...')
       const matches = this.plugin.textProcessor.getMatches(
         note.content,
         foundWords,
         query
       )
-      logDebug(`Matches for note "${note.path}"`, matches)
+      logVerbose(`Matches for note "${note.path}"`, matches)
       const resultNote: ResultNote = {
         score: result.score,
         foundWords,
@@ -454,7 +453,7 @@ export class SearchEngine {
       return resultNote
     })
 
-    logDebug('Suggestions:', resultNotes)
+    logVerbose('Suggestions:', resultNotes)
 
     return resultNotes
   }

@@ -5,7 +5,7 @@ import {
   isFilePDF,
   isFileCanvas,
   isFileExcalidraw,
-  warnDebug,
+  warnVerbose,
 } from './utils'
 import { escapeHTML } from './text-processing'
 
@@ -38,7 +38,7 @@ export async function loadIconData(plugin: OmnisearchPlugin): Promise<any> {
     }
     return iconData
   } catch (e) {
-    warnDebug('Failed to read data.json:', e)
+    warnVerbose('Failed to read data.json:', e)
     return {}
   }
 }
@@ -74,7 +74,7 @@ export async function initializeIconPacks(
         }
       }
     } catch (e) {
-      warnDebug('Failed to list icon packs:', e)
+      warnVerbose('Failed to list icon packs:', e)
     }
   }
 
@@ -142,7 +142,7 @@ export async function loadIconSVG(
   const iconPackName = prefixToIconPack[prefix]
 
   if (!iconPackName) {
-    warnDebug(`No icon pack found for prefix: ${prefix}`)
+    warnVerbose(`No icon pack found for prefix: ${prefix}`)
     return null
   }
 
@@ -153,12 +153,12 @@ export async function loadIconSVG(
     if (iconEl) {
       return iconEl.outerHTML
     } else {
-      warnDebug(`Lucide icon not found: ${dashedName}`)
+      warnVerbose(`Lucide icon not found: ${dashedName}`)
       return null
     }
   } else {
     if (!iconsPath) {
-      warnDebug('Icons path is not set. Cannot load icon SVG.')
+      warnVerbose('Icons path is not set. Cannot load icon SVG.')
       return null
     }
     const iconPath = `${plugin.app.vault.configDir}/${iconsPath}/${iconPackName}/${name}.svg`
@@ -166,7 +166,7 @@ export async function loadIconSVG(
       const svgContent = await plugin.app.vault.adapter.read(iconPath)
       return svgContent
     } catch (e) {
-      warnDebug(`Failed to load icon SVG for ${iconName} at ${iconPath}:`, e)
+      warnVerbose(`Failed to load icon SVG for ${iconName} at ${iconPath}:`, e)
       return null
     }
   }

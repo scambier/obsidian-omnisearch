@@ -1,6 +1,6 @@
 import { getLinkpath, Notice } from 'obsidian'
 import type OmnisearchPlugin from '../main'
-import { logDebug } from '../tools/utils'
+import { logVerbose } from '../tools/utils'
 
 export class EmbedsRepository {
   /** Map<embedded file, notes where the embed is referenced> */
@@ -55,7 +55,7 @@ export class EmbedsRepository {
   }
 
   public async writeToCache(): Promise<void> {
-    logDebug('Writing embeds to cache')
+    logVerbose('Writing embeds to cache')
     const database = this.plugin.database
     const data: { embedded: string; referencedBy: string[] }[] = []
     for (const [path, embedsList] of this.embeds) {
@@ -69,10 +69,10 @@ export class EmbedsRepository {
     try {
       const database = this.plugin.database
       if (!database.embeds) {
-        logDebug('No embeds in cache')
+        logVerbose('No embeds in cache')
         return
       }
-      logDebug('Loading embeds from cache')
+      logVerbose('Loading embeds from cache')
       const embedsArr = await database.embeds.toArray()
       for (const { embedded: path, referencedBy: embeds } of embedsArr) {
         for (const embed of embeds) {

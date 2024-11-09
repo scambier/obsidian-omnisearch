@@ -40,7 +40,7 @@ export function getServer(plugin: OmnisearchPlugin) {
 
   return {
     listen(port: string) {
-      console.log(`Omnisearch - Starting HTTP server on port ${port}`)
+      console.debug(`Omnisearch - Starting HTTP server on port ${port}`)
       server.listen(
         {
           port: parseInt(port),

@@ -1,6 +1,6 @@
 import type { QueryCombination } from 'minisearch'
 import { BRACKETS_AND_SPACE, chsRegex, SPACE_OR_PUNCTUATION } from '../globals'
-import { logDebug, splitCamelCase, splitHyphens } from '../tools/utils'
+import { logVerbose, splitCamelCase, splitHyphens } from '../tools/utils'
 import type OmnisearchPlugin from '../main'
 
 const markdownLinkExtractor = require('markdown-link-extractor')
@@ -22,7 +22,7 @@ export class Tokenizer {
         try {
           urls = markdownLinkExtractor(text)
         } catch (e) {
-          logDebug('Error extracting urls', e)
+          logVerbose('Error extracting urls', e)
         }
       }
 

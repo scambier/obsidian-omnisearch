@@ -7,7 +7,7 @@ import {
   isFileFromDataloom,
   isFileImage,
   isFilePDF,
-  logDebug,
+  logVerbose,
 } from './tools/utils'
 
 export class NotesIndexer {
@@ -25,7 +25,7 @@ export class NotesIndexer {
 
   public async refreshIndex(): Promise<void> {
     for (const file of this.notesToReindex) {
-      logDebug('Updating file', file.path)
+      logVerbose('Updating file', file.path)
       await this.plugin.documentsRepository.addDocument(file.path)
     }
 

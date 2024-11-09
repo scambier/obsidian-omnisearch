@@ -60,7 +60,7 @@ export class Database extends Dexie {
       paths,
       data: minisearchJson,
     })
-    console.log('Omnisearch - Search cache written')
+    console.debug('Omnisearch - Search cache written')
   }
 
   /**
@@ -74,7 +74,7 @@ export class Database extends Dexie {
         db.version !== Database.dbVersion * 10
     )
     if (toDelete.length) {
-      console.log('Omnisearch - Those IndexedDb databases will be deleted:')
+      console.debug('Omnisearch - Those IndexedDb databases will be deleted:')
       for (const db of toDelete) {
         if (db.name) {
           indexedDB.deleteDatabase(db.name)

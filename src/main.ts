@@ -32,11 +32,11 @@ import { notifyOnIndexed, registerAPI } from './tools/api'
 import { Database } from './database'
 import { SearchEngine } from './search/search-engine'
 import { DocumentsRepository } from './repositories/documents-repository'
-import { logDebug } from './tools/utils'
+import { logVerbose } from './tools/utils'
 import { NotesIndexer } from './notes-indexer'
 import { TextProcessor } from './tools/text-processing'
 import { EmbedsRepository } from './repositories/embeds-repository'
-import { SearchHistory } from "./search/search-history";
+import { SearchHistory } from './search/search-history'
 
 export default class OmnisearchPlugin extends Plugin {
   // FIXME: fix the type
@@ -71,7 +71,7 @@ export default class OmnisearchPlugin extends Plugin {
     }
 
     if (isPluginDisabled(this.app)) {
-      console.log('Omnisearch - Plugin disabled')
+      console.debug('Plugin disabled')
       return
     }
 
@@ -120,7 +120,7 @@ export default class OmnisearchPlugin extends Plugin {
             file instanceof TFile &&
             this.notesIndexer.isFileIndexable(file.path)
           ) {
-            logDebug('Indexing new file', file.path)
+            logVerbose('Indexing new file', file.path)
             searchEngine.addFromPaths([file.path])
             this.embedsRepository.refreshEmbedsForNote(file.path)
           }
@@ -128,7 +128,7 @@ export default class OmnisearchPlugin extends Plugin {
       )
       this.registerEvent(
         this.app.vault.on('delete', file => {
-          logDebug('Removing file', file.path)
+          logVerbose('Removing file', file.path)
           this.documentsRepository.removeDocument(file.path)
           searchEngine.removeFromPaths([file.path])
           this.embedsRepository.removeFile(file.path)
@@ -145,7 +145,7 @@ export default class OmnisearchPlugin extends Plugin {
       this.registerEvent(
         this.app.vault.on('rename', async (file, oldPath) => {
           if (this.notesIndexer.isFileIndexable(file.path)) {
-            logDebug('Renaming file', file.path)
+            logVerbose('Renaming file', file.path)
             this.documentsRepository.removeDocument(oldPath)
             await this.documentsRepository.addDocument(file.path)
 
@@ -237,25 +237,23 @@ export default class OmnisearchPlugin extends Plugin {
   }
 
   private async populateIndex(): Promise<void> {
-    console.time('Omnisearch - Indexing total time')
+    console.time('Indexing total time')
     indexingStep.set(IndexingStepType.ReadingFiles)
     const files = this.app.vault
       .getFiles()
       .filter(f => this.notesIndexer.isFileIndexable(f.path))
-    console.log(`Omnisearch - ${files.length} files total`)
-    console.log(
-      `Omnisearch - Cache is ${isCacheEnabled() ? 'enabled' : 'disabled'}`
-    )
+    console.debug(`${files.length} files total`)
+    console.debug(`Cache is ${isCacheEnabled() ? 'enabled' : 'disabled'}`)
     // Map documents in the background
     // Promise.all(files.map(f => cacheManager.addToLiveCache(f.path)))
 
     const searchEngine = this.searchEngine
     if (isCacheEnabled()) {
-      console.time('Omnisearch - Loading index from cache')
+      console.time('Loading index from cache')
       indexingStep.set(IndexingStepType.LoadingCache)
       const hasCache = await searchEngine.loadCache()
       if (hasCache) {
-        console.timeEnd('Omnisearch - Loading index from cache')
+        console.timeEnd('Loading index from cache')
       }
     }
 
@@ -265,22 +263,20 @@ export default class OmnisearchPlugin extends Plugin {
 
     if (isCacheEnabled()) {
       if (diff.toAdd.length) {
-        console.log(
-          'Omnisearch - Total number of files to add/update: ' +
-            diff.toAdd.length
+        console.debug(
+          'Total number of files to add/update: ' + diff.toAdd.length
         )
       }
       if (diff.toRemove.length) {
-        console.log(
-          'Omnisearch - Total number of files to remove: ' +
-            diff.toRemove.length
+        console.debug(
+          'Total number of files to remove: ' + diff.toRemove.length
         )
       }
     }
 
     if (diff.toAdd.length >= 1000 && isCacheEnabled()) {
       new Notice(
-        `Omnisearch - ${diff.toAdd.length} files need to be indexed. Obsidian may experience stutters and freezes during the process`,
+        `${diff.toAdd.length} files need to be indexed. Obsidian may experience stutters and freezes during the process`,
         10_000
       )
     }
@@ -310,9 +306,9 @@ export default class OmnisearchPlugin extends Plugin {
       }
     }
 
-    console.timeEnd('Omnisearch - Indexing total time')
+    console.timeEnd('Indexing total time')
     if (diff.toAdd.length >= 1000 && isCacheEnabled()) {
-      new Notice(`Omnisearch - Your files have been indexed.`)
+      new Notice(`Your files have been indexed.`)
     }
     indexingStep.set(IndexingStepType.Done)
     notifyOnIndexed()

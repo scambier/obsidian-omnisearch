@@ -1,5 +1,5 @@
 import { excerptAfter, excerptBefore, type SearchMatch } from '../globals'
-import { removeDiacritics, warnDebug } from './utils'
+import { removeDiacritics, warnVerbose } from './utils'
 import type { Query } from '../search/query'
 import { Notice } from 'obsidian'
 import { escapeRegExp } from 'lodash-es'
@@ -115,7 +115,7 @@ export class TextProcessor {
     while ((match = reg.exec(text)) !== null) {
       // Avoid infinite loops, stop looking after 100 matches or if we're taking too much time
       if (++count >= 100 || new Date().getTime() - startTime > 50) {
-        warnDebug('Stopped getMatches at', count, 'results')
+        warnVerbose('Stopped getMatches at', count, 'results')
         break
       }
       const matchStartIndex = match.index

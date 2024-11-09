@@ -11,7 +11,7 @@ import {
 import { writable } from 'svelte/store'
 import { K_DISABLE_OMNISEARCH } from './globals'
 import type OmnisearchPlugin from './main'
-import { enablePrintDebug } from './tools/utils'
+import { enableVerboseLogging } from './tools/utils'
 import { debounce } from 'lodash-es'
 
 interface WeightingSettings {
@@ -687,7 +687,7 @@ export class SettingsTab extends PluginSettingTab {
       .addToggle(toggle =>
         toggle.setValue(settings.verboseLogging).onChange(async v => {
           settings.verboseLogging = v
-          enablePrintDebug(v)
+          enableVerboseLogging(v)
           await saveSettings(this.plugin)
         })
       )
@@ -869,7 +869,7 @@ export async function loadSettings(
     await plugin.loadData()
   )
   showExcerpt.set(settings.showExcerpt)
-  enablePrintDebug(settings.verboseLogging)
+  enableVerboseLogging(settings.verboseLogging)
   return settings
 }
 

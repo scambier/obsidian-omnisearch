@@ -9,7 +9,7 @@ import {
   isFileImage,
   isFileOffice,
   isFilePDF,
-  logDebug,
+  logVerbose,
   removeDiacritics,
   stripMarkdownCharacters,
 } from '../tools/utils'
@@ -65,7 +65,7 @@ export class DocumentsRepository {
     if (this.documents.has(path)) {
       return this.documents.get(path)!
     }
-    logDebug('Generating IndexedDocument from', path)
+    logVerbose('Generating IndexedDocument from', path)
     await this.addDocument(path)
     return this.documents.get(path)!
   }
