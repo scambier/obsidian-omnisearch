@@ -377,7 +377,7 @@
   </div>
 
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">alt o</span>
+    <span class="prompt-instruction-command">{getCtrlKeyLabel()} o</span>
     <span>to open in the background</span>
   </div>
 
