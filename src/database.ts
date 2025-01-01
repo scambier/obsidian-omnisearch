@@ -38,8 +38,8 @@ export class Database extends Dexie {
     data: AsPlainObject
   } | null> {
     try {
-      const cachedIndex = (await this.plugin.database.minisearch.toArray())[0]
-      return cachedIndex
+      const cachedIndex = await this.plugin.database.minisearch.limit(1).first()
+      return cachedIndex ? { paths: cachedIndex.paths, data: cachedIndex.data } : null
     } catch (e) {
       new Notice(
         'Omnisearch - Cache missing or invalid. Some freezes may occur while Omnisearch indexes your vault.'
