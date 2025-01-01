@@ -189,6 +189,19 @@ export function makeMD5(data: BinaryLike): string {
   return createHash('md5').update(data).digest('hex')
 }
 
+/**
+ * Splits an array into chunks of a specified length.
+ * 
+ * @param arr - The input array to be chunked
+ * @param len - The length of each chunk
+ * @returns An array of arrays, where each inner array has at most `len` elements
+ * 
+ * @example
+ * ```typescript
+ * chunkArray([1, 2, 3, 4, 5], 2)
+ * // returns [[1, 2], [3, 4], [5]]
+ * ```
+ */
 export function chunkArray<T>(arr: T[], len: number): T[][] {
   const chunks = []
   let i = 0

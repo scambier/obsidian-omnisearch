@@ -17,6 +17,7 @@ export class SearchEngine {
   private minisearch: MiniSearch
   /** Map<path, mtime> */
   private indexedDocuments: Map<string, number> = new Map()
+  private readonly BATCH_SIZE = 1000
 
   // private previousResults: SearchResult[] = []
   // private previousQuery: Query | null = null
@@ -30,14 +31,26 @@ export class SearchEngine {
    * Return true if the cache is valid
    */
   async loadCache(): Promise<boolean> {
-    await this.plugin.embedsRepository.loadFromCache()
-    const cache = await this.plugin.database.getMinisearchCache()
+    // Prefetch embeds in parallel
+    const embedsPromise = this.plugin.embedsRepository.loadFromCache()
+    const cachePromise = this.plugin.database.getMinisearchCache()
+    
+    const [cache] = await Promise.all([cachePromise, embedsPromise])
+
     if (cache) {
       this.minisearch = await MiniSearch.loadJSAsync(
         cache.data,
         this.getOptions()
       )
+
+      const pathBatches = chunkArray(cache.paths, this.BATCH_SIZE)
       this.indexedDocuments = new Map(cache.paths.map(o => [o.path, o.mtime]))
+    
+      for (const batch of pathBatches) {
+        batch.forEach(o => this.indexedDocuments.set(o.path, o.mtime))
+        // Allow other operations between batches
+        await new Promise(resolve => setTimeout(resolve, 0))
+      }
       return true
     }
     console.log('Omnisearch - No cache found')
