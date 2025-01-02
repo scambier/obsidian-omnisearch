@@ -11,7 +11,7 @@ import {
 import { writable } from 'svelte/store'
 import { K_DISABLE_OMNISEARCH } from './globals'
 import type OmnisearchPlugin from './main'
-import { enableVerboseLogging } from './tools/utils'
+import { enableVerboseLogging, getCtrlKeyLabel } from './tools/utils'
 import { debounce } from 'lodash-es'
 
 interface WeightingSettings {
@@ -398,9 +398,7 @@ export class SettingsTab extends PluginSettingTab {
     // Set Vim like navigation keys
     new Setting(containerEl)
       .setName('Set Vim like navigation keys')
-      .setDesc(
-        'Navigate down the results with Ctrl/⌘ + J/N, or navigate up with Ctrl/⌘ + K/P'
-      )
+      .setDesc(`Navigate down the results with ${getCtrlKeyLabel()} + J/N, or navigate up with ${getCtrlKeyLabel()} + K/P.`)
       .addToggle(toggle =>
         toggle
           .setValue(settings.vimLikeNavigationShortcut)

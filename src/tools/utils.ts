@@ -145,8 +145,12 @@ export function removeDiacritics(str: string, arabic = false): string {
   return str
 }
 
-export function getCtrlKeyLabel(): 'ctrl' | '⌘' {
-  return Platform.isMacOS ? '⌘' : 'ctrl'
+export function getCtrlKeyLabel(): 'Ctrl' | '⌘' {
+  return Platform.isMacOS ? '⌘' : 'Ctrl'
+}
+
+export function getAltKeyLabel(): 'Alt' | '⌥' {
+  return Platform.isMacOS ? '⌥' : 'Alt'
 }
 
 export function isFileImage(path: string): boolean {
