@@ -14,6 +14,7 @@
   import { createNote, openNote } from '../tools/notes'
   import {
     getCtrlKeyLabel,
+    getAltKeyLabel,
     getExtension,
     isFilePDF,
     loopIndex,
@@ -44,20 +45,20 @@
   let openInCurrentPaneKey: string
   let createInNewPaneKey: string
   let createInCurrentPaneKey: string
-  let openInNewLeafKey: string = getCtrlKeyLabel() + ' alt ↵'
+  let openInNewLeafKey: string = getCtrlKeyLabel() + getAltKeyLabel() + ' ↵'
 
   $: selectedNote = resultNotes[selectedIndex]
   $: searchQuery = searchQuery ?? previousQuery
   $: if (plugin.settings.openInNewPane) {
     openInNewPaneKey = '↵'
     openInCurrentPaneKey = getCtrlKeyLabel() + ' ↵'
-    createInNewPaneKey = 'shift ↵'
-    createInCurrentPaneKey = getCtrlKeyLabel() + ' shift ↵'
+    createInNewPaneKey = 'Shift ↵'
+    createInCurrentPaneKey = getCtrlKeyLabel() + ' Shift ↵'
   } else {
     openInNewPaneKey = getCtrlKeyLabel() + ' ↵'
     openInCurrentPaneKey = '↵'
-    createInNewPaneKey = getCtrlKeyLabel() + ' shift ↵'
-    createInCurrentPaneKey = 'shift ↵'
+    createInNewPaneKey = getCtrlKeyLabel() + ' Shift ↵'
+    createInCurrentPaneKey = 'Shift ↵'
   }
   $: if (searchQuery) {
     updateResultsDebounced()
@@ -354,7 +355,7 @@
     <span class="prompt-instruction-command">↑↓</span><span>to navigate</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">alt ↑↓</span>
+    <span class="prompt-instruction-command">{getAltKeyLabel()} ↑↓</span>
     <span>to cycle history</span>
   </div>
   <div class="prompt-instruction">
@@ -362,7 +363,7 @@
     <span>to open</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">tab</span>
+    <span class="prompt-instruction-command">Tab</span>
     <span>to switch to In-File Search</span>
   </div>
 
@@ -391,14 +392,14 @@
   </div>
 
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">alt ↵</span>
+    <span class="prompt-instruction-command">{getAltKeyLabel()} ↵</span>
     <span>to insert a link</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">ctrl g</span>
+    <span class="prompt-instruction-command">Ctrl g</span>
     <span>to toggle excerpts</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">esc</span><span>to close</span>
+    <span class="prompt-instruction-command">Esc</span><span>to close</span>
   </div>
 </div>
