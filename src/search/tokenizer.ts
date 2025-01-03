@@ -27,15 +27,11 @@ export class Tokenizer {
       }
 
       let tokens = this.tokenizeTokens(text, { skipChs: true })
-
-      // Split hyphenated tokens
-      tokens = [...tokens, ...tokens.flatMap(splitHyphens)]
-
-      // Split camelCase tokens into "camel" and "case
-      tokens = [...tokens, ...tokens.flatMap(splitCamelCase)]
-
-      // Add whole words (aka "not tokens")
-      tokens = [...tokens, ...words]
+      tokens = [...tokens.flatMap(token => [
+        token,
+        ...splitHyphens(token),
+        ...splitCamelCase(token),
+      ]), ...words]
 
       // Add urls
       if (urls.length) {
