@@ -106,6 +106,11 @@ export function getTagsFromMetadata(metadata: CachedMetadata | null): string[] {
   return tags
 }
 
+// Define cached diacritics regex once outside the function
+const japaneseDiacritics = ['\\u30FC', '\\u309A', '\\u3099']
+const regexpExclude = japaneseDiacritics.join('|')
+const diacriticsRegex = new RegExp(`(?!${regexpExclude})\\p{Diacritic}`, 'gu')
+
 /**
  * https://stackoverflow.com/a/37511463
  */
@@ -113,11 +118,6 @@ export function removeDiacritics(str: string, arabic = false): string {
   if (str === null || str === undefined) {
     return ''
   }
-
-  // Japanese diacritics that should be distinguished
-  const japaneseDiacritics: string[] = ['\\u30FC', '\\u309A', '\\u3099']
-  const regexpExclude: string = japaneseDiacritics.join('|')
-  const regexp: RegExp = new RegExp(`(?!${regexpExclude})\\p{Diacritic}`, 'gu')
 
   if (arabic) {
     // Arabic diacritics
@@ -139,7 +139,7 @@ export function removeDiacritics(str: string, arabic = false): string {
   // Keep caret same as above
   str = str.replaceAll('^', '[__omnisearch__caret__]')
   // To keep right form of Korean character, NFC normalization is necessary
-  str = str.normalize('NFD').replace(regexp, '').normalize('NFC')
+  str = str.normalize('NFD').replace(diacriticsRegex, '').normalize('NFC')
   str = str.replaceAll('[__omnisearch__backtick__]', '`')
   str = str.replaceAll('[__omnisearch__caret__]', '^')
   return str
