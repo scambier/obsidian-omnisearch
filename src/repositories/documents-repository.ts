@@ -216,8 +216,8 @@ export class DocumentsRepository {
       }
     }
     let displayTitle: string
-    if (this.plugin.settings.displayTitle == '#heading') {
-      displayTitle = metadata?.headings?.find(h => h.level == 1)?.heading ?? ''
+    if (this.plugin.settings.displayTitle === '#heading') {
+      displayTitle = metadata?.headings?.find(h => h.level === 1)?.heading ?? ''
     } else {
       displayTitle = metadata?.frontmatter?.[this.plugin.settings.displayTitle] ?? ''
     }

@@ -242,7 +242,7 @@
     if (file && active) {
       link = plugin.app.fileManager.generateMarkdownLink(file, active.path, "", selectedNote.displayTitle)
     } else {
-      let maybeDisplayTitle = selectedNote.displayTitle === "" ? "" : `|${selectedNote.displayTitle}`
+      const maybeDisplayTitle = selectedNote.displayTitle === "" ? "" : `|${selectedNote.displayTitle}`
       link = `[[${selectedNote.basename}.${getExtension(selectedNote.path)}${maybeDisplayTitle}]]`
     }
 
