@@ -215,8 +215,12 @@ export class DocumentsRepository {
         }
       }
     }
-    const displayTitle =
-      metadata?.frontmatter?.[this.plugin.settings.displayTitle] ?? ''
+    let displayTitle: string
+    if (this.plugin.settings.displayTitle === '#heading') {
+      displayTitle = metadata?.headings?.find(h => h.level === 1)?.heading ?? ''
+    } else {
+      displayTitle = metadata?.frontmatter?.[this.plugin.settings.displayTitle] ?? ''
+    }
     const tags = getTagsFromMetadata(metadata)
     return {
       basename: file.basename,
