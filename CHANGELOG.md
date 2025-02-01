@@ -2,11 +2,17 @@
 
 This changelog is not exhaustive.
 
+## 1.26.x
+
+- Allow `# headings` as display titles in search results
+- Added an experimental recency boost
+
 ## 1.25.x
 
 - Added basic support for embed references in Vault Search results
 - Added support for [Iconize](https://github.com/FlorianWoelki/obsidian-iconize)
 - Weights are now 1-10 (instead of 1-5)
+- Small performance improvements
 
 ## 1.24.x
 
