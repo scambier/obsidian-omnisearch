@@ -9,7 +9,7 @@ import {
   SliderComponent,
 } from 'obsidian'
 import { writable } from 'svelte/store'
-import { K_DISABLE_OMNISEARCH } from './globals'
+import { K_DISABLE_OMNISEARCH, RecencyCutoff } from './globals'
 import type OmnisearchPlugin from './main'
 import { enableVerboseLogging, getCtrlKeyLabel } from './tools/utils'
 import { debounce } from 'lodash-es'
@@ -29,6 +29,8 @@ export interface OmnisearchSettings extends WeightingSettings {
   useCache: boolean
   /** Respect the "excluded files" Obsidian setting by downranking results ignored files */
   hideExcluded: boolean
+  /** Boost more recent files */
+  recencyBoost: RecencyCutoff
   /** downrank files in the given folders */
   downrankedFoldersFilters: string[]
   /** Ignore diacritics when indexing files */
@@ -317,6 +319,24 @@ export class SettingsTab extends PluginSettingTab {
         })
       )
 
+    new Setting(containerEl)
+      .setName('Recency boost (experimental)')
+      .setDesc('Files that have been modified more recently than [selected cutoff] are given a higher rank.')
+      .addDropdown(dropdown =>
+        dropdown
+          .addOptions({
+            [RecencyCutoff.Disabled]: 'Disabled',
+            [RecencyCutoff.Day]: '24 hours',
+            [RecencyCutoff.Week]: '7 days',
+            [RecencyCutoff.Month]: '30 days',
+          })
+          .setValue(settings.recencyBoost)
+          .onChange(async v => {
+            settings.recencyBoost = v as RecencyCutoff
+            await saveSettings(this.plugin)
+          })
+      )
+
     // Downranked files
     new Setting(containerEl)
       .setName('Folders to downrank in search results')
@@ -398,7 +418,9 @@ export class SettingsTab extends PluginSettingTab {
     // Set Vim like navigation keys
     new Setting(containerEl)
       .setName('Set Vim like navigation keys')
-      .setDesc(`Navigate down the results with ${getCtrlKeyLabel()} + J/N, or navigate up with ${getCtrlKeyLabel()} + K/P.`)
+      .setDesc(
+        `Navigate down the results with ${getCtrlKeyLabel()} + J/N, or navigate up with ${getCtrlKeyLabel()} + K/P.`
+      )
       .addToggle(toggle =>
         toggle
           .setValue(settings.vimLikeNavigationShortcut)
@@ -793,6 +815,7 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
   return {
     useCache: true,
     hideExcluded: false,
+    recencyBoost: RecencyCutoff.Disabled,
     downrankedFoldersFilters: [] as string[],
     ignoreDiacritics: true,
     ignoreArabicDiacritics: false,

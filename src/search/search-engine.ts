@@ -3,7 +3,12 @@ import MiniSearch, {
   type Options,
   type SearchResult,
 } from 'minisearch'
-import type { DocumentRef, IndexedDocument, ResultNote } from '../globals'
+import {
+  RecencyCutoff,
+  type DocumentRef,
+  type IndexedDocument,
+  type ResultNote,
+} from '../globals'
 
 import { chunkArray, logVerbose, removeDiacritics } from '../tools/utils'
 import { Notice } from 'obsidian'
@@ -60,7 +65,7 @@ export class SearchEngine {
         !this.indexedDocuments.has(d.path) ||
         this.indexedDocuments.get(d.path) !== d.mtime
     )
-    
+
     const toRemove = [...this.indexedDocuments]
       .filter(
         ([path, mtime]) => !docsMap.has(path) || docsMap.get(path) !== mtime
@@ -171,6 +176,25 @@ export class SearchEngine {
       },
       // The query is already tokenized, don't tokenize again
       tokenize: text => [text],
+      boostDocument(_id, _term, storedFields) {
+        if (
+          !storedFields?.mtime ||
+          settings.recencyBoost === RecencyCutoff.Disabled
+        ) {
+          return 1
+        }
+        const mtime = storedFields?.mtime as number
+        const now = new Date().valueOf()
+        const daysElapsed = (now - mtime) / (24 * 3600)
+
+        // Documents boost
+        const cutoff = {
+          [RecencyCutoff.Day]: -3,
+          [RecencyCutoff.Week]: -0.3,
+          [RecencyCutoff.Month]: -0.1,
+        } as const
+        return 1 + Math.exp(cutoff[settings.recencyBoost] * daysElapsed)
+      },
     })
 
     logVerbose(`Found ${results.length} results`, results)
@@ -300,7 +324,8 @@ export class SearchEngine {
 
     const documents = await Promise.all(
       results.map(
-        async result => await this.plugin.documentsRepository.getDocument(result.id)
+        async result =>
+          await this.plugin.documentsRepository.getDocument(result.id)
       )
     )
 
@@ -376,7 +401,8 @@ export class SearchEngine {
 
     const documents = await Promise.all(
       results.map(
-        async result => await this.plugin.documentsRepository.getDocument(result.id)
+        async result =>
+          await this.plugin.documentsRepository.getDocument(result.id)
       )
     )
 
@@ -503,7 +529,7 @@ export class SearchEngine {
         'headings2',
         'headings3',
       ],
-      storeFields: ['tags'],
+      storeFields: ['tags', 'mtime'],
       logger(_level, _message, code) {
         if (code === 'version_conflict') {
           new Notice(

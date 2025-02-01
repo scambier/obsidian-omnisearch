@@ -41,6 +41,13 @@ export const enum Action {
   OpenInNewLeaf = 'open-in-new-leaf',
 }
 
+export const enum RecencyCutoff {
+  Disabled = '0',
+  Day = '1',
+  Week = '2',
+  Month = '3',
+}
+
 export type DocumentRef = { path: string; mtime: number }
 
 export type IndexedDocument = {
@@ -100,8 +107,8 @@ export type TextExtractorApi = {
 }
 
 export type AIImageAnalyzerAPI = {
-  analyzeImage: (file: TFile) => Promise<string>;
-  canBeAnalyzed: (file: TFile) => boolean;
+  analyzeImage: (file: TFile) => Promise<string>
+  canBeAnalyzed: (file: TFile) => boolean
 }
 
 export const SEPARATORS =
