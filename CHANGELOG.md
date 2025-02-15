@@ -6,6 +6,7 @@ This changelog is not exhaustive.
 
 - Allow `# headings` as display titles in search results
 - Added an experimental recency boost
+- Added lazy loading for the vault modal items
 
 ## 1.25.x
 
