@@ -12,14 +12,14 @@ import {
 } from './components/modals'
 import {
   getDefaultSettings,
-  isCacheEnabled,
-  isPluginDisabled,
   loadSettings,
-  type OmnisearchSettings,
-  saveSettings,
   SettingsTab,
   showExcerpt,
 } from './settings'
+import type { OmnisearchSettings } from './settings/utils'
+import { isCacheEnabled } from './settings/utils'
+import { saveSettings } from './settings/utils'
+import { isPluginDisabled } from './settings/utils'
 import {
   eventBus,
   EventNames,

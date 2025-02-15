@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { showExcerpt } from '../settings'
+  import { showExcerpt } from '../settings/index'
   import type { ResultNote } from '../globals'
   import {
     getExtension,
