@@ -28,6 +28,7 @@
   import { cancelable, CancelablePromise } from 'cancelable-promise'
   import { debounce } from 'lodash-es'
   import type OmnisearchPlugin from '../main'
+  import LazyLoader from './lazy-loader/LazyLoader.svelte'
 
   export let modal: OmnisearchVaultModal
   export let previousQuery: string | undefined
@@ -111,9 +112,7 @@
 
   async function prevSearchHistory() {
     // Filter out the empty string, if it's there
-    const history = (await plugin.searchHistory.getHistory()).filter(
-      s => s
-    )
+    const history = (await plugin.searchHistory.getHistory()).filter(s => s)
     if (++historySearchIndex >= history.length) {
       historySearchIndex = 0
     }
@@ -122,9 +121,7 @@
   }
 
   async function nextSearchHistory() {
-    const history = (await plugin.searchHistory.getHistory()).filter(
-      s => s
-    )
+    const history = (await plugin.searchHistory.getHistory()).filter(s => s)
     if (--historySearchIndex < 0) {
       historySearchIndex = history.length ? history.length - 1 : 0
     }
@@ -240,10 +237,18 @@
     // Generate link
     let link: string
     if (file && active) {
-      link = plugin.app.fileManager.generateMarkdownLink(file, active.path, "", selectedNote.displayTitle)
+      link = plugin.app.fileManager.generateMarkdownLink(
+        file,
+        active.path,
+        '',
+        selectedNote.displayTitle
+      )
     } else {
-      const maybeDisplayTitle = selectedNote.displayTitle === "" ? "" : `|${selectedNote.displayTitle}`
-      link = `[[${selectedNote.basename}.${getExtension(selectedNote.path)}${maybeDisplayTitle}]]`
+      const maybeDisplayTitle =
+        selectedNote.displayTitle === '' ? '' : `|${selectedNote.displayTitle}`
+      link = `[[${selectedNote.basename}.${getExtension(
+        selectedNote.path
+      )}${maybeDisplayTitle}]]`
     }
 
     // Inject link
@@ -255,7 +260,7 @@
     modal.close()
   }
 
-  function      switchToInFileModal(): void {
+  function switchToInFileModal(): void {
     // Do nothing if the selectedNote is a PDF,
     // or if there is 0 match (e.g indexing in progress)
     if (
@@ -323,15 +328,21 @@
 
 <ModalContainer>
   {#each resultNotes as result, i}
-    <ResultItemVault
-      {plugin}
-      selected="{i === selectedIndex}"
-      note="{result}"
-      on:mousemove="{_ => (selectedIndex = i)}"
-      on:click="{onClick}"
-      on:auxclick="{evt => {
-        if (evt.button == 1) openNoteInNewPane()
-      }}" />
+    <LazyLoader
+      height="{100}"
+      offset="{500}"
+      keep="{true}"
+      fadeOption="{{ delay: 0, duration: 0 }}">
+      <ResultItemVault
+        plugin="{plugin}"
+        selected="{i === selectedIndex}"
+        note="{result}"
+        on:mousemove="{_ => (selectedIndex = i)}"
+        on:click="{onClick}"
+        on:auxclick="{evt => {
+          if (evt.button == 1) openNoteInNewPane()
+        }}" />
+    </LazyLoader>
   {/each}
   <div style="text-align: center;">
     {#if !resultNotes.length && searchQuery && !searching}
