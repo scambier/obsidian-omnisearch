@@ -3,7 +3,6 @@ import type { OmnisearchSettings } from './utils'
 import { saveSettings } from './utils'
 import { htmlDescription, needsARestart } from './utils'
 import type OmnisearchPlugin from 'src/main'
-import { RecencyCutoff } from 'src/globals'
 import { getCtrlKeyLabel } from 'src/tools/utils'
 
 export function injectSettingsBehavior(
@@ -51,26 +50,6 @@ export function injectSettingsBehavior(
         settings.hideExcluded = v
         await saveSettings(plugin)
       })
-    )
-
-  new Setting(containerEl)
-    .setName('Recency boost (experimental)')
-    .setDesc(
-      'Files that have been modified more recently than [selected cutoff] are given a higher rank.'
-    )
-    .addDropdown(dropdown =>
-      dropdown
-        .addOptions({
-          [RecencyCutoff.Disabled]: 'Disabled',
-          [RecencyCutoff.Day]: '24 hours',
-          [RecencyCutoff.Week]: '7 days',
-          [RecencyCutoff.Month]: '30 days',
-        })
-        .setValue(settings.recencyBoost)
-        .onChange(async v => {
-          settings.recencyBoost = v as RecencyCutoff
-          await saveSettings(plugin)
-        })
     )
 
   // Downranked files

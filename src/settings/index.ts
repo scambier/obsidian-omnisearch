@@ -57,11 +57,17 @@ export class SettingsTab extends PluginSettingTab {
     `
 
     injectSettingsIndexing(this.plugin, settings, containerEl)
+    containerEl.createEl('hr')
     injectSettingsBehavior(this.plugin, settings, containerEl)
+    containerEl.createEl('hr')
     injectSettingsUserInterface(this.plugin, settings, containerEl)
+    containerEl.createEl('hr')
     injectSettingsWeighting(this.plugin, settings, containerEl, this.display)
+    containerEl.createEl('hr')
     injectSettingsHttp(this.plugin, settings, containerEl)
+    containerEl.createEl('hr')
     injectSettingsDanger(this.plugin, settings, containerEl)
+    containerEl.createEl('hr')
 
     //#region Debugging
 

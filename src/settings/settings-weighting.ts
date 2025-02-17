@@ -1,11 +1,10 @@
 import { Setting, SliderComponent } from 'obsidian'
-import {
-  getDefaultSettings,
-} from 'src/settings'
+import { getDefaultSettings } from 'src/settings'
 import type { OmnisearchSettings } from './utils'
 import { saveSettings } from './utils'
 import type { WeightingSettings } from './utils'
 import type OmnisearchPlugin from 'src/main'
+import { RecencyCutoff } from 'src/globals'
 
 export function injectSettingsWeighting(
   plugin: OmnisearchPlugin,
@@ -64,18 +63,19 @@ export function injectSettingsWeighting(
 
   for (let i = 0; i < settings.weightCustomProperties.length; i++) {
     const item = settings.weightCustomProperties[i]
-    new Setting(containerEl)
-      .setName((i + 1).toString() + '.')
-      // TODO: add autocompletion from app.metadataCache.getAllPropertyInfos()
-      .addText(text => {
-        text
-          .setPlaceholder('Property name')
-          .setValue(item.name)
-          .onChange(async v => {
-            item.name = v
-            await saveSettings(plugin)
-          })
-      })
+    const el = new Setting(containerEl).setName((i + 1).toString() + '.')
+    el.settingEl.style.paddingLeft = '2em'
+
+    // TODO: add autocompletion from app.metadataCache.getAllPropertyInfos()
+    el.addText(text => {
+      text
+        .setPlaceholder('Property name')
+        .setValue(item.name)
+        .onChange(async v => {
+          item.name = v
+          await saveSettings(plugin)
+        })
+    })
       .addSlider(cb => {
         cb.setLimits(0.1, 5, 0.1)
           .setValue(item.weight)
@@ -104,4 +104,24 @@ export function injectSettingsWeighting(
       refreshDisplay()
     })
   })
+
+  new Setting(containerEl)
+    .setName('Recency boost (experimental)')
+    .setDesc(
+      'Files that have been modified more recently than [selected cutoff] are given a higher rank.'
+    )
+    .addDropdown(dropdown =>
+      dropdown
+        .addOptions({
+          [RecencyCutoff.Disabled]: 'Disabled',
+          [RecencyCutoff.Day]: '24 hours',
+          [RecencyCutoff.Week]: '7 days',
+          [RecencyCutoff.Month]: '30 days',
+        })
+        .setValue(settings.recencyBoost)
+        .onChange(async v => {
+          settings.recencyBoost = v as RecencyCutoff
+          await saveSettings(plugin)
+        })
+    )
 }
