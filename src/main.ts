@@ -53,7 +53,7 @@ export default class OmnisearchPlugin extends Plugin {
   public readonly searchHistory = new SearchHistory(this)
 
   private ribbonButton?: HTMLElement
-  private refreshIndexCallback?: () => void
+  private refreshIndexCallback?: (ev: FocusEvent) => any
 
   constructor(app: App, manifest: PluginManifest) {
     super(app, manifest)
@@ -160,7 +160,7 @@ export default class OmnisearchPlugin extends Plugin {
       this.refreshIndexCallback = this.notesIndexer.refreshIndex.bind(
         this.notesIndexer
       )
-      addEventListener('blur', this.refreshIndexCallback)
+      addEventListener('blur', this.refreshIndexCallback!)
       removeEventListener
 
       await this.executeFirstLaunchTasks()

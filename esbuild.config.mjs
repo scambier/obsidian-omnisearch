@@ -1,9 +1,8 @@
-import { build } from 'esbuild'
-import sveltePlugin from 'esbuild-svelte'
-import sveltePreprocess from 'svelte-preprocess'
-import { copy } from 'esbuild-plugin-copy'
+import esbuild from 'esbuild'
 import process from 'process'
 import builtins from 'builtin-modules'
+import esbuildSvelte from 'esbuild-svelte'
+import { sveltePreprocess } from 'svelte-preprocess'
 import path from 'path'
 
 const banner = `/*
@@ -14,7 +13,7 @@ if you want to view the source, please visit the github repository of this plugi
 
 const prod = process.argv[2] === 'production'
 
-build({
+const context = await esbuild.context({
   banner: {
     js: banner,
   },
@@ -24,54 +23,36 @@ build({
     'obsidian',
     'electron',
     '@codemirror/autocomplete',
-    '@codemirror/closebrackets',
     '@codemirror/collab',
     '@codemirror/commands',
-    '@codemirror/comment',
-    '@codemirror/fold',
-    '@codemirror/gutter',
-    '@codemirror/highlight',
-    '@codemirror/history',
     '@codemirror/language',
     '@codemirror/lint',
-    '@codemirror/matchbrackets',
-    '@codemirror/panel',
-    '@codemirror/rangeset',
-    '@codemirror/rectangular-selection',
     '@codemirror/search',
     '@codemirror/state',
-    '@codemirror/stream-parser',
-    '@codemirror/text',
-    '@codemirror/tooltip',
     '@codemirror/view',
+    '@lezer/common',
+    '@lezer/highlight',
+    '@lezer/lr',
     ...builtins,
   ],
   outfile: path.join('./dist', 'main.js'),
   plugins: [
-    sveltePlugin({
+    esbuildSvelte({
+      compilerOptions: { css: 'injected' },
       preprocess: sveltePreprocess(),
     }),
-    copy({
-      assets: {
-        from: ['./assets/styles.css', 'manifest.json'],
-        to: ['./'],
-      },
-    }),
-    {
-      name: 'resolve-minisearch',
-      setup(build) {
-        build.onResolve({ filter: /^minisearch$/ }, () => {
-          return { path: path.resolve('node_modules/minisearch/src/MiniSearch.ts') };
-        });
-      },
-    },
   ],
   format: 'cjs',
-  watch: !prod,
   target: 'chrome98',
   logLevel: 'info',
   sourcemap: prod ? false : 'inline',
   treeShaking: true,
   minify: prod,
-  legalComments: 'none',
-}).catch(() => process.exit(1))
+})
+
+if (prod) {
+  await context.rebuild()
+  process.exit(0)
+} else {
+  await context.watch()
+}
