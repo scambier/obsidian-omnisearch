@@ -198,7 +198,7 @@ export class OmnisearchInFileModal extends OmnisearchModal {
   ) {
     super(plugin)
 
-    const cmp = new ModalInFile({
+    const cmp = mount(ModalInFile, {
       target: this.modalEl,
       props: {
         plugin,
@@ -217,7 +217,7 @@ export class OmnisearchInFileModal extends OmnisearchModal {
       if (parent) {
         parent.containerEl.toggleVisibility(true)
       }
-      cmp.$destroy()
+      unmount(cmp)
     }
   }
 }
