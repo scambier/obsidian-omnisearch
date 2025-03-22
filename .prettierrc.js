@@ -7,7 +7,6 @@ module.exports = {
   singleQuote: true,
   arrowParens: 'avoid',
   bracketSameLine: true,
-  svelteStrictMode: true,
   svelteBracketNewLine: false,
   svelteAllowShorthand: true,
   svelteIndentScriptAndStyle: true,

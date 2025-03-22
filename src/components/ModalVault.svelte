@@ -30,44 +30,55 @@
   import type OmnisearchPlugin from '../main'
   import LazyLoader from './lazy-loader/LazyLoader.svelte'
 
-  export let modal: OmnisearchVaultModal
-  export let previousQuery: string | undefined
-  export let plugin: OmnisearchPlugin
+  let {
+    modal,
+    previousQuery,
+    plugin,
+  }: {
+    modal: OmnisearchVaultModal
+    previousQuery?: string | undefined
+    plugin: OmnisearchPlugin
+  } = $props()
 
-  let selectedIndex = 0
+  let selectedIndex = $state(0)
   let historySearchIndex = 0
-  let searchQuery: string | undefined
-  let resultNotes: ResultNote[] = []
+  let searchQuery = $state(previousQuery ?? '')
+  let resultNotes: ResultNote[] = $state([])
   let query: Query
-  let indexingStepDesc = ''
-  let searching = true
+  let indexingStepDesc = $state('')
+  let searching = $state(true)
   let refInput: InputSearch | undefined
-  let openInNewPaneKey: string
-  let openInCurrentPaneKey: string
-  let createInNewPaneKey: string
-  let createInCurrentPaneKey: string
+  let openInNewPaneKey: string = $state('')
+  let openInCurrentPaneKey: string = $state('')
+  let createInNewPaneKey: string = $state('')
+  let createInCurrentPaneKey: string = $state('')
   let openInNewLeafKey: string = getCtrlKeyLabel() + getAltKeyLabel() + ' ↵'
 
-  $: selectedNote = resultNotes[selectedIndex]
-  $: searchQuery = searchQuery ?? previousQuery
-  $: if (plugin.settings.openInNewPane) {
-    openInNewPaneKey = '↵'
-    openInCurrentPaneKey = getCtrlKeyLabel() + ' ↵'
-    createInNewPaneKey = 'Shift ↵'
-    createInCurrentPaneKey = getCtrlKeyLabel() + ' Shift ↵'
-  } else {
-    openInNewPaneKey = getCtrlKeyLabel() + ' ↵'
-    openInCurrentPaneKey = '↵'
-    createInNewPaneKey = getCtrlKeyLabel() + ' Shift ↵'
-    createInCurrentPaneKey = 'Shift ↵'
-  }
-  $: if (searchQuery) {
-    updateResultsDebounced()
-  } else {
-    searching = false
-    resultNotes = []
-  }
-  $: {
+  const selectedNote = $derived(resultNotes[selectedIndex])
+
+  $effect(() => {
+    if (plugin.settings.openInNewPane) {
+      openInNewPaneKey = '↵'
+      openInCurrentPaneKey = getCtrlKeyLabel() + ' ↵'
+      createInNewPaneKey = 'Shift ↵'
+      createInCurrentPaneKey = getCtrlKeyLabel() + ' Shift ↵'
+    } else {
+      openInNewPaneKey = getCtrlKeyLabel() + ' ↵'
+      openInCurrentPaneKey = '↵'
+      createInNewPaneKey = getCtrlKeyLabel() + ' Shift ↵'
+      createInCurrentPaneKey = 'Shift ↵'
+    }
+  })
+
+  $effect(() => {
+    if (searchQuery) {
+      updateResultsDebounced()
+    } else {
+      searching = false
+      resultNotes = []
+    }
+  })
+  $effect(() => {
     switch ($indexingStep) {
       case IndexingStepType.LoadingCache:
         indexingStepDesc = 'Loading cache...'
@@ -87,7 +98,7 @@
         indexingStepDesc = ''
         break
     }
-  }
+  })
 
   onMount(async () => {
     eventBus.enable('vault')
@@ -305,17 +316,17 @@
 </script>
 
 <InputSearch
-  bind:this="{refInput}"
-  plugin="{plugin}"
-  initialValue="{searchQuery}"
-  on:input="{e => (searchQuery = e.detail)}"
+  bind:this={refInput}
+  {plugin}
+  initialValue={searchQuery}
+  on:input={e => (searchQuery = e.detail)}
   placeholder="Omnisearch - Vault">
   <div class="omnisearch-input-container__buttons">
     {#if plugin.settings.showCreateButton}
-      <button on:click="{onClickCreateNote}">Create note</button>
+      <button on:click={onClickCreateNote}>Create note</button>
     {/if}
     {#if Platform.isMobile}
-      <button on:click="{switchToInFileModal}">In-File search</button>
+      <button on:click={switchToInFileModal}>In-File search</button>
     {/if}
   </div>
 </InputSearch>
@@ -329,19 +340,19 @@
 <ModalContainer>
   {#each resultNotes as result, i}
     <LazyLoader
-      height="{100}"
-      offset="{500}"
-      keep="{true}"
-      fadeOption="{{ delay: 0, duration: 0 }}">
+      height={100}
+      offset={500}
+      keep={true}
+      fadeOption={{ delay: 0, duration: 0 }}>
       <ResultItemVault
-        plugin="{plugin}"
-        selected="{i === selectedIndex}"
-        note="{result}"
-        on:mousemove="{_ => (selectedIndex = i)}"
-        on:click="{onClick}"
-        on:auxclick="{evt => {
+        {plugin}
+        selected={i === selectedIndex}
+        note={result}
+        on:mousemove={_ => (selectedIndex = i)}
+        on:click={onClick}
+        on:auxclick={evt => {
           if (evt.button == 1) openNoteInNewPane()
-        }}" />
+        }} />
     </LazyLoader>
   {/each}
   <div style="text-align: center;">

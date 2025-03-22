@@ -4,6 +4,7 @@ import ModalVault from './ModalVault.svelte'
 import ModalInFile from './ModalInFile.svelte'
 import { Action, eventBus, EventNames, isInputComposition } from '../globals'
 import type OmnisearchPlugin from '../main'
+import { mount, unmount } from 'svelte'
 
 abstract class OmnisearchModal extends Modal {
   protected constructor(plugin: OmnisearchPlugin) {
@@ -170,7 +171,7 @@ export class OmnisearchVaultModal extends OmnisearchModal {
         : null
 
       // Instantiate and display the Svelte component
-      const cmp = new ModalVault({
+      const cmp = mount(ModalVault, {
         target: this.modalEl,
         props: {
           plugin,
@@ -178,10 +179,11 @@ export class OmnisearchVaultModal extends OmnisearchModal {
           previousQuery: query || selectedText || previous || '',
         },
       })
+
       this.onClose = () => {
         // Since the component is manually created,
         // we also need to manually destroy it
-        cmp.$destroy()
+        unmount(cmp)
       }
     })
   }
