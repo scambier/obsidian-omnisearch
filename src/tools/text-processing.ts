@@ -102,6 +102,7 @@ export class TextProcessor {
    * @param query
    */
   public getMatches(text: string, words: string[], query?: Query): SearchMatch[] {
+    words = words.map(escapeHTML)
     const reg = this.stringsToRegex(words)
     const originalText = text
     // text = text.toLowerCase().replace(new RegExp(SEPARATORS, 'gu'), ' ')
@@ -199,4 +200,3 @@ export function escapeHTML(html: string): string {
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;')
 }
-
