@@ -120,7 +120,7 @@ abstract class OmnisearchModal extends Modal {
     })
 
     // Open in background
-    this.scope.register(['Ctrl'], 'O', e => {
+    this.scope.register(['Mod'], 'O', e => {
       if (!isInputComposition()) {
         // Check if the user is still typing
         e.preventDefault()
@@ -144,7 +144,7 @@ abstract class OmnisearchModal extends Modal {
     })
 
     // Context
-    this.scope.register(['Ctrl'], 'G', _e => {
+    this.scope.register(['Mod'], 'G', _e => {
       eventBus.emit(EventNames.ToggleExcerpts)
     })
   }

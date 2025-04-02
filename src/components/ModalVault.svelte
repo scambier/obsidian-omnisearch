@@ -52,7 +52,7 @@
   let openInCurrentPaneKey: string = $state('')
   let createInNewPaneKey: string = $state('')
   let createInCurrentPaneKey: string = $state('')
-  let openInNewLeafKey: string = getCtrlKeyLabel() + getAltKeyLabel() + ' ↵'
+  let openInNewLeafKey: string = `${getCtrlKeyLabel()} ${getAltKeyLabel()} ↵`
 
   const selectedNote = $derived(resultNotes[selectedIndex])
 
@@ -419,7 +419,7 @@
     <span>to insert a link</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">Ctrl g</span>
+    <span class="prompt-instruction-command">{getCtrlKeyLabel()} g</span>
     <span>to toggle excerpts</span>
   </div>
   <div class="prompt-instruction">
