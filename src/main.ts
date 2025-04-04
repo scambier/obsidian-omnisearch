@@ -116,10 +116,8 @@ export default class OmnisearchPlugin extends Plugin {
       // Listeners to keep the search index up-to-date
       this.registerEvent(
         this.app.vault.on('create', file => {
-          if (
-            file instanceof TFile &&
-            this.notesIndexer.isFileIndexable(file.path)
-          ) {
+          if (!(file instanceof TFile)) return
+          if (this.notesIndexer.isFileIndexable(file.path)) {
             logVerbose('Indexing new file', file.path)
             searchEngine.addFromPaths([file.path])
             this.embedsRepository.refreshEmbedsForNote(file.path)
@@ -128,6 +126,7 @@ export default class OmnisearchPlugin extends Plugin {
       )
       this.registerEvent(
         this.app.vault.on('delete', file => {
+          if (!(file instanceof TFile)) return
           logVerbose('Removing file', file.path)
           this.documentsRepository.removeDocument(file.path)
           searchEngine.removeFromPaths([file.path])
@@ -136,6 +135,7 @@ export default class OmnisearchPlugin extends Plugin {
       )
       this.registerEvent(
         this.app.vault.on('modify', async file => {
+          if (!(file instanceof TFile)) return
           if (this.notesIndexer.isFileIndexable(file.path)) {
             this.notesIndexer.flagNoteForReindex(file)
           }
@@ -144,6 +144,7 @@ export default class OmnisearchPlugin extends Plugin {
       )
       this.registerEvent(
         this.app.vault.on('rename', async (file, oldPath) => {
+          if (!(file instanceof TFile)) return
           if (this.notesIndexer.isFileIndexable(file.path)) {
             logVerbose('Renaming file', file.path)
             this.documentsRepository.removeDocument(oldPath)
