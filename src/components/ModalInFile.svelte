@@ -191,7 +191,7 @@
     {/each}
   {:else}
     <div style="text-align: center;">
-      We found 0 result for your search here.
+      We found 0 results for your search here.
     </div>
   {/if}
 </ModalContainer>
