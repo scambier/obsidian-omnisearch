@@ -357,7 +357,7 @@
   {/each}
   <div style="text-align: center;">
     {#if !resultNotes.length && searchQuery && !searching}
-      We found 0 result for your search here.
+      We found 0 results for your search here.
       {#if plugin.settings.simpleSearch && searchQuery
           .split(SPACE_OR_PUNCTUATION)
           .some(w => w.length < 3)}
