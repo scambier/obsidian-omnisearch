@@ -23,55 +23,13 @@ export class TextProcessor {
       return text
     }
     try {
-      // Text to highlight
-      const smartMatches = new RegExp(
-        matches
-          .map(
-            // This regex will match the word (with \b word boundary)
-            // \b doesn't detect non-alphabetical character's word boundary, so we need to escape it
-            matchItem => {
-              const escaped = escapeRegExp(matchItem.match)
-              return `\\b${escaped}\\b${
-                !/[a-zA-Z]/.test(matchItem.match) ? `|${escaped}` : ''
-              }`
-            }
-          )
-          .join('|'),
-        'giu'
-      )
-
-      // Replacer function that will highlight the matches
-      const replacer = (match: string) => {
-        const matchInfo = matches.find(info =>
-          match.match(
-            new RegExp(
-              `\\b${escapeRegExp(info.match)}\\b${
-                !/[a-zA-Z]/.test(info.match)
-                  ? `|${escapeRegExp(info.match)}`
-                  : ''
-              }`,
-              'giu'
-            )
-          )
-        )
-        if (matchInfo) {
-          return `<span class="${highlightClass}">${match}</span>`
-        }
-        return match
-      }
-
-      // Effectively highlight the text
-      let newText = text.replace(smartMatches, replacer)
-
-      // If the text didn't change (= nothing to highlight), re-run the regex but just replace the matches without the word boundary
-      if (newText === text) {
-        const dumbMatches = new RegExp(
-          matches.map(matchItem => escapeRegExp(matchItem.match)).join('|'),
+      return text.replace(
+        new RegExp(
+          `(${matches.map(item => escapeRegExp(item.match)).join('|')})`,
           'giu'
-        )
-        newText = text.replace(dumbMatches, replacer)
-      }
-      return newText
+        ),
+        `<span class="${highlightClass}">$1</span>`
+      )
     } catch (e) {
       console.error('Omnisearch - Error in highlightText()', e)
       return text
@@ -101,7 +59,12 @@ export class TextProcessor {
    * @param reg
    * @param query
    */
-  public getMatches(text: string, words: string[], query?: Query): SearchMatch[] {
+  public getMatches(
+    text: string,
+    words: string[],
+    query?: Query
+  ): SearchMatch[] {
+    words = words.map(escapeHTML)
     const reg = this.stringsToRegex(words)
     const originalText = text
     // text = text.toLowerCase().replace(new RegExp(SEPARATORS, 'gu'), ' ')
@@ -199,4 +162,3 @@ export function escapeHTML(html: string): string {
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;')
 }
-

@@ -67,7 +67,16 @@ export class DocumentsRepository {
     }
     logVerbose('Generating IndexedDocument from', path)
     await this.addDocument(path)
-    return this.documents.get(path)!
+    const document = this.documents.get(path)
+
+    // Only happens if the cache is corrupted
+    if (!document) {
+      console.error('Omnisearch', path, 'cannot be read')
+      this.countError()
+    }
+
+    // The document might be undefined, but this shouldn't stop the search from mostly working
+    return document!
   }
 
   /**
@@ -219,7 +228,8 @@ export class DocumentsRepository {
     if (this.plugin.settings.displayTitle === '#heading') {
       displayTitle = metadata?.headings?.find(h => h.level === 1)?.heading ?? ''
     } else {
-      displayTitle = metadata?.frontmatter?.[this.plugin.settings.displayTitle] ?? ''
+      displayTitle =
+        metadata?.frontmatter?.[this.plugin.settings.displayTitle] ?? ''
     }
     const tags = getTagsFromMetadata(metadata)
     return {
@@ -247,10 +257,11 @@ export class DocumentsRepository {
   }
 
   private countError(): void {
-    if (++this.errorsCount > 5 && !this.errorsWarned) {
+    if (++this.errorsCount >= 3 && !this.errorsWarned) {
       this.errorsWarned = true
       new Notice(
-        'Omnisearch ⚠️ There might be an issue with your cache. You should clean it in Omnisearch settings and restart Obsidian.'
+        'Omnisearch ⚠️ There might be an issue with your cache. You should clean it in Omnisearch settings and restart Obsidian.',
+        0
       )
     }
   }

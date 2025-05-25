@@ -76,7 +76,7 @@ export class SettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Enable verbose logging')
       .setDesc(
-        "Adds a LOT of logs for debugging purposes. Don't forget to disable it."
+        'Adds a LOT of logs for debugging purposes. You also need to enable "Verbose" logging in the console to see these logs.'
       )
       .addToggle(toggle =>
         toggle.setValue(settings.verboseLogging).onChange(async v => {

@@ -1,31 +1,27 @@
 {
-  "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
-    "types": [
-      "svelte",
-      "node",
-      "jest"
-    ],
-    "strict": true,
-    "noUncheckedIndexedAccess": false,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
     "baseUrl": ".",
+    "inlineSourceMap": true,
+    "inlineSources": true,
     "module": "ESNext",
     "target": "ES2021",
     "allowJs": true,
     "noImplicitAny": true,
     "moduleResolution": "node",
     "importHelpers": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
+    "strictNullChecks": true,
     "lib": [
       "DOM",
       "ES2021"
-    ],
-    "paths": {
-      "minisearch": ["node_modules/minisearch/src/MiniSearch.ts"] 
-    }
+    ]
   },
   "include": [
     "**/*.ts",
-    "src/__tests__/event-bus-tests.mts"
+    "**/*.svelte"
   ]
 }
