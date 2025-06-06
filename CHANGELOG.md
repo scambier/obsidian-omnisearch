@@ -2,6 +2,11 @@
 
 This changelog is not exhaustive.
 
+## 1.27.x
+
+- Updated Svelte from v3 to v5
+- Highlighting improvements
+
 ## 1.26.x
 
 - Allow `# headings` as display titles in search results
