@@ -1,6 +1,7 @@
 import {
   type CachedMetadata,
   getAllTags,
+  Notice,
   parseFrontMatterAliases,
   Platform,
 } from 'obsidian'
@@ -155,7 +156,13 @@ export function getAltKeyLabel(): 'Alt' | '⌥' {
 
 export function isFileImage(path: string): boolean {
   const ext = getExtension(path)
-  return ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'webp' || ext === 'gif'
+  return (
+    ext === 'png' ||
+    ext === 'jpg' ||
+    ext === 'jpeg' ||
+    ext === 'webp' ||
+    ext === 'gif'
+  )
 }
 
 export function isFilePDF(path: string): boolean {
@@ -252,3 +259,23 @@ function printVerbose(fn: (...args: any[]) => any, ...args: any[]): void {
     fn(...args)
   }
 }
+
+export const countError = (() => {
+  let counter = 0
+  let alreadyWarned = false
+  setTimeout(() => {
+    if (counter > 0) {
+      --counter
+    }
+  }, 1000)
+  return (immediate = false) => {
+    // 3 errors in 1 second, there's probably something wrong
+    if ((++counter >= 5 || immediate) && !alreadyWarned) {
+      alreadyWarned = true
+      new Notice(
+        'Omnisearch ⚠️ There might be an issue with your cache. You should clean it in Omnisearch settings and restart Obsidian.',
+        5000
+      )
+    }
+  }
+})()

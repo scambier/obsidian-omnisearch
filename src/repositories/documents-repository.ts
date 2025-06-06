@@ -1,6 +1,7 @@
 import { normalizePath, Notice, TFile } from 'obsidian'
 import type { IndexedDocument } from '../globals'
 import {
+  countError,
   extractHeadingsFromCache,
   getAliasesFromMetadata,
   getTagsFromMetadata,
@@ -53,7 +54,7 @@ export class DocumentsRepository {
       console.warn(`Omnisearch: Error while adding "${path}" to live cache`, e)
       // Shouldn't be needed, but...
       this.removeDocument(path)
-      this.countError()
+      countError()
     }
   }
 
@@ -72,7 +73,7 @@ export class DocumentsRepository {
     // Only happens if the cache is corrupted
     if (!document) {
       console.error('Omnisearch', path, 'cannot be read')
-      this.countError()
+      countError()
     }
 
     // The document might be undefined, but this shouldn't stop the search from mostly working
@@ -256,13 +257,5 @@ export class DocumentsRepository {
     }
   }
 
-  private countError(): void {
-    if (++this.errorsCount >= 3 && !this.errorsWarned) {
-      this.errorsWarned = true
-      new Notice(
-        'Omnisearch ⚠️ There might be an issue with your cache. You should clean it in Omnisearch settings and restart Obsidian.',
-        0
-      )
-    }
-  }
+
 }

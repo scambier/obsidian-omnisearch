@@ -10,7 +10,12 @@ import {
   type ResultNote,
 } from '../globals'
 
-import { chunkArray, logVerbose, removeDiacritics } from '../tools/utils'
+import {
+  chunkArray,
+  countError,
+  logVerbose,
+  removeDiacritics,
+} from '../tools/utils'
 import { Notice } from 'obsidian'
 import type { Query } from './query'
 import { sortBy } from 'lodash-es'
@@ -323,10 +328,16 @@ export class SearchEngine {
     if (results.length) logVerbose('First result:', results[0])
 
     const documents = await Promise.all(
-      results.map(
-        async result =>
-          await this.plugin.documentsRepository.getDocument(result.id)
-      )
+      results.map(async result => {
+        const doc = await this.plugin.documentsRepository.getDocument(result.id)
+        if (!doc) {
+          console.warn(
+            `Omnisearch - Note "${result.id}" not in the live cache`
+          )
+          countError(true)
+        }
+        return doc
+      })
     )
 
     // If the search query contains quotes, filter out results that don't have the exact match
