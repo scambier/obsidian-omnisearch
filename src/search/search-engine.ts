@@ -190,7 +190,8 @@ export class SearchEngine {
         }
         const mtime = storedFields?.mtime as number
         const now = new Date().valueOf()
-        const daysElapsed = (now - mtime) / (24 * 3600)
+        console.log(now)
+        const daysElapsed = (now - mtime) / (24 * 3600_000)
 
         // Documents boost
         const cutoff = {
@@ -198,7 +199,9 @@ export class SearchEngine {
           [RecencyCutoff.Week]: -0.3,
           [RecencyCutoff.Month]: -0.1,
         } as const
-        return 1 + Math.exp(cutoff[settings.recencyBoost] * daysElapsed)
+        return (
+          1 + Math.exp(cutoff[settings.recencyBoost] * (daysElapsed / 1000))
+        )
       },
     })
 
@@ -331,9 +334,7 @@ export class SearchEngine {
       results.map(async result => {
         const doc = await this.plugin.documentsRepository.getDocument(result.id)
         if (!doc) {
-          console.warn(
-            `Omnisearch - Note "${result.id}" not in the live cache`
-          )
+          console.warn(`Omnisearch - Note "${result.id}" not in the live cache`)
           countError(true)
         }
         return doc
