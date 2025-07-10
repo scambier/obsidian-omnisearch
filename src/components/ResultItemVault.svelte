@@ -68,7 +68,7 @@
       )
     } else {
       // Fallback to default folder icon
-      folderIconSVG = getDefaultIconSVG('folder', plugin)
+      folderIconSVG = getDefaultIconSVG('folder')
     }
 
     // Load file icon
@@ -82,7 +82,7 @@
       )
     } else {
       // Fallback to default icons based on file type
-      fileIconSVG = getDefaultIconSVG(note.path, plugin)
+      fileIconSVG = getDefaultIconSVG(note.path)
     }
   }
 

@@ -172,18 +172,20 @@ export async function loadIconSVG(
   }
 }
 
-export function getDefaultIconSVG(
-  notePath: string,
-  plugin: OmnisearchPlugin
-): string {
+export function getDefaultIconSVG(notePath: string): string {
   // Return SVG content for default icons based on file type
   let iconName = 'file'
-  if (isFileImage(notePath)) {
-    iconName = 'image'
-  } else if (isFilePDF(notePath)) {
-    iconName = 'file-text'
-  } else if (isFileCanvas(notePath) || isFileExcalidraw(notePath)) {
-    iconName = 'layout-dashboard'
+
+  if (notePath === 'folder') {
+    iconName = 'folder'
+  } else {
+    if (isFileImage(notePath)) {
+      iconName = 'image'
+    } else if (isFilePDF(notePath)) {
+      iconName = 'file-text'
+    } else if (isFileCanvas(notePath) || isFileExcalidraw(notePath)) {
+      iconName = 'layout-dashboard'
+    }
   }
   const iconEl = getIcon(iconName)
   return iconEl ? iconEl.outerHTML : ''
