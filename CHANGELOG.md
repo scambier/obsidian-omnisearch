@@ -6,6 +6,7 @@ This changelog is not exhaustive.
 
 - Updated Svelte from v3 to v5
 - Highlighting improvements
+- Bug fixes
 
 ## 1.26.x
 
