@@ -39,7 +39,10 @@ export class Tokenizer {
       }
 
       // Remove duplicates
-      tokens = [...new Set(tokens)]
+      // tokens = [...new Set(tokens)]
+      
+      // Remove empty tokens
+      tokens = tokens.filter(Boolean)
 
       return tokens
     } catch (e) {
