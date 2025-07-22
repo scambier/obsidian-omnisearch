@@ -39,17 +39,17 @@ jobs:
           ls
           echo "::set-output name=tag_name::$(git tag --sort version:refname | tail -n 1)"
 
-      - name: Generate a changelog
-        uses: orhun/git-cliff-action@v3
-        id: git-cliff
-        with:
-          config: cliff.toml
-          args: -vv --latest --strip header
-        env:
-          GITHUB_REPO: ${{ github.repository }}
+      # - name: Generate a changelog
+      #   uses: orhun/git-cliff-action@v3
+      #   id: git-cliff
+      #   with:
+      #     config: cliff.toml
+      #     args: -vv --latest --strip header
+      #   env:
+      #     GITHUB_REPO: ${{ github.repository }}
 
-      - name: Print the changelog
-        run: cat "${{ steps.git-cliff.outputs.changelog }}"
+      # - name: Print the changelog
+      #   run: cat "${{ steps.git-cliff.outputs.changelog }}"
 
       - name: Create Release
         id: create_release
