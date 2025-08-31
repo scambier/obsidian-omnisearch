@@ -4,6 +4,7 @@ import {
   isFileImage,
   isFilePDF,
   isFileCanvas,
+  isFileBase,
   isFileExcalidraw,
   warnVerbose,
 } from './utils'
@@ -183,7 +184,7 @@ export function getDefaultIconSVG(notePath: string): string {
       iconName = 'image'
     } else if (isFilePDF(notePath)) {
       iconName = 'file-text'
-    } else if (isFileCanvas(notePath) || isFileExcalidraw(notePath)) {
+    } else if (isFileCanvas(notePath) || isFileExcalidraw(notePath) || isFileBase(notePath)) {
       iconName = 'layout-dashboard'
     }
   }

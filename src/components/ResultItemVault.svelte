@@ -4,6 +4,7 @@
   import {
     getExtension,
     isFileCanvas,
+    isFileBase,
     isFileExcalidraw,
     isFileImage,
     isFilePDF,
@@ -135,7 +136,7 @@
         setIcon(elFilePathIcon, 'image')
       } else if (isFilePDF(note.path)) {
         setIcon(elFilePathIcon, 'file-text')
-      } else if (isFileCanvas(note.path) || isFileExcalidraw(note.path)) {
+      } else if (isFileCanvas(note.path) || isFileExcalidraw(note.path) || isFileBase(note.path)) {
         setIcon(elFilePathIcon, 'layout-dashboard')
       } else {
         setIcon(elFilePathIcon, 'file')
