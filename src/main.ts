@@ -218,7 +218,7 @@ export default class OmnisearchPlugin extends Plugin {
    * @returns
    */
   public getChsSegmenter(): any | undefined {
-    return (this.app as any).plugins.plugins['cm-chs-patch']
+    return (this.app as any).plugins?.plugins?.['cm-chs-patch']
   }
 
   /**

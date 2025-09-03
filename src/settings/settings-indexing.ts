@@ -90,7 +90,8 @@ export function injectSettingsIndexing(
   // AI Images Indexing
   const aiIndexImagesDesc = new DocumentFragment()
   aiIndexImagesDesc.createSpan({}, span => {
-    span.innerHTML = `Omnisearch will use AI Image Analyzer to index the content of your images with ai.`
+    span.innerHTML = `Omnisearch will use AI Image Analyzer to index the content of your images with ai.<br/>
+    ⚠️ <span style="color: var(--text-accent)">If both AI Image Analyzer and Text Extractor are enabled, Text Extractor will only be used as a fallback.</span>`
   })
   new Setting(containerEl)
     .setName(`Images AI indexing ${aiImageAnalyzer ? '' : '⚠️ Disabled'}`)

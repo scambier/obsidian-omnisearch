@@ -149,25 +149,21 @@ export class DocumentsRepository {
     }
 
     // ** Image **
-    else if (
-      isFileImage(path) &&
-      ((this.plugin.settings.imagesIndexing &&
-        extractor?.canFileBeExtracted(path)) ||
-        (this.plugin.settings.aiImageIndexing &&
-          aiImageAnalyzer?.canBeAnalyzed(file)))
-    ) {
-      if (
-        this.plugin.settings.imagesIndexing &&
-        extractor?.canFileBeExtracted(path)
-      ) {
-        content = await extractor.extractText(file)
-      }
-
+    else if (isFileImage(path)) {
+      // AI Image Analyzer
       if (
         this.plugin.settings.aiImageIndexing &&
         aiImageAnalyzer?.canBeAnalyzed(file)
       ) {
-        content = (await aiImageAnalyzer.analyzeImage(file)) + (content ?? '')
+        content = await aiImageAnalyzer.analyzeImage(file)
+      }
+
+      // Text Extractor
+      else if (
+        this.plugin.settings.imagesIndexing &&
+        extractor?.canFileBeExtracted(path)
+      ) {
+        content = await extractor.extractText(file)
       }
     }
     // ** PDF **
@@ -256,6 +252,4 @@ export class DocumentsRepository {
         : '',
     }
   }
-
-
 }
