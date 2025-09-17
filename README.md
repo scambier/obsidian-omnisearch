@@ -61,6 +61,7 @@ _Submit a PR to add your own project!_
 
 - [Omnisearch Companion](https://github.com/ALegendsTale/omnisearch-companion), an extension for your browser ([Firefox](https://addons.mozilla.org/en-US/firefox/addon/omnisearch-companion/), [Chrome](https://chromewebstore.google.com/detail/omnisearch-companion/kcjcnnlpfbilodfnnkpioijobpjhokkd))
 - [Actions for Obsidian](https://actions.work/actions-for-obsidian)
+- [Notebook Navigator](https://notebooknavigator.com/)
 - [Userscripts](https://publish.obsidian.md/omnisearch/Inject+Omnisearch+results+into+your+search+engine) to inject Omnisearch into your favorite web search engine
 
 ## LICENSE
