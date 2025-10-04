@@ -178,6 +178,10 @@ export function isFileCanvas(path: string): boolean {
   return path.endsWith('.canvas')
 }
 
+export function isFileBase(path: string): boolean {
+  return path.endsWith('.base')
+}
+
 export function isFileExcalidraw(path: string): boolean {
   return path.endsWith('.excalidraw')
 }
