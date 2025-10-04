@@ -52,7 +52,6 @@ export class NotesIndexer {
     return (
       this.isFilePlaintext(path) ||
       isFileCanvas(path) ||
-      isFileBase(path) ||
       isFileFromDataloom(path) ||
       (canIndexPDF && isFilePDF(path)) ||
       (canIndexImages && isFileImage(path)) ||
