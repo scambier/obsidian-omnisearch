@@ -2,6 +2,10 @@
 
 This changelog is not exhaustive.
 
+## 1.28.x
+
+- Added support for PDF pagination
+
 ## 1.27.x
 
 - Updated Svelte from v3 to v5
