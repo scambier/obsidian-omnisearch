@@ -129,15 +129,21 @@ export function injectSettingsIndexing(
   new Setting(containerEl)
     .setName('Set frontmatter property key as title')
     .setDesc(
-      htmlDescription(`If you have a custom property in your notes that you want to use as the title in search results. If you set this to '#heading', then use the first heading from a file as the title.<br>
+      htmlDescription(`Custom property in your notes to use as the title in search results.<br>
+          Use <code>#heading</code> to use the first H1 heading.<br>
+          <strong>Fallback support:</strong> Separate multiple sources with commas. The first non-empty value will be used.<br>
+          Example: <code>#heading,title,name</code> tries H1 first, then frontmatter "title", then "name".<br>
           Leave empty to disable.`)
     )
     .addText(component => {
-      component.setValue(settings.displayTitle).onChange(async v => {
-        await clearCacheDebounced()
-        settings.displayTitle = v
-        await saveSettings(plugin)
-      })
+      component
+        .setPlaceholder('e.g., #heading,title')
+        .setValue(settings.displayTitle)
+        .onChange(async v => {
+          await clearCacheDebounced()
+          settings.displayTitle = v
+          await saveSettings(plugin)
+        })
     })
 
   // Additional text files to index

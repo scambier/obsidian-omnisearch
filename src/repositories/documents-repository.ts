@@ -221,12 +221,26 @@ export class DocumentsRepository {
         }
       }
     }
-    let displayTitle: string
-    if (this.plugin.settings.displayTitle === '#heading') {
-      displayTitle = metadata?.headings?.find(h => h.level === 1)?.heading ?? ''
-    } else {
-      displayTitle =
-        metadata?.frontmatter?.[this.plugin.settings.displayTitle] ?? ''
+    let displayTitle = ''
+    const displayTitleSetting = this.plugin.settings.displayTitle
+
+    if (displayTitleSetting) {
+      const sources = displayTitleSetting.split(',').map(s => s.trim()).filter(s => s)
+
+      for (const source of sources) {
+        let value = ''
+
+        if (source === '#heading') {
+          value = metadata?.headings?.find(h => h.level === 1)?.heading ?? ''
+        } else {
+          value = metadata?.frontmatter?.[source] ?? ''
+        }
+
+        if (value) {
+          displayTitle = value
+          break
+        }
+      }
     }
     const tags = getTagsFromMetadata(metadata)
     return {
