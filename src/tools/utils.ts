@@ -111,8 +111,8 @@ export function getTagsFromMetadata(metadata: CachedMetadata | null): string[] {
 const japaneseDiacritics = ['\\u30FC', '\\u309A', '\\u3099']
 const regexpExclude = japaneseDiacritics.join('|')
 const diacriticsRegex = new RegExp(`(?!${regexpExclude})\\p{Diacritic}`, 'gu')
-// Hebrew nikud (vowels, dagesh, cantillation): U+0591–U+05C7
-const hebrewNikudRegex = /[\u0591-\u05C7]/g
+// Hebrew nikud (vowels, dagesh, cantillation): U+0591–U+05C7, excluding U+05BE (maqaf ־ hyphen)
+const hebrewNikudRegex = /[\u0591-\u05BD\u05BF-\u05C7]/g
 // Arabic harakat and small marks (only used when ignoreArabicDiacritics is on)
 const arabicHarakatRegex = /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED]/g
 

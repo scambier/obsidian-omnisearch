@@ -7,10 +7,11 @@ import type OmnisearchPlugin from '../main'
 
 // When matching with "ignore diacritics", allow these between base letters so we
 // search the original text and get correct indices (normalized text has different length).
+// Exclude U+05BE (maqaf ־) — it's a hyphen, not a diacritic.
 const OPTIONAL_DIACRITICS_CLASS =
-  '[\\u0591-\\u05C7\\u0300-\\u036f]' // Hebrew nikud + Latin combining
+  '[\\u0591-\\u05BD\\u05BF-\\u05C7\\u0300-\\u036f]' // Hebrew nikud + Latin combining
 const OPTIONAL_DIACRITICS_CLASS_ARABIC =
-  '[\\u0591-\\u05C7\\u0300-\\u036f\\u0610-\\u061A\\u064B-\\u065F\\u0670\\u06D6-\\u06DC\\u06DF-\\u06E4\\u06E7\\u06E8\\u06EA-\\u06ED]'
+  '[\\u0591-\\u05BD\\u05BF-\\u05C7\\u0300-\\u036f\\u0610-\\u061A\\u064B-\\u065F\\u0670\\u06D6-\\u06DC\\u06DF-\\u06E4\\u06E7\\u06E8\\u06EA-\\u06ED]'
 
 export class TextProcessor {
   constructor(private plugin: OmnisearchPlugin) {}
@@ -105,7 +106,9 @@ export class TextProcessor {
         .map(w => this.regexForWordWithOptionalDiacritics(w, arabic))
         .filter(Boolean)
       if (!patterns.length) return []
-      const joined = `(?:${patterns.map(p => `\\b(?:${p})\\b|(?:${p})`).join('|')})`
+      // Don't use \b word boundaries — they're unreliable with Hebrew in many engines.
+      // Match the pattern (word + optional diacritics) anywhere; prefix matches still work.
+      const joined = `(?:${patterns.map(p => `(?:${p})`).join('|')})`
       reg = new RegExp(joined, 'giu')
       searchText = originalText
     } else {
