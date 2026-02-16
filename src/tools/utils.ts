@@ -111,6 +111,10 @@ export function getTagsFromMetadata(metadata: CachedMetadata | null): string[] {
 const japaneseDiacritics = ['\\u30FC', '\\u309A', '\\u3099']
 const regexpExclude = japaneseDiacritics.join('|')
 const diacriticsRegex = new RegExp(`(?!${regexpExclude})\\p{Diacritic}`, 'gu')
+// Hebrew nikud (vowels, dagesh, cantillation): U+0591–U+05C7
+const hebrewNikudRegex = /[\u0591-\u05C7]/g
+// Arabic harakat and small marks (only used when ignoreArabicDiacritics is on)
+const arabicHarakatRegex = /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED]/g
 
 /**
  * https://stackoverflow.com/a/37511463
@@ -140,7 +144,12 @@ export function removeDiacritics(str: string, arabic = false): string {
   // Keep caret same as above
   str = str.replaceAll('^', '[__omnisearch__caret__]')
   // To keep right form of Korean character, NFC normalization is necessary
-  str = str.normalize('NFD').replace(diacriticsRegex, '').normalize('NFC')
+  // \p{Diacritic} covers Latin combining marks; Hebrew nikud and Arabic harakat need explicit ranges
+  str = str.normalize('NFD').replace(diacriticsRegex, '').replace(hebrewNikudRegex, '')
+  if (arabic) {
+    str = str.replace(arabicHarakatRegex, '')
+  }
+  str = str.normalize('NFC')
   str = str.replaceAll('[__omnisearch__backtick__]', '`')
   str = str.replaceAll('[__omnisearch__caret__]', '^')
   return str
