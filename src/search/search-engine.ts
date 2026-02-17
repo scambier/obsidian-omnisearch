@@ -21,6 +21,10 @@ import type { Query } from './query'
 import { sortBy } from 'lodash-es'
 import type OmnisearchPlugin from '../main'
 import { Tokenizer } from './tokenizer'
+import {
+  proximitySearchText,
+  proximityMatchesToSearchMatches,
+} from './proximity-search'
 
 export class SearchEngine {
   private tokenizer: Tokenizer
@@ -397,6 +401,13 @@ export class SearchEngine {
     query: Query,
     options?: Partial<{ singleFilePath?: string }>
   ): Promise<ResultNote[]> {
+    // Proximity queries: scan indexed documents directly instead of relying
+    // on MiniSearch, because Hebrew prefix letters (ב,ה,ו,ל,...) make root
+    // terms unreliable for MiniSearch token matching.
+    if (query.proximityQuery) {
+      return this.getProximitySuggestions(query, options)
+    }
+
     // Get the raw results
     let results: SearchResult[]
     if (this.plugin.settings.simpleSearch) {
@@ -489,6 +500,47 @@ export class SearchEngine {
 
     logVerbose('Suggestions:', resultNotes)
 
+    return resultNotes
+  }
+
+  /**
+   * Proximity queries: scan all indexed documents directly and return
+   * only those that have proximity matches. Bypasses MiniSearch because
+   * Hebrew prefix letters make root-term matching unreliable.
+   */
+  private async getProximitySuggestions(
+    query: Query,
+    options?: Partial<{ singleFilePath?: string }>
+  ): Promise<ResultNote[]> {
+    const proxQuery = query.proximityQuery!
+    let paths = [...this.indexedDocuments.keys()]
+    if (options?.singleFilePath) {
+      paths = paths.filter(p => p === options.singleFilePath)
+    }
+
+    logVerbose(`Proximity search: scanning ${paths.length} documents`)
+
+    const resultNotes: ResultNote[] = []
+    for (const path of paths) {
+      const doc = await this.plugin.documentsRepository.getDocument(path)
+      if (!doc?.content) continue
+
+      const proxMatches = proximitySearchText(doc.content, proxQuery)
+      if (proxMatches.length === 0) continue
+
+      const matches = proximityMatchesToSearchMatches(proxMatches)
+      resultNotes.push({
+        score: proxMatches.length,
+        foundWords: proxQuery.patterns,
+        matches,
+        isEmbed: false,
+        ...doc,
+      })
+      if (resultNotes.length >= 50) break
+    }
+
+    resultNotes.sort((a, b) => b.score - a.score)
+    logVerbose(`Proximity search: found ${resultNotes.length} results`)
     return resultNotes
   }
 
