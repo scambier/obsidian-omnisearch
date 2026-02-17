@@ -62,6 +62,41 @@ describe('Proximity search', () => {
       expect(re.test('בשלמות')).toBe(true)
       expect(re.test('שלמה')).toBe(true)
     })
+    it('middle + applies to ALL inter-letter gaps', () => {
+      const re = patternToRegex('ש+לם')
+      // + between ש and ל should also apply between ל and ם
+      expect(re.test('שלם')).toBe(true)
+      expect(re.test('שילמה')).toBe(true)
+      expect(re.test('שלמות')).toBe(true)
+    })
+    it('middle * applies to ALL inter-letter gaps', () => {
+      const re = patternToRegex('ת*קן')
+      // * between ת and ק should also apply between ק and נ
+      expect(re.test('תקן')).toBe(true)
+      expect(re.test('תיקון')).toBe(true)
+      expect(re.test('תקונ')).toBe(true)
+    })
+    it('no middle wildcard = exact letters, leading/trailing only at edges', () => {
+      const re1 = patternToRegex('תקן')
+      expect(re1.test('תקן')).toBe(true)
+      expect(re1.test('תיקון')).toBe(false)
+
+      const re2 = patternToRegex('+שלם+')
+      // +שלם+ has NO middle wildcard — only edge wildcards
+      expect(re2.test('שלם')).toBe(true)
+      expect(re2.test('השלמות')).toBe(true)
+      expect(re2.test('בשלמות')).toBe(true)
+      // No chars allowed between root letters:
+      expect(re2.test('שילום')).toBe(false)
+    })
+    it('+ש+לם+ has middle wildcard and matches more broadly', () => {
+      const re = patternToRegex('+ש+לם+')
+      expect(re.test('שלם')).toBe(true)
+      expect(re.test('השלמות')).toBe(true)
+      expect(re.test('בשלמות')).toBe(true)
+      // Middle wildcard allows plus-set chars between letters:
+      expect(re.test('שילום')).toBe(true)
+    })
     it('final-form מ/ם interchangeable', () => {
       const re = patternToRegex('מאד')
       expect(re.test('מאד')).toBe(true)

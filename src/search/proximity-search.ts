@@ -109,20 +109,68 @@ function letterClass(char: string): string {
  * * = any Hebrew letter (zero or more)
  * + = zero or more from prefix/suffix set
  * Letters get final-form equivalence.
+ *
+ * Leading/trailing wildcards apply only at the edges.
+ * If ANY wildcard (* or +) appears BETWEEN the first and last Hebrew
+ * letter, the broadest type is inserted between EVERY pair of Hebrew
+ * letters (* > +). So +ש+לם+ has middle wildcards, but +שלם+ does not.
  */
 export function patternToRegex(pattern: string): RegExp {
-  let re = ''
-  for (let i = 0; i < pattern.length; i++) {
-    const c = pattern[i]
-    if (c === '*') {
-      re += `[${HEBREW_LETTERS}]*`
-    } else if (c === '+') {
-      re += `${PLUS_CLASS}*`
-    } else if (c >= '\u05D0' && c <= '\u05EA') {
-      re += letterClass(c)
+  const chars = [...pattern]
+
+  // Locate first and last Hebrew letter
+  let firstHeb = -1
+  let lastHeb = -1
+  for (let i = 0; i < chars.length; i++) {
+    if (chars[i] >= '\u05D0' && chars[i] <= '\u05EA') {
+      if (firstHeb === -1) firstHeb = i
+      lastHeb = i
     }
-    // Skip any other characters (e.g. spaces already removed)
   }
+  if (firstHeb === -1) return /(?!)/u // no Hebrew letters — never matches
+
+  // Detect broadest wildcard BETWEEN Hebrew letters only (* beats +)
+  let hasMiddleStar = false
+  let hasMiddlePlus = false
+  for (let i = firstHeb + 1; i < lastHeb; i++) {
+    if (chars[i] === '*') hasMiddleStar = true
+    else if (chars[i] === '+') hasMiddlePlus = true
+  }
+  const middleWild = hasMiddleStar
+    ? `[${HEBREW_LETTERS}]*`
+    : hasMiddlePlus
+      ? `${PLUS_CLASS}*`
+      : ''
+
+  // Leading wildcards (before first Hebrew letter)
+  let re = ''
+  for (let i = 0; i < firstHeb; i++) {
+    if (chars[i] === '*') re += `[${HEBREW_LETTERS}]*`
+    else if (chars[i] === '+') re += `${PLUS_CLASS}*`
+  }
+
+  // Collect Hebrew letters in the core of the pattern
+  const hebrewLetters: string[] = []
+  for (let i = firstHeb; i <= lastHeb; i++) {
+    if (chars[i] >= '\u05D0' && chars[i] <= '\u05EA') {
+      hebrewLetters.push(chars[i])
+    }
+  }
+
+  // Build core: each letter with optional middle wildcard between pairs
+  for (let i = 0; i < hebrewLetters.length; i++) {
+    re += letterClass(hebrewLetters[i])
+    if (i < hebrewLetters.length - 1 && middleWild) {
+      re += middleWild
+    }
+  }
+
+  // Trailing wildcards (after last Hebrew letter)
+  for (let i = lastHeb + 1; i < chars.length; i++) {
+    if (chars[i] === '*') re += `[${HEBREW_LETTERS}]*`
+    else if (chars[i] === '+') re += `${PLUS_CLASS}*`
+  }
+
   return new RegExp(`^${re}$`, 'u')
 }
 
