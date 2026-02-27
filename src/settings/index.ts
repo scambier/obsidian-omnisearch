@@ -1,21 +1,16 @@
 // noinspection CssUnresolvedCustomProperty
-import {
-  App,
-  Plugin,
-  PluginSettingTab,
-  Setting,
-} from 'obsidian'
+import { App, Plugin, PluginSettingTab, Setting } from 'obsidian'
 import { writable } from 'svelte/store'
 import { K_DISABLE_OMNISEARCH, RecencyCutoff } from '../globals'
 import type OmnisearchPlugin from '../main'
 import { enableVerboseLogging } from '../tools/utils'
-import { injectSettingsIndexing } from './settings-indexing'
-import { type OmnisearchSettings, saveSettings } from './utils'
 import { injectSettingsBehavior } from './settings-behavior'
+import { injectSettingsDanger } from './settings-danger'
+import { injectSettingsHttp } from './settings-http'
+import { injectSettingsIndexing } from './settings-indexing'
 import { injectSettingsUserInterface } from './settings-ui'
 import { injectSettingsWeighting } from './settings-weighting'
-import { injectSettingsHttp } from './settings-http'
-import { injectSettingsDanger } from './settings-danger'
+import { type OmnisearchSettings, saveSettings } from './utils'
 
 /**
  * A store to reactively toggle the `showExcerpt` setting on the fly
@@ -37,7 +32,6 @@ export class SettingsTab extends PluginSettingTab {
 
   display(): void {
     const { containerEl } = this
-    const database = this.plugin.database
 
     containerEl.empty()
 
@@ -62,7 +56,9 @@ export class SettingsTab extends PluginSettingTab {
     containerEl.createEl('hr')
     injectSettingsUserInterface(this.plugin, settings, containerEl)
     containerEl.createEl('hr')
-    injectSettingsWeighting(this.plugin, settings, containerEl, this.display)
+    injectSettingsWeighting(this.plugin, settings, containerEl, () => {
+      this.display()
+    })
     containerEl.createEl('hr')
     injectSettingsHttp(this.plugin, settings, containerEl)
     containerEl.createEl('hr')
