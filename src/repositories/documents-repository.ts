@@ -1,5 +1,8 @@
-import { normalizePath, Notice, TFile } from 'obsidian'
+import { normalizePath, TFile } from 'obsidian'
+import type { CanvasData } from 'obsidian/canvas'
 import type { IndexedDocument } from '../globals'
+import type OmnisearchPlugin from '../main'
+import { getNonExistingNotes } from '../tools/notes'
 import {
   countError,
   extractHeadingsFromCache,
@@ -13,10 +16,8 @@ import {
   logVerbose,
   removeDiacritics,
   stripMarkdownCharacters,
+  warnVerbose,
 } from '../tools/utils'
-import type { CanvasData } from 'obsidian/canvas'
-import type OmnisearchPlugin from '../main'
-import { getNonExistingNotes } from '../tools/notes'
 
 export class DocumentsRepository {
   /**
@@ -190,8 +191,7 @@ export class DocumentsRepository {
     }
 
     if (content === null || content === undefined) {
-      // This shouldn't happen
-      console.warn(`Omnisearch: ${content} content for file`, file.path)
+      warnVerbose(`Omnisearch: ${content} content for file`, file.path)
       content = ''
     }
     const metadata = app.metadataCache.getFileCache(file)
