@@ -5,6 +5,14 @@ import { Notice } from 'obsidian'
 import { escapeRegExp } from 'lodash-es'
 import type OmnisearchPlugin from '../main'
 
+// When matching with "ignore diacritics", allow these between base letters so we
+// search the original text and get correct indices (normalized text has different length).
+// Exclude U+05BE (maqaf ־) — it's a hyphen, not a diacritic.
+const OPTIONAL_DIACRITICS_CLASS =
+  '[\\u0591-\\u05BD\\u05BF-\\u05C7\\u0300-\\u036f]' // Hebrew nikud + Latin combining
+const OPTIONAL_DIACRITICS_CLASS_ARABIC =
+  '[\\u0591-\\u05BD\\u05BF-\\u05C7\\u0300-\\u036f\\u0610-\\u061A\\u064B-\\u065F\\u0670\\u06D6-\\u06DC\\u06DF-\\u06E4\\u06E7\\u06E8\\u06EA-\\u06ED]'
+
 export class TextProcessor {
   constructor(private plugin: OmnisearchPlugin) {}
 
@@ -54,6 +62,24 @@ export class TextProcessor {
   }
 
   /**
+   * Builds a regex pattern that matches a word with optional diacritics between
+   * each character. Used on the *original* text so match indices are correct
+   * (normalized text has different length and would give wrong highlight spans).
+   */
+  private regexForWordWithOptionalDiacritics(
+    word: string,
+    arabic: boolean
+  ): string {
+    const diacriticsClass = arabic
+      ? OPTIONAL_DIACRITICS_CLASS_ARABIC
+      : OPTIONAL_DIACRITICS_CLASS
+    const opt = `(?:${diacriticsClass})*`
+    const chars = [...word].map(c => escapeRegExp(c))
+    if (chars.length === 0) return ''
+    return chars.join(opt) + opt
+  }
+
+  /**
    * Returns an array of matches in the text, using the provided regex
    * @param text
    * @param reg
@@ -65,27 +91,41 @@ export class TextProcessor {
     query?: Query
   ): SearchMatch[] {
     words = words.map(escapeHTML)
-    const reg = this.stringsToRegex(words)
     const originalText = text
-    // text = text.toLowerCase().replace(new RegExp(SEPARATORS, 'gu'), ' ')
-    if (this.plugin.settings.ignoreDiacritics) {
-      text = removeDiacritics(text, this.plugin.settings.ignoreArabicDiacritics)
+    const ignoreDiacritics = this.plugin.settings.ignoreDiacritics
+    const arabic = this.plugin.settings.ignoreArabicDiacritics
+
+    let reg: RegExp
+    let searchText: string
+
+    if (ignoreDiacritics) {
+      // Match on original text with optional diacritics between letters so
+      // indices and matched strings are correct (normalized text has different length).
+      const sorted = [...words].sort((a, b) => b.length - a.length)
+      const patterns = sorted
+        .map(w => this.regexForWordWithOptionalDiacritics(w, arabic))
+        .filter(Boolean)
+      if (!patterns.length) return []
+      // Don't use \b word boundaries — they're unreliable with Hebrew in many engines.
+      // Match the pattern (word + optional diacritics) anywhere; prefix matches still work.
+      const joined = `(?:${patterns.map(p => `(?:${p})`).join('|')})`
+      reg = new RegExp(joined, 'giu')
+      searchText = originalText
+    } else {
+      reg = this.stringsToRegex(words)
+      searchText = originalText
     }
+
     const startTime = new Date().getTime()
     let match: RegExpExecArray | null = null
     let matches: SearchMatch[] = []
     let count = 0
-    while ((match = reg.exec(text)) !== null) {
-      // Avoid infinite loops, stop looking after 100 matches or if we're taking too much time
+    while ((match = reg.exec(searchText)) !== null) {
       if (++count >= 100 || new Date().getTime() - startTime > 50) {
         warnVerbose('Stopped getMatches at', count, 'results')
         break
       }
-      const matchStartIndex = match.index
-      const matchEndIndex = matchStartIndex + match[0].length
-      const originalMatch = originalText
-        .substring(matchStartIndex, matchEndIndex)
-        .trim()
+      const originalMatch = match[0].trim()
       if (originalMatch && match.index >= 0) {
         matches.push({ match: originalMatch, offset: match.index })
       }
@@ -96,12 +136,18 @@ export class TextProcessor {
       query &&
       (query.query.text.length > 1 || query.getExactTerms().length > 0)
     ) {
-      const best = text.indexOf(query.getBestStringForExcerpt())
-      if (best > -1 && matches.find(m => m.offset === best)) {
-        matches.unshift({
-          offset: best,
-          match: query.getBestStringForExcerpt(),
-        })
+      const bestStr = query.getBestStringForExcerpt()
+      const bestMatch = matches.find(m => {
+        const normalized = ignoreDiacritics
+          ? removeDiacritics(m.match, arabic)
+          : m.match
+        return normalized.toLowerCase() === bestStr.toLowerCase()
+      })
+      if (bestMatch) {
+        matches = [
+          bestMatch,
+          ...matches.filter(m => m !== bestMatch),
+        ]
       }
     }
     return matches
