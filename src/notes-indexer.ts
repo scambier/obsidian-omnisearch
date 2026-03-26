@@ -39,6 +39,15 @@ export class NotesIndexer {
   }
 
   public isFileIndexable(path: string): boolean {
+    // Skip excluded files when hideExcluded is enabled
+    if (
+      this.plugin.settings.hideExcluded &&
+      this.plugin.app.metadataCache.isUserIgnored &&
+      this.plugin.app.metadataCache.isUserIgnored(path)
+    ) {
+      return false
+    }
+
     return this.isFilenameIndexable(path) || this.isContentIndexable(path)
   }
 
