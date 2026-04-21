@@ -15,13 +15,6 @@ declare module 'obsidian' {
     getConfig(string): unknown
   }
 
-  interface WorkspaceLeaf {
-    openFile(
-      file: TFile,
-      openState?: OpenViewState
-    ): Promise<void>
-  }
-
   interface App {
     appId: string
     loadLocalStorage(key: string): string | null

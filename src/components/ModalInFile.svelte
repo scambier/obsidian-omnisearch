@@ -135,7 +135,7 @@
       // Open (or switch focus to) the note
       const reg = plugin.textProcessor.stringsToRegex(note.foundWords)
       reg.exec(note.content)
-      await openNote(plugin.app, note, reg.lastIndex, newTab)
+      await openNote(plugin, note, reg.lastIndex, newTab)
 
       // Move cursor to the match
       const view = plugin.app.workspace.getActiveViewOfType(MarkdownView)

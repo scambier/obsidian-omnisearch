@@ -1,4 +1,5 @@
-import { type App, type CachedMetadata, MarkdownView, TFile } from 'obsidian'
+import { type App, type CachedMetadata, MarkdownView, TFile, WorkspaceLeaf } from 'obsidian'
+import OmnisearchPlugin from '../main'
 import type { ResultNote } from '../globals'
 
 /**
@@ -26,12 +27,13 @@ function getPdfPageFromOffset(content: string, offset: number): number | null {
 }
 
 export async function openNote(
-  app: App,
+  plugin: OmnisearchPlugin,
   item: ResultNote,
   offset = 0,
   newPane = false,
   newLeaf = false
 ): Promise<void> {
+  const app = plugin.app;
   // We don't have a way to switch pages on a PDF view, so we must open a new pane for PDF results to trigger page navigation
   // We should only trigger this behaviour if we know the page number for the result
   // This code runs before the normal implementation because we don't want to trigger activation of an existing pane for this PDF and then open a new one on top
@@ -81,18 +83,16 @@ export async function openNote(
       }
     }
 
-    if (app.plugin.settings.indexFilesWithoutExtension && !linkPath.includes('.')) {
-      // Obsidian's openLinkText treats extensionless paths as non-existing
-      // markdown links and appends .md by default, creating a new file
-      const existingFile = app.vault.getAbstractFileByPath(item.path)
-      if (existingFile instanceof TFile) {
-        const leaf = app.workspace.getLeaf(newLeaf ? 'split' : newPane)
-        await leaf.openFile(existingFile, { active: !newLeaf && !newPane })
-        return;
-      }
-    }
+    // Obsidian's openLinkText treats extensionless paths as non-existing
+    // markdown links and appends .md by default, creating a new file
+    const existingFile = (plugin.settings.indexFilesWithoutExtension && !linkPath.includes('.') ? app.vault.getAbstractFileByPath(item.path) : undefined)
 
-    await app.workspace.openLinkText(item.path, '', newLeaf ? 'split' : newPane)
+    if (existingFile instanceof TFile) {
+      const leaf = app.workspace.getLeaf(newLeaf ? 'split' : newPane)
+      await leaf.openFile(existingFile, { active: !newLeaf && !newPane })
+    } else {
+      await app.workspace.openLinkText(item.path, '', newLeaf ? 'split' : newPane)
+    }
   }
 
   const view = app.workspace.getActiveViewOfType(MarkdownView)

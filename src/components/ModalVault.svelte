@@ -212,7 +212,7 @@
   ) {
     saveCurrentQuery()
     const offset = note.matches?.[0]?.offset ?? 0
-    openNote(plugin.app, note, offset, newPane, newLeaf)
+    openNote(plugin, note, offset, newPane, newLeaf)
   }
 
   async function onClickCreateNote(_e: MouseEvent) {
