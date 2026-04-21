@@ -6,13 +6,18 @@ declare module 'obsidian' {
   }
 
   interface ViewState {
-    state?: {
-      file?: string
-    }
+    state?: Record<string, unknown>
   }
 
   interface Vault {
-    getConfig(string): unknown
+    getConfig(key: string): unknown
+  }
+
+  interface WorkspaceLeaf {
+    openFile(
+      file: TFile,
+      state?: { active?: boolean; eState?: Record<string, unknown> }
+    ): Promise<void>
   }
 
   interface App {

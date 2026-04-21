@@ -68,20 +68,31 @@ export async function openNote(
   })
 
   if (!alreadyOpenAndPinned) {
-    // For PDFs, extract page number and append to path
-    // TODO if we knew the view type for PDF could we reuse an existing view?
-    let linkPath = item.path
+    // Check if file exists at exact path — critical for extensionless files.
+    // Obsidian's openLinkText treats extensionless paths as non-existing
+    // markdown links and appends .md by default, creating a new file!
+    const existingFile = app.vault.getAbstractFileByPath(item.path)
 
-    if (isPdf && offset > 0) {
-      // If this PDF extract has page headings, use them
-      const pageNum = getPdfPageFromOffset(item.content, offset)
+    if (existingFile instanceof TFile) {
+      const leaf = app.workspace.getLeaf(newLeaf ? 'split' : newPane)
+      await leaf.openFile(existingFile, { active: !newLeaf && !newPane })
+    } else {
+      // Fallback for non-existent files (broken links etc.) — use original behavior
+      let linkPath = item.path
 
-      if (pageNum !== null) {
-        linkPath = `${item.path}#page=${pageNum}`
+      if (isPdf && offset > 0) {
+        const pageNum = getPdfPageFromOffset(item.content, offset)
+        if (pageNum !== null) {
+          linkPath = `${item.path}#page=${pageNum}`
+        }
       }
-    }
 
-    await app.workspace.openLinkText(item.path, '', newLeaf ? 'split' : newPane)
+      await app.workspace.openLinkText(
+        linkPath,
+        '',
+        newLeaf ? 'split' : newPane
+      )
+    }
   }
 
   const view = app.workspace.getActiveViewOfType(MarkdownView)
