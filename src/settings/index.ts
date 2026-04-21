@@ -99,6 +99,7 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
     ignoreDiacritics: true,
     ignoreArabicDiacritics: false,
     indexedFileTypes: [] as string[],
+    indexFilesWithoutExtension: false,
     displayTitle: '',
     PDFIndexing: false,
     officeIndexing: false,

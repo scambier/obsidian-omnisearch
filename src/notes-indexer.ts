@@ -113,6 +113,7 @@ export class NotesIndexer {
   public isFilePlaintext(path: string): boolean {
     return [...this.plugin.settings.indexedFileTypes, 'md'].some(t =>
       path.endsWith(`.${t}`)
-    )
+    ) ||
+    (this.plugin.settings.indexFilesWithoutExtension && !path.includes('.'))
   }
 }

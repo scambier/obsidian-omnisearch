@@ -159,4 +159,19 @@ export function injectSettingsIndexing(
           await saveSettings(plugin)
         })
     })
+
+  // Index files without extension
+  new Setting(containerEl)
+    .setName('Index files without extension')
+    .setDesc(
+      htmlDescription(`Enable this to also index files that have <strong style="color: var(--text-accent)">no file extension</strong>.<br/>
+      These files will be indexed as plaintext files.`)
+    )
+    .addToggle(toggle => {
+      toggle.setValue(settings.indexFilesWithoutExtension).onChange(async v => {
+        await database.clearCache()
+        settings.indexFilesWithoutExtension = v
+        await saveSettings(plugin)
+      })
+    })
 }

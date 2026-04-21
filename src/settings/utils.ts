@@ -47,6 +47,8 @@ export interface OmnisearchSettings extends WeightingSettings {
 
   /** Extensions of plain text files to index, in addition to .md */
   indexedFileTypes: string[]
+  /** Index files without extension */
+  indexFilesWithoutExtension: boolean
   /** Custom title field */
   displayTitle: string
   /** Enable PDF indexing */
