@@ -85,7 +85,10 @@ export async function openNote(
 
     // Obsidian's openLinkText treats extensionless paths as non-existing
     // markdown links and appends .md by default, creating a new file
-    const existingFile = (plugin.settings.indexFilesWithoutExtension && !linkPath.includes('.') ? app.vault.getAbstractFileByPath(item.path) : undefined)
+    const existingFile =
+      plugin.settings.indexFilesWithoutExtension && !linkPath.includes('.')
+        ? app.vault.getAbstractFileByPath(item.path)
+        : undefined
 
     if (existingFile instanceof TFile) {
       const leaf = app.workspace.getLeaf(newLeaf ? 'split' : newPane)
