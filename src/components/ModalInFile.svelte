@@ -133,26 +133,13 @@
       if (parent) parent.close()
 
       // Open (or switch focus to) the note
-      const reg = plugin.textProcessor.stringsToRegex(note.foundWords)
-      reg.exec(note.content)
-      await openNote(plugin, note, reg.lastIndex, newTab)
-
-      // Move cursor to the match
-      const view = plugin.app.workspace.getActiveViewOfType(MarkdownView)
-      if (!view) {
-        // Not an editable document, so no cursor to place
-        return
-        // throw new Error('OmniSearch - No active MarkdownView')
-      }
-
       const offset = groupedOffsets[selectedIndex] ?? 0
-      const pos = view.editor.offsetToPos(offset)
-      pos.ch = 0
-      view.editor.setCursor(pos)
-      view.editor.scrollIntoView({
-        from: { line: pos.line - 10, ch: 0 },
-        to: { line: pos.line + 10, ch: 0 },
-      })
+
+      // Find the match at this offset
+      const currentMatch = note.matches?.find(m => m.offset === offset)
+      const matchLen = currentMatch?.match.length ?? 0
+
+      await openNote(plugin, note, offset, newTab, false, matchLen)
     }
   }
 

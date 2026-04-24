@@ -1,4 +1,10 @@
-import { type App, type CachedMetadata, MarkdownView, TFile, WorkspaceLeaf } from 'obsidian'
+import {
+  type App,
+  type CachedMetadata,
+  MarkdownView,
+  TFile,
+  WorkspaceLeaf,
+} from 'obsidian'
 import OmnisearchPlugin from '../main'
 import type { ResultNote } from '../globals'
 
@@ -16,9 +22,7 @@ function getPdfPageFromOffset(content: string, offset: number): number | null {
   const regex = /^# Page ([0-9]+)\^page=\1$/gm
   let lastMatch: RegExpExecArray | null = null
   let match: RegExpExecArray | null
-  while (
-    (match = regex.exec(textBeforeOffset)) !== null
-  ) {
+  while ((match = regex.exec(textBeforeOffset)) !== null) {
     lastMatch = match
   }
 
@@ -33,7 +37,7 @@ export async function openNote(
   newPane = false,
   newLeaf = false
 ): Promise<void> {
-  const app = plugin.app;
+  const app = plugin.app
   // We don't have a way to switch pages on a PDF view, so we must open a new pane for PDF results to trigger page navigation
   // We should only trigger this behaviour if we know the page number for the result
   // This code runs before the normal implementation because we don't want to trigger activation of an existing pane for this PDF and then open a new one on top
@@ -94,7 +98,11 @@ export async function openNote(
       const leaf = app.workspace.getLeaf(newLeaf ? 'split' : newPane)
       await leaf.openFile(existingFile, { active: !newLeaf && !newPane })
     } else {
-      await app.workspace.openLinkText(item.path, '', newLeaf ? 'split' : newPane)
+      await app.workspace.openLinkText(
+        item.path,
+        '',
+        newLeaf ? 'split' : newPane
+      )
     }
   }
 
@@ -105,9 +113,15 @@ export async function openNote(
     return
   }
   const pos = view.editor.offsetToPos(offset)
-  // pos.ch = 0
 
-  view.editor.setCursor(pos)
+  // Find the match at this offset, if any, to highlight the matched text
+  const match = item.matches?.find(m => m.offset === offset)
+  if (match) {
+    const endPos = view.editor.offsetToPos(offset + match.match.length)
+    view.editor.setSelection(pos, endPos)
+  } else {
+    view.editor.setCursor(pos)
+  }
   view.editor.scrollIntoView({
     from: { line: pos.line - 10, ch: 0 },
     to: { line: pos.line + 10, ch: 0 },

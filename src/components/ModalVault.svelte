@@ -211,8 +211,10 @@
     newLeaf = false
   ) {
     saveCurrentQuery()
-    const offset = note.matches?.[0]?.offset ?? 0
-    openNote(plugin, note, offset, newPane, newLeaf)
+    const firstMatch = note.matches?.[0]
+    const offset = firstMatch?.offset ?? 0
+    const matchLen = firstMatch?.match.length ?? 0
+    openNote(plugin, note, offset, newPane, newLeaf, matchLen)
   }
 
   async function onClickCreateNote(_e: MouseEvent) {
