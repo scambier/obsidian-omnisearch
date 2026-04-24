@@ -134,12 +134,7 @@
 
       // Open (or switch focus to) the note
       const offset = groupedOffsets[selectedIndex] ?? 0
-
-      // Find the match at this offset
-      const currentMatch = note.matches?.find(m => m.offset === offset)
-      const matchLen = currentMatch?.match.length ?? 0
-
-      await openNote(plugin, note, offset, newTab, false, matchLen)
+      await openNote(plugin, note, offset, newTab)
     }
   }
 

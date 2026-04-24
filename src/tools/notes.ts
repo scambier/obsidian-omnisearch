@@ -118,7 +118,8 @@ export async function openNote(
   const match = item.matches?.find(m => m.offset === offset)
   if (match) {
     const endPos = view.editor.offsetToPos(offset + match.match.length)
-    view.editor.setSelection(pos, endPos)
+    // setSelection(anchor, head): cursor goes to head → ставим в начало
+    view.editor.setSelection(endPos, pos)
   } else {
     view.editor.setCursor(pos)
   }
