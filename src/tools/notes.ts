@@ -126,7 +126,7 @@ export async function openNote(
     view.editor.setSelection(endPos, pos)
 
     // Inject pink highlight style directly into the document
-    const styleId = 'omnisearch-result-highlight-style'
+    const styleId = 'omnisearch-rh-style'
     if (!document.getElementById(styleId)) {
       const style = document.createElement('style')
       style.id = styleId
@@ -134,6 +134,7 @@ export async function openNote(
         .omnisearch-result-highlight .cm-content ::selection,
         .omnisearch-result-highlight .cm-line::selection {
           background-color: var(--omnisearch-highlight-color, hotpink) !important;
+          color: var(--omnisearch-highlight-text-color, black) !important;
         }
         .omnisearch-result-highlight .cm-selectionLayer .cm-selectionBackground {
           background-color: var(--omnisearch-highlight-color, hotpink) !important;
