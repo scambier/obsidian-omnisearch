@@ -133,12 +133,11 @@ export async function openNote(
       style.textContent = `
         .omnisearch-result-highlight .cm-content ::selection,
         .omnisearch-result-highlight .cm-line::selection {
-          background-color: var(--omnisearch-highlight-color, hotpink) !important;
+          background-color: var(--omnisearch-highlight-color, rgba(222, 183, 110, 1.0)) !important;
           color: var(--omnisearch-highlight-text-color, black) !important;
         }
         .omnisearch-result-highlight .cm-selectionLayer .cm-selectionBackground {
-          background-color: var(--omnisearch-highlight-color, hotpink) !important;
-          opacity: 0.5 !important;
+          background-color: var(--omnisearch-highlight-color, rgba(222, 183, 110, 1.0)) !important;
         }
       `
       document.head.appendChild(style)
