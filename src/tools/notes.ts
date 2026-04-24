@@ -113,20 +113,52 @@ export async function openNote(
     return
   }
   const pos = view.editor.offsetToPos(offset)
+  view.editor.setCursor(pos)
+  view.editor.scrollIntoView({
+    from: { line: Math.max(0, pos.line - 10), ch: 0 },
+    to: { line: pos.line + 10, ch: 0 },
+  })
 
-  // Find the match at this offset, if any, to highlight the matched text
+  // Highlight the match with a pink selection (like Ctrl+F)
   const match = item.matches?.find(m => m.offset === offset)
   if (match) {
     const endPos = view.editor.offsetToPos(offset + match.match.length)
-    // setSelection(anchor, head): cursor goes to head → ставим в начало
     view.editor.setSelection(endPos, pos)
-  } else {
-    view.editor.setCursor(pos)
+
+    // Inject pink highlight style directly into the document
+    const styleId = 'omnisearch-result-highlight-style'
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style')
+      style.id = styleId
+      style.textContent = `
+        .omnisearch-result-highlight .cm-content ::selection,
+        .omnisearch-result-highlight .cm-line::selection {
+          background-color: var(--omnisearch-highlight-color, hotpink) !important;
+        }
+        .omnisearch-result-highlight .cm-selectionLayer .cm-selectionBackground {
+          background-color: var(--omnisearch-highlight-color, hotpink) !important;
+          opacity: 0.5 !important;
+        }
+      `
+      document.head.appendChild(style)
+    }
+
+    // Find .cm-editor reliably through the view's content area
+    const cmEditor =
+      view.contentEl?.querySelector('.cm-editor') ??
+      view.containerEl?.querySelector('.cm-editor') ??
+      document.querySelector('.cm-editor')
+    if (cmEditor) {
+      cmEditor.classList.add('omnisearch-result-highlight')
+      const cleanup = () => {
+        cmEditor.classList.remove('omnisearch-result-highlight')
+        cmEditor.removeEventListener('mousedown', cleanup)
+        cmEditor.removeEventListener('keydown', cleanup)
+      }
+      cmEditor.addEventListener('mousedown', cleanup)
+      cmEditor.addEventListener('keydown', cleanup)
+    }
   }
-  view.editor.scrollIntoView({
-    from: { line: pos.line - 10, ch: 0 },
-    to: { line: pos.line + 10, ch: 0 },
-  })
 }
 
 export async function createNote(
