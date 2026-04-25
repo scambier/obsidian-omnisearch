@@ -153,9 +153,19 @@ export function getAltKeyLabel(): 'Alt' | '⌥' {
   return Platform.isMacOS ? '⌥' : 'Alt'
 }
 
+export function getShiftKeyLabel(): 'Shift' | '⇧' {
+  return Platform.isMacOS ? '⇧' : 'Shift'
+}
+
 export function isFileImage(path: string): boolean {
   const ext = getExtension(path)
-  return ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'webp' || ext === 'gif'
+  return (
+    ext === 'png' ||
+    ext === 'jpg' ||
+    ext === 'jpeg' ||
+    ext === 'webp' ||
+    ext === 'gif'
+  )
 }
 
 export function isFilePDF(path: string): boolean {
