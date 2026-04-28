@@ -9,7 +9,7 @@
   } from '../globals'
   import { getCtrlKeyLabel, loopIndex } from '../tools/utils'
   import { onDestroy, onMount, tick } from 'svelte'
-  import { MarkdownView, Platform } from 'obsidian'
+  import { Platform } from 'obsidian'
   import ModalContainer from './ModalContainer.svelte'
   import {
     OmnisearchInFileModal,
