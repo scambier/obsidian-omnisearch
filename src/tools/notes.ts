@@ -125,24 +125,6 @@ export async function openNote(
     const endPos = view.editor.offsetToPos(offset + match.match.length)
     view.editor.setSelection(endPos, pos)
 
-    // Inject pink highlight style directly into the document
-    const styleId = 'omnisearch-rh-style'
-    if (!document.getElementById(styleId)) {
-      const style = document.createElement('style')
-      style.id = styleId
-      style.textContent = `
-        .omnisearch-result-highlight .cm-content ::selection,
-        .omnisearch-result-highlight .cm-line::selection {
-          background-color: var(--omnisearch-highlight-color, rgba(222, 183, 110, 1.0)) !important;
-          color: var(--omnisearch-highlight-text-color, black) !important;
-        }
-        .omnisearch-result-highlight .cm-selectionLayer .cm-selectionBackground {
-          background-color: var(--omnisearch-highlight-color, rgba(222, 183, 110, 1.0)) !important;
-        }
-      `
-      document.head.appendChild(style)
-    }
-
     // Find .cm-editor reliably through the view's content area
     const cmEditor =
       view.contentEl?.querySelector('.cm-editor') ??

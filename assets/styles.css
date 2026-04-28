@@ -132,3 +132,19 @@
   position: relative;
   flex-grow: 1;
 }
+
+.omnisearch-result-highlight .cm-content ::selection,
+.omnisearch-result-highlight .cm-line::selection {
+  background-color: var(
+    --omnisearch-highlight-color,
+    rgba(222, 183, 110, 1)
+  ) !important;
+  color: var(--omnisearch-highlight-text-color, black) !important;
+}
+
+.omnisearch-result-highlight .cm-selectionLayer .cm-selectionBackground {
+  background-color: var(
+    --omnisearch-highlight-color,
+    rgba(222, 183, 110, 1)
+  ) !important;
+}
