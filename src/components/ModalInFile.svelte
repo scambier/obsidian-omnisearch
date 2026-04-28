@@ -145,13 +145,13 @@
 </script>
 
 <InputSearch
-  plugin="{plugin}"
-  on:input="{e => (searchQuery = e.detail)}"
+  {plugin}
+  on:input={e => (searchQuery = e.detail)}
   placeholder="Omnisearch - File"
-  initialValue="{previousQuery}">
+  initialValue={previousQuery}>
   <div class="omnisearch-input-container__buttons">
     {#if Platform.isMobile}
-      <button on:click="{switchToVaultModal}">Vault search</button>
+      <button on:click={switchToVaultModal}>Vault search</button>
     {/if}
   </div>
 </InputSearch>
@@ -161,15 +161,15 @@
     {#each groupedOffsets as offset, i}
       <ResultItemInFile
         {plugin}
-        offset="{offset}"
-        note="{note}"
-        index="{i}"
-        selected="{i === selectedIndex}"
-        on:mousemove="{_e => (selectedIndex = i)}"
-        on:click="{evt => openSelection(evt.ctrlKey)}"
-        on:auxclick="{evt => {
+        {offset}
+        {note}
+        index={i}
+        selected={i === selectedIndex}
+        on:mousemove={_e => (selectedIndex = i)}
+        on:click={evt => openSelection(evt.ctrlKey)}
+        on:auxclick={evt => {
           if (evt.button == 1) openSelection(true)
-        }}" />
+        }} />
     {/each}
   {:else}
     <div style="text-align: center;">
