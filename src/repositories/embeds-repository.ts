@@ -5,6 +5,8 @@ import { logVerbose } from '../tools/utils'
 export class EmbedsRepository {
   /** Map<embedded file, notes where the embed is referenced> */
   private embeds: Map<string, Set<string>> = new Map()
+  /** Reverse index: Map<note path, embedded files it references> */
+  private noteEmbeds: Map<string, Set<string>> = new Map()
 
   constructor(private plugin: OmnisearchPlugin) {}
 
@@ -13,6 +15,11 @@ export class EmbedsRepository {
       this.embeds.set(embed, new Set())
     }
     this.embeds.get(embed)!.add(notePath)
+
+    if (!this.noteEmbeds.has(notePath)) {
+      this.noteEmbeds.set(notePath, new Set())
+    }
+    this.noteEmbeds.get(notePath)!.add(embed)
   }
 
   public removeFile(filePath: string): void {
@@ -35,16 +42,34 @@ export class EmbedsRepository {
         referencedBy.add(newPath)
       }
     })
+    // Rebuild the reverse index to avoid stale entries
+    this.rebuildNoteEmbeds()
   }
 
   public refreshEmbedsForNote(filePath: string): void {
-    this.embeds.forEach((referencedBy, _key) => {
-      if (referencedBy.has(filePath)) {
-        referencedBy.delete(filePath)
+    const oldEmbeds = this.noteEmbeds.get(filePath)
+    if (oldEmbeds) {
+      for (const embedded of oldEmbeds) {
+        this.embeds.get(embedded)?.delete(filePath)
       }
-    })
-
+    }
+    this.noteEmbeds.delete(filePath)
     this.addEmbedsForNote(filePath)
+  }
+
+  /** Rebuild the reverse index from the source-of-truth embeds map */
+  public rebuildNoteEmbeds(): void {
+    this.noteEmbeds.clear()
+    for (const [embeddedPath, notes] of this.embeds.entries()) {
+      for (const notePath of notes) {
+        let embeddedFiles = this.noteEmbeds.get(notePath)
+        if (!embeddedFiles) {
+          embeddedFiles = new Set()
+          this.noteEmbeds.set(notePath, embeddedFiles)
+        }
+        embeddedFiles.add(embeddedPath)
+      }
+    }
   }
 
   public getEmbeds(pathEmbedded: string): string[] {
