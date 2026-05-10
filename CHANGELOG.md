@@ -2,6 +2,12 @@
 
 This changelog is not exhaustive.
 
+## 1.29.x
+
+* Feature/537 add index files without extension by @Acallaris738 in https://github.com/scambier/obsidian-omnisearch/pull/538
+* Fix: Skip excluded files during indexing when hideExcluded is enabled by @byte74128 in https://github.com/scambier/obsidian-omnisearch/pull/530
+* feat: Highlight search result on open with cursor at match start by @Evgene-Kopylov in https://github.com/scambier/obsidian-omnisearch/pull/539
+
 ## 1.28.x
 
 - Added support for PDF pagination
