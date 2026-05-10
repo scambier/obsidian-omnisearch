@@ -98,7 +98,6 @@ export function injectSettingsIndexing(
     .setDesc(aiIndexImagesDesc)
     .addToggle(toggle =>
       toggle.setValue(settings.aiImageIndexing).onChange(async v => {
-        await database.clearCache()
         settings.aiImageIndexing = v
         await saveSettings(plugin)
       })
