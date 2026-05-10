@@ -9,7 +9,7 @@
   } from '../globals'
   import { getCtrlKeyLabel, loopIndex } from '../tools/utils'
   import { onDestroy, onMount, tick } from 'svelte'
-  import { MarkdownView, Platform } from 'obsidian'
+  import { Platform } from 'obsidian'
   import ModalContainer from './ModalContainer.svelte'
   import {
     OmnisearchInFileModal,
@@ -133,26 +133,8 @@
       if (parent) parent.close()
 
       // Open (or switch focus to) the note
-      const reg = plugin.textProcessor.stringsToRegex(note.foundWords)
-      reg.exec(note.content)
-      await openNote(plugin, note, reg.lastIndex, newTab)
-
-      // Move cursor to the match
-      const view = plugin.app.workspace.getActiveViewOfType(MarkdownView)
-      if (!view) {
-        // Not an editable document, so no cursor to place
-        return
-        // throw new Error('OmniSearch - No active MarkdownView')
-      }
-
       const offset = groupedOffsets[selectedIndex] ?? 0
-      const pos = view.editor.offsetToPos(offset)
-      pos.ch = 0
-      view.editor.setCursor(pos)
-      view.editor.scrollIntoView({
-        from: { line: pos.line - 10, ch: 0 },
-        to: { line: pos.line + 10, ch: 0 },
-      })
+      await openNote(plugin, note, offset, newTab)
     }
   }
 
@@ -163,13 +145,13 @@
 </script>
 
 <InputSearch
-  plugin="{plugin}"
-  on:input="{e => (searchQuery = e.detail)}"
+  {plugin}
+  on:input={e => (searchQuery = e.detail)}
   placeholder="Omnisearch - File"
-  initialValue="{previousQuery}">
+  initialValue={previousQuery}>
   <div class="omnisearch-input-container__buttons">
     {#if Platform.isMobile}
-      <button on:click="{switchToVaultModal}">Vault search</button>
+      <button on:click={switchToVaultModal}>Vault search</button>
     {/if}
   </div>
 </InputSearch>
@@ -179,15 +161,15 @@
     {#each groupedOffsets as offset, i}
       <ResultItemInFile
         {plugin}
-        offset="{offset}"
-        note="{note}"
-        index="{i}"
-        selected="{i === selectedIndex}"
-        on:mousemove="{_e => (selectedIndex = i)}"
-        on:click="{evt => openSelection(evt.ctrlKey)}"
-        on:auxclick="{evt => {
+        {offset}
+        {note}
+        index={i}
+        selected={i === selectedIndex}
+        on:mousemove={_e => (selectedIndex = i)}
+        on:click={evt => openSelection(evt.ctrlKey)}
+        on:auxclick={evt => {
           if (evt.button == 1) openSelection(true)
-        }}" />
+        }} />
     {/each}
   {:else}
     <div style="text-align: center;">
