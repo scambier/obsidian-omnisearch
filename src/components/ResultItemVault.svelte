@@ -89,13 +89,21 @@
 
   // Svelte action to render SVG content with dynamic updates
   function renderSVG(node: HTMLElement, svgContent: string) {
-    node.innerHTML = svgContent
+    const parser = new DOMParser()
+    const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml')
+    let svgElement = svgDoc.documentElement
+    node.appendChild(svgElement)
     return {
       update(newSvgContent: string) {
-        node.innerHTML = newSvgContent
+        const newSvgDoc = parser.parseFromString(newSvgContent, 'image/svg+xml')
+        const newSvgElement = newSvgDoc.documentElement
+        node.replaceChild(newSvgElement, svgElement)
+        svgElement = newSvgElement
       },
       destroy() {
-        node.innerHTML = ''
+        if (node.firstElementChild) {
+          node.removeChild(node.firstElementChild)
+        }
       },
     }
   }
@@ -136,7 +144,11 @@
         setIcon(elFilePathIcon, 'image')
       } else if (isFilePDF(note.path)) {
         setIcon(elFilePathIcon, 'file-text')
-      } else if (isFileCanvas(note.path) || isFileExcalidraw(note.path) || isFileBase(note.path)) {
+      } else if (
+        isFileCanvas(note.path) ||
+        isFileExcalidraw(note.path) ||
+        isFileBase(note.path)
+      ) {
         setIcon(elFilePathIcon, 'layout-dashboard')
       } else {
         setIcon(elFilePathIcon, 'file')
@@ -149,25 +161,24 @@
 </script>
 
 <ResultItemContainer
-  glyph="{glyph}"
-  id="{note.path}"
+  {glyph}
+  id={note.path}
   cssClass=" {note.isEmbed ? 'omnisearch-result__embed' : ''}"
   on:auxclick
   on:click
   on:mousemove
-  selected="{selected}">
+  {selected}>
   <div>
     <div class="omnisearch-result__title-container">
       <span class="omnisearch-result__title">
         {#if note.isEmbed}
           <span
-            bind:this="{elEmbedIcon}"
-            title="The document above is embedded in this note"></span>
+            bind:this={elEmbedIcon}
+            title="The document above is embedded in this note" />
         {:else}
           <!-- File Icon -->
           {#if fileIconSVG}
-            <span class="omnisearch-result__icon" use:renderSVG="{fileIconSVG}"
-            ></span>
+            <span class="omnisearch-result__icon" use:renderSVG={fileIconSVG} />
           {/if}
         {/if}
         <span>
@@ -195,8 +206,7 @@
       <div class="omnisearch-result__folder-path">
         <!-- Folder Icon -->
         {#if folderIconSVG}
-          <span class="omnisearch-result__icon" use:renderSVG="{folderIconSVG}"
-          ></span>
+          <span class="omnisearch-result__icon" use:renderSVG={folderIconSVG} />
         {/if}
         <span>
           {@html plugin.textProcessor.highlightText(notePath, matchesNotePath)}
@@ -219,7 +229,7 @@
         <!-- Image -->
         {#if imagePath}
           <div class="omnisearch-result__image-container">
-            <img style="width: 100px" src="{imagePath}" alt="" />
+            <img style="width: 100px" src={imagePath} alt="" />
           </div>
         {/if}
       </div>
