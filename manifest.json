@@ -3,9 +3,9 @@
   "name": "Omnisearch",
   "version": "1.29.0",
   "minAppVersion": "1.7.2",
-  "description": "A search engine that just works",
+  "description": "A search engine that just works.",
   "author": "Simon Cambier",
-  "authorUrl": "https://github.com/scambier/obsidian-omnisearch",
+  "authorUrl": "https://scambier.xyz",
   "fundingUrl": {
     "Github": "https://github.com/sponsors/scambier",
     "Ko-fi": "https://ko-fi.com/scambier"
