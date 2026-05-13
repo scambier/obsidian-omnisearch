@@ -135,7 +135,7 @@ export class SearchEngine {
   public async search(
     query: Query,
     options: { prefixLength: number; singleFilePath?: string }
-  ): Promise<SearchResult[]> {
+  ): Promise<(Omit<SearchResult, 'id'> & { id: string })[]> {
     const settings = this.plugin.settings
     if (query.isEmpty()) {
       // this.previousResults = []
@@ -203,7 +203,7 @@ export class SearchEngine {
           1 + Math.exp(cutoff[settings.recencyBoost] * (daysElapsed / 1000))
         )
       },
-    })
+    }) as (Omit<SearchResult, 'id'> & { id: string })[] // Type hack since SearchResult.id is of type any
 
     logVerbose(`Found ${results.length} results`, results)
 
@@ -222,7 +222,7 @@ export class SearchEngine {
     if (query.query.path) {
       results = results.filter(r =>
         query.query.path?.some(p =>
-          (r.id as string).toLowerCase().includes(p.toLowerCase())
+          r.id.toLowerCase().includes(p.toLowerCase())
         )
       )
     }
@@ -230,7 +230,7 @@ export class SearchEngine {
       results = results.filter(
         r =>
           !query.query.exclude.path?.some(p =>
-            (r.id as string).toLowerCase().includes(p.toLowerCase())
+            r.id.toLowerCase().includes(p.toLowerCase())
           )
       )
     }
@@ -398,7 +398,7 @@ export class SearchEngine {
     options?: Partial<{ singleFilePath?: string }>
   ): Promise<ResultNote[]> {
     // Get the raw results
-    let results: SearchResult[]
+    let results: Omit<SearchResult, 'id'> & { id: string; isEmbed?: boolean }[]
     if (this.plugin.settings.simpleSearch) {
       results = await this.search(query, {
         prefixLength: 3,

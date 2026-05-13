@@ -29,7 +29,7 @@ export class DocumentsRepository {
   private errorsWarned = false
 
   constructor(private plugin: OmnisearchPlugin) {
-    setInterval(() => {
+    window.setInterval(() => {
       if (this.errorsCount > 0) {
         --this.errorsCount
       }

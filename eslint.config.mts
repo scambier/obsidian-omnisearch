@@ -18,6 +18,9 @@ export default defineConfig([
       ...obsidianmd.configs.recommended,
       ...tseslint.configs.recommended,
     ],
+    rules: {
+      'obsidianmd/ui/sentence-case': 'off'
+    },
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
