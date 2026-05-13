@@ -37,18 +37,43 @@ export class SettingsTab extends PluginSettingTab {
 
     if (this.app.loadLocalStorage(K_DISABLE_OMNISEARCH) == '1') {
       const span = containerEl.createEl('span')
-      span.innerHTML = `<strong style="color: var(--text-accent)">⚠️ OMNISEARCH IS DISABLED ⚠️</strong>`
+      const strong = document.createElement('strong')
+      strong.style.color = 'var(--text-accent)'
+      strong.textContent = '⚠️ OMNISEARCH IS DISABLED ⚠️'
+      span.appendChild(strong)
     }
 
     // Settings main title
     containerEl.createEl('h1', { text: 'Omnisearch' })
 
-    // Sponsor link - Thank you!
+    /*
+     * Sponsor links - Thank you!
+     */
+
+    // Github
     const divSponsor = containerEl.createDiv()
-    divSponsor.innerHTML = `
-        <iframe sandbox="allow-top-navigation-by-user-activation" src="https://github.com/sponsors/scambier/button" title="Sponsor scambier" height="35" width="116" style="border: 0;"></iframe>
-        <a href='https://ko-fi.com/B0B6LQ2C' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://cdn.ko-fi.com/cdn/kofi2.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a> 
-    `
+    const iframe = document.createElement('iframe')
+    iframe.setAttribute('sandbox', 'allow-top-navigation-by-user-activation')
+    iframe.setAttribute('src', 'https://github.com/sponsors/scambier/button')
+    iframe.setAttribute('title', 'Sponsor scambier')
+    iframe.setAttribute('height', '35')
+    iframe.setAttribute('width', '116')
+    iframe.style.border = '0'
+    divSponsor.appendChild(iframe)
+
+    // Ko-fi
+    const a = document.createElement('a')
+    a.href = 'https://ko-fi.com/B0B6LQ2C'
+    a.target = '_blank'
+    const img = document.createElement('img')
+    img.setAttribute('height', '36')
+    img.src = 'https://cdn.ko-fi.com/cdn/kofi2.png?v=3'
+    img.alt = 'Buy Me a Coffee at ko-fi.com'
+    img.style.border = '0px'
+    img.style.height = '36px'
+    img.style.marginLeft = '1em'
+    a.appendChild(img)
+    divSponsor.appendChild(a)
 
     injectSettingsIndexing(this.plugin, settings, containerEl)
     containerEl.createEl('hr')

@@ -43,11 +43,8 @@ export function injectSettingsDanger(
     )
 
   // Disable Omnisearch
-  const disableDesc = new DocumentFragment()
-  disableDesc.createSpan({}, span => {
-    span.innerHTML = `Disable Omnisearch on this device only.<br>
-      ${needsARestart}`
-  })
+  const disableDesc = htmlDescription(`Disable Omnisearch on this device only.<br>
+      ${needsARestart}`)
   new Setting(containerEl)
     .setName('Disable on this device')
     .setDesc(disableDesc)
