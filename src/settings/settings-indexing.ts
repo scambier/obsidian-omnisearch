@@ -3,7 +3,7 @@ import type { OmnisearchSettings } from './utils'
 import { saveSettings } from './utils'
 import { htmlDescription } from './utils'
 import type OmnisearchPlugin from 'src/main'
-import { debounce } from 'lodash-es'
+import { debounce } from 'es-toolkit'
 
 export function injectSettingsIndexing(
   plugin: OmnisearchPlugin,

@@ -18,7 +18,7 @@ import {
 } from '../tools/utils'
 import { Notice } from 'obsidian'
 import type { Query } from './query'
-import { sortBy } from 'lodash-es'
+import { sortBy } from 'es-toolkit/compat'
 import type OmnisearchPlugin from '../main'
 import { Tokenizer } from './tokenizer'
 
