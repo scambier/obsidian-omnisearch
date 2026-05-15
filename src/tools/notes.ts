@@ -1,12 +1,6 @@
-import {
-  type App,
-  type CachedMetadata,
-  MarkdownView,
-  TFile,
-  WorkspaceLeaf,
-} from 'obsidian'
-import OmnisearchPlugin from '../main'
+import { type App, type CachedMetadata, MarkdownView, TFile } from 'obsidian'
 import type { ResultNote } from '../globals'
+import OmnisearchPlugin from '../main'
 
 /**
  * Extracts the PDF page number from content based on the offset, looking for page markers in format: `^# Page N^page=N$`
@@ -155,7 +149,7 @@ export async function createNote(
         pathPrefix = (app.workspace.getActiveFile()?.parent?.path ?? '') + '/'
         break
       case 'folder':
-        pathPrefix = app.vault.getConfig('newFileFolderPath') + '/'
+        pathPrefix = (app.vault.getConfig('newFileFolderPath') as string) + '/'
         break
       default: // 'root'
         pathPrefix = ''
@@ -163,8 +157,9 @@ export async function createNote(
     }
     await app.workspace.openLinkText(`${pathPrefix}${name}.md`, '', newLeaf)
   } catch (e) {
-    ;(e as any).message =
-      'OmniSearch - Could not create note: ' + (e as any).message
+    ;(e as { message: string }).message =
+      'OmniSearch - Could not create note: ' +
+      (e as { message: string }).message
     console.error(e)
     throw e
   }

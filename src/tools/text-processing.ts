@@ -72,8 +72,8 @@ export class TextProcessor {
       text = removeDiacritics(text, this.plugin.settings.ignoreArabicDiacritics)
     }
     const startTime = new Date().getTime()
-    let match: RegExpExecArray | null = null
-    let matches: SearchMatch[] = []
+    let match: RegExpExecArray | null
+    const matches: SearchMatch[] = []
     let count = 0
     while ((match = reg.exec(text)) !== null) {
       // Avoid infinite loops, stop looking after 100 matches or if we're taking too much time

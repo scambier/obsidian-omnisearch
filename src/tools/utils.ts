@@ -6,8 +6,6 @@ import {
   Platform,
 } from 'obsidian'
 import { isSearchMatch, type SearchMatch } from '../globals'
-import { type BinaryLike, createHash } from 'crypto'
-import { md5 } from 'pure-md5'
 
 export function pathWithoutFilename(path: string): string {
   const split = path.split('/')
@@ -17,7 +15,7 @@ export function pathWithoutFilename(path: string): string {
 
 export function wait(ms: number): Promise<void> {
   return new Promise(resolve => {
-    setTimeout(resolve, ms)
+    window.setTimeout(resolve, ms)
   })
 }
 
@@ -74,7 +72,7 @@ export async function filterAsync<T>(
  * @returns
  */
 export function stripMarkdownCharacters(text: string): string {
-  return text.replace(/(\*|_)+(.+?)(\*|_)+/g, (_match, _p1, p2) => p2)
+  return text.replace(/(\*|_)+(.+?)(\*|_)+/g, (_match, _p1, p2) => p2 as string)
 }
 
 export function getAliasesFromMetadata(
@@ -195,15 +193,6 @@ export function getExtension(path: string): string {
   return split[split.length - 1] ?? ''
 }
 
-export function makeMD5(data: BinaryLike): string {
-  if (Platform.isMobileApp) {
-    // A node-less implementation, but since we're not hashing the same data
-    // (arrayBuffer vs stringified array) the hash will be different
-    return md5(data.toString())
-  }
-  return createHash('md5').update(data).digest('hex')
-}
-
 export function chunkArray<T>(arr: T[], len: number): T[][] {
   const chunks = []
   let i = 0
@@ -245,11 +234,11 @@ export function splitHyphens(text: string): string[] {
   return text.split('-').filter(t => t)
 }
 
-export function logVerbose(...args: any[]): void {
+export function logVerbose(...args: unknown[]): void {
   printVerbose(console.debug, ...args)
 }
 
-export function warnVerbose(...args: any[]): void {
+export function warnVerbose(...args: unknown[]): void {
   printVerbose(console.warn, ...args)
 }
 
@@ -258,7 +247,10 @@ export function enableVerboseLogging(enable: boolean): void {
   verboseLoggingEnabled = enable
 }
 
-function printVerbose(fn: (...args: any[]) => any, ...args: any[]): void {
+function printVerbose(
+  fn: (...args: unknown[]) => unknown,
+  ...args: unknown[]
+): void {
   if (verboseLoggingEnabled) {
     fn(...args)
   }
@@ -267,7 +259,7 @@ function printVerbose(fn: (...args: any[]) => any, ...args: any[]): void {
 export const countError = (() => {
   let counter = 0
   let alreadyWarned = false
-  setTimeout(() => {
+  window.setTimeout(() => {
     if (counter > 0) {
       --counter
     }

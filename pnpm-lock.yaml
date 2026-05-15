@@ -26,9 +26,6 @@ importers:
       minisearch:
         specifier: 7.1.0
         version: 7.1.0
-      pure-md5:
-        specifier: ^0.1.14
-        version: 0.1.14
       search-query-parser:
         specifier: ^1.6.0
         version: 1.6.0
@@ -3066,9 +3063,6 @@ packages:
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
-
-  pure-md5@0.1.14:
-    resolution: {integrity: sha512-tQ/inCmpbggbJRgJESzyhAj8weRANMMgYvBtVcqDHfTXR88fgU/Ff7YQHm8dGrcenCxkjas10SmbaFROcp2kZQ==}
 
   querystringify@2.2.0:
     resolution: {integrity: sha512-FIqgj2EUvTa7R50u0rGsyTftzjYmv/a3hO345bZNrqabNqjtgiDMgmo4mkUjd+nzU5oF3dClKqFIPUKybUyqoQ==}
@@ -7377,8 +7371,6 @@ snapshots:
       punycode: 2.3.1
 
   punycode@2.3.1: {}
-
-  pure-md5@0.1.14: {}
 
   querystringify@2.2.0: {}
 

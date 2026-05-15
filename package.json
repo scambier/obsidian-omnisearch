@@ -52,7 +52,6 @@
     "es-toolkit": "^1.46.1",
     "markdown-link-extractor": "^4.0.3",
     "minisearch": "7.1.0",
-    "pure-md5": "^0.1.14",
     "search-query-parser": "^1.6.0",
     "svelte-multiselect": "github:janosh/svelte-multiselect"
   },
