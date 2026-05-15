@@ -135,7 +135,7 @@ export class SearchEngine {
   public async search(
     query: Query,
     options: { prefixLength: number; singleFilePath?: string }
-  ): Promise<(Omit<SearchResult, 'id'> & { id: string })[]> {
+  ): Promise<SearchResult[]> {
     const settings = this.plugin.settings
     if (query.isEmpty()) {
       // this.previousResults = []
@@ -203,7 +203,7 @@ export class SearchEngine {
           1 + Math.exp(cutoff[settings.recencyBoost] * (daysElapsed / 1000))
         )
       },
-    }) as (Omit<SearchResult, 'id'> & { id: string })[] // Type hack since SearchResult.id is of type any
+    }) // Type hack since SearchResult.id is of type any
 
     logVerbose(`Found ${results.length} results`, results)
 
@@ -211,7 +211,7 @@ export class SearchEngine {
     if (query.query.ext?.length) {
       results = results.filter(r => {
         // ".can" should match ".canvas"
-        const ext = '.' + r.id.split('.').pop()
+        const ext = '.' + (r.id as string).split('.').pop()
         return query.query.ext?.some(e =>
           ext.startsWith(e.startsWith('.') ? e : '.' + e)
         )
@@ -222,7 +222,7 @@ export class SearchEngine {
     if (query.query.path) {
       results = results.filter(r =>
         query.query.path?.some(p =>
-          r.id.toLowerCase().includes(p.toLowerCase())
+          (r.id as string).toLowerCase().includes(p.toLowerCase())
         )
       )
     }
@@ -230,7 +230,7 @@ export class SearchEngine {
       results = results.filter(
         r =>
           !query.query.exclude.path?.some(p =>
-            r.id.toLowerCase().includes(p.toLowerCase())
+            (r.id as string).toLowerCase().includes(p.toLowerCase())
           )
       )
     }
@@ -255,7 +255,7 @@ export class SearchEngine {
         result =>
           !(
             this.plugin.app.metadataCache.isUserIgnored &&
-            this.plugin.app.metadataCache.isUserIgnored(result.id)
+            this.plugin.app.metadataCache.isUserIgnored(result.id as string)
           )
       )
     } else {
@@ -263,7 +263,7 @@ export class SearchEngine {
       results.forEach(result => {
         if (
           this.plugin.app.metadataCache.isUserIgnored &&
-          this.plugin.app.metadataCache.isUserIgnored(result.id)
+          this.plugin.app.metadataCache.isUserIgnored(result.id as string)
         ) {
           result.score /= 10
         }
@@ -274,7 +274,7 @@ export class SearchEngine {
     const tags = query.getTags()
 
     for (const result of results) {
-      const path = result.id
+      const path = result.id as string
       if (settings.downrankedFoldersFilters.length > 0) {
         // downrank files that are in folders listed in the downrankedFoldersFilters
         let downrankingFolder = false
@@ -306,7 +306,7 @@ export class SearchEngine {
       if (metadata) {
         // Boost custom properties
         for (const { name, weight } of settings.weightCustomProperties) {
-          const values = metadata?.frontmatter?.[name]
+          const values = metadata?.frontmatter?.[name] as string
           if (values && result.terms.some(t => values.includes(t))) {
             logVerbose(`Boosting field "${name}" x${weight} for ${path}`)
             result.score *= weight
@@ -316,7 +316,7 @@ export class SearchEngine {
 
       // Put the results with tags on top
       for (const tag of tags) {
-        if ((result.tags ?? []).includes(tag)) {
+        if (((result.tags as string[]) ?? []).includes(tag)) {
           result.score *= 100
         }
       }
@@ -332,7 +332,9 @@ export class SearchEngine {
 
     const documents = await Promise.all(
       results.map(async result => {
-        const doc = await this.plugin.documentsRepository.getDocument(result.id)
+        const doc = await this.plugin.documentsRepository.getDocument(
+          result.id as string
+        )
         if (!doc) {
           console.warn(`Omnisearch - Note "${result.id}" not in the live cache`)
           countError(true)
@@ -398,7 +400,7 @@ export class SearchEngine {
     options?: Partial<{ singleFilePath?: string }>
   ): Promise<ResultNote[]> {
     // Get the raw results
-    let results: Omit<SearchResult, 'id'> & { id: string; isEmbed?: boolean }[]
+    let results: SearchResult[]
     if (this.plugin.settings.simpleSearch) {
       results = await this.search(query, {
         prefixLength: 3,
@@ -414,7 +416,7 @@ export class SearchEngine {
     const documents = await Promise.all(
       results.map(
         async result =>
-          await this.plugin.documentsRepository.getDocument(result.id)
+          await this.plugin.documentsRepository.getDocument(result.id as string)
       )
     )
 
@@ -523,7 +525,8 @@ export class SearchEngine {
           parts.pop()
           return parts.join('/')
         }
-        return (doc as any)[fieldName]
+        // @ts-expect-error fieldname isn't typechecked
+        return doc[fieldName] as string
       },
       processTerm: (term: string) =>
         (this.plugin.settings.ignoreDiacritics

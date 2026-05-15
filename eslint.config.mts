@@ -19,7 +19,10 @@ export default defineConfig([
       ...tseslint.configs.recommended,
     ],
     rules: {
-      'obsidianmd/ui/sentence-case': 'off'
+      'obsidianmd/ui/sentence-case': 'off',
+      'obsidianmd/rule-custom-message': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'warn',
+      '@typescript-eslint/no-unsafe-call': 'warn',
     },
     languageOptions: {
       parser: tseslint.parser,

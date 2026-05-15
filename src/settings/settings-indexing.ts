@@ -71,7 +71,9 @@ export function injectSettingsIndexing(
     .setDisabled(!textExtractor)
 
   // Office Documents Indexing
-  const indexOfficesDesc = htmlDescription(`Omnisearch will use Text Extractor to index the content of your office documents (currently <pre style="display:inline">.docx</pre> and <pre style="display:inline">.xlsx</pre>).`)
+  const indexOfficesDesc = htmlDescription(
+    `Omnisearch will use Text Extractor to index the content of your office documents (currently <pre style="display:inline">.docx</pre> and <pre style="display:inline">.xlsx</pre>).`
+  )
   new Setting(containerEl)
     .setName(`Documents content indexing ${textExtractor ? '' : '⚠️ Disabled'}`)
     .setDesc(indexOfficesDesc)
@@ -85,7 +87,8 @@ export function injectSettingsIndexing(
     .setDisabled(!textExtractor)
 
   // AI Images Indexing
-  const aiIndexImagesDesc = htmlDescription(`Omnisearch will use AI Image Analyzer to index the content of your images with AI.<br/>
+  const aiIndexImagesDesc =
+    htmlDescription(`Omnisearch will use AI Image Analyzer to index the content of your images with AI.<br/>
     ⚠️ <span style="color: var(--text-accent)">If both AI Image Analyzer and Text Extractor are enabled, Text Extractor will only be used as a fallback.</span>`)
   new Setting(containerEl)
     .setName(`Images AI indexing ${aiImageAnalyzer ? '' : '⚠️ Disabled'}`)
