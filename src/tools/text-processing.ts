@@ -2,7 +2,7 @@ import { excerptAfter, excerptBefore, type SearchMatch } from '../globals'
 import { removeDiacritics, warnVerbose } from './utils'
 import type { Query } from '../search/query'
 import { Notice } from 'obsidian'
-import { escapeRegExp } from 'lodash-es'
+import { escapeRegExp } from 'es-toolkit'
 import type OmnisearchPlugin from '../main'
 
 export class TextProcessor {

@@ -26,7 +26,7 @@
   import ResultItemVault from './ResultItemVault.svelte'
   import { Query } from '../search/query'
   import { cancelable, CancelablePromise } from 'cancelable-promise'
-  import { debounce } from 'lodash-es'
+  import { debounce } from 'es-toolkit'
   import type OmnisearchPlugin from '../main'
   import LazyLoader from './lazy-loader/LazyLoader.svelte'
 
