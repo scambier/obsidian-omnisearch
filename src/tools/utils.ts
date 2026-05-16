@@ -6,8 +6,6 @@ import {
   Platform,
 } from 'obsidian'
 import { isSearchMatch, type SearchMatch } from '../globals'
-import { type BinaryLike, createHash } from 'crypto'
-import { md5 } from 'pure-md5'
 
 export function pathWithoutFilename(path: string): string {
   const split = path.split('/')
@@ -193,15 +191,6 @@ export function isFileFromDataloom(path: string): boolean {
 export function getExtension(path: string): string {
   const split = path.split('.')
   return split[split.length - 1] ?? ''
-}
-
-export function makeMD5(data: BinaryLike): string {
-  if (Platform.isMobileApp) {
-    // A node-less implementation, but since we're not hashing the same data
-    // (arrayBuffer vs stringified array) the hash will be different
-    return md5(data.toString())
-  }
-  return createHash('md5').update(data).digest('hex')
 }
 
 export function chunkArray<T>(arr: T[], len: number): T[][] {
