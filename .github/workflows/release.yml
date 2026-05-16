@@ -1,10 +1,5 @@
 name: Release Obsidian plugin
 
-permissions:
-  id-token: write
-  contents: read
-  attestations: write
-
 on:
   push:
     tags:
@@ -31,7 +26,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           cache: 'pnpm'
-          node-version: "20.x"
+          node-version: "24.x"
 
       - name: Build
         id: build
@@ -69,16 +64,16 @@ jobs:
           draft: true
           prerelease: false
 
-      # - name: Upload zip file
-      #   id: upload-zip
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-      #     asset_path: ./${{ env.PLUGIN_NAME }}.zip
-      #     asset_name: ${{ env.PLUGIN_NAME }}-${{ steps.build.outputs.tag_name }}.zip
-      #     asset_content_type: application/zip
+      - name: Upload zip file
+        id: upload-zip
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./${{ env.PLUGIN_NAME }}.zip
+          asset_name: ${{ env.PLUGIN_NAME }}-${{ steps.build.outputs.tag_name }}.zip
+          asset_content_type: application/zip
 
       - name: Upload main.js
         id: upload-main
