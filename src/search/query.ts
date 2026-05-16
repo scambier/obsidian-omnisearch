@@ -1,5 +1,11 @@
 import { removeDiacritics } from '../tools/utils'
 import { parse } from 'search-query-parser'
+import {
+  isProximityQuery,
+  parseProximityQuery,
+  extractRootTerms,
+  type ProximityQuery,
+} from './proximity-search'
 
 const keywords = ['ext', 'path'] as const
 
@@ -12,10 +18,25 @@ export class Query {
     exclude: Keywords
   }
   #inQuotes: string[]
+  /** Set when the query is a proximity query @N(pattern1 pattern2 ...) */
+  public proximityQuery: ProximityQuery | null = null
 
   constructor(text = '', options: { ignoreDiacritics: boolean, ignoreArabicDiacritics: boolean}) {
     if (options.ignoreDiacritics) {
       text = removeDiacritics(text, options.ignoreArabicDiacritics)
+    }
+    const trimmed = text.trim()
+    if (isProximityQuery(trimmed)) {
+      this.proximityQuery = parseProximityQuery(text)
+      const rootTerms = extractRootTerms(this.proximityQuery.patterns)
+      this.query = {
+        text: rootTerms,
+        exclude: { text: [] },
+        ext: [],
+        path: [],
+      }
+      this.#inQuotes = []
+      return
     }
     const parsed = parse(text.toLowerCase(), {
       tokenize: true,
@@ -60,6 +81,9 @@ export class Query {
   }
 
   public isEmpty(): boolean {
+    if (this.proximityQuery !== null) {
+      return this.proximityQuery.patterns.length === 0
+    }
     for (const k of keywords) {
       if (this.query[k]?.length) {
         return false
