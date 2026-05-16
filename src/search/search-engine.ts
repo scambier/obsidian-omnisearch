@@ -459,31 +459,27 @@ export class SearchEngine {
         } as IndexedDocument
       }
 
-      // Clean search matches that match quoted expressions,
-      // and inject those expressions instead
+      // Use the user's actual query terms for highlighting, not MiniSearch's
+      // result.terms (which can include fuzzy matches like "תקיש" for "תקון").
+      // This way we only highlight what the user searched for.
       const foundWords = [
-        // Matching terms from the result,
-        // do not necessarily match the query
-        ...result.terms,
-
-        // Quoted expressions
+        ...query.query.text,
         ...query.getExactTerms(),
-
-        // Tags, starting with #
         ...query.getTags(),
-      ]
-      logVerbose('Matching tokens:', foundWords)
+      ].filter(Boolean)
+      const uniqueFoundWords = [...new Set(foundWords)]
+      logVerbose('Matching tokens (query terms for highlight):', uniqueFoundWords)
 
       logVerbose('Getting matches locations...')
       const matches = this.plugin.textProcessor.getMatches(
         note.content,
-        foundWords,
+        uniqueFoundWords,
         query
       )
       logVerbose(`Matches for note "${note.path}"`, matches)
       const resultNote: ResultNote = {
         score: result.score,
-        foundWords,
+        foundWords: uniqueFoundWords,
         matches,
         isEmbed: result.isEmbed,
         ...note,
