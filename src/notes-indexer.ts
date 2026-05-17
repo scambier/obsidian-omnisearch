@@ -24,6 +24,14 @@ export class NotesIndexer {
     this.notesToReindex.add(note)
   }
 
+  public unflagNoteForReindex(path: string): void {
+    for (const note of this.notesToReindex) {
+      if (note.path === path) {
+        this.notesToReindex.delete(note)
+      }
+    }
+  }
+
   public async refreshIndex(): Promise<void> {
     for (const file of this.notesToReindex) {
       logVerbose('Updating file', file.path)

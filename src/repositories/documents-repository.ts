@@ -43,6 +43,7 @@ export class DocumentsRepository {
   public async addDocument(path: string): Promise<void> {
     try {
       const doc = await this.getAndMapIndexedDocument(path)
+      if (!doc) return
       if (!doc.path) {
         console.error(
           `Missing .path field in IndexedDocument "${doc.basename}", skipping`
@@ -88,11 +89,11 @@ export class DocumentsRepository {
    */
   private async getAndMapIndexedDocument(
     path: string
-  ): Promise<IndexedDocument> {
+  ): Promise<IndexedDocument | null> {
     path = normalizePath(path)
     const app = this.plugin.app
     const file = app.vault.getAbstractFileByPath(path)
-    if (!file) throw new Error(`Invalid file path: "${path}"`)
+    if (!file) return null
     if (!(file instanceof TFile)) throw new Error(`Not a TFile: "${path}"`)
     let content: string | null = null
 
