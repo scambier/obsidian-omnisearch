@@ -63,7 +63,7 @@ _Submit a PR to add your own project!_
 - [Actions for Obsidian](https://actions.work/actions-for-obsidian)
 - [Notebook Navigator](https://notebooknavigator.com/)
 - [Userscripts](https://publish.obsidian.md/omnisearch/Inject+Omnisearch+results+into+your+search+engine) to inject Omnisearch into your favorite web search engine
-- [Obsidian MCP Server](https://github.com/cyanheads/obsidian-mcp-server), an MCP server that auto-detects Omnisearch and exposes it as a BM25-ranked search mode for AI agents accessing your vault
+- [obsidian-mcp-server](https://github.com/cyanheads/obsidian-mcp-server), an MCP server that auto-detects Omnisearch and exposes it as a BM25-ranked search mode for AI agents accessing your vault
 
 ## LICENSE
 
