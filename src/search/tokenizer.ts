@@ -5,6 +5,35 @@ import type OmnisearchPlugin from '../main'
 
 const markdownLinkExtractor = require('markdown-link-extractor')
 
+/**
+ * Regex to match Arabic/Persian script characters.
+ * Covers Arabic (\u0600-\u06FF), Arabic Supplement (\u0750-\u077F),
+ * and Arabic Extended-A (\u08A0-\u08FF).
+ */
+const arabicScriptRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/
+
+/**
+ * Arabic definite article prefix "ال" (al-).
+ * In Unicode: \u0627\u0644
+ */
+const arabicDefiniteArticle = '\u0627\u0644'
+
+/**
+ * If a word starts with the Arabic definite article "ال",
+ * return both the original word and the word without the prefix.
+ * This allows searching for "کتاب" to match "الکتاب".
+ */
+function splitArabicPrefix(word: string): string[] {
+  if (
+    word.length > 2 &&
+    arabicScriptRegex.test(word) &&
+    word.slice(0, 2) === arabicDefiniteArticle
+  ) {
+    return [word, word.slice(2)]
+  }
+  return [word]
+}
+
 export class Tokenizer {
   constructor(private plugin: OmnisearchPlugin) {}
 
@@ -31,6 +60,7 @@ export class Tokenizer {
         token,
         ...splitHyphens(token),
         ...splitCamelCase(token),
+        ...splitArabicPrefix(token),
       ]), ...words]
 
       // Add urls
@@ -63,11 +93,13 @@ export class Tokenizer {
     text = urls.reduce((acc, url) => acc.replace(url, ''), text)
 
     const tokens = [...this.tokenizeTokens(text), ...urls].filter(Boolean)
+    const arabicTokens = tokens.flatMap(splitArabicPrefix).filter(Boolean)
 
     return {
       combineWith: 'OR',
       queries: [
         { combineWith: 'AND', queries: tokens },
+        { combineWith: 'AND', queries: arabicTokens },
         {
           combineWith: 'AND',
           queries: this.tokenizeWords(text).filter(Boolean),
