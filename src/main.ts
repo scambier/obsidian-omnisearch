@@ -131,6 +131,7 @@ export default class OmnisearchPlugin extends Plugin {
           this.documentsRepository.removeDocument(file.path)
           searchEngine.removeFromPaths([file.path])
           this.embedsRepository.removeFile(file.path)
+          this.notesIndexer.unflagNoteForReindex(file.path)
         })
       )
       this.registerEvent(
