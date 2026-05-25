@@ -138,13 +138,13 @@
   background-color: var(
     --omnisearch-highlight-color,
     rgba(222, 183, 110, 1)
-  ) !important;
-  color: var(--omnisearch-highlight-text-color, black) !important;
+  );
+  color: var(--omnisearch-highlight-text-color, black);
 }
 
 .omnisearch-result-highlight .cm-selectionLayer .cm-selectionBackground {
   background-color: var(
     --omnisearch-highlight-color,
     rgba(222, 183, 110, 1)
-  ) !important;
+  );
 }
