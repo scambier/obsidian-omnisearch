@@ -11,6 +11,8 @@
   data-result-id={id}
   class="suggestion-item omnisearch-result {cssClass}"
   class:is-selected={selected}
+  role="button"
+  tabindex="0"
   on:mousemove
   on:click
   on:keypress

@@ -35,7 +35,7 @@
     "jiti": "^2.7.0",
     "obsidian": "1.12.3",
     "prettier": "^2.8.8",
-    "prettier-plugin-svelte": "^2.10.1",
+    "prettier-plugin-svelte": "^4.0.1",
     "svelte": "^5.55.7",
     "svelte-check": "^4.4.8",
     "svelte-jester": "^2.3.2",

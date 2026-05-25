@@ -323,10 +323,10 @@
   placeholder="Omnisearch - Vault">
   <div class="omnisearch-input-container__buttons">
     {#if plugin.settings.showCreateButton}
-      <button on:click={onClickCreateNote}>Create note</button>
+      <button onclick={onClickCreateNote}>Create note</button>
     {/if}
     {#if Platform.isMobile}
-      <button on:click={switchToInFileModal}>In-File search</button>
+      <button onclick={switchToInFileModal}>In-File search</button>
     {/if}
   </div>
 </InputSearch>
