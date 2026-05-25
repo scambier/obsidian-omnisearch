@@ -3,10 +3,10 @@ import { EventBus } from '../tools/event-bus'
 describe('EventBus', () => {
   it('should refuse the registering of invalid ctx/event names', () => {
     const eventBus = new EventBus()
-    expect(() => eventBus.on('@', 'event', () => {})).toThrowError(
+    expect(() => eventBus.on('@', 'event', () => {})).toThrow(
       'Invalid context/event name - Cannot contain @'
     )
-    expect(() => eventBus.on('context', '@', () => {})).toThrowError(
+    expect(() => eventBus.on('context', '@', () => {})).toThrow(
       'Invalid context/event name - Cannot contain @'
     )
   })

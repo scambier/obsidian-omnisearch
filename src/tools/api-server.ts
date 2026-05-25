@@ -1,3 +1,4 @@
+/* eslint-disable import/no-nodejs-modules */ // NodeJS modules are needed to create the server
 import * as http from 'http'
 import * as url from 'url'
 import { Notice } from 'obsidian'

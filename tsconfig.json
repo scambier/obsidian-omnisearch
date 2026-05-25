@@ -2,19 +2,22 @@
   "compilerOptions": {
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
     "inlineSourceMap": true,
     "inlineSources": true,
     "module": "ESNext",
     "target": "ES2021",
     "allowJs": true,
     "noImplicitAny": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "importHelpers": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
     "strictNullChecks": true,
+    "types": [
+      "node",
+      "jest"
+    ],
     "lib": [
       "DOM",
       "ES2021"
