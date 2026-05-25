@@ -1,9 +1,8 @@
-import { Setting } from 'obsidian'
-import type { OmnisearchSettings } from './utils'
-import { saveSettings } from './utils'
-import { htmlDescription } from './utils'
-import type OmnisearchPlugin from 'src/main'
 import { debounce } from 'es-toolkit'
+import { Setting } from 'obsidian'
+import type OmnisearchPlugin from '../main'
+import type { OmnisearchSettings } from './utils'
+import { htmlDescription, saveSettings } from './utils'
 
 export function injectSettingsIndexing(
   plugin: OmnisearchPlugin,

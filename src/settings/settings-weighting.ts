@@ -1,10 +1,9 @@
 import { Setting, SliderComponent } from 'obsidian'
-import { getDefaultSettings } from 'src/settings'
-import type { OmnisearchSettings } from './utils'
+import { RecencyCutoff } from '../globals'
+import type OmnisearchPlugin from '../main'
+import { getDefaultSettings } from './index'
+import type { OmnisearchSettings, WeightingSettings } from './utils'
 import { saveSettings } from './utils'
-import type { WeightingSettings } from './utils'
-import type OmnisearchPlugin from 'src/main'
-import { RecencyCutoff } from 'src/globals'
 
 export function injectSettingsWeighting(
   plugin: OmnisearchPlugin,

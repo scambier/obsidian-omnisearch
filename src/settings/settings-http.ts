@@ -1,8 +1,7 @@
 import { Platform, Setting } from 'obsidian'
+import type OmnisearchPlugin from '../main'
 import type { OmnisearchSettings } from './utils'
-import { saveSettings } from './utils'
-import { htmlDescription } from './utils'
-import type OmnisearchPlugin from 'src/main'
+import { htmlDescription, saveSettings } from './utils'
 
 export function injectSettingsHttp(
   plugin: OmnisearchPlugin,

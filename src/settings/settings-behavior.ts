@@ -1,9 +1,8 @@
 import { Platform, Setting } from 'obsidian'
+import type OmnisearchPlugin from '../main'
+import { getCtrlKeyLabel } from '../tools/utils'
 import type { OmnisearchSettings } from './utils'
-import { saveSettings } from './utils'
-import { htmlDescription, needsARestart } from './utils'
-import type OmnisearchPlugin from 'src/main'
-import { getCtrlKeyLabel } from 'src/tools/utils'
+import { htmlDescription, needsARestart, saveSettings } from './utils'
 
 export function injectSettingsBehavior(
   plugin: OmnisearchPlugin,

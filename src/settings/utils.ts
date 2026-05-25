@@ -1,6 +1,6 @@
 import { App, Platform, Plugin } from 'obsidian'
-import { K_DISABLE_OMNISEARCH, RecencyCutoff } from 'src/globals'
 import { settings } from '.'
+import { K_DISABLE_OMNISEARCH, RecencyCutoff } from '../globals'
 
 export function htmlDescription(htmlContent: string): DocumentFragment {
   const desc = new DocumentFragment()
