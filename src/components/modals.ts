@@ -1,10 +1,17 @@
 import { MarkdownView, Modal, TFile } from 'obsidian'
-import type { Modifier } from 'obsidian'
+import type { EditorPosition, Modifier } from 'obsidian'
 import ModalVault from './ModalVault.svelte'
 import ModalInFile from './ModalInFile.svelte'
 import { Action, eventBus, EventNames, isInputComposition } from '../globals'
 import type OmnisearchPlugin from '../main'
 import { mount, unmount } from 'svelte'
+import { orderSelection } from '../tools/link-insertion'
+
+export type CapturedSelection = {
+  from: EditorPosition
+  to: EditorPosition
+  text: string
+}
 
 abstract class OmnisearchModal extends Modal {
   protected constructor(plugin: OmnisearchPlugin) {
@@ -100,6 +107,12 @@ abstract class OmnisearchModal extends Modal {
       eventBus.emit(Action.InsertLink)
     })
 
+    // Insert link into frontmatter property
+    this.scope.register(['Mod', 'Shift', 'Alt'], 'Enter', e => {
+      e.preventDefault()
+      eventBus.emit(Action.InsertLinkInFrontmatter)
+    })
+
     // Create a new note
     this.scope.register(createInCurrentPaneKey, 'Enter', e => {
       e.preventDefault()
@@ -159,10 +172,25 @@ export class OmnisearchVaultModal extends OmnisearchModal {
   constructor(plugin: OmnisearchPlugin, query?: string) {
     super(plugin)
 
-    // Selected text in the editor
-    const selectedText = plugin.app.workspace
-      .getActiveViewOfType(MarkdownView)
-      ?.editor.getSelection()
+    // Capture editor state at modal open: the selection (range + text) and the
+    // active file. Opening the modal steals focus, so we snapshot this up-front
+    // and use it later for link insertion into the originating editor.
+    const mdView = plugin.app.workspace.getActiveViewOfType(MarkdownView)
+    const editor = mdView?.editor
+    let capturedSelection: CapturedSelection | undefined
+    let selectedText = ''
+    if (editor) {
+      const sel = editor.listSelections()[0]
+      if (sel) {
+        const { from, to } = orderSelection(sel.anchor, sel.head)
+        const text = editor.getRange(from, to)
+        if (text.length > 0) {
+          capturedSelection = { from, to, text }
+          selectedText = text
+        }
+      }
+    }
+    const capturedFilePath = mdView?.file?.path
 
     plugin.searchHistory.getHistory().then(history => {
       // Previously searched query (if enabled in settings)
@@ -177,6 +205,8 @@ export class OmnisearchVaultModal extends OmnisearchModal {
           plugin,
           modal: this,
           previousQuery: query || selectedText || previous || '',
+          capturedSelection,
+          capturedFilePath,
         },
       })
 

@@ -152,6 +152,10 @@ export function getAltKeyLabel(): 'Alt' | '⌥' {
   return Platform.isMacOS ? '⌥' : 'Alt'
 }
 
+export function getShiftKeyLabel(): 'Shift' | '⇧' {
+  return Platform.isMacOS ? '⇧' : 'Shift'
+}
+
 export function isFileImage(path: string): boolean {
   const ext = getExtension(path)
   return (

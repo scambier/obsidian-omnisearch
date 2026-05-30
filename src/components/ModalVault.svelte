@@ -15,6 +15,7 @@
   import {
     getCtrlKeyLabel,
     getAltKeyLabel,
+    getShiftKeyLabel,
     getExtension,
     isFilePDF,
     loopIndex,
@@ -22,7 +23,9 @@
   import {
     OmnisearchInFileModal,
     type OmnisearchVaultModal,
+    type CapturedSelection,
   } from '../components/modals'
+  import { OmnisearchFrontmatterLinkModal } from './frontmatter-link-modal'
   import ResultItemVault from './ResultItemVault.svelte'
   import { Query } from '../search/query'
   import { cancelable, CancelablePromise } from 'cancelable-promise'
@@ -34,10 +37,14 @@
     modal,
     previousQuery,
     plugin,
+    capturedSelection,
+    capturedFilePath,
   }: {
     modal: OmnisearchVaultModal
     previousQuery?: string | undefined
     plugin: OmnisearchPlugin
+    capturedSelection?: CapturedSelection | undefined
+    capturedFilePath?: string | undefined
   } = $props()
 
   let selectedIndex = $state(0)
@@ -107,6 +114,11 @@
     eventBus.on('vault', Action.CreateNote, createNoteAndCloseModal)
     eventBus.on('vault', Action.OpenInNewPane, openNoteInNewPane)
     eventBus.on('vault', Action.InsertLink, insertLink)
+    eventBus.on(
+      'vault',
+      Action.InsertLinkInFrontmatter,
+      insertLinkInFrontmatter
+    )
     eventBus.on('vault', Action.Tab, switchToInFileModal)
     eventBus.on('vault', Action.ArrowUp, () => moveIndex(-1))
     eventBus.on('vault', Action.ArrowDown, () => moveIndex(1))
@@ -245,30 +257,86 @@
       return
     }
 
-    // Generate link
+    // If the editor had a non-empty selection when Omnisearch was opened, use
+    // that selected text as the link alias and replace the range. Otherwise
+    // insert at the current cursor position (the pre-existing behaviour).
+    const hasSelection =
+      !!capturedSelection && capturedSelection.text.length > 0
+
     let link: string
     if (file && active) {
       link = plugin.app.fileManager.generateMarkdownLink(
         file,
         active.path,
         '',
-        selectedNote.displayTitle
+        hasSelection ? capturedSelection!.text : selectedNote.displayTitle
       )
     } else {
-      const maybeDisplayTitle =
-        selectedNote.displayTitle === '' ? '' : `|${selectedNote.displayTitle}`
+      const alias = hasSelection
+        ? capturedSelection!.text
+        : selectedNote.displayTitle
+      const maybeDisplayTitle = alias === '' ? '' : `|${alias}`
       link = `[[${selectedNote.basename}.${getExtension(
         selectedNote.path
       )}${maybeDisplayTitle}]]`
     }
 
-    // Inject link
-    const cursor = view.editor.getCursor()
-    view.editor.replaceRange(link, cursor, cursor)
-    cursor.ch += link.length
-    view.editor.setCursor(cursor)
+    if (hasSelection) {
+      view.editor.replaceRange(
+        link,
+        capturedSelection!.from,
+        capturedSelection!.to
+      )
+      // Place the cursor at the end of the inserted link on the last line it spans
+      const endLine = capturedSelection!.from.line
+      const endCh = capturedSelection!.from.ch + link.length
+      view.editor.setCursor({ line: endLine, ch: endCh })
+    } else {
+      const cursor = view.editor.getCursor()
+      view.editor.replaceRange(link, cursor, cursor)
+      cursor.ch += link.length
+      view.editor.setCursor(cursor)
+    }
 
     modal.close()
+  }
+
+  function insertLinkInFrontmatter(): void {
+    if (!selectedNote) return
+
+    // Resolve the file that was active when Omnisearch was opened. Falling back
+    // to the currently active file covers the case where the user explicitly
+    // focused a different pane behind the modal.
+    const path = capturedFilePath ?? plugin.app.workspace.getActiveFile()?.path
+    const active = path ? plugin.app.vault.getAbstractFileByPath(path) : null
+    if (!(active instanceof TFile)) {
+      new Notice(
+        'Omnisearch - No file to receive the link (open a note first)',
+        4000
+      )
+      return
+    }
+
+    const target = plugin.app.vault
+      .getMarkdownFiles()
+      .find(f => f.path === selectedNote.path)
+
+    // Always emit a wikilink here, regardless of the "Use [[Wikilinks]]"
+    // setting: Obsidian's property editor only renders wikilinks as link
+    // chips and only indexes those for graph/backlinks. A markdown-style link
+    // in YAML lands as a plain string. The user's setting still applies to
+    // body inserts (#425).
+    const linktext = target
+      ? plugin.app.metadataCache.fileToLinktext(target, active.path, true)
+      : `${selectedNote.basename}.${getExtension(selectedNote.path)}`
+    const alias =
+      selectedNote.displayTitle && selectedNote.displayTitle !== linktext
+        ? `|${selectedNote.displayTitle}`
+        : ''
+    const link = `[[${linktext}${alias}]]`
+
+    modal.close()
+    new OmnisearchFrontmatterLinkModal(plugin.app, plugin, active, link).open()
   }
 
   function switchToInFileModal(): void {
@@ -417,6 +485,14 @@
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">{getAltKeyLabel()} ↵</span>
     <span>to insert a link</span>
+  </div>
+  <div class="prompt-instruction">
+    <span class="prompt-instruction-command">
+      {getCtrlKeyLabel()}
+      {getShiftKeyLabel()}
+      {getAltKeyLabel()} ↵
+    </span>
+    <span>to insert link into frontmatter</span>
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">{getCtrlKeyLabel()} g</span>

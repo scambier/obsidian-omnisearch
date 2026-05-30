@@ -33,6 +33,7 @@ export const enum Action {
   CreateNote = 'create-note',
   OpenInNewPane = 'open-in-new-pane',
   InsertLink = 'insert-link',
+  InsertLinkInFrontmatter = 'insert-link-frontmatter',
   Tab = 'tab',
   ArrowUp = 'arrow-up',
   ArrowDown = 'arrow-down',
