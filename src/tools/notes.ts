@@ -51,7 +51,7 @@ export async function openNote(
       await app.workspace.openLinkText(
         linkPath,
         '',
-        newLeaf ? 'split' : (newPane === true ? 'tab' : newPane)
+        newLeaf ? 'split' : (newPane ? 'tab' : newPane)
       )
       return
     }
@@ -95,13 +95,13 @@ export async function openNote(
         : undefined
 
     if (existingFile instanceof TFile) {
-      const leaf = app.workspace.getLeaf(newLeaf ? 'split' : (newPane === true ? 'tab' : newPane))
+      const leaf = app.workspace.getLeaf(newLeaf ? 'split' : (newPane ? 'tab' : newPane))
       await leaf.openFile(existingFile, { active: !newLeaf && !newPane })
     } else {
       await app.workspace.openLinkText(
         item.path,
         '',
-        newLeaf ? 'split' : (newPane === true ? 'tab' : newPane)
+        newLeaf ? 'split' : (newPane ? 'tab' : newPane)
       )
     }
   }
