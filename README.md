@@ -51,9 +51,12 @@ You can check the [CHANGELOG](./CHANGELOG.md) for more information on the differ
 - Directly Insert a `[[link]]` from the search results
 - Supports Vim navigation keys
 
-**Note:** support of Chinese depends
-on [this additional plugin](https://github.com/aidenlx/cm-chs-patch) (also you may need to clear search cache data to apply new Chinese index). Please read its documentation for more
-information.
+**Chinese search:** Omnisearch includes a dependency-free fallback for internal
+Han substrings of two or more characters. The
+[Chinese Support Patch](https://github.com/aidenlx/cm-chs-patch) remains
+optional and can improve word-aware tokenization and ranking. Omnisearch
+automatically rebuilds an incompatible search index after its tokenization
+schema or the optional tokenizer changes.
 
 ## Projects that use Omnisearch
 

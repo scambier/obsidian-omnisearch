@@ -4,7 +4,7 @@ import { parse } from 'search-query-parser'
 const keywords = ['ext', 'path'] as const
 
 type Keywords = {
-  [K in typeof keywords[number]]?: string[]
+  [K in (typeof keywords)[number]]?: string[]
 } & { text: string[] }
 
 export class Query {
@@ -12,8 +12,15 @@ export class Query {
     exclude: Keywords
   }
   #inQuotes: string[]
+  #rawInput: string
+  #rawText?: string[]
 
-  constructor(text = '', options: { ignoreDiacritics: boolean, ignoreArabicDiacritics: boolean}) {
+  constructor(
+    text = '',
+    options: { ignoreDiacritics: boolean; ignoreArabicDiacritics: boolean }
+  ) {
+    this.#rawInput = text
+
     if (options.ignoreDiacritics) {
       text = removeDiacritics(text, options.ignoreArabicDiacritics)
     }
@@ -73,6 +80,20 @@ export class Query {
 
   public segmentsToStr(): string {
     return this.query.text.join(' ')
+  }
+
+  public rawSegmentsToStr(): string {
+    if (!this.#rawText) {
+      const rawParsed = parse(this.#rawInput.toLowerCase(), {
+        tokenize: true,
+        keywords: keywords as unknown as string[],
+      }) as unknown as typeof this.query
+      const rawText = rawParsed.text ?? []
+      this.#rawText = (Array.isArray(rawText) ? rawText : [rawText]).filter(
+        value => !value.startsWith('.')
+      )
+    }
+    return this.#rawText.join(' ')
   }
 
   public getTags(): string[] {

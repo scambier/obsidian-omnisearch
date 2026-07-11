@@ -53,6 +53,7 @@
   let createInNewPaneKey: string = $state('')
   let createInCurrentPaneKey: string = $state('')
   let openInNewLeafKey: string = `${getCtrlKeyLabel()} ${getAltKeyLabel()} ↵`
+  let destroyed = false
 
   const selectedNote = $derived(resultNotes[selectedIndex])
 
@@ -74,6 +75,8 @@
     if (searchQuery) {
       updateResultsDebounced()
     } else {
+      updateResultsDebounced.cancel()
+      cancelActiveSearch()
       searching = false
       resultNotes = []
     }
@@ -114,10 +117,14 @@
     eventBus.on('vault', Action.NextSearchHistory, nextSearchHistory)
     eventBus.on('vault', Action.OpenInNewLeaf, openNoteInNewLeaf)
     await plugin.notesIndexer.refreshIndex()
+    if (destroyed) return
     await updateResultsDebounced()
   })
 
   onDestroy(() => {
+    destroyed = true
+    updateResultsDebounced.cancel()
+    cancelActiveSearch()
     eventBus.disable('vault')
   })
 
@@ -141,23 +148,37 @@
   }
 
   let cancelableQuery: CancelablePromise<ResultNote[]> | null = null
+  let searchAbortController: AbortController | null = null
+
+  function cancelActiveSearch() {
+    searchAbortController?.abort()
+    searchAbortController = null
+    cancelableQuery?.cancel()
+    cancelableQuery = null
+  }
+
   async function updateResults() {
     searching = true
     // If search is already in progress, cancel it and start a new one
-    if (cancelableQuery) {
-      cancelableQuery.cancel()
-      cancelableQuery = null
-    }
+    cancelActiveSearch()
     query = new Query(searchQuery, {
       ignoreDiacritics: plugin.settings.ignoreDiacritics,
       ignoreArabicDiacritics: plugin.settings.ignoreArabicDiacritics,
     })
+    searchAbortController = new AbortController()
+    const currentController = searchAbortController
     cancelableQuery = cancelable(
       new Promise(resolve => {
-        resolve(plugin.searchEngine.getSuggestions(query))
+        resolve(
+          plugin.searchEngine.getSuggestions(query, {
+            signal: currentController.signal,
+          })
+        )
       })
     )
-    resultNotes = await cancelableQuery
+    const nextResultNotes = await cancelableQuery
+    if (currentController.signal.aborted) return
+    resultNotes = nextResultNotes
     selectedIndex = 0
     await scrollIntoView()
     searching = false

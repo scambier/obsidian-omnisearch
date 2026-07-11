@@ -12,6 +12,7 @@ export class Database extends Dexie {
       date: string
       paths: DocumentRef[]
       data: AsPlainObject
+      indexSignature: string
     },
     string
   >
@@ -36,6 +37,7 @@ export class Database extends Dexie {
   public async getMinisearchCache(): Promise<{
     paths: DocumentRef[]
     data: AsPlainObject
+    indexSignature?: string
   } | null> {
     try {
       const cachedIndex = (await this.plugin.database.minisearch.toArray())[0]
@@ -59,6 +61,7 @@ export class Database extends Dexie {
       date: new Date().toISOString(),
       paths,
       data: minisearchJson,
+      indexSignature: this.plugin.searchEngine.getIndexSignature(),
     })
     console.debug('Omnisearch - Search cache written')
   }

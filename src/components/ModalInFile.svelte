@@ -31,6 +31,7 @@
   let selectedIndex = 0
   let note: ResultNote | undefined
   let query: Query
+  let searchAbortController: AbortController | null = null
 
   $: searchQuery = previousQuery ?? ''
 
@@ -45,21 +46,28 @@
   })
 
   onDestroy(() => {
+    searchAbortController?.abort()
     eventBus.disable('infile')
   })
 
   $: (async () => {
+    searchAbortController?.abort()
     if (searchQuery) {
+      const currentController = new AbortController()
+      searchAbortController = currentController
       query = new Query(searchQuery, {
         ignoreDiacritics: plugin.settings.ignoreDiacritics,
         ignoreArabicDiacritics: plugin.settings.ignoreArabicDiacritics,
       })
-      note =
+      const nextNote =
         (
           await plugin.searchEngine.getSuggestions(query, {
             singleFilePath,
+            signal: currentController.signal,
           })
         )[0] ?? null
+      if (currentController.signal.aborted) return
+      note = nextNote
     }
     selectedIndex = 0
     await scrollIntoView()

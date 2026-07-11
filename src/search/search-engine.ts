@@ -1,6 +1,8 @@
 import MiniSearch, {
   type AsPlainObject,
   type Options,
+  type QueryCombination,
+  type SearchOptions,
   type SearchResult,
 } from 'minisearch'
 import {
@@ -21,6 +23,18 @@ import type { Query } from './query'
 import { sortBy } from 'es-toolkit/compat'
 import type OmnisearchPlugin from '../main'
 import { Tokenizer } from './tokenizer'
+import {
+  HAN_GRAM_FIELD_BY_SOURCE,
+  HAN_GRAM_FIELDS,
+  ORIGINAL_SEARCH_FIELDS,
+  documentContainsHanRuns,
+  getSourceFieldForHanGram,
+  isHanGramField,
+  reconcileVerifiedHanResults,
+  requiresHanVerification,
+} from './han-grams'
+
+type SearchResultWithHan = SearchResult & { hanQueryRuns?: string[] }
 
 export class SearchEngine {
   private tokenizer: Tokenizer
@@ -43,6 +57,10 @@ export class SearchEngine {
     await this.plugin.embedsRepository.loadFromCache()
     const cache = await this.plugin.database.getMinisearchCache()
     if (cache) {
+      if (cache.indexSignature !== this.getIndexSignature()) {
+        logVerbose('Search cache index signature changed')
+        return false
+      }
       this.minisearch = await MiniSearch.loadJSAsync(
         cache.data,
         this.getOptions()
@@ -134,10 +152,14 @@ export class SearchEngine {
    */
   public async search(
     query: Query,
-    options: { prefixLength: number; singleFilePath?: string }
+    options: {
+      prefixLength: number
+      singleFilePath?: string
+      signal?: AbortSignal
+    }
   ): Promise<SearchResult[]> {
     const settings = this.plugin.settings
-    if (query.isEmpty()) {
+    if (query.isEmpty() || options.signal?.aborted) {
       // this.previousResults = []
       // this.previousQuery = null
       return []
@@ -159,9 +181,16 @@ export class SearchEngine {
         break
     }
 
-    const searchTokens = this.tokenizer.tokenizeForSearch(query.segmentsToStr())
-    logVerbose(JSON.stringify(searchTokens, null, 1))
-    let results = this.minisearch.search(searchTokens, {
+    const naturalQuery = this.tokenizer.tokenizeForSearch(query.segmentsToStr())
+    const hanSearch = this.tokenizer.tokenizeForHanSearch(
+      query.segmentsToStr(),
+      () => query.rawSegmentsToStr()
+    )
+    logVerbose(JSON.stringify(naturalQuery, null, 1))
+    if (hanSearch) logVerbose(JSON.stringify(hanSearch.query, null, 1))
+
+    const miniSearchOptions: SearchOptions = {
+      fields: [...ORIGINAL_SEARCH_FIELDS],
       prefix: term => term.length >= options.prefixLength,
       // length <= 3: no fuzziness
       // length <= 5: fuzziness of 10%
@@ -178,6 +207,13 @@ export class SearchEngine {
         headings3: settings.weightH3,
         tags: settings.weightUnmarkedTags,
         unmarkedTags: settings.weightUnmarkedTags,
+        [HAN_GRAM_FIELD_BY_SOURCE.basename]: settings.weightBasename,
+        [HAN_GRAM_FIELD_BY_SOURCE.directory]: settings.weightDirectory,
+        [HAN_GRAM_FIELD_BY_SOURCE.aliases]: settings.weightBasename,
+        [HAN_GRAM_FIELD_BY_SOURCE.content]: 1,
+        [HAN_GRAM_FIELD_BY_SOURCE.headings1]: settings.weightH1,
+        [HAN_GRAM_FIELD_BY_SOURCE.headings2]: settings.weightH2,
+        [HAN_GRAM_FIELD_BY_SOURCE.headings3]: settings.weightH3,
       },
       // The query is already tokenized, don't tokenize again
       tokenize: text => [text],
@@ -203,44 +239,35 @@ export class SearchEngine {
           1 + Math.exp(cutoff[settings.recencyBoost] * (daysElapsed / 1000))
         )
       },
-    })
+    }
+
+    let results = hanSearch
+      ? await this.searchWithHanFallback(
+          naturalQuery,
+          hanSearch,
+          query,
+          options.singleFilePath,
+          options.signal,
+          miniSearchOptions
+        )
+      : this.minisearch.search(naturalQuery, miniSearchOptions)
+
+    if (options.signal?.aborted) return []
 
     logVerbose(`Found ${results.length} results`, results)
 
-    // Filter query results to only keep files that match query.query.ext (if any)
-    if (query.query.ext?.length) {
-      results = results.filter(r => {
-        // ".can" should match ".canvas"
-        const ext = '.' + r.id.split('.').pop()
-        return query.query.ext?.some(e =>
-          ext.startsWith(e.startsWith('.') ? e : '.' + e)
-        )
-      })
-    }
-
-    // Filter query results that match the path
-    if (query.query.path) {
-      results = results.filter(r =>
-        query.query.path?.some(p =>
-          (r.id as string).toLowerCase().includes(p.toLowerCase())
-        )
-      )
-    }
-    if (query.query.exclude.path) {
-      results = results.filter(
-        r =>
-          !query.query.exclude.path?.some(p =>
-            (r.id as string).toLowerCase().includes(p.toLowerCase())
-          )
-      )
-    }
+    results = this.filterByQueryPath(results, query)
 
     if (!results.length) {
       return []
     }
 
     if (options.singleFilePath) {
-      return results.filter(r => r.id === options.singleFilePath)
+      return this.filterByDocumentSemantics(
+        results.filter(r => r.id === options.singleFilePath),
+        query,
+        options.signal
+      )
     }
 
     logVerbose(
@@ -330,47 +357,11 @@ export class SearchEngine {
 
     if (results.length) logVerbose('First result:', results[0])
 
-    const documents = await Promise.all(
-      results.map(async result => {
-        const doc = await this.plugin.documentsRepository.getDocument(result.id)
-        if (!doc) {
-          console.warn(`Omnisearch - Note "${result.id}" not in the live cache`)
-          countError(true)
-        }
-        return doc
-      })
+    results = await this.filterByDocumentSemantics(
+      results,
+      query,
+      options.signal
     )
-
-    // If the search query contains quotes, filter out results that don't have the exact match
-    const exactTerms = query.getExactTerms()
-    if (exactTerms.length) {
-      logVerbose('Filtering with quoted terms: ', exactTerms)
-      results = results.filter(r => {
-        const document = documents.find(d => d.path === r.id)
-        const title = document?.path.toLowerCase() ?? ''
-        const content = (document?.cleanedContent ?? '').toLowerCase()
-        return exactTerms.every(
-          q =>
-            content.includes(q) ||
-            removeDiacritics(
-              title,
-              this.plugin.settings.ignoreArabicDiacritics
-            ).includes(q)
-        )
-      })
-    }
-
-    // If the search query contains exclude terms, filter out results that have them
-    const exclusions = query.query.exclude.text
-    if (exclusions.length) {
-      logVerbose('Filtering with exclusions')
-      results = results.filter(r => {
-        const content = (
-          documents.find(d => d.path === r.id)?.content ?? ''
-        ).toLowerCase()
-        return exclusions.every(q => !content.includes(q))
-      })
-    }
 
     logVerbose('Deduping')
     // FIXME:
@@ -395,7 +386,7 @@ export class SearchEngine {
    */
   public async getSuggestions(
     query: Query,
-    options?: Partial<{ singleFilePath?: string }>
+    options?: { singleFilePath?: string; signal?: AbortSignal }
   ): Promise<ResultNote[]> {
     // Get the raw results
     let results: SearchResult[]
@@ -403,13 +394,17 @@ export class SearchEngine {
       results = await this.search(query, {
         prefixLength: 3,
         singleFilePath: options?.singleFilePath,
+        signal: options?.signal,
       })
     } else {
       results = await this.search(query, {
         prefixLength: 1,
         singleFilePath: options?.singleFilePath,
+        signal: options?.signal,
       })
     }
+
+    if (options?.signal?.aborted) return []
 
     const documents = await Promise.all(
       results.map(
@@ -417,10 +412,12 @@ export class SearchEngine {
           await this.plugin.documentsRepository.getDocument(result.id)
       )
     )
+    if (options?.signal?.aborted) return []
 
     // Inject embeds for images, documents, and PDFs
     let total = documents.length
     for (let i = 0; i < total; i++) {
+      if (options?.signal?.aborted) return []
       const doc = documents[i]
       if (!doc) continue
 
@@ -430,8 +427,10 @@ export class SearchEngine {
 
       // Inject embeds in the results
       for (const embed of embeds) {
+        if (options?.signal?.aborted) return []
         total++
         const newDoc = await this.plugin.documentsRepository.getDocument(embed)
+        if (options?.signal?.aborted) return []
         documents.splice(i + 1, 0, newDoc)
         results.splice(i + 1, 0, {
           id: newDoc.path,
@@ -461,16 +460,25 @@ export class SearchEngine {
 
       // Clean search matches that match quoted expressions,
       // and inject those expressions instead
+      const hanQueryRuns = (result as SearchResultWithHan).hanQueryRuns ?? []
+      const naturalTerms = result.terms.filter(
+        term => !result.match[term]?.some(field => isHanGramField(field))
+      )
       const foundWords = [
-        // Matching terms from the result,
-        // do not necessarily match the query
-        ...result.terms,
+        ...new Set([
+          // Use the original query run for fallback excerpts/highlights.
+          ...hanQueryRuns,
 
-        // Quoted expressions
-        ...query.getExactTerms(),
+          // Matching terms from the result,
+          // do not necessarily match the query
+          ...naturalTerms,
 
-        // Tags, starting with #
-        ...query.getTags(),
+          // Quoted expressions
+          ...query.getExactTerms(),
+
+          // Tags, starting with #
+          ...query.getTags(),
+        ]),
       ]
       logVerbose('Matching tokens:', foundWords)
 
@@ -513,34 +521,27 @@ export class SearchEngine {
     }))
   }
 
+  public getIndexSignature(): string {
+    return this.tokenizer.getIndexSignature()
+  }
+
   private getOptions(): Options<IndexedDocument> {
     return {
       tokenize: this.tokenizer.tokenizeForIndexing.bind(this.tokenizer),
-      extractField: (doc, fieldName) => {
-        if (fieldName === 'directory') {
-          // return path without the filename
-          const parts = doc.path.split('/')
-          parts.pop()
-          return parts.join('/')
-        }
-        return (doc as any)[fieldName]
-      },
-      processTerm: (term: string) =>
-        (this.plugin.settings.ignoreDiacritics
-          ? removeDiacritics(term, this.plugin.settings.ignoreArabicDiacritics)
-          : term
+      extractField: (doc, fieldName) =>
+        this.extractDocumentField(doc, fieldName),
+      processTerm: (term: string, fieldName?: string) =>
+        (fieldName && isHanGramField(fieldName)
+          ? term
+          : this.plugin.settings.ignoreDiacritics
+            ? removeDiacritics(
+                term,
+                this.plugin.settings.ignoreArabicDiacritics
+              )
+            : term
         ).toLowerCase(),
       idField: 'path',
-      fields: [
-        'basename',
-        // Different from `path`, since `path` is the unique index and needs to include the filename
-        'directory',
-        'aliases',
-        'content',
-        'headings1',
-        'headings2',
-        'headings3',
-      ],
+      fields: [...ORIGINAL_SEARCH_FIELDS, ...HAN_GRAM_FIELDS],
       storeFields: ['tags', 'mtime'],
       logger(_level, _message, code) {
         if (code === 'version_conflict') {
@@ -551,5 +552,200 @@ export class SearchEngine {
         }
       },
     }
+  }
+
+  private extractDocumentField(
+    document: IndexedDocument,
+    fieldName: string
+  ): string {
+    // MiniSearch's extractField type says string, but stored fields retain their
+    // original runtime values and are not sent through the tokenizer.
+    if (fieldName === 'tags') return document.tags as unknown as string
+    if (fieldName === 'mtime') return document.mtime as unknown as string
+
+    const sourceField = isHanGramField(fieldName)
+      ? getSourceFieldForHanGram(fieldName)
+      : fieldName
+    if (sourceField === 'directory') {
+      const parts = document.path.split('/')
+      parts.pop()
+      return parts.join('/')
+    }
+    const value = document[sourceField as keyof IndexedDocument]
+    return Array.isArray(value) ? value.join(' ') : String(value ?? '')
+  }
+
+  private async filterByDocumentSemantics(
+    results: SearchResult[],
+    query: Query,
+    signal?: AbortSignal
+  ): Promise<SearchResult[]> {
+    const documents = await Promise.all(
+      results.map(async result => {
+        const document = await this.plugin.documentsRepository.getDocument(
+          result.id
+        )
+        if (!document) {
+          console.warn(`Omnisearch - Note "${result.id}" not in the live cache`)
+          countError(true)
+        }
+        return document
+      })
+    )
+    if (signal?.aborted) return []
+
+    const exactTerms = query.getExactTerms()
+    if (exactTerms.length) {
+      logVerbose('Filtering with quoted terms: ', exactTerms)
+      results = results.filter(result => {
+        const document = documents.find(item => item.path === result.id)
+        const title = document?.path.toLowerCase() ?? ''
+        const content = (document?.cleanedContent ?? '').toLowerCase()
+        return exactTerms.every(
+          term =>
+            content.includes(term) ||
+            removeDiacritics(
+              title,
+              this.plugin.settings.ignoreArabicDiacritics
+            ).includes(term)
+        )
+      })
+    }
+
+    const exclusions = query.query.exclude.text
+    if (exclusions.length) {
+      logVerbose('Filtering with exclusions')
+      results = results.filter(result => {
+        const content = (
+          documents.find(item => item.path === result.id)?.content ?? ''
+        ).toLowerCase()
+        return exclusions.every(term => !content.includes(term))
+      })
+    }
+
+    return results
+  }
+
+  private filterByQueryPath<T extends SearchResult>(
+    results: T[],
+    query: Query
+  ): T[] {
+    if (query.query.ext?.length) {
+      results = results.filter(result => {
+        const ext = '.' + String(result.id).split('.').pop()
+        return query.query.ext?.some(value =>
+          ext.startsWith(value.startsWith('.') ? value : '.' + value)
+        )
+      })
+    }
+    if (query.query.path) {
+      results = results.filter(result =>
+        query.query.path?.some(path =>
+          String(result.id).toLowerCase().includes(path.toLowerCase())
+        )
+      )
+    }
+    if (query.query.exclude.path) {
+      results = results.filter(
+        result =>
+          !query.query.exclude.path?.some(path =>
+            String(result.id).toLowerCase().includes(path.toLowerCase())
+          )
+      )
+    }
+    return results
+  }
+
+  private async searchWithHanFallback(
+    naturalQuery: QueryCombination,
+    hanSearch: { query: QueryCombination; runs: string[] },
+    query: Query,
+    singleFilePath: string | undefined,
+    signal: AbortSignal | undefined,
+    miniSearchOptions: SearchOptions
+  ): Promise<SearchResultWithHan[]> {
+    const combinedQuery: QueryCombination = {
+      combineWith: 'OR',
+      queries: [naturalQuery, hanSearch.query],
+    }
+    if (!requiresHanVerification(hanSearch.runs)) {
+      return this.markHanResults(
+        this.minisearch.search(combinedQuery, miniSearchOptions),
+        hanSearch.runs
+      )
+    }
+
+    const naturalResults = this.minisearch.search(
+      naturalQuery,
+      miniSearchOptions
+    )
+    let fallbackCandidates = this.filterByQueryPath(
+      this.minisearch.search(hanSearch.query, miniSearchOptions),
+      query
+    )
+    if (singleFilePath) {
+      fallbackCandidates = fallbackCandidates.filter(
+        result => result.id === singleFilePath
+      )
+    }
+    const verifiedFallbackIds = await this.verifyHanCandidates(
+      fallbackCandidates,
+      hanSearch.runs,
+      signal
+    )
+    if (!verifiedFallbackIds) return []
+    const combinedResults = this.minisearch.search(
+      combinedQuery,
+      miniSearchOptions
+    )
+    return this.markHanResults(
+      reconcileVerifiedHanResults(
+        naturalResults,
+        combinedResults,
+        verifiedFallbackIds
+      ),
+      hanSearch.runs
+    )
+  }
+
+  private async verifyHanCandidates(
+    results: SearchResult[],
+    runs: string[],
+    signal?: AbortSignal
+  ): Promise<Set<string> | null> {
+    const verified = new Set<string>()
+    for (const chunk of chunkArray(results, 50)) {
+      if (signal?.aborted) return null
+      const documents = await Promise.all(
+        chunk.map(result =>
+          this.plugin.documentsRepository.getDocument(String(result.id))
+        )
+      )
+      documents.forEach((document, index) => {
+        if (!document) return
+        const fieldValues = ORIGINAL_SEARCH_FIELDS.map(field =>
+          String(this.extractDocumentField(document, field) ?? '')
+        )
+        if (documentContainsHanRuns(runs, fieldValues)) {
+          verified.add(String(chunk[index].id))
+        }
+      })
+      if (signal?.aborted) return null
+    }
+    return verified
+  }
+
+  private markHanResults(
+    results: SearchResultWithHan[],
+    runs: string[]
+  ): SearchResultWithHan[] {
+    results.forEach(result => {
+      if (
+        Object.values(result.match).some(fields => fields.some(isHanGramField))
+      ) {
+        result.hanQueryRuns = runs
+      }
+    })
+    return results
   }
 }
