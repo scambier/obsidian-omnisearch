@@ -273,7 +273,7 @@ export class SearchEngine {
     const tags = query.getTags()
 
     for (const result of results) {
-      const path = result.id
+      const path = result.id as string
       if (settings.downrankedFoldersFilters.length > 0) {
         // downrank files that are in folders listed in the downrankedFoldersFilters
         let downrankingFolder = false
@@ -310,6 +310,23 @@ export class SearchEngine {
             logVerbose(`Boosting field "${name}" x${weight} for ${path}`)
             result.score *= weight
           }
+        }
+      }
+
+      // Boost results whose title (basename or displayTitle) starts with the full query
+      const queryStr = query.segmentsToStr().toLowerCase()
+      if (queryStr) {
+        let title = (path.split('/').pop() ?? '').replace(/\.[^.]+$/, '')
+        if (metadata && settings.displayTitle) {
+          if (settings.displayTitle === '#heading') {
+            title = metadata?.headings?.find(h => h.level === 1)?.heading ?? title
+          } else {
+            title = (metadata?.frontmatter?.[settings.displayTitle] as string | undefined) ?? title
+          }
+        }
+        if (title.toLowerCase().startsWith(queryStr)) {
+          logVerbose(`Exact title prefix match: ${path}`)
+          result.score *= 100
         }
       }
 
