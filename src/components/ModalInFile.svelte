@@ -127,6 +127,13 @@
     return openSelection(true)
   }
 
+  async function openSelectionFromClick(evt: MouseEvent): Promise<void> {
+    const newTab = plugin.settings.openInNewPane
+      ? !evt.ctrlKey
+      : evt.ctrlKey ? true : false
+    return openSelection(newTab)
+  }
+
   async function openSelection(newTab = false): Promise<void> {
     if (note) {
       modal.close()
@@ -166,7 +173,7 @@
         index={i}
         selected={i === selectedIndex}
         on:mousemove={_e => (selectedIndex = i)}
-        on:click={evt => openSelection(evt.ctrlKey)}
+        on:click={openSelectionFromClick}
         on:auxclick={evt => {
           if (evt.button == 1) openSelection(true)
         }} />

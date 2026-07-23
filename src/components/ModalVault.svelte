@@ -167,11 +167,19 @@
 
   function onClick(evt?: MouseEvent | KeyboardEvent) {
     if (!selectedNote) return
-    if (evt?.ctrlKey) {
+    const newPane = plugin.settings.openInNewPane
+      ? !evt?.ctrlKey // Setting is true, ctrl not pressed => open in new pane
+      : evt?.ctrlKey ? true : false // Setting is false, ctrl pressed => open in same pane
+    if (newPane) {
       openNoteInNewPane()
     } else {
       openNoteAndCloseModal()
     }
+  }
+
+  function openNoteInNewPane(): void {
+    if (!selectedNote) return
+    openSearchResult(selectedNote, true)
     modal.close()
   }
 
@@ -184,12 +192,6 @@
   function openNoteInBackground(): void {
     if (!selectedNote) return
     openSearchResult(selectedNote, true)
-  }
-
-  function openNoteInNewPane(): void {
-    if (!selectedNote) return
-    openSearchResult(selectedNote, true)
-    modal.close()
   }
 
   function openNoteInNewLeaf(): void {
