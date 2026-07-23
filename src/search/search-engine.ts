@@ -413,6 +413,9 @@ export class SearchEngine {
     query: Query,
     options?: Partial<{ singleFilePath?: string }>
   ): Promise<ResultNote[]> {
+    // Clear highlight regex cache for fresh search
+    this.plugin.textProcessor.clearHighlightCache()
+
     // Get the raw results
     let results: SearchResult[]
     if (this.plugin.settings.simpleSearch) {

@@ -6,7 +6,16 @@ import { escapeRegExp } from 'es-toolkit'
 import type OmnisearchPlugin from '../main'
 
 export class TextProcessor {
+  private highlightRegexCache = new Map<string, RegExp>()
+
   constructor(private plugin: OmnisearchPlugin) {}
+
+  /**
+   * Clear the highlight regex cache. Call at the start of each search.  
+   */
+  public clearHighlightCache(): void {
+    this.highlightRegexCache.clear()
+  }
 
   /**
    * Wraps the matches in the text with a <span> element and a highlight class
@@ -23,11 +32,19 @@ export class TextProcessor {
       return text
     }
     try {
+      const cacheKey = matches
+        .map(m => escapeRegExp(m.match))
+        .sort()
+        .join('|')
+
+      let regex = this.highlightRegexCache.get(cacheKey)
+      if (!regex) {
+        regex = new RegExp(`(${cacheKey})`, 'giu')
+        this.highlightRegexCache.set(cacheKey, regex)
+      }
+
       return text.replace(
-        new RegExp(
-          `(${matches.map(item => escapeRegExp(item.match)).join('|')})`,
-          'giu'
-        ),
+        regex,
         `<span class="${highlightClass}">$1</span>`
       )
     } catch (e) {
