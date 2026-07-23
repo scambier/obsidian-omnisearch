@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { MarkdownView, Notice, Platform, TFile } from 'obsidian'
+  import { MarkdownView, Notice, Platform, TFile, debounce } from 'obsidian'
   import { onDestroy, onMount, tick } from 'svelte'
   import InputSearch from './InputSearch.svelte'
   import ModalContainer from './ModalContainer.svelte'
@@ -26,7 +26,6 @@
   import ResultItemVault from './ResultItemVault.svelte'
   import { Query } from '../search/query'
   import { cancelable, CancelablePromise } from 'cancelable-promise'
-  import { debounce } from 'es-toolkit'
   import type OmnisearchPlugin from '../main'
   import LazyLoader from './lazy-loader/LazyLoader.svelte'
 

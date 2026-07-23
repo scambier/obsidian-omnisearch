@@ -1,5 +1,4 @@
-import { debounce } from 'es-toolkit'
-import { Setting } from 'obsidian'
+import { Setting, debounce } from 'obsidian'
 import type OmnisearchPlugin from '../main'
 import type { OmnisearchSettings } from './utils'
 import { htmlDescription, saveSettings } from './utils'

@@ -14,6 +14,7 @@
   import type OmnisearchPlugin from '../main'
   import { setIcon, TFile } from 'obsidian'
   import { onMount } from 'svelte'
+  import type { SearchMatch } from '../globals'
 
   // Import icon utility functions
   import {
@@ -37,6 +38,10 @@
   let prefixToIconPack: { [prefix: string]: string } = {}
   let iconsPath: string
   let iconDataLoaded = false // Flag to indicate iconData is loaded
+
+  // Lazy-computed body matches for offscreen results
+  // Pre-computed for first 10 visible results, deferred for the rest
+  let lazyMatches: SearchMatch[] = []
 
   // Initialize icon data and icon packs once when the component mounts
   onMount(async () => {
@@ -126,9 +131,25 @@
     notePath,
     note.foundWords
   )
+
+  // Compute body matches lazily for offscreen results
+  $: {
+    if (note.matches.length > 0) {
+      lazyMatches = note.matches
+    } else if (note.foundWords.length > 0 && note.content) {
+      // Defer heavy regex to avoid blocking first paint
+      setTimeout(() => {
+        lazyMatches = plugin.textProcessor.getMatches(
+          note.content,
+          note.foundWords
+        )
+      }, 0)
+    }
+  }
+
   $: cleanedContent = plugin.textProcessor.makeExcerpt(
     note.content,
-    note.matches[0]?.offset ?? -1
+    lazyMatches[0]?.offset ?? -1
   )
   $: glyph = false //cacheManager.getLiveDocument(note.path)?.doesNotExist
   $: {
@@ -191,9 +212,9 @@
         {/if}
 
         <!-- Counter -->
-        {#if note.matches.length > 0}
+        {#if lazyMatches.length > 0}
           <span class="omnisearch-result__counter">
-            {note.matches.length}&nbsp;{note.matches.length > 1
+            {lazyMatches.length}&nbsp;{lazyMatches.length > 1
               ? 'matches'
               : 'match'}
           </span>
@@ -221,7 +242,7 @@
           <div class="omnisearch-result__body">
             {@html plugin.textProcessor.highlightText(
               cleanedContent,
-              note.matches
+              lazyMatches
             )}
           </div>
         {/if}
