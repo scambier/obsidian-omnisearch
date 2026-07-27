@@ -29,11 +29,13 @@ export class DocumentsRepository {
   private errorsWarned = false
 
   constructor(private plugin: OmnisearchPlugin) {
-    setInterval(() => {
+    this.plugin.registerInterval(
+    window.setInterval(() => {
       if (this.errorsCount > 0) {
         --this.errorsCount
-      }
-    }, 1000)
+        }
+      }, 1000)
+    )
   }
 
   /**
