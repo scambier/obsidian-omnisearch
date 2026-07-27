@@ -219,19 +219,20 @@ export class SearchEngine {
 
     // Filter query results that match the path
     if (query.query.path) {
-      results = results.filter(r =>
-        query.query.path?.some(p =>
-          (r.id as string).toLowerCase().includes(p.toLowerCase())
-        )
-      )
+      results = results.filter(r => {
+        const rPath = settings.ignoreDiacritics
+          ? removeDiacritics(r.id as string, settings.ignoreArabicDiacritics).toLowerCase()
+          : (r.id as string).toLowerCase()
+        return query.query.path?.some(p => rPath.includes(p.toLowerCase()))
+      })
     }
     if (query.query.exclude.path) {
-      results = results.filter(
-        r =>
-          !query.query.exclude.path?.some(p =>
-            (r.id as string).toLowerCase().includes(p.toLowerCase())
-          )
-      )
+      results = results.filter(r => {
+        const rPath = settings.ignoreDiacritics
+          ? removeDiacritics(r.id as string, settings.ignoreArabicDiacritics).toLowerCase()
+          : (r.id as string).toLowerCase()
+        return !query.query.exclude.path?.some(p => rPath.includes(p.toLowerCase()))
+      })
     }
 
     if (!results.length) {
