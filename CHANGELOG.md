@@ -2,6 +2,17 @@
 
 This changelog is not exhaustive.
 
+## 1.30.x
+
+- Boost results when the search term matches a filename exactly (#561)
+- Fixed an interval not being properly registered, preventing garbage collection on plugin unload (#565)
+- Fixed "Open in new pane" setting being ignored (#563)
+- Fixed diacritics handling in the `path:` filter (#566)
+- Fixed new tab opening on Android (#551)
+- Performance improvements: deferred highlighting, pre-computed regexes (#562)
+- Code cleanup and dependency updates (#553)
+
+
 ## 1.29.x
 
 * Feature/537 add index files without extension by @Acallaris738 in https://github.com/scambier/obsidian-omnisearch/pull/538
