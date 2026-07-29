@@ -53,7 +53,7 @@ export function getServer(plugin: OmnisearchPlugin) {
           host: plugin.settings.DANGER_httpHost ?? 'localhost',
         },
         () => {
-          console.log(`Omnisearch - Started HTTP server on port ${port}`)// eslint-disable-line obsidianmd/rule-custom-message -- security information
+          console.log(`Omnisearch - Started HTTP server on port ${port}`)
           if (plugin.settings.DANGER_httpHost && plugin.settings.DANGER_httpHost !== 'localhost') {
             new Notice(`Omnisearch - Started non-localhost HTTP server at ${plugin.settings.DANGER_httpHost}:${port}`, 120_000)
           }
