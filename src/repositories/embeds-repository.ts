@@ -79,8 +79,8 @@ export class EmbedsRepository {
           this.addEmbed(path, embed)
         }
       }
-    } catch (e) {
-      this.plugin.database.clearCache()
+    } catch {
+      await this.plugin.database.clearCache()
       console.error('Omnisearch - Error while loading embeds cache')
       new Notice('Omnisearch - There was an error while loading the cache. Please restart Obsidian.')
     }

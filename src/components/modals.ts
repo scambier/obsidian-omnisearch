@@ -183,8 +183,10 @@ export class OmnisearchVaultModal extends OmnisearchModal {
       this.onClose = () => {
         // Since the component is manually created,
         // we also need to manually destroy it
-        unmount(cmp)
+        void unmount(cmp)
       }
+    }).catch(e => {
+      console.error('Omnisearch - Failed to load search history', e)
     })
   }
 }
@@ -217,7 +219,7 @@ export class OmnisearchInFileModal extends OmnisearchModal {
       if (parent) {
         parent.containerEl.toggleVisibility(true)
       }
-      unmount(cmp)
+      void unmount(cmp)
     }
   }
 }

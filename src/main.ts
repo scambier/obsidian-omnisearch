@@ -67,7 +67,9 @@ export default class OmnisearchPlugin extends Plugin {
     if (!Platform.isMobile) {
       import('./tools/api-server').then(
         m => (this.apiHttpServer = m.getServer(this))
-      )
+      ).catch(e => {
+        console.error('Omnisearch - Failed to load API server', e)
+      })
     }
 
     if (isPluginDisabled(this.app)) {
@@ -119,7 +121,9 @@ export default class OmnisearchPlugin extends Plugin {
           if (!(file instanceof TFile)) return
           if (this.notesIndexer.isFileIndexable(file.path)) {
             logVerbose('Indexing new file', file.path)
-            searchEngine.addFromPaths([file.path])
+            searchEngine.addFromPaths([file.path]).catch(e => {
+              console.error('Omnisearch - Error indexing new file', e)
+            })
             this.embedsRepository.refreshEmbedsForNote(file.path)
           }
         })
