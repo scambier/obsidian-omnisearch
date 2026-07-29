@@ -5,18 +5,18 @@ import { K_DISABLE_OMNISEARCH, RecencyCutoff } from '../globals'
 export function htmlDescription(htmlContent: string): DocumentFragment {
   const desc = new DocumentFragment()
   const span = desc.appendChild(document.createElement('span'))
-  
+
   // Parse HTML string safely using DOMParser
   const parser = new DOMParser()
   const parsed = parser.parseFromString(`<div>${htmlContent}</div>`, 'text/html')
-  
+
   // Check for parse errors
   if (parsed.body.querySelector('parsererror')) {
     // Fallback to plain text if parsing fails
     span.textContent = htmlContent
     return desc
   }
-  
+
   // Copy all child nodes from parsed content to span
   const sourceDiv = parsed.body.firstElementChild as HTMLElement
   if (sourceDiv) {
@@ -24,7 +24,7 @@ export function htmlDescription(htmlContent: string): DocumentFragment {
       span.appendChild(sourceDiv.firstChild)
     }
   }
-  
+
   return desc
 }
 
