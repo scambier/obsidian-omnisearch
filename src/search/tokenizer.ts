@@ -3,7 +3,8 @@ import { BRACKETS_AND_SPACE, chsRegex, SPACE_OR_PUNCTUATION } from '../globals'
 import { logVerbose, splitCamelCase, splitHyphens } from '../tools/utils'
 import type OmnisearchPlugin from '../main'
 
-const markdownLinkExtractor = require('markdown-link-extractor')
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- that's how you're supposed to import this package
+const markdownLinkExtractor = require('markdown-link-extractor') as (value: string) => string[]
 
 export class Tokenizer {
   constructor(private plugin: OmnisearchPlugin) {}
@@ -93,7 +94,7 @@ export class Tokenizer {
   }
 
   private tokenizeChsWord(tokens: string[]): string[] {
-    const segmenter = this.plugin.getChsSegmenter()
+    const segmenter = this.plugin.getChsSegmenter() as { cut: (word: string, options: { search: boolean }) => string[] }
     if (!segmenter) return tokens
     return tokens.flatMap(word =>
       chsRegex.test(word) ? segmenter.cut(word, { search: true }) : [word]
