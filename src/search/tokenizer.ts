@@ -30,7 +30,7 @@ export class Tokenizer {
       tokens = [...tokens.flatMap(token => [
         token,
         ...splitHyphens(token),
-        ...splitCamelCase(token),
+        ...(this.plugin.settings.splitCamelCase ? splitCamelCase(token) : []),
       ]), ...words]
 
       // Add urls
@@ -40,7 +40,7 @@ export class Tokenizer {
 
       // Remove duplicates
       // tokens = [...new Set(tokens)]
-      
+
       // Remove empty tokens
       tokens = tokens.filter(Boolean)
 
@@ -73,7 +73,9 @@ export class Tokenizer {
           queries: this.tokenizeWords(text).filter(Boolean),
         },
         { combineWith: 'AND', queries: tokens.flatMap(splitHyphens) },
-        { combineWith: 'AND', queries: tokens.flatMap(splitCamelCase) },
+        ...(this.plugin.settings.splitCamelCase
+          ? [{ combineWith: 'AND' as const, queries: tokens.flatMap(splitCamelCase) }]
+          : []),
       ],
     }
   }
