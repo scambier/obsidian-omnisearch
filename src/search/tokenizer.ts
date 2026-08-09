@@ -1,6 +1,6 @@
 import type { QueryCombination } from 'minisearch'
 import { BRACKETS_AND_SPACE, chsRegex, SPACE_OR_PUNCTUATION } from '../globals'
-import { logVerbose, splitCamelCase, splitHyphens } from '../tools/utils'
+import { logVerbose, removeBase64Images, splitCamelCase, splitHyphens } from '../tools/utils'
 import type OmnisearchPlugin from '../main'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- that's how you're supposed to import this package
@@ -17,6 +17,7 @@ export class Tokenizer {
    */
   public tokenizeForIndexing(text: string): string[] {
     try {
+      text = removeBase64Images(text)
       const words = this.tokenizeWords(text)
       let urls: string[] = []
       if (this.plugin.settings.tokenizeUrls) {
