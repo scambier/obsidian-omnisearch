@@ -15,8 +15,7 @@
     "isolatedModules": true,
     "strictNullChecks": true,
     "types": [
-      "node",
-      "jest"
+      "node"
     ],
     "lib": [
       "DOM",

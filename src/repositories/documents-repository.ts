@@ -111,8 +111,11 @@ export class DocumentsRepository {
     // Extract the text fields from the json
     else if (isFileCanvas(path)) {
       const fileContents = await app.vault.cachedRead(file)
-      const canvas: CanvasData = fileContents ? JSON.parse(fileContents) : {}
-      let texts: string[] = []
+      const canvas = fileContents ? JSON.parse(fileContents) as CanvasData : {
+        nodes: [],
+        edges: [],
+      }
+      const texts: string[] = []
       // Concatenate text from the canvas fields
       for (const node of canvas.nodes ?? []) {
         if (node.type === 'text') {
@@ -130,7 +133,7 @@ export class DocumentsRepository {
     // ** Dataloom plugin **
     else if (isFileFromDataloom(path)) {
       try {
-        const data = JSON.parse(await app.vault.cachedRead(file))
+        const data = JSON.parse(await app.vault.cachedRead(file)) as unknown
         // data is a json object, we recursively iterate the keys
         // and concatenate the values if the key is "markdown"
         const texts: string[] = []
@@ -196,20 +199,21 @@ export class DocumentsRepository {
       warnVerbose(`Omnisearch: ${content} content for file`, file.path)
       content = ''
     }
+
     const metadata = app.metadataCache.getFileCache(file)
 
     // Look for links that lead to non-existing files,
     // and add them to the index.
     if (metadata) {
-      const nonExisting = getNonExistingNotes(this.plugin.app, file, metadata)
-      for (const name of nonExisting.filter(o => !this.documents.has(o))) {
-        const doc =
-          this.plugin.notesIndexer.generateIndexableNonexistingDocument(
-            name,
-            file.path
-          )
-        // TODO: index non-existing note
-      }
+      // const nonExisting = getNonExistingNotes(this.plugin.app, file, metadata)
+      // for (const name of nonExisting.filter(o => !this.documents.has(o))) {
+      //   const doc =
+      //     this.plugin.notesIndexer.generateIndexableNonexistingDocument(
+      //       name,
+      //       file.path
+      //     )
+      //   // TODO: index non-existing note
+      // }
 
       // EXCALIDRAW
       // Remove the json code
