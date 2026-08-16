@@ -114,6 +114,17 @@ export class SearchEngine {
 
       // Add docs to minisearch
       await this.minisearch.addAllAsync(docs)
+
+      // A file may have been deleted while we were reading/indexing it.
+      // Its delete handler ran before the doc was in minisearch,
+      // so it couldn't discard it.
+      // Remove vanished files now to avoid keeping stale entries.
+      const deleted = docs.filter(
+        doc => !this.plugin.app.vault.getAbstractFileByPath(doc.path)
+      )
+      if (deleted.length) {
+        this.removeFromPaths(deleted.map(doc => doc.path))
+      }
     }
   }
 
@@ -450,8 +461,9 @@ export class SearchEngine {
 
       // Inject embeds in the results
       for (const embed of embeds) {
-        total++
         const newDoc = await this.plugin.documentsRepository.getDocument(embed)
+        if (!newDoc?.path) continue
+        total++
         documents.splice(i + 1, 0, newDoc)
         results.splice(i + 1, 0, {
           id: newDoc.path,

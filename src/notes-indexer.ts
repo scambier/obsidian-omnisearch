@@ -25,17 +25,32 @@ export class NotesIndexer {
   }
 
   public async refreshIndex(): Promise<void> {
-    for (const file of this.notesToReindex) {
+    const queued = [...this.notesToReindex]
+
+    // A note can be deleted after being flagged for reindexing. Skip those,
+    // and make sure their stale path is removed from the search index.
+    const existing = queued.filter(file =>
+      this.plugin.app.vault.getAbstractFileByPath(file.path)
+    )
+    for (const file of existing) {
       logVerbose('Updating file', file.path)
       await this.plugin.documentsRepository.addDocument(file.path)
     }
 
-    const paths = [...this.notesToReindex].map(n => n.path)
-    if (paths.length) {
-      this.plugin.searchEngine.removeFromPaths(paths)
-      await this.plugin.searchEngine.addFromPaths(paths)
-      this.notesToReindex.clear()
+    const existingPaths = existing.map(file => file.path)
+    if (existingPaths.length) {
+      this.plugin.searchEngine.removeFromPaths(existingPaths)
+      await this.plugin.searchEngine.addFromPaths(existingPaths)
     }
+
+    const deletedPaths = queued
+      .filter(file => !existing.includes(file))
+      .map(file => file.path)
+    if (deletedPaths.length) {
+      this.plugin.searchEngine.removeFromPaths(deletedPaths)
+    }
+
+    this.notesToReindex.clear()
   }
 
   public isFileIndexable(path: string): boolean {
