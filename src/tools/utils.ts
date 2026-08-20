@@ -152,6 +152,13 @@ export function getAltKeyLabel(): 'Alt' | '⌥' {
   return Platform.isMacOS ? '⌥' : 'Alt'
 }
 
+export function isModKeyPressed(
+  evt?: MouseEvent | KeyboardEvent | null
+): boolean {
+  if (!evt) return false
+  return Platform.isMacOS ? evt.metaKey : evt.ctrlKey
+}
+
 export function isFileImage(path: string): boolean {
   const ext = getExtension(path)
   return (

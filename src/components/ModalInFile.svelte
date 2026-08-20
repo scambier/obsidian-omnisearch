@@ -7,7 +7,7 @@
     type ResultNote,
     type SearchMatch,
   } from '../globals'
-  import { getCtrlKeyLabel, loopIndex } from '../tools/utils'
+  import { getCtrlKeyLabel, isModKeyPressed, loopIndex } from '../tools/utils'
   import { onDestroy, onMount, tick } from 'svelte'
   import { Platform } from 'obsidian'
   import ModalContainer from './ModalContainer.svelte'
@@ -128,9 +128,10 @@
   }
 
   async function openSelectionFromClick(evt: MouseEvent): Promise<void> {
+    const modKey = isModKeyPressed(evt)
     const newTab = plugin.settings.openInNewPane
-      ? !evt.ctrlKey
-      : evt.ctrlKey ? true : false
+      ? !modKey
+      : modKey ? true : false
     return openSelection(newTab)
   }
 
