@@ -16,6 +16,7 @@
   id="{index.toString()}"
   on:auxclick
   on:click
+  on:longpress
   on:mousemove
   selected="{selected}">
   <div class="omnisearch-result__body">

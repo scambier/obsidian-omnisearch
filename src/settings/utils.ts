@@ -99,7 +99,6 @@ export interface OmnisearchSettings extends WeightingSettings {
   tokenizeUrls: boolean
   highlight: boolean
   splitCamelCase: boolean
-  openInNewPane: boolean
   verboseLogging: boolean
   vimLikeNavigationShortcut: boolean
   fuzziness: '0' | '1' | '2'
