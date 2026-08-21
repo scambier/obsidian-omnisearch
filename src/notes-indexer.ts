@@ -121,7 +121,6 @@ export class NotesIndexer {
       mtime: 0,
 
       content: '',
-      cleanedContent: '',
       tags: [],
       unmarkedTags: [],
       aliases: '',

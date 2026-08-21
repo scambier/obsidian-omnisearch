@@ -87,6 +87,10 @@ export function removeBase64Images(text: string): string {
   return text.replace(/data:[^;)]*;base64,[A-Za-z0-9+/=_-]*/g, '')
 }
 
+export function normalizeExactMatchContent(text: string): string {
+  return stripMarkdownCharacters(removeDiacritics(text)).toLowerCase()
+}
+
 export function getAliasesFromMetadata(
   metadata: CachedMetadata | null
 ): string[] {

@@ -14,6 +14,7 @@ import {
   chunkArray,
   countError,
   logVerbose,
+  normalizeExactMatchContent,
   removeDiacritics,
 } from '../tools/utils'
 import { Notice } from 'obsidian'
@@ -376,7 +377,7 @@ export class SearchEngine {
       results = results.filter(r => {
         const document = documents.find(d => d.path === r.id)
         const title = document?.path.toLowerCase() ?? ''
-        const content = (document?.cleanedContent ?? '').toLowerCase()
+        const content = normalizeExactMatchContent(document?.content ?? '')
         return exactTerms.every(
           q =>
             content.includes(q) ||

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { CachedMetadata } from 'obsidian'
-import { getAliasesFromMetadata, removeBase64Images } from '../tools/utils'
+import {
+  getAliasesFromMetadata,
+  normalizeExactMatchContent,
+  removeBase64Images,
+} from '../tools/utils'
 
 describe('Utils', () => {
   describe('getAliasesFromMetadata', () => {
@@ -98,6 +102,14 @@ describe('Utils', () => {
       const actual = removeBase64Images(text)
       // Assert
       expect(actual).toBe(text)
+    })
+  })
+
+  describe('normalizeExactMatchContent', () => {
+    it('matches the normalized content formerly retained by each document', () => {
+      expect(normalizeExactMatchContent('A *Crème* _brûlée_')).toBe(
+        'a creme brulee'
+      )
     })
   })
 })

@@ -14,8 +14,6 @@ import {
   isFileOffice,
   isFilePDF,
   logVerbose,
-  removeDiacritics,
-  stripMarkdownCharacters,
   warnVerbose,
 } from '../tools/utils'
 
@@ -239,8 +237,6 @@ export class DocumentsRepository {
       basename: file.basename,
       displayTitle,
       content,
-      /** Content without diacritics and markdown chars */
-      cleanedContent: stripMarkdownCharacters(removeDiacritics(content)),
       path: file.path,
       mtime: file.stat.mtime,
 
