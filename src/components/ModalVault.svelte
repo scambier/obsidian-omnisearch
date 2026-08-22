@@ -17,6 +17,7 @@
     getAltKeyLabel,
     getExtension,
     isFilePDF,
+    isModKeyPressed,
     loopIndex,
   } from '../tools/utils'
   import {
@@ -167,9 +168,10 @@
 
   function onClick(evt?: MouseEvent | KeyboardEvent) {
     if (!selectedNote) return
+    const modKey = isModKeyPressed(evt)
     const newPane = plugin.settings.openInNewPane
-      ? !evt?.ctrlKey // Setting is true, ctrl not pressed => open in new pane
-      : evt?.ctrlKey ? true : false // Setting is false, ctrl pressed => open in same pane
+      ? !modKey // Setting is true, mod not pressed => open in new pane
+      : modKey ? true : false // Setting is false, mod pressed => open in same pane
     if (newPane) {
       openNoteInNewPane()
     } else {
