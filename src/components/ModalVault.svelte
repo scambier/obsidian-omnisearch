@@ -48,27 +48,13 @@
   let indexingStepDesc = $state('')
   let searching = $state(true)
   let refInput: InputSearch | undefined
-  let openInNewPaneKey: string = $state('')
-  let openInCurrentPaneKey: string = $state('')
-  let createInNewPaneKey: string = $state('')
-  let createInCurrentPaneKey: string = $state('')
-  let openInNewLeafKey: string = `${getCtrlKeyLabel()} ${getAltKeyLabel()} ↵`
+  const openInCurrentPaneKey = '↵'
+  const openInNewPaneKey = `${getCtrlKeyLabel()} ↵`
+  const createInCurrentPaneKey = 'Shift ↵'
+  const createInNewPaneKey = `${getCtrlKeyLabel()} Shift ↵`
+  const openInNewLeafKey = `${getCtrlKeyLabel()} ${getAltKeyLabel()} ↵`
 
   const selectedNote = $derived(resultNotes[selectedIndex])
-
-  $effect(() => {
-    if (plugin.settings.openInNewPane) {
-      openInNewPaneKey = '↵'
-      openInCurrentPaneKey = getCtrlKeyLabel() + ' ↵'
-      createInNewPaneKey = 'Shift ↵'
-      createInCurrentPaneKey = getCtrlKeyLabel() + ' Shift ↵'
-    } else {
-      openInNewPaneKey = getCtrlKeyLabel() + ' ↵'
-      openInCurrentPaneKey = '↵'
-      createInNewPaneKey = getCtrlKeyLabel() + ' Shift ↵'
-      createInCurrentPaneKey = 'Shift ↵'
-    }
-  })
 
   $effect(() => {
     if (searchQuery) {
@@ -168,11 +154,7 @@
 
   function onClick(evt?: MouseEvent | KeyboardEvent) {
     if (!selectedNote) return
-    const modKey = isModKeyPressed(evt)
-    const newPane = plugin.settings.openInNewPane
-      ? !modKey // Setting is true, mod not pressed => open in new pane
-      : modKey ? true : false // Setting is false, mod pressed => open in same pane
-    if (newPane) {
+    if (isModKeyPressed(evt)) {
       openNoteInNewPane()
     } else {
       openNoteAndCloseModal()
@@ -353,6 +335,10 @@
         note={result}
         on:mousemove={_ => (selectedIndex = i)}
         on:click={onClick}
+        on:longpress={() => {
+          selectedIndex = i
+          openNoteInNewPane()
+        }}
         on:auxclick={evt => {
           if (evt.button == 1) openNoteInNewPane()
         }} />
@@ -397,6 +383,13 @@
     <span class="prompt-instruction-command">{openInNewPaneKey}</span>
     <span>to open in a new pane</span>
   </div>
+
+  {#if Platform.isMobile}
+    <div class="prompt-instruction">
+      <span class="prompt-instruction-command">hold</span>
+      <span>to open in a new pane</span>
+    </div>
+  {/if}
 
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">{openInNewLeafKey}</span>

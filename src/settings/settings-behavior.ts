@@ -116,17 +116,6 @@ export function injectSettingsBehavior(
       )
   }
 
-  // Open in new pane
-  new Setting(containerEl)
-    .setName('Open in new pane')
-    .setDesc('Open and create files in a new pane instead of the current pane.')
-    .addToggle(toggle =>
-      toggle.setValue(settings.openInNewPane).onChange(async v => {
-        settings.openInNewPane = v
-        await saveSettings(plugin)
-      })
-    )
-
   // Set Vim like navigation keys
   new Setting(containerEl)
     .setName('Set Vim like navigation keys')
