@@ -57,7 +57,6 @@ export type IndexedDocument = {
   mtime: number
 
   content: string
-  cleanedContent: string
   aliases: string
   tags: string[]
   unmarkedTags: string[]
