@@ -75,6 +75,22 @@ export function stripMarkdownCharacters(text: string): string {
   return text.replace(/(\*|_)+(.+?)(\*|_)+/g, (_match, _p1, p2) => p2)
 }
 
+/**
+ * Removes inlined base64 data URIs (embedded images, fonts, ...) from a string.
+ * They are pure noise for search purposes, and can be huge: a single image can
+ * add hundreds of thousands of unique terms to the index.
+ * https://github.com/scambier/obsidian-omnisearch/issues/567
+ * @param text
+ * @returns
+ */
+export function removeBase64Images(text: string): string {
+  return text.replace(/data:[^;)]*;base64,[A-Za-z0-9+/=_-]*/g, '')
+}
+
+export function normalizeExactMatchContent(text: string): string {
+  return stripMarkdownCharacters(removeDiacritics(text)).toLowerCase()
+}
+
 export function getAliasesFromMetadata(
   metadata: CachedMetadata | null
 ): string[] {
@@ -150,6 +166,13 @@ export function getCtrlKeyLabel(): 'Ctrl' | '⌘' {
 
 export function getAltKeyLabel(): 'Alt' | '⌥' {
   return Platform.isMacOS ? '⌥' : 'Alt'
+}
+
+export function isModKeyPressed(
+  evt?: MouseEvent | KeyboardEvent | null
+): boolean {
+  if (!evt) return false
+  return Platform.isMacOS ? evt.metaKey : evt.ctrlKey
 }
 
 export function isFileImage(path: string): boolean {

@@ -132,7 +132,6 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
     aiImageIndexing: false,
     unsupportedFilesIndexing: 'default',
     splitCamelCase: false,
-    openInNewPane: false,
     vimLikeNavigationShortcut: app.vault.getConfig('vimMode') as boolean,
 
     ribbonIcon: true,

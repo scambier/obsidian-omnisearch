@@ -7,7 +7,7 @@
     type ResultNote,
     type SearchMatch,
   } from '../globals'
-  import { getCtrlKeyLabel, loopIndex } from '../tools/utils'
+  import { getCtrlKeyLabel, isModKeyPressed, loopIndex } from '../tools/utils'
   import { onDestroy, onMount, tick } from 'svelte'
   import { Platform } from 'obsidian'
   import ModalContainer from './ModalContainer.svelte'
@@ -128,10 +128,7 @@
   }
 
   async function openSelectionFromClick(evt: MouseEvent): Promise<void> {
-    const newTab = plugin.settings.openInNewPane
-      ? !evt.ctrlKey
-      : evt.ctrlKey ? true : false
-    return openSelection(newTab)
+    return openSelection(isModKeyPressed(evt))
   }
 
   async function openSelection(newTab = false): Promise<void> {
@@ -174,6 +171,10 @@
         selected={i === selectedIndex}
         on:mousemove={_e => (selectedIndex = i)}
         on:click={openSelectionFromClick}
+        on:longpress={() => {
+          selectedIndex = i
+          openSelection(true)
+        }}
         on:auxclick={evt => {
           if (evt.button == 1) openSelection(true)
         }} />
@@ -209,4 +210,11 @@
     <span class="prompt-instruction-command">{getCtrlKeyLabel()} ↵</span>
     <span>to open in a new pane</span>
   </div>
+
+  {#if Platform.isMobile}
+    <div class="prompt-instruction">
+      <span class="prompt-instruction-command">hold</span>
+      <span>to open in a new pane</span>
+    </div>
+  {/if}
 </div>

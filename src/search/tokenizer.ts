@@ -1,9 +1,10 @@
 import type { QueryCombination } from 'minisearch'
 import { BRACKETS_AND_SPACE, chsRegex, SPACE_OR_PUNCTUATION } from '../globals'
-import { logVerbose, splitCamelCase, splitHyphens } from '../tools/utils'
+import { logVerbose, removeBase64Images, splitCamelCase, splitHyphens } from '../tools/utils'
 import type OmnisearchPlugin from '../main'
 
-const markdownLinkExtractor = require('markdown-link-extractor')
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- that's how you're supposed to import this package
+const markdownLinkExtractor = require('markdown-link-extractor') as (value: string) => string[]
 
 export class Tokenizer {
   constructor(private plugin: OmnisearchPlugin) {}
@@ -16,6 +17,7 @@ export class Tokenizer {
    */
   public tokenizeForIndexing(text: string): string[] {
     try {
+      text = removeBase64Images(text)
       const words = this.tokenizeWords(text)
       let urls: string[] = []
       if (this.plugin.settings.tokenizeUrls) {
@@ -30,7 +32,7 @@ export class Tokenizer {
       tokens = [...tokens.flatMap(token => [
         token,
         ...splitHyphens(token),
-        ...splitCamelCase(token),
+        ...(this.plugin.settings.splitCamelCase ? splitCamelCase(token) : []),
       ]), ...words]
 
       // Add urls
@@ -40,7 +42,7 @@ export class Tokenizer {
 
       // Remove duplicates
       // tokens = [...new Set(tokens)]
-      
+
       // Remove empty tokens
       tokens = tokens.filter(Boolean)
 
@@ -73,7 +75,9 @@ export class Tokenizer {
           queries: this.tokenizeWords(text).filter(Boolean),
         },
         { combineWith: 'AND', queries: tokens.flatMap(splitHyphens) },
-        { combineWith: 'AND', queries: tokens.flatMap(splitCamelCase) },
+        ...(this.plugin.settings.splitCamelCase
+          ? [{ combineWith: 'AND' as const, queries: tokens.flatMap(splitCamelCase) }]
+          : []),
       ],
     }
   }
@@ -91,7 +95,7 @@ export class Tokenizer {
   }
 
   private tokenizeChsWord(tokens: string[]): string[] {
-    const segmenter = this.plugin.getChsSegmenter()
+    const segmenter = this.plugin.getChsSegmenter() as { cut: (word: string, options: { search: boolean }) => string[] }
     if (!segmenter) return tokens
     return tokens.flatMap(word =>
       chsRegex.test(word) ? segmenter.cut(word, { search: true }) : [word]

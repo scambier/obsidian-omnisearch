@@ -18,8 +18,10 @@ export class EmbedsRepository {
   public removeFile(filePath: string): void {
     // If the file is embedded
     this.embeds.delete(filePath)
-    // If the file is a note referencing other files
-    this.refreshEmbedsForNote(filePath)
+    // If the file is a note referencing other files, remove it from those
+    // references. We must not call refreshEmbedsForNote() here, because it
+    // would re-read the deleted file's metadata and re-add its embeds.
+    this.embeds.forEach(referencedBy => referencedBy.delete(filePath))
   }
 
   public renameFile(oldPath: string, newPath: string): void {

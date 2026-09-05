@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { Platform } from 'obsidian'
+  import { longpress } from '../tools/longpress'
   import GlyphAddNote from './GlyphAddNote.svelte'
 
   export let id: string
@@ -13,10 +15,12 @@
   class:is-selected={selected}
   role="button"
   tabindex="0"
+  use:longpress={{ enabled: Platform.isMobile }}
   on:mousemove
   on:click
   on:keypress
-  on:auxclick>
+  on:auxclick
+  on:longpress>
   {#if glyph}
     <GlyphAddNote />
   {/if}

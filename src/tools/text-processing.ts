@@ -113,11 +113,15 @@ export class TextProcessor {
       query &&
       (query.query.text.length > 1 || query.getExactTerms().length > 0)
     ) {
-      const best = text.indexOf(query.getBestStringForExcerpt())
+      const excerptString = query.getBestStringForExcerpt()
+      // Matched case-insensitively via regex rather than by lowercasing `text`,
+      // because toLowerCase() is not length-preserving across all of Unicode and
+      // would desynchronise `best` from the offsets collected above.
+      const best = text.search(new RegExp(escapeRegExp(excerptString), 'iu'))
       if (best > -1 && matches.find(m => m.offset === best)) {
         matches.unshift({
           offset: best,
-          match: query.getBestStringForExcerpt(),
+          match: excerptString,
         })
       }
     }

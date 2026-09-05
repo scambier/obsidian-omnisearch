@@ -187,6 +187,7 @@
   cssClass=" {note.isEmbed ? 'omnisearch-result__embed' : ''}"
   on:auxclick
   on:click
+  on:longpress
   on:mousemove
   {selected}>
   <div>
