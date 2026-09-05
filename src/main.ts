@@ -166,7 +166,6 @@ export default class OmnisearchPlugin extends Plugin {
         this.notesIndexer
       )
       addEventListener('blur', this.refreshIndexCallback!)
-      removeEventListener
 
       await this.executeFirstLaunchTasks()
       await this.populateIndex()
