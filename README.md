@@ -6,7 +6,7 @@
 ![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/scambier/obsidian-omnisearch)
 ![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/scambier/obsidian-omnisearch?include_prereleases&label=BRAT%20beta)
 
-_🏆 Winner of the _[2023 Gems of the Year](https://obsidian.md/blog/2023-goty-winners/)_ in the "Existing plugin" category 🏆_
+🏆 _Winner of the _[2023 Gems of the Year](https://obsidian.md/blog/2023-goty-winners/)_ in the "Existing plugin" category_ 🏆
 
 
 ---
@@ -64,6 +64,7 @@ _Submit a PR to add your own project!_
 - [Notebook Navigator](https://notebooknavigator.com/)
 - [Userscripts](https://publish.obsidian.md/omnisearch/Inject+Omnisearch+results+into+your+search+engine) to inject Omnisearch into your favorite web search engine
 - [obsidian-mcp-server](https://github.com/cyanheads/obsidian-mcp-server), an MCP server that auto-detects Omnisearch and exposes it as a BM25-ranked search mode for AI agents accessing your vault
+- [Silversearch](https://github.com/MrMugame/silversearch) is a fork of Omnisearch for [Silverbullet](https://silverbullet.md/).
 
 ## LICENSE
 
@@ -73,5 +74,3 @@ Omnisearch is licensed under [GPL-3](https://tldrlegal.com/license/gnu-general-p
 
 To all people who donate through [Ko-Fi](https://ko-fi.com/scambier)
 or [Github Sponsors](https://github.com/sponsors/scambier) ❤
-
-![JetBrains logo](https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg)
