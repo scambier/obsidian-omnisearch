@@ -138,6 +138,7 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
     showExcerpt: true,
     maxEmbeds: 5,
     renderLineReturnInExcerpts: true,
+    excerptSkipFrontmatter: true,
     showCreateButton: false,
     highlight: true,
     showPreviousQueryResults: true,
