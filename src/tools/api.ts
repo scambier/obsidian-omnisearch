@@ -34,7 +34,7 @@ function mapResults(
 
     const excerpt = plugin.textProcessor.makeExcerpt(
       content,
-      matches[0]?.offset ?? -1
+      plugin.textProcessor.getExcerptOffset(content, matches)
     )
 
     const res: ResultNoteApi = {

@@ -88,6 +88,8 @@ export interface OmnisearchSettings extends WeightingSettings {
   maxEmbeds: number
   /** Render line returns with <br> in excerpts */
   renderLineReturnInExcerpts: boolean
+  /** Prefer body matches over frontmatter matches when building excerpts */
+  excerptSkipFrontmatter: boolean
   /** Enable a "create note" button in the Vault Search modal */
   showCreateButton: boolean
   /** Re-execute the last query when opening Omnisearch */

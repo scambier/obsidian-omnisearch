@@ -39,6 +39,19 @@ export function injectSettingsUserInterface(
       })
     )
 
+  // Skip frontmatter in excerpts
+  new Setting(containerEl)
+    .setName('Prefer body matches in excerpts')
+    .setDesc(
+      'When a note matches both in its properties (frontmatter) and in its body, center the excerpt on the first body match. Notes that only match in their properties still show the properties. Disable to always use the first match in the file.'
+    )
+    .addToggle(toggle =>
+      toggle.setValue(settings.excerptSkipFrontmatter).onChange(async v => {
+        settings.excerptSkipFrontmatter = v
+        await saveSettings(plugin)
+      })
+    )
+
   // Show embeds
   new Setting(containerEl)
     .setName('Show embed references')
