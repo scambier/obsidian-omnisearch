@@ -7,8 +7,29 @@ import type OmnisearchPlugin from '../main'
 
 export class TextProcessor {
   private highlightRegexCache = new Map<string, RegExp>()
+  private readonly diacriticsCache = new Map<string, string>()
+  private static readonly DIACRITICS_CACHE_MAX = 100
 
   constructor(private plugin: OmnisearchPlugin) {}
+
+  private getCachedDiacritics(text: string): string {
+    const cacheKey = `${this.plugin.settings.ignoreArabicDiacritics}:${text}`
+    const cached = this.diacriticsCache.get(cacheKey)
+    if (cached) return cached
+
+    const cleaned = removeDiacritics(
+      text,
+      this.plugin.settings.ignoreArabicDiacritics
+    )
+    this.diacriticsCache.set(cacheKey, cleaned)
+
+    if (this.diacriticsCache.size > TextProcessor.DIACRITICS_CACHE_MAX) {
+      const firstKey = this.diacriticsCache.keys().next().value
+      if (firstKey !== undefined) this.diacriticsCache.delete(firstKey)
+    }
+
+    return cleaned
+  }
 
   /**
    * Clear the highlight regex cache. Call at the start of each search.  
@@ -86,7 +107,7 @@ export class TextProcessor {
     const originalText = text
     // text = text.toLowerCase().replace(new RegExp(SEPARATORS, 'gu'), ' ')
     if (this.plugin.settings.ignoreDiacritics) {
-      text = removeDiacritics(text, this.plugin.settings.ignoreArabicDiacritics)
+      text = this.getCachedDiacritics(text)
     }
     const startTime = new Date().getTime()
     let match: RegExpExecArray | null = null
