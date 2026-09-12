@@ -188,7 +188,6 @@ export class SearchEngine {
         headings1: settings.weightH1,
         headings2: settings.weightH2,
         headings3: settings.weightH3,
-        tags: settings.weightUnmarkedTags,
         unmarkedTags: settings.weightUnmarkedTags,
       },
       // The query is already tokenized, don't tokenize again
@@ -318,7 +317,7 @@ export class SearchEngine {
       if (metadata) {
         // Boost custom properties
         for (const { name, weight } of settings.weightCustomProperties) {
-          const values = metadata?.frontmatter?.[name]
+          const values = metadata?.frontmatter?.[name] as string[] | undefined
           if (values && result.terms.some(t => values.includes(t))) {
             logVerbose(`Boosting field "${name}" x${weight} for ${path}`)
             result.score *= weight
@@ -345,7 +344,7 @@ export class SearchEngine {
 
       // Put the results with tags on top
       for (const tag of tags) {
-        if ((result.tags ?? []).includes(tag)) {
+        if (((result.tags as string[]) ?? []).includes(tag)) {
           result.score *= 100
         }
       }
@@ -573,6 +572,7 @@ export class SearchEngine {
         'headings1',
         'headings2',
         'headings3',
+        'unmarkedTags',
       ],
       storeFields: ['tags', 'mtime'],
       logger(_level, _message, code) {
