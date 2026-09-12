@@ -149,7 +149,7 @@
 
   $: cleanedContent = plugin.textProcessor.makeExcerpt(
     note.content,
-    lazyMatches[0]?.offset ?? -1
+    plugin.textProcessor.getExcerptOffset(note.content, lazyMatches)
   )
   $: glyph = false //cacheManager.getLiveDocument(note.path)?.doesNotExist
   $: {

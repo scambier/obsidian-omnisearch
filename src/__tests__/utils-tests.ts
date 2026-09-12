@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { CachedMetadata } from 'obsidian'
 import {
   getAliasesFromMetadata,
+  getFrontmatterEndOffset,
   normalizeExactMatchContent,
   removeBase64Images,
 } from '../tools/utils'
@@ -110,6 +111,34 @@ describe('Utils', () => {
       expect(normalizeExactMatchContent('A *Crème* _brûlée_')).toBe(
         'a creme brulee'
       )
+    })
+  })
+
+  describe('getFrontmatterEndOffset', () => {
+    it('returns 0 when there is no frontmatter', () => {
+      expect(getFrontmatterEndOffset('# Title\nbody')).toBe(0)
+      expect(getFrontmatterEndOffset('')).toBe(0)
+    })
+    it('returns 0 when the opening fence is not on the first line', () => {
+      expect(getFrontmatterEndOffset('\n---\na: 1\n---\nbody')).toBe(0)
+    })
+    it('returns the offset of the first body character', () => {
+      const fm = '---\nsource: "[[Folder/Note.pdf]]"\ntitle: Note\n---\n'
+      expect(getFrontmatterEndOffset(fm + 'body text')).toBe(fm.length)
+    })
+    it('handles CRLF line endings', () => {
+      const fm = '---\r\na: 1\r\n---\r\n'
+      expect(getFrontmatterEndOffset(fm + 'body')).toBe(fm.length)
+    })
+    it('treats an unterminated fence as no frontmatter', () => {
+      expect(getFrontmatterEndOffset('---\na: 1\nbody')).toBe(0)
+    })
+    it('accepts an empty frontmatter block', () => {
+      expect(getFrontmatterEndOffset('---\n---\nbody')).toBe(8)
+    })
+    it('handles a file that is only frontmatter', () => {
+      const fm = '---\na: 1\n---'
+      expect(getFrontmatterEndOffset(fm)).toBe(fm.length)
     })
   })
 })

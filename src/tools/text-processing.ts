@@ -1,5 +1,5 @@
 import { excerptAfter, excerptBefore, type SearchMatch } from '../globals'
-import { removeDiacritics, warnVerbose } from './utils'
+import { getFrontmatterEndOffset, removeDiacritics, warnVerbose } from './utils'
 import type { Query } from '../search/query'
 import { Notice } from 'obsidian'
 import { escapeRegExp } from 'es-toolkit'
@@ -147,6 +147,23 @@ export class TextProcessor {
       }
     }
     return matches
+  }
+
+  /**
+   * Picks the match offset the excerpt should be centered on.
+   * When `excerptSkipFrontmatter` is enabled, matches inside the YAML
+   * frontmatter are only used when the body has no match at all — otherwise
+   * notes whose frontmatter repeats the file path or title (e.g. a `source:`
+   * property) would always show frontmatter instead of body text.
+   * @returns the chosen offset, or -1 when there is no match
+   */
+  public getExcerptOffset(content: string, matches: SearchMatch[]): number {
+    if (!matches.length) return -1
+    if (!this.plugin.settings.excerptSkipFrontmatter) return matches[0].offset
+    const bodyStart = getFrontmatterEndOffset(content)
+    if (bodyStart === 0) return matches[0].offset
+    const bodyMatch = matches.find(m => m.offset >= bodyStart)
+    return bodyMatch ? bodyMatch.offset : matches[0].offset
   }
 
   public makeExcerpt(content: string, offset: number): string {

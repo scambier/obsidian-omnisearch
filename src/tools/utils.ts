@@ -87,6 +87,18 @@ export function removeBase64Images(text: string): string {
   return text.replace(/data:[^;)]*;base64,[A-Za-z0-9+/=_-]*/g, '')
 }
 
+/**
+ * Returns the offset of the first character after the YAML frontmatter block,
+ * or 0 if the content has no frontmatter. Works on raw content so it can be
+ * used where no CachedMetadata is available (API, cached documents).
+ * Like Obsidian's own parser, the first line that is exactly `---` closes the
+ * block; an empty block (`---\n---`) counts as frontmatter.
+ */
+export function getFrontmatterEndOffset(content: string): number {
+  const match = /^---[ \t]*\r?\n(?:[\s\S]*?\r?\n)?---[ \t]*(?:\r?\n|$)/.exec(content)
+  return match ? match[0].length : 0
+}
+
 export function normalizeExactMatchContent(text: string): string {
   return stripMarkdownCharacters(removeDiacritics(text)).toLowerCase()
 }
