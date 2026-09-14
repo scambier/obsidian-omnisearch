@@ -196,7 +196,10 @@
     newLeaf = false
   ) {
     saveCurrentQuery()
-    const offset = note.matches?.[0]?.offset ?? 0
+    // A null offset opens the note without moving the cursor to the match
+    const offset = plugin.settings.scrollToMatch
+      ? (note.matches?.[0]?.offset ?? 0)
+      : null
     openNote(plugin, note, offset, newPane, newLeaf)
   }
 

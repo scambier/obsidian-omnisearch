@@ -142,6 +142,7 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
     showCreateButton: false,
     highlight: true,
     showPreviousQueryResults: true,
+    scrollToMatch: true,
     simpleSearch: false,
     tokenizeUrls: false,
     fuzziness: '1',
