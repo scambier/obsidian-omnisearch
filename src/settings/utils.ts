@@ -94,6 +94,8 @@ export interface OmnisearchSettings extends WeightingSettings {
   showCreateButton: boolean
   /** Re-execute the last query when opening Omnisearch */
   showPreviousQueryResults: boolean
+  /** Move the cursor to the first match when opening a note from the Vault Search modal */
+  scrollToMatch: boolean
   /** Key for the welcome message when Obsidian is updated. A message is only shown once. */
   welcomeMessage: string
   /** If a query returns 0 result, try again with more relax conditions */
