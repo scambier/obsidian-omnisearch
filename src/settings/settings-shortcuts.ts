@@ -22,9 +22,10 @@ export function injectSettingsShortcuts(
   new Setting(containerEl)
     .setName('Customize keyboard shortcuts')
     .setDesc(
-      'These shortcuts are active while the Omnisearch search menu is open. ' +
-        'Click the + button to record a new shortcut, click an existing shortcut to replace ' +
-        'it, or click the × to remove it. Press Esc while recording to cancel.'
+      'These shortcuts are available ONLY while the Omnisearch search menu is open; ' +
+        'outside of the search menu they do nothing. Click the + button to record a new ' +
+        'shortcut, click an existing shortcut to replace it, or click the × to remove it. ' +
+        'Press Esc while recording to cancel.'
     )
     .addButton(button =>
       button

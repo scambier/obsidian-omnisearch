@@ -42,6 +42,7 @@ You can check the [CHANGELOG](./CHANGELOG.md) for more information on the differ
   - The relevance of a document against a query depends on the number of times the query terms appear in the document,
     its filename, and its headings
 - Keyboard first: you never have to use your mouse
+- Fully customizable keyboard shortcuts for the search menu
 - Workflow similar to the "Quick Switcher" core plugin
 - Opt-in local HTTP server to query Omnisearch from outside of Obsidian
 - Resistance to typos
@@ -65,6 +66,38 @@ _Submit a PR to add your own project!_
 - [Userscripts](https://publish.obsidian.md/omnisearch/Inject+Omnisearch+results+into+your+search+engine) to inject Omnisearch into your favorite web search engine
 - [obsidian-mcp-server](https://github.com/cyanheads/obsidian-mcp-server), an MCP server that auto-detects Omnisearch and exposes it as a BM25-ranked search mode for AI agents accessing your vault
 - [Silversearch](https://github.com/MrMugame/silversearch) is a fork of Omnisearch for [Silverbullet](https://silverbullet.md/).
+
+## Settings
+
+### Keyboard shortcuts
+
+Every shortcut used while the search menu is open can be rebound in **Settings → Omnisearch → Keyboard shortcuts**. The editor mirrors Obsidian's own Hotkeys UI: click `+` to record a new combination, click an existing shortcut to replace it, click `×` to remove it, and press Esc to cancel. A "Reset to defaults" button restores the original keybindings.
+
+While the search menu is open, Omnisearch's shortcuts take priority over Obsidian's and other plugins' hotkeys for the same keys.
+
+The shortcuts are stored in the `shortcuts` setting, a map of shortcut id to hotkey list. The defaults are:
+
+| Shortcut | Default key |
+| --- | --- |
+| Open result in current pane | Enter |
+| Open result in new pane | Mod + Enter |
+| Open result in new split | Mod + Alt + Enter |
+| Open result in background | Mod + O |
+| Create note | Shift + Enter |
+| Create note in new pane | Mod + Shift + Enter |
+| Insert link to result | Alt + Enter |
+| Switch context (vault / in-file search) | Tab |
+| Toggle excerpts | Mod + G |
+| Previous search history | Alt + ArrowUp |
+| Next search history | Alt + ArrowDown |
+| Navigate up | ArrowUp |
+| Navigate down | ArrowDown |
+| Navigate up (Vim style) | Mod + K, Mod + P |
+| Navigate down (Vim style) | Mod + J, Mod + N |
+
+`Mod` is Ctrl on Windows/Linux and Cmd on macOS. The Vim-style navigation shortcuts only apply when "Set Vim like navigation keys" is enabled.
+
+Middle-clicking a result opens it in a new tab and closes the search menu. Ctrl/Cmd + middle-click opens it in the background and keeps the search menu open.
 
 ## LICENSE
 
