@@ -2,12 +2,14 @@
 import { App, Plugin, PluginSettingTab, Setting } from 'obsidian'
 import { writable } from 'svelte/store'
 import { K_DISABLE_OMNISEARCH, RecencyCutoff } from '../globals'
+import { defaultShortcuts } from '../shortcuts'
 import type OmnisearchPlugin from '../main'
 import { enableVerboseLogging } from '../tools/utils'
 import { injectSettingsBehavior } from './settings-behavior'
 import { injectSettingsDanger } from './settings-danger'
 import { injectSettingsHttp } from './settings-http'
 import { injectSettingsIndexing } from './settings-indexing'
+import { injectSettingsShortcuts } from './settings-shortcuts'
 import { injectSettingsUserInterface } from './settings-ui'
 import { injectSettingsWeighting } from './settings-weighting'
 import { type OmnisearchSettings, saveSettings } from './utils'
@@ -78,6 +80,8 @@ export class SettingsTab extends PluginSettingTab {
     injectSettingsIndexing(this.plugin, settings, containerEl)
     containerEl.createEl('hr')
     injectSettingsBehavior(this.plugin, settings, containerEl)
+    containerEl.createEl('hr')
+    injectSettingsShortcuts(this.plugin, settings, containerEl)
     containerEl.createEl('hr')
     injectSettingsUserInterface(this.plugin, settings, containerEl)
     containerEl.createEl('hr')
@@ -159,6 +163,7 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
 
     welcomeMessage: '',
     verboseLogging: false,
+    shortcuts: defaultShortcuts(),
 
     DANGER_httpHost: null,
     DANGER_forceSaveCache: false,

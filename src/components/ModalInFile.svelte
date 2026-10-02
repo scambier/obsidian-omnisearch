@@ -142,6 +142,12 @@
     }
   }
 
+  function openSelectionInBackground(): void {
+    if (!note) return
+    const offset = groupedOffsets[selectedIndex] ?? 0
+    void openNote(plugin, note, offset, true)
+  }
+
   function switchToVaultModal(): void {
     new OmnisearchVaultModal(plugin, searchQuery ?? previousQuery).open()
     modal.close()
@@ -176,7 +182,15 @@
           openSelection(true)
         }}
         on:auxclick={evt => {
-          if (evt.button == 1) openSelection(true)
+          if (evt.button == 1) {
+            evt.preventDefault()
+            evt.stopPropagation()
+            if (isModKeyPressed(evt)) {
+              openSelectionInBackground()
+            } else {
+              openSelection(true)
+            }
+          }
         }} />
     {/each}
   {:else}

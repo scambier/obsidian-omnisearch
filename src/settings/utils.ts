@@ -1,4 +1,4 @@
-import { App, Platform, Plugin } from 'obsidian'
+import { App, type Hotkey, Platform, Plugin } from 'obsidian'
 import { settings } from '.'
 import { K_DISABLE_OMNISEARCH, RecencyCutoff } from '../globals'
 
@@ -101,6 +101,8 @@ export interface OmnisearchSettings extends WeightingSettings {
   splitCamelCase: boolean
   verboseLogging: boolean
   vimLikeNavigationShortcut: boolean
+  /** Custom keyboard shortcuts for the search menu, keyed by shortcut id */
+  shortcuts: Record<string, Hotkey[]>
   fuzziness: '0' | '1' | '2'
   httpApiEnabled: boolean
   httpApiPort: string
