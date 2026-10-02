@@ -97,7 +97,7 @@ The shortcuts are stored in the `shortcuts` setting, a map of shortcut id to hot
 
 `Mod` is Ctrl on Windows/Linux and Cmd on macOS. The Vim-style navigation shortcuts only apply when "Set Vim like navigation keys" is enabled.
 
-Middle-clicking a result opens it in a new tab and closes the search menu. Ctrl/Cmd + middle-click opens it in the background and keeps the search menu open.
+Middle-clicking a result opens it in the background and keeps the search menu open.
 
 ## LICENSE
 

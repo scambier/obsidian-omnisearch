@@ -344,11 +344,7 @@
           if (evt.button == 1) {
             evt.preventDefault()
             evt.stopPropagation()
-            if (isModKeyPressed(evt)) {
-              openNoteInBackground()
-            } else {
-              openNoteInNewPane()
-            }
+            openNoteInBackground()
           }
         }} />
     </LazyLoader>

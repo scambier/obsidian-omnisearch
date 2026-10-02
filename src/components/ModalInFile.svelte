@@ -185,11 +185,7 @@
           if (evt.button == 1) {
             evt.preventDefault()
             evt.stopPropagation()
-            if (isModKeyPressed(evt)) {
-              openSelectionInBackground()
-            } else {
-              openSelection(true)
-            }
+            openSelectionInBackground()
           }
         }} />
     {/each}
