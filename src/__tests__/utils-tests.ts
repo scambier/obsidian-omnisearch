@@ -161,6 +161,9 @@ describe('Utils', () => {
       expect(isFileExcalidraw('Drawing.EXCALIDRAW')).toBe(true)
       expect(isFileFromDataloom('Table.LOOM')).toBe(true)
     })
+    it('should recognize .bmp files as images', () => {
+      expect(isFileImage('Scans/page.bmp')).toBe(true)
+    })
     it('should only look at the extension', () => {
       expect(isFileImage('JPG/notes.md')).toBe(false)
       expect(isFilePDF('PDF/notes.md')).toBe(false)

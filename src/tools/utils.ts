@@ -198,7 +198,8 @@ export function isFileImage(path: string): boolean {
     ext === 'jpg' ||
     ext === 'jpeg' ||
     ext === 'webp' ||
-    ext === 'gif'
+    ext === 'gif' ||
+    ext === 'bmp'
   )
 }
 
