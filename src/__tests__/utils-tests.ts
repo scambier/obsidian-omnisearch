@@ -3,6 +3,13 @@ import type { CachedMetadata } from 'obsidian'
 import {
   getAliasesFromMetadata,
   getFrontmatterEndOffset,
+  isFileBase,
+  isFileCanvas,
+  isFileExcalidraw,
+  isFileFromDataloom,
+  isFileImage,
+  isFileOffice,
+  isFilePDF,
   normalizeExactMatchContent,
   removeBase64Images,
 } from '../tools/utils'
@@ -139,6 +146,25 @@ describe('Utils', () => {
     it('handles a file that is only frontmatter', () => {
       const fm = '---\na: 1\n---'
       expect(getFrontmatterEndOffset(fm)).toBe(fm.length)
+    })
+  })
+
+  describe('file type helpers', () => {
+    it('should recognize file types regardless of the extension case', () => {
+      expect(isFileImage('Photos/IMG_0001.JPG')).toBe(true)
+      expect(isFileImage('Screenshot.Png')).toBe(true)
+      expect(isFilePDF('Scans/Invoice.PDF')).toBe(true)
+      expect(isFileOffice('Report.DOCX')).toBe(true)
+      expect(isFileOffice('Budget.Xlsx')).toBe(true)
+      expect(isFileCanvas('Board.CANVAS')).toBe(true)
+      expect(isFileBase('Tasks.BASE')).toBe(true)
+      expect(isFileExcalidraw('Drawing.EXCALIDRAW')).toBe(true)
+      expect(isFileFromDataloom('Table.LOOM')).toBe(true)
+    })
+    it('should only look at the extension', () => {
+      expect(isFileImage('JPG/notes.md')).toBe(false)
+      expect(isFilePDF('PDF/notes.md')).toBe(false)
+      expect(isFileCanvas('Canvas/notes.md')).toBe(false)
     })
   })
 })

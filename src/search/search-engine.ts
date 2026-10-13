@@ -221,7 +221,8 @@ export class SearchEngine {
     if (query.query.ext?.length) {
       results = results.filter(r => {
         // ".can" should match ".canvas"
-        const ext = '.' + r.id.split('.').pop()
+        // The query is lowercased, so ".jpg" must also match ".JPG"
+        const ext = ('.' + (r.id as string).split('.').pop()).toLowerCase()
         return query.query.ext?.some(e =>
           ext.startsWith(e.startsWith('.') ? e : '.' + e)
         )

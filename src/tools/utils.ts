@@ -187,8 +187,12 @@ export function isModKeyPressed(
   return Platform.isMacOS ? evt.metaKey : evt.ctrlKey
 }
 
+// Extensions are compared in lowercase, so that files like "IMG_0001.JPG" or
+// "Scan.PDF" are recognized. `getExtension()` keeps the original case, since
+// it is also used for display.
+// https://github.com/scambier/obsidian-omnisearch/issues/541
 export function isFileImage(path: string): boolean {
-  const ext = getExtension(path)
+  const ext = getExtension(path).toLowerCase()
   return (
     ext === 'png' ||
     ext === 'jpg' ||
@@ -199,28 +203,28 @@ export function isFileImage(path: string): boolean {
 }
 
 export function isFilePDF(path: string): boolean {
-  return getExtension(path) === 'pdf'
+  return getExtension(path).toLowerCase() === 'pdf'
 }
 
 export function isFileOffice(path: string): boolean {
-  const ext = getExtension(path)
+  const ext = getExtension(path).toLowerCase()
   return ext === 'docx' || ext === 'xlsx'
 }
 
 export function isFileCanvas(path: string): boolean {
-  return path.endsWith('.canvas')
+  return path.toLowerCase().endsWith('.canvas')
 }
 
 export function isFileBase(path: string): boolean {
-  return path.endsWith('.base')
+  return path.toLowerCase().endsWith('.base')
 }
 
 export function isFileExcalidraw(path: string): boolean {
-  return path.endsWith('.excalidraw')
+  return path.toLowerCase().endsWith('.excalidraw')
 }
 
 export function isFileFromDataloom(path: string): boolean {
-  return path.endsWith('.loom')
+  return path.toLowerCase().endsWith('.loom')
 }
 
 export function getExtension(path: string): string {
