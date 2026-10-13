@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { CachedMetadata } from 'obsidian'
 import {
   getAliasesFromMetadata,
+  getExtension,
   getFrontmatterEndOffset,
   isFileBase,
   isFileCanvas,
@@ -146,6 +147,17 @@ describe('Utils', () => {
     it('handles a file that is only frontmatter', () => {
       const fm = '---\na: 1\n---'
       expect(getFrontmatterEndOffset(fm)).toBe(fm.length)
+    })
+  })
+
+  describe('getExtension', () => {
+    it('should return the extension in lowercase', () => {
+      expect(getExtension('README.MD')).toBe('md')
+      expect(getExtension('Photos/IMG_0001.JPG')).toBe('jpg')
+      expect(getExtension('notes.md')).toBe('md')
+    })
+    it('should only return the last extension', () => {
+      expect(getExtension('Drawing.Excalidraw.MD')).toBe('md')
     })
   })
 

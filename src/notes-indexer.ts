@@ -3,6 +3,7 @@ import type OmnisearchPlugin from './main'
 import { removeAnchors } from './tools/notes'
 import type { IndexedDocument } from './globals'
 import {
+  getExtension,
   isFileCanvas,
   isFileBase,
   isFileFromDataloom,
@@ -134,12 +135,9 @@ export class NotesIndexer {
   }
 
   public isFilePlaintext(path: string): boolean {
-    // Compare in lowercase, so that "README.MD" is indexed,
-    // and "TXT" in the settings also matches "notes.txt"
-    const lowercasePath = path.toLowerCase()
     return (
-      [...this.plugin.settings.indexedFileTypes, 'md'].some(t =>
-        lowercasePath.endsWith(`.${t.toLowerCase()}`)
+      [...this.plugin.settings.indexedFileTypes, 'md'].some(
+        t => getExtension(path) === t.toLowerCase()
       ) ||
       (this.plugin.settings.indexFilesWithoutExtension && !path.includes('.'))
     )
