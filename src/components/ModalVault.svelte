@@ -15,7 +15,6 @@
   import {
     getCtrlKeyLabel,
     getAltKeyLabel,
-    getExtension,
     isFilePDF,
     isModKeyPressed,
     loopIndex,
@@ -245,9 +244,10 @@
     } else {
       const maybeDisplayTitle =
         selectedNote.displayTitle === '' ? '' : `|${selectedNote.displayTitle}`
-      link = `[[${selectedNote.basename}.${getExtension(
-        selectedNote.path
-      )}${maybeDisplayTitle}]]`
+      // Keep the extension's case (getExtension() lowercases it),
+      // so that the link matches the file name
+      const extension = selectedNote.path.split('.').pop()
+      link = `[[${selectedNote.basename}.${extension}${maybeDisplayTitle}]]`
     }
 
     // Inject link

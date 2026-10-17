@@ -194,7 +194,8 @@ export function isFileImage(path: string): boolean {
     ext === 'jpg' ||
     ext === 'jpeg' ||
     ext === 'webp' ||
-    ext === 'gif'
+    ext === 'gif' ||
+    ext === 'bmp'
   )
 }
 
@@ -208,24 +209,24 @@ export function isFileOffice(path: string): boolean {
 }
 
 export function isFileCanvas(path: string): boolean {
-  return path.endsWith('.canvas')
+  return getExtension(path) === 'canvas'
 }
 
 export function isFileBase(path: string): boolean {
-  return path.endsWith('.base')
+  return getExtension(path) === 'base'
 }
 
 export function isFileExcalidraw(path: string): boolean {
-  return path.endsWith('.excalidraw')
+  return getExtension(path) === 'excalidraw'
 }
 
 export function isFileFromDataloom(path: string): boolean {
-  return path.endsWith('.loom')
+  return getExtension(path) === 'loom'
 }
 
 export function getExtension(path: string): string {
   const split = path.split('.')
-  return split[split.length - 1] ?? ''
+  return split[split.length - 1]?.toLowerCase() ?? ''
 }
 
 export function chunkArray<T>(arr: T[], len: number): T[][] {

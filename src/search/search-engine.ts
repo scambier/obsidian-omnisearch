@@ -13,6 +13,7 @@ import {
 import {
   chunkArray,
   countError,
+  getExtension,
   logVerbose,
   normalizeExactMatchContent,
   removeDiacritics,
@@ -221,7 +222,7 @@ export class SearchEngine {
     if (query.query.ext?.length) {
       results = results.filter(r => {
         // ".can" should match ".canvas"
-        const ext = '.' + r.id.split('.').pop()
+        const ext = '.' + getExtension(r.id as string)
         return query.query.ext?.some(e =>
           ext.startsWith(e.startsWith('.') ? e : '.' + e)
         )
