@@ -53,6 +53,11 @@ export class Query {
     this.query.ext = [...new Set([...ext, ...(this.query.ext ?? [])])]
     // and remove them from the text field
     this.query.text = this.query.text.filter(o => !o.startsWith('.'))
+    // A pasted filename like "My note.md" should still match its basename,
+    // so drop a trailing .md from each word (a bare ".md" was already handled above)
+    this.query.text = this.query.text
+      .map(o => o.replace(/\.md$/i, ''))
+      .filter(o => o.length)
 
     // Get strings in quotes, and remove the quotes
     this.#inQuotes =
