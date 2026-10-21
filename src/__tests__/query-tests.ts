@@ -50,4 +50,16 @@ describe('The Query class', () => {
       expect(query.getExactTerms()).toEqual(['lorem ipsum', 'sit amet'])
     })
   })
+
+  it('should strip a trailing .md so a full filename matches', () => {
+    // Act
+    const query = new Query('My note.md .md', {
+      ignoreDiacritics: true,
+      ignoreArabicDiacritics: true,
+    })
+
+    // Assert
+    expect(query.query.text).toEqual(['my', 'note'])
+    expect(query.query.ext).toContain('md')
+  })
 })
