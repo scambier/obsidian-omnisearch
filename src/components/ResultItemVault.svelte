@@ -13,7 +13,7 @@
   import ResultItemContainer from './ResultItemContainer.svelte'
   import type OmnisearchPlugin from '../main'
   import { setIcon, TFile } from 'obsidian'
-  import { onMount } from 'svelte'
+  import { onDestroy, onMount } from 'svelte'
   import type { SearchMatch } from '../globals'
 
   // Import icon utility functions
@@ -42,6 +42,7 @@
   // Lazy-computed body matches for offscreen results
   // Pre-computed for first 10 visible results, deferred for the rest
   let lazyMatches: SearchMatch[] = []
+  let lazyMatchesTimeout: ReturnType<typeof setTimeout> | undefined
 
   // Initialize icon data and icon packs once when the component mounts
   onMount(async () => {
@@ -134,18 +135,27 @@
 
   // Compute body matches lazily for offscreen results
   $: {
+    // Drop any pending scan for a previous note
+    clearTimeout(lazyMatchesTimeout)
+    lazyMatches = []
+
     if (note.matches.length > 0) {
       lazyMatches = note.matches
     } else if (note.foundWords.length > 0 && note.content) {
       // Defer heavy regex to avoid blocking first paint
-      setTimeout(() => {
+      const currentNote = note
+      lazyMatchesTimeout = setTimeout(() => {
         lazyMatches = plugin.textProcessor.getMatches(
-          note.content,
-          note.foundWords
+          currentNote.content,
+          currentNote.foundWords
         )
       }, 0)
     }
   }
+
+  onDestroy(() => {
+    clearTimeout(lazyMatchesTimeout)
+  })
 
   $: cleanedContent = plugin.textProcessor.makeExcerpt(
     note.content,
