@@ -1,6 +1,6 @@
 import { EventBus } from './tools/event-bus'
 import { writable } from 'svelte/store'
-import type { TFile } from 'obsidian'
+import type { App, TFile } from 'obsidian'
 
 export const regexLineSplit = /\r?\n|\r|((\.|\?|!)( |\r?\n|\r))/g
 export const regexYaml = /^---\s*\n(.*?)\n?^---\s?/ms
@@ -108,6 +108,29 @@ export type TextExtractorApi = {
 export type AIImageAnalyzerAPI = {
   analyzeImage: (file: TFile) => Promise<string>
   canBeAnalyzed: (file: TFile) => boolean
+}
+
+export type ChsSegmenter = {
+  cut: (word: string, options: { search: boolean }) => string[]
+}
+
+export type AppWithPlugins = App & {
+  plugins?: {
+    plugins?: Record<string, unknown>
+    getPlugin?: (id: string) => unknown
+  }
+}
+
+/**
+ * Helper function to help satisfy eslint when querying `app.plugins`
+ */
+export function getCommunityPlugin<T = unknown>(
+  app: App,
+  id: string
+): T | undefined {
+  const registry = (app as AppWithPlugins).plugins
+  const plugin = registry?.plugins?.[id] ?? registry?.getPlugin?.(id)
+  return plugin as T | undefined
 }
 
 export const SEPARATORS =

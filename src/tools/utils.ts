@@ -270,11 +270,11 @@ export function splitHyphens(text: string): string[] {
   return text.split('-').filter(t => t)
 }
 
-export function logVerbose(...args: any[]): void {
+export function logVerbose(...args: unknown[]): void {
   printVerbose(console.debug, ...args)
 }
 
-export function warnVerbose(...args: any[]): void {
+export function warnVerbose(...args: unknown[]): void {
   printVerbose(console.warn, ...args)
 }
 
@@ -283,7 +283,10 @@ export function enableVerboseLogging(enable: boolean): void {
   verboseLoggingEnabled = enable
 }
 
-function printVerbose(fn: (...args: any[]) => any, ...args: any[]): void {
+function printVerbose(
+  fn: (...args: unknown[]) => void,
+  ...args: unknown[]
+): void {
   if (verboseLoggingEnabled) {
     fn(...args)
   }

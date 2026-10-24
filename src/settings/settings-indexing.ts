@@ -115,7 +115,8 @@ export function injectSettingsIndexing(
         .setValue(settings.unsupportedFilesIndexing)
         .onChange(async v => {
           await clearCacheDebounced()
-          ;(settings.unsupportedFilesIndexing as any) = v
+          settings.unsupportedFilesIndexing =
+            v as OmnisearchSettings['unsupportedFilesIndexing']
           await saveSettings(plugin)
         })
     })

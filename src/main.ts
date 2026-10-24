@@ -23,10 +23,12 @@ import { isPluginDisabled } from './settings/utils'
 import {
   eventBus,
   EventNames,
+  getCommunityPlugin,
   indexingStep,
   IndexingStepType,
-  type TextExtractorApi,
   type AIImageAnalyzerAPI,
+  type ChsSegmenter,
+  type TextExtractorApi,
 } from './globals'
 import { notifyOnIndexed, registerAPI } from './tools/api'
 import { Database } from './database'
@@ -37,10 +39,10 @@ import { NotesIndexer } from './notes-indexer'
 import { TextProcessor } from './tools/text-processing'
 import { EmbedsRepository } from './repositories/embeds-repository'
 import { SearchHistory } from './search/search-history'
+import type { OmnisearchServer } from './tools/api-server'
 
 export default class OmnisearchPlugin extends Plugin {
-  // FIXME: fix the type
-  public apiHttpServer: null | any = null
+  public apiHttpServer: null | OmnisearchServer = null
   public settings: OmnisearchSettings = getDefaultSettings(this.app)
 
   public readonly documentsRepository: DocumentsRepository
@@ -53,7 +55,7 @@ export default class OmnisearchPlugin extends Plugin {
   public readonly searchHistory = new SearchHistory(this)
 
   private ribbonButton?: HTMLElement
-  private refreshIndexCallback?: (ev: FocusEvent) => any
+  private refreshIndexCallback?: (ev: FocusEvent) => void
 
   constructor(app: App, manifest: PluginManifest) {
     super(app, manifest)
@@ -164,10 +166,10 @@ export default class OmnisearchPlugin extends Plugin {
         })
       )
 
-      this.refreshIndexCallback = this.notesIndexer.refreshIndex.bind(
-        this.notesIndexer
-      )
-      addEventListener('blur', this.refreshIndexCallback!)
+      this.refreshIndexCallback = () => {
+        this.notesIndexer.refreshIndex().catch(e => console.error(e))
+      }
+      addEventListener('blur', this.refreshIndexCallback)
 
       await this.executeFirstLaunchTasks()
       await this.populateIndex()
@@ -222,8 +224,8 @@ export default class OmnisearchPlugin extends Plugin {
    * Plugin dependency - Chs Patch for Chinese word segmentation
    * @returns
    */
-  public getChsSegmenter(): any | undefined {
-    return (this.app as any).plugins?.plugins?.['cm-chs-patch']
+  public getChsSegmenter(): ChsSegmenter | undefined {
+    return getCommunityPlugin<ChsSegmenter>(this.app, 'cm-chs-patch')
   }
 
   /**
@@ -231,7 +233,10 @@ export default class OmnisearchPlugin extends Plugin {
    * @returns
    */
   public getTextExtractor(): TextExtractorApi | undefined {
-    return (this.app as any).plugins?.plugins?.['text-extractor']?.api
+    return getCommunityPlugin<{ api?: TextExtractorApi }>(
+      this.app,
+      'text-extractor'
+    )?.api
   }
 
   /**
@@ -239,7 +244,10 @@ export default class OmnisearchPlugin extends Plugin {
    * @returns
    */
   public getAIImageAnalyzer(): AIImageAnalyzerAPI | undefined {
-    return (this.app as any).plugins?.plugins?.['ai-image-analyzer']?.api
+    return getCommunityPlugin<{ api?: AIImageAnalyzerAPI }>(
+      this.app,
+      'ai-image-analyzer'
+    )?.api
   }
 
   private async populateIndex(): Promise<void> {

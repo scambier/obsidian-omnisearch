@@ -95,7 +95,7 @@ export class Tokenizer {
   }
 
   private tokenizeChsWord(tokens: string[]): string[] {
-    const segmenter = this.plugin.getChsSegmenter() as { cut: (word: string, options: { search: boolean }) => string[] }
+    const segmenter = this.plugin.getChsSegmenter()
     if (!segmenter) return tokens
     return tokens.flatMap(word =>
       chsRegex.test(word) ? segmenter.cut(word, { search: true }) : [word]

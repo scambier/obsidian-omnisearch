@@ -1,4 +1,4 @@
-import type { ResultNote } from '../globals'
+import type { AppWithPlugins, ResultNote } from '../globals'
 import { Query } from '../search/query'
 import type OmnisearchPlugin from '../main'
 import { OmnisearchVaultModal } from '../components/modals'
@@ -80,7 +80,10 @@ export function registerAPI(plugin: OmnisearchPlugin): void {
   // @ts-ignore
   globalThis['omnisearch'] = api
   // Deprecated
-  ;(plugin.app as any).plugins.plugins.omnisearch.api = api
+  const registry = (plugin.app as AppWithPlugins).plugins?.plugins
+  if (registry?.['omnisearch']) {
+    ;(registry['omnisearch'] as { api?: ReturnType<typeof getApi> }).api = api
+  }
 }
 
 export function getApi(plugin: OmnisearchPlugin) {

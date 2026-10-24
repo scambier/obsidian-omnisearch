@@ -169,10 +169,10 @@ export async function createNote(
     }
     await app.workspace.openLinkText(`${pathPrefix}${name}.md`, '', newLeaf)
   } catch (e) {
-    ;(e as any).message =
-      'OmniSearch - Could not create note: ' + (e as any).message
-    console.error(e)
-    throw e
+    const message = e instanceof Error ? e.message : String(e)
+    const error = new Error('OmniSearch - Could not create note: ' + message)
+    console.error(error)
+    throw error
   }
 }
 

@@ -1,7 +1,14 @@
-export type EventBusCallback = (...args: any[]) => any
+/**
+ * Accepts any callback signature. Using `never[]` for the parameters keeps
+ * arbitrary handlers assignable without resorting to `any`.
+ */
+export type EventBusCallback = (...args: never[]) => unknown
+
+/** Handlers receive the untyped arguments passed to `emit`. */
+type EventBusHandler = (...args: unknown[]) => unknown
 
 export class EventBus {
-  private handlers: Map<string, EventBusCallback> = new Map()
+  private handlers: Map<string, EventBusHandler> = new Map()
   private disabled: string[] = []
 
   /**
@@ -15,7 +22,7 @@ export class EventBus {
     if (context.includes('@') || event.includes('@')) {
       throw new Error('Invalid context/event name - Cannot contain @')
     }
-    this.handlers.set(`${context}@${event}`, callback)
+    this.handlers.set(`${context}@${event}`, callback as EventBusHandler)
   }
 
   /**
@@ -53,7 +60,7 @@ export class EventBus {
     this.disabled = this.disabled.filter(v => v !== context)
   }
 
-  public emit(event: string, ...args: any[]): void {
+  public emit(event: string, ...args: unknown[]): void {
     const entries = [...this.handlers.entries()].filter(
       ([k, _]) => !this.disabled.includes(k.split('@')[0])
     )
