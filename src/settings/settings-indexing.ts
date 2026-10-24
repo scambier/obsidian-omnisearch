@@ -114,7 +114,7 @@ export function injectSettingsIndexing(
         .addOptions({ yes: 'Yes', no: 'No', default: 'Obsidian setting' })
         .setValue(settings.unsupportedFilesIndexing)
         .onChange(async v => {
-          await clearCacheDebounced()
+          clearCacheDebounced()
           settings.unsupportedFilesIndexing =
             v as OmnisearchSettings['unsupportedFilesIndexing']
           await saveSettings(plugin)
@@ -130,7 +130,7 @@ export function injectSettingsIndexing(
     )
     .addText(component => {
       component.setValue(settings.displayTitle).onChange(async v => {
-        await clearCacheDebounced()
+        clearCacheDebounced()
         settings.displayTitle = v
         await saveSettings(plugin)
       })

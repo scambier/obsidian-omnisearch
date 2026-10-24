@@ -64,7 +64,7 @@ describe('SearchEngine', () => {
       // Act
       const results = await searchEngine.search(query, { prefixLength: 1 })
       // Assert
-      expect(results.map(r => r.id as string)).toEqual(['Photos/IMG_0001.JPG'])
+      expect(results.map(r => r.id)).toEqual(['Photos/IMG_0001.JPG'])
     })
   })
 })

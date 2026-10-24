@@ -1,4 +1,4 @@
-import type { MetadataCache, ViewState, Vault } from 'obsidian'
+export {} // treat this file as a module
 
 declare module 'obsidian' {
   interface MetadataCache {

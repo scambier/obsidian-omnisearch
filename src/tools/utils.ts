@@ -72,7 +72,10 @@ export async function filterAsync<T>(
  * @returns
  */
 export function stripMarkdownCharacters(text: string): string {
-  return text.replace(/(\*|_)+(.+?)(\*|_)+/g, (_match, _p1, p2) => p2)
+  return text.replace(
+    /(\*|_)+(.+?)(\*|_)+/g,
+    (_match: string, _p1: string, p2: string) => p2
+  )
 }
 
 /**

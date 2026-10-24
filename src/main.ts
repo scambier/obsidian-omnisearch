@@ -194,7 +194,7 @@ export default class OmnisearchPlugin extends Plugin {
   }
 
   onunload(): void {
-    // @ts-ignore
+    // @ts-expect-error - the global API is defined at runtime in tools/api.ts
     delete globalThis['omnisearch']
 
     if (this.refreshIndexCallback) {
@@ -346,7 +346,9 @@ async function cleanOldCacheFiles(app: App) {
     if (await app.vault.adapter.exists(item)) {
       try {
         await app.vault.adapter.remove(item)
-      } catch (e) {}
+      } catch {
+        // The file is already gone; nothing to do.
+      }
     }
   }
 }

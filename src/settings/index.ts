@@ -24,9 +24,9 @@ export class SettingsTab extends PluginSettingTab {
     super(plugin.app, plugin)
     this.plugin = plugin
 
-    showExcerpt.subscribe(async v => {
+    showExcerpt.subscribe(v => {
       settings.showExcerpt = v
-      await saveSettings(this.plugin)
+      void saveSettings(this.plugin)
     })
   }
 
@@ -185,7 +185,7 @@ export async function loadSettings(
   settings = Object.assign(
     {},
     getDefaultSettings(plugin.app),
-    await plugin.loadData()
+    (await plugin.loadData()) as Partial<OmnisearchSettings> | null
   )
   showExcerpt.set(settings.showExcerpt)
   enableVerboseLogging(settings.verboseLogging)

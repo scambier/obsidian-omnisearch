@@ -1,10 +1,4 @@
-import {
-  type App,
-  type CachedMetadata,
-  MarkdownView,
-  TFile,
-  WorkspaceLeaf,
-} from 'obsidian'
+import { type App, type CachedMetadata, MarkdownView, TFile } from 'obsidian'
 import OmnisearchPlugin from '../main'
 import type { ResultNote } from '../globals'
 
@@ -161,7 +155,7 @@ export async function createNote(
         pathPrefix = (app.workspace.getActiveFile()?.parent?.path ?? '') + '/'
         break
       case 'folder':
-        pathPrefix = app.vault.getConfig('newFileFolderPath') + '/'
+        pathPrefix = (app.vault.getConfig('newFileFolderPath') as string) + '/'
         break
       default: // 'root'
         pathPrefix = ''

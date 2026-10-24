@@ -1,8 +1,4 @@
-import MiniSearch, {
-  type AsPlainObject,
-  type Options,
-  type SearchResult,
-} from 'minisearch'
+import MiniSearch, { type AsPlainObject, type Options } from 'minisearch'
 import {
   RecencyCutoff,
   type DocumentRef,
@@ -23,6 +19,22 @@ import type { Query } from './query'
 import { sortBy } from 'es-toolkit/compat'
 import type OmnisearchPlugin from '../main'
 import { Tokenizer } from './tokenizer'
+
+/**
+ * Minisearch types `SearchResult.id` as `any`, but Omnisearch always uses note
+ * paths (strings) as document ids. Narrow it so that it can be used without
+ * unsafe casts.
+ */
+type SearchResultWithPath = {
+  id: string
+  score: number
+  terms: string[]
+  queryTerms: string[]
+  match: Record<string, string[]>
+  tags?: string[]
+  isEmbed?: boolean
+  [key: string]: unknown
+}
 
 export class SearchEngine {
   private tokenizer: Tokenizer
@@ -148,7 +160,7 @@ export class SearchEngine {
   public async search(
     query: Query,
     options: { prefixLength: number; singleFilePath?: string }
-  ): Promise<SearchResult[]> {
+  ): Promise<SearchResultWithPath[]> {
     const settings = this.plugin.settings
     if (query.isEmpty()) {
       // this.previousResults = []
@@ -174,7 +186,7 @@ export class SearchEngine {
 
     const searchTokens = this.tokenizer.tokenizeForSearch(query.segmentsToStr())
     logVerbose(JSON.stringify(searchTokens, null, 1))
-    let results = this.minisearch.search(searchTokens, {
+    let results: SearchResultWithPath[] = this.minisearch.search(searchTokens, {
       prefix: term => term.length >= options.prefixLength,
       // length <= 3: no fuzziness
       // length <= 5: fuzziness of 10%
@@ -222,7 +234,7 @@ export class SearchEngine {
     if (query.query.ext?.length) {
       results = results.filter(r => {
         // ".can" should match ".canvas"
-        const ext = '.' + getExtension(r.id as string)
+        const ext = '.' + getExtension(r.id)
         return query.query.ext?.some(e =>
           ext.startsWith(e.startsWith('.') ? e : '.' + e)
         )
@@ -234,10 +246,10 @@ export class SearchEngine {
       results = results.filter(r => {
         const rPath = settings.ignoreDiacritics
           ? removeDiacritics(
-              r.id as string,
+              r.id,
               settings.ignoreArabicDiacritics
             ).toLowerCase()
-          : (r.id as string).toLowerCase()
+          : r.id.toLowerCase()
         return query.query.path?.some(p => rPath.includes(p.toLowerCase()))
       })
     }
@@ -245,10 +257,10 @@ export class SearchEngine {
       results = results.filter(r => {
         const rPath = settings.ignoreDiacritics
           ? removeDiacritics(
-              r.id as string,
+              r.id,
               settings.ignoreArabicDiacritics
             ).toLowerCase()
-          : (r.id as string).toLowerCase()
+          : r.id.toLowerCase()
         return !query.query.exclude.path?.some(p =>
           rPath.includes(p.toLowerCase())
         )
@@ -294,7 +306,7 @@ export class SearchEngine {
     const tags = query.getTags()
 
     for (const result of results) {
-      const path = result.id as string
+      const path = result.id
       if (settings.downrankedFoldersFilters.length > 0) {
         // downrank files that are in folders listed in the downrankedFoldersFilters
         let downrankingFolder = false
@@ -441,7 +453,7 @@ export class SearchEngine {
     this.plugin.textProcessor.clearHighlightCache()
 
     // Get the raw results
-    let results: SearchResult[]
+    let results: SearchResultWithPath[]
     if (this.plugin.settings.simpleSearch) {
       results = await this.search(query, {
         prefixLength: 3,
@@ -534,7 +546,7 @@ export class SearchEngine {
         score: result.score,
         foundWords,
         matches,
-        isEmbed: result.isEmbed,
+        isEmbed: result.isEmbed as boolean,
         ...note,
       }
       return resultNote

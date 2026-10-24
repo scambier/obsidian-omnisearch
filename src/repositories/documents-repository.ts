@@ -232,7 +232,8 @@ export class DocumentsRepository {
       displayTitle = metadata?.headings?.find(h => h.level === 1)?.heading ?? ''
     } else {
       displayTitle =
-        metadata?.frontmatter?.[this.plugin.settings.displayTitle] ?? ''
+        (metadata?.frontmatter?.[this.plugin.settings.displayTitle] as
+          string | undefined) ?? ''
     }
     const tags = getTagsFromMetadata(metadata)
     return {

@@ -77,7 +77,7 @@ export function registerAPI(plugin: OmnisearchPlugin): void {
   const api = getApi(plugin)
 
   // Public api
-  // @ts-ignore
+  // @ts-expect-error - the global API is only declared at runtime
   globalThis['omnisearch'] = api
   // Deprecated
   const registry = (plugin.app as AppWithPlugins).plugins?.plugins
@@ -106,6 +106,6 @@ export function getApi(plugin: OmnisearchPlugin) {
     unregisterOnIndexed(cb: () => void): void {
       onIndexedCallbacks = onIndexedCallbacks.filter(o => o !== cb)
     },
-    refreshIndex: plugin.notesIndexer.refreshIndex,
+    refreshIndex: () => plugin.notesIndexer.refreshIndex(),
   }
 }

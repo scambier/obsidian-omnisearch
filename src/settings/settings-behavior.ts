@@ -54,7 +54,7 @@ export function injectSettingsBehavior(
   new Setting(containerEl)
     .setName('Respect Obsidian\'s "Excluded Files"')
     .setDesc(
-      `By default, files that are in Obsidian\'s "Options > Files & Links > Excluded Files" list are downranked in results.
+      `By default, files that are in Obsidian's "Options > Files & Links > Excluded Files" list are downranked in results.
         Enable this option to completely hide them.`
     )
     .addToggle(toggle =>
