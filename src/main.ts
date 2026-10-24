@@ -193,7 +193,7 @@ export default class OmnisearchPlugin extends Plugin {
     await this.saveData(this.settings)
   }
 
-  async onunload(): Promise<void> {
+  onunload(): void {
     // @ts-ignore
     delete globalThis['omnisearch']
 
@@ -203,9 +203,9 @@ export default class OmnisearchPlugin extends Plugin {
 
     // Clear cache when disabling Omnisearch
     if (process.env.NODE_ENV === 'production') {
-      await this.database.clearCache()
+      void this.database.clearCache()
     }
-    this.apiHttpServer.close()
+    this.apiHttpServer?.close()
   }
 
   addRibbonButton(): void {
