@@ -205,7 +205,7 @@ export function isFilePDF(path: string): boolean {
 
 export function isFileOffice(path: string): boolean {
   const ext = getExtension(path)
-  return ext === 'docx' || ext === 'xlsx'
+  return ext === 'docx' || ext === 'pptx' || ext === 'xlsx'
 }
 
 export function isFileCanvas(path: string): boolean {
