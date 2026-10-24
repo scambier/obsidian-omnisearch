@@ -24,9 +24,9 @@ export class SettingsTab extends PluginSettingTab {
     super(plugin.app, plugin)
     this.plugin = plugin
 
-    showExcerpt.subscribe(async v => {
+    showExcerpt.subscribe(v => {
       settings.showExcerpt = v
-      await saveSettings(this.plugin)
+      void saveSettings(this.plugin)
     })
   }
 
@@ -138,9 +138,11 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
     showExcerpt: true,
     maxEmbeds: 5,
     renderLineReturnInExcerpts: true,
+    excerptSkipFrontmatter: true,
     showCreateButton: false,
     highlight: true,
     showPreviousQueryResults: true,
+    scrollToMatch: true,
     simpleSearch: false,
     tokenizeUrls: false,
     fuzziness: '1',
@@ -183,7 +185,7 @@ export async function loadSettings(
   settings = Object.assign(
     {},
     getDefaultSettings(plugin.app),
-    await plugin.loadData()
+    (await plugin.loadData()) as Partial<OmnisearchSettings> | null
   )
   showExcerpt.set(settings.showExcerpt)
   enableVerboseLogging(settings.verboseLogging)

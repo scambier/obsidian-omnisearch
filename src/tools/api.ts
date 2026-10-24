@@ -1,4 +1,4 @@
-import type { ResultNote } from '../globals'
+import type { AppWithPlugins, ResultNote } from '../globals'
 import { Query } from '../search/query'
 import type OmnisearchPlugin from '../main'
 import { OmnisearchVaultModal } from '../components/modals'
@@ -34,7 +34,7 @@ function mapResults(
 
     const excerpt = plugin.textProcessor.makeExcerpt(
       content,
-      matches[0]?.offset ?? -1
+      plugin.textProcessor.getExcerptOffset(content, matches)
     )
 
     const res: ResultNoteApi = {
@@ -77,10 +77,13 @@ export function registerAPI(plugin: OmnisearchPlugin): void {
   const api = getApi(plugin)
 
   // Public api
-  // @ts-ignore
+  // @ts-expect-error - the global API is only declared at runtime
   globalThis['omnisearch'] = api
   // Deprecated
-  ;(plugin.app as any).plugins.plugins.omnisearch.api = api
+  const registry = (plugin.app as AppWithPlugins).plugins?.plugins
+  if (registry?.['omnisearch']) {
+    ;(registry['omnisearch'] as { api?: ReturnType<typeof getApi> }).api = api
+  }
 }
 
 export function getApi(plugin: OmnisearchPlugin) {
@@ -103,6 +106,6 @@ export function getApi(plugin: OmnisearchPlugin) {
     unregisterOnIndexed(cb: () => void): void {
       onIndexedCallbacks = onIndexedCallbacks.filter(o => o !== cb)
     },
-    refreshIndex: plugin.notesIndexer.refreshIndex,
+    refreshIndex: () => plugin.notesIndexer.refreshIndex(),
   }
 }

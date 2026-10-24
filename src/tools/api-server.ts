@@ -5,6 +5,8 @@ import type OmnisearchPlugin from '../main'
 import { getApi } from './api'
 import { logVerbose } from './utils'
 
+export type OmnisearchServer = ReturnType<typeof getServer>
+
 export function getServer(plugin: OmnisearchPlugin) {
   const api = getApi(plugin)
   const server = http.createServer(function (req, res) {
@@ -25,15 +27,17 @@ export function getServer(plugin: OmnisearchPlugin) {
         const parsedUrl = url.parse(req.url, true)
         if (parsedUrl.pathname === '/search') {
           const q = parsedUrl.query.q as string
-          api.search(q).then(results => {
-            res.statusCode = 200
-            res.setHeader('Content-Type', 'application/json')
-            res.end(JSON.stringify(results))
-          })
-          .catch(e => {
-            res.statusCode = 500
-            res.end(e)
-          })
+          api
+            .search(q)
+            .then(results => {
+              res.statusCode = 200
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify(results))
+            })
+            .catch(e => {
+              res.statusCode = 500
+              res.end(e)
+            })
         } else {
           res.end()
         }
@@ -54,10 +58,15 @@ export function getServer(plugin: OmnisearchPlugin) {
         },
         () => {
           console.log(`Omnisearch - Started HTTP server on port ${port}`)
-          if (plugin.settings.DANGER_httpHost && plugin.settings.DANGER_httpHost !== 'localhost') {
-            new Notice(`Omnisearch - Started non-localhost HTTP server at ${plugin.settings.DANGER_httpHost}:${port}`, 120_000)
-          }
-          else if (plugin.settings.httpApiNotice) {
+          if (
+            plugin.settings.DANGER_httpHost &&
+            plugin.settings.DANGER_httpHost !== 'localhost'
+          ) {
+            new Notice(
+              `Omnisearch - Started non-localhost HTTP server at ${plugin.settings.DANGER_httpHost}:${port}`,
+              120_000
+            )
+          } else if (plugin.settings.httpApiNotice) {
             new Notice(`Omnisearch - Started HTTP server on port ${port}`)
           }
         }

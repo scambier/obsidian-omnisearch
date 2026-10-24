@@ -3,10 +3,12 @@ import type OmnisearchPlugin from './main'
 import { removeAnchors } from './tools/notes'
 import type { IndexedDocument } from './globals'
 import {
+  getExtension,
   isFileCanvas,
   isFileBase,
   isFileFromDataloom,
   isFileImage,
+  isFileOffice,
   isFilePDF,
   logVerbose,
 } from './tools/utils'
@@ -72,6 +74,7 @@ export class NotesIndexer {
     const hasAIImageAnalyzer = !!this.plugin.getAIImageAnalyzer()
     const canIndexPDF = hasTextExtractor && settings.PDFIndexing
     const canIndexImages = hasTextExtractor && settings.imagesIndexing
+    const canIndexOfficeDocuments = hasTextExtractor && settings.officeIndexing
     const canIndexImagesAI = hasAIImageAnalyzer && settings.aiImageIndexing
     return (
       this.isFilePlaintext(path) ||
@@ -79,6 +82,7 @@ export class NotesIndexer {
       isFileFromDataloom(path) ||
       (canIndexPDF && isFilePDF(path)) ||
       (canIndexImages && isFileImage(path)) ||
+      (canIndexOfficeDocuments && isFileOffice(path)) ||
       (canIndexImagesAI && isFileImage(path))
     )
   }
@@ -135,8 +139,8 @@ export class NotesIndexer {
 
   public isFilePlaintext(path: string): boolean {
     return (
-      [...this.plugin.settings.indexedFileTypes, 'md'].some(t =>
-        path.endsWith(`.${t}`)
+      [...this.plugin.settings.indexedFileTypes, 'md'].some(
+        t => getExtension(path) === t.toLowerCase()
       ) ||
       (this.plugin.settings.indexFilesWithoutExtension && !path.includes('.'))
     )

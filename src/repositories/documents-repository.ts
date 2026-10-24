@@ -2,7 +2,6 @@ import { normalizePath, TFile } from 'obsidian'
 import type { CanvasData } from 'obsidian/canvas'
 import type { IndexedDocument } from '../globals'
 import type OmnisearchPlugin from '../main'
-import { getNonExistingNotes } from '../tools/notes'
 import {
   countError,
   extractHeadingsFromCache,
@@ -28,9 +27,9 @@ export class DocumentsRepository {
 
   constructor(private plugin: OmnisearchPlugin) {
     this.plugin.registerInterval(
-    window.setInterval(() => {
-      if (this.errorsCount > 0) {
-        --this.errorsCount
+      window.setInterval(() => {
+        if (this.errorsCount > 0) {
+          --this.errorsCount
         }
       }, 1000)
     )
@@ -109,10 +108,12 @@ export class DocumentsRepository {
     // Extract the text fields from the json
     else if (isFileCanvas(path)) {
       const fileContents = await app.vault.cachedRead(file)
-      const canvas = fileContents ? JSON.parse(fileContents) as CanvasData : {
-        nodes: [],
-        edges: [],
-      }
+      const canvas = fileContents
+        ? (JSON.parse(fileContents) as CanvasData)
+        : {
+            nodes: [],
+            edges: [],
+          }
       const texts: string[] = []
       // Concatenate text from the canvas fields
       for (const node of canvas.nodes ?? []) {
@@ -135,12 +136,13 @@ export class DocumentsRepository {
         // data is a json object, we recursively iterate the keys
         // and concatenate the values if the key is "markdown"
         const texts: string[] = []
-        const iterate = (obj: any) => {
-          for (const key in obj) {
-            if (typeof obj[key] === 'object') {
-              iterate(obj[key])
-            } else if (key === 'content') {
-              texts.push(obj[key])
+        const iterate = (obj: unknown): void => {
+          if (typeof obj !== 'object' || obj === null) return
+          for (const [key, value] of Object.entries(obj)) {
+            if (typeof value === 'object') {
+              iterate(value)
+            } else if (key === 'content' && typeof value === 'string') {
+              texts.push(value)
             }
           }
         }
@@ -230,7 +232,8 @@ export class DocumentsRepository {
       displayTitle = metadata?.headings?.find(h => h.level === 1)?.heading ?? ''
     } else {
       displayTitle =
-        metadata?.frontmatter?.[this.plugin.settings.displayTitle] ?? ''
+        (metadata?.frontmatter?.[this.plugin.settings.displayTitle] as
+          string | undefined) ?? ''
     }
     const tags = getTagsFromMetadata(metadata)
     return {

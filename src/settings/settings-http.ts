@@ -24,9 +24,9 @@ export function injectSettingsHttp(
         toggle.setValue(settings.httpApiEnabled).onChange(async v => {
           settings.httpApiEnabled = v
           if (v) {
-            plugin.apiHttpServer.listen(settings.httpApiPort)
+            plugin.apiHttpServer?.listen(settings.httpApiPort)
           } else {
-            plugin.apiHttpServer.close()
+            plugin.apiHttpServer?.close()
           }
           await saveSettings(plugin)
         })
@@ -43,8 +43,8 @@ export function injectSettingsHttp(
           }
           settings.httpApiPort = v
           if (settings.httpApiEnabled) {
-            plugin.apiHttpServer.close()
-            plugin.apiHttpServer.listen(settings.httpApiPort)
+            plugin.apiHttpServer?.close()
+            plugin.apiHttpServer?.listen(settings.httpApiPort)
           }
           await saveSettings(plugin)
         })

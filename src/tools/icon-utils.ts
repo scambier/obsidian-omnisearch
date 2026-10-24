@@ -1,5 +1,6 @@
 import { getIcon, normalizePath } from 'obsidian'
 import type OmnisearchPlugin from '../main'
+import { getCommunityPlugin } from '../globals'
 import {
   isFileImage,
   isFilePDF,
@@ -15,14 +16,20 @@ export interface IconPacks {
   iconsPath: string
 }
 
-export async function loadIconData(plugin: OmnisearchPlugin): Promise<any> {
+export type IconDataEntry = string | { iconName?: string }
+export type IconData = Record<string, IconDataEntry>
+
+type IconFolderPlugin = {
+  settings?: { iconPacksPath?: string }
+}
+
+export async function loadIconData(
+  plugin: OmnisearchPlugin
+): Promise<IconData> {
   const app = plugin.app
 
   // Check if the 'obsidian-icon-folder' plugin is installed and enabled
-  // Casting 'app' to 'any' here to avoid TypeScript errors since 'plugins' might not be defined on 'App'
-  const iconFolderPlugin = (app as any).plugins.getPlugin(
-    'obsidian-icon-folder'
-  )
+  const iconFolderPlugin = getCommunityPlugin(app, 'obsidian-icon-folder')
   if (!iconFolderPlugin) {
     return {}
   }
@@ -30,9 +37,12 @@ export async function loadIconData(plugin: OmnisearchPlugin): Promise<any> {
   const dataJsonPath = `${app.vault.configDir}/plugins/obsidian-icon-folder/data.json`
   try {
     const dataJsonContent = await app.vault.adapter.read(dataJsonPath)
-    const rawIconData = JSON.parse(dataJsonContent)
+    const rawIconData = JSON.parse(dataJsonContent) as Record<
+      string,
+      IconDataEntry
+    >
     // Normalize keys
-    const iconData: any = {}
+    const iconData: IconData = {}
     for (const key in rawIconData) {
       const normalizedKey = normalizePath(key)
       iconData[normalizedKey] = rawIconData[key]
@@ -54,7 +64,8 @@ export async function initializeIconPacks(
   const app = plugin.app
 
   // Access the obsidian-icon-folder plugin
-  const iconFolderPlugin = (app as any).plugins.getPlugin(
+  const iconFolderPlugin = getCommunityPlugin<IconFolderPlugin>(
+    app,
     'obsidian-icon-folder'
   )
 
@@ -96,13 +107,19 @@ function createIconPackPrefix(iconPackName: string): string {
   )
 }
 
-export function getIconNameForPath(path: string, iconData: any): string | null {
+export function getIconNameForPath(
+  path: string,
+  iconData: IconData
+): string | null {
   const normalizedPath = normalizePath(path)
   const iconEntry = iconData[normalizedPath]
   if (iconEntry) {
     if (typeof iconEntry === 'string') {
       return iconEntry
-    } else if (typeof iconEntry === 'object' && iconEntry.iconName) {
+    } else if (
+      typeof iconEntry === 'object' &&
+      typeof iconEntry.iconName === 'string'
+    ) {
       return iconEntry.iconName
     }
   }
@@ -184,7 +201,11 @@ export function getDefaultIconSVG(notePath: string): string {
       iconName = 'image'
     } else if (isFilePDF(notePath)) {
       iconName = 'file-text'
-    } else if (isFileCanvas(notePath) || isFileExcalidraw(notePath) || isFileBase(notePath)) {
+    } else if (
+      isFileCanvas(notePath) ||
+      isFileExcalidraw(notePath) ||
+      isFileBase(notePath)
+    ) {
       iconName = 'layout-dashboard'
     }
   }

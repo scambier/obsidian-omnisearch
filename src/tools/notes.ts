@@ -1,10 +1,4 @@
-import {
-  type App,
-  type CachedMetadata,
-  MarkdownView,
-  TFile,
-  WorkspaceLeaf,
-} from 'obsidian'
+import { type App, type CachedMetadata, MarkdownView, TFile } from 'obsidian'
 import OmnisearchPlugin from '../main'
 import type { ResultNote } from '../globals'
 
@@ -30,10 +24,14 @@ function getPdfPageFromOffset(content: string, offset: number): number | null {
   return lastMatch ? parseInt(lastMatch[1], 10) : null
 }
 
+/**
+ * Opens a note, then places the cursor on the match at `offset`.
+ * If `offset` is null, the note is opened without moving the cursor.
+ */
 export async function openNote(
   plugin: OmnisearchPlugin,
   item: ResultNote,
-  offset = 0,
+  offset: number | null = 0,
   newPane = false,
   newLeaf = false
 ): Promise<void> {
@@ -42,7 +40,7 @@ export async function openNote(
   // We should only trigger this behaviour if we know the page number for the result
   // This code runs before the normal implementation because we don't want to trigger activation of an existing pane for this PDF and then open a new one on top
   const isPdf = item.path.toLowerCase().endsWith('.pdf')
-  if (isPdf) {
+  if (isPdf && offset !== null) {
     const pdfPage = isPdf ? getPdfPageFromOffset(item.content, offset) : null
     if (pdfPage !== null) {
       // Obsidian also supports &selection= but this takes page content id references
@@ -78,7 +76,7 @@ export async function openNote(
     // TODO if we knew the view type for PDF could we reuse an existing view?
     let linkPath = item.path
 
-    if (isPdf && offset > 0) {
+    if (isPdf && offset !== null && offset > 0) {
       // If this PDF extract has page headings, use them
       const pageNum = getPdfPageFromOffset(item.content, offset)
 
@@ -105,6 +103,8 @@ export async function openNote(
       )
     }
   }
+
+  if (offset === null) return
 
   const view = app.workspace.getActiveViewOfType(MarkdownView)
   if (!view) {
@@ -155,7 +155,7 @@ export async function createNote(
         pathPrefix = (app.workspace.getActiveFile()?.parent?.path ?? '') + '/'
         break
       case 'folder':
-        pathPrefix = app.vault.getConfig('newFileFolderPath') + '/'
+        pathPrefix = (app.vault.getConfig('newFileFolderPath') as string) + '/'
         break
       default: // 'root'
         pathPrefix = ''
@@ -163,10 +163,10 @@ export async function createNote(
     }
     await app.workspace.openLinkText(`${pathPrefix}${name}.md`, '', newLeaf)
   } catch (e) {
-    ;(e as any).message =
-      'OmniSearch - Could not create note: ' + (e as any).message
-    console.error(e)
-    throw e
+    const message = e instanceof Error ? e.message : String(e)
+    const error = new Error('OmniSearch - Could not create note: ' + message)
+    console.error(error)
+    throw error
   }
 }
 

@@ -15,7 +15,6 @@
   import {
     getCtrlKeyLabel,
     getAltKeyLabel,
-    getExtension,
     isFilePDF,
     isModKeyPressed,
     loopIndex,
@@ -196,7 +195,10 @@
     newLeaf = false
   ) {
     saveCurrentQuery()
-    const offset = note.matches?.[0]?.offset ?? 0
+    // A null offset opens the note without moving the cursor to the match
+    const offset = plugin.settings.scrollToMatch
+      ? (note.matches?.[0]?.offset ?? 0)
+      : null
     openNote(plugin, note, offset, newPane, newLeaf)
   }
 
@@ -242,9 +244,10 @@
     } else {
       const maybeDisplayTitle =
         selectedNote.displayTitle === '' ? '' : `|${selectedNote.displayTitle}`
-      link = `[[${selectedNote.basename}.${getExtension(
-        selectedNote.path
-      )}${maybeDisplayTitle}]]`
+      // Keep the extension's case (getExtension() lowercases it),
+      // so that the link matches the file name
+      const extension = selectedNote.path.split('.').pop()
+      link = `[[${selectedNote.basename}.${extension}${maybeDisplayTitle}]]`
     }
 
     // Inject link

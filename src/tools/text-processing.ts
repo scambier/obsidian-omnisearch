@@ -1,5 +1,5 @@
 import { excerptAfter, excerptBefore, type SearchMatch } from '../globals'
-import { removeDiacritics, warnVerbose } from './utils'
+import { getFrontmatterEndOffset, removeDiacritics, warnVerbose } from './utils'
 import type { Query } from '../search/query'
 import { Notice } from 'obsidian'
 import { escapeRegExp } from 'es-toolkit'
@@ -7,8 +7,29 @@ import type OmnisearchPlugin from '../main'
 
 export class TextProcessor {
   private highlightRegexCache = new Map<string, RegExp>()
+  private readonly diacriticsCache = new Map<string, string>()
+  private static readonly DIACRITICS_CACHE_MAX = 100
 
   constructor(private plugin: OmnisearchPlugin) {}
+
+  private getCachedDiacritics(text: string): string {
+    const cacheKey = `${this.plugin.settings.ignoreArabicDiacritics}:${text}`
+    const cached = this.diacriticsCache.get(cacheKey)
+    if (cached) return cached
+
+    const cleaned = removeDiacritics(
+      text,
+      this.plugin.settings.ignoreArabicDiacritics
+    )
+    this.diacriticsCache.set(cacheKey, cleaned)
+
+    if (this.diacriticsCache.size > TextProcessor.DIACRITICS_CACHE_MAX) {
+      const firstKey = this.diacriticsCache.keys().next().value
+      if (firstKey !== undefined) this.diacriticsCache.delete(firstKey)
+    }
+
+    return cleaned
+  }
 
   /**
    * Clear the highlight regex cache. Call at the start of each search.  
@@ -86,11 +107,11 @@ export class TextProcessor {
     const originalText = text
     // text = text.toLowerCase().replace(new RegExp(SEPARATORS, 'gu'), ' ')
     if (this.plugin.settings.ignoreDiacritics) {
-      text = removeDiacritics(text, this.plugin.settings.ignoreArabicDiacritics)
+      text = this.getCachedDiacritics(text)
     }
     const startTime = new Date().getTime()
-    let match: RegExpExecArray | null = null
-    let matches: SearchMatch[] = []
+    let match: RegExpExecArray | null
+    const matches: SearchMatch[] = []
     let count = 0
     while ((match = reg.exec(text)) !== null) {
       // Avoid infinite loops, stop looking after 100 matches or if we're taking too much time
@@ -126,6 +147,23 @@ export class TextProcessor {
       }
     }
     return matches
+  }
+
+  /**
+   * Picks the match offset the excerpt should be centered on.
+   * When `excerptSkipFrontmatter` is enabled, matches inside the YAML
+   * frontmatter are only used when the body has no match at all — otherwise
+   * notes whose frontmatter repeats the file path or title (e.g. a `source:`
+   * property) would always show frontmatter instead of body text.
+   * @returns the chosen offset, or -1 when there is no match
+   */
+  public getExcerptOffset(content: string, matches: SearchMatch[]): number {
+    if (!matches.length) return -1
+    if (!this.plugin.settings.excerptSkipFrontmatter) return matches[0].offset
+    const bodyStart = getFrontmatterEndOffset(content)
+    if (bodyStart === 0) return matches[0].offset
+    const bodyMatch = matches.find(m => m.offset >= bodyStart)
+    return bodyMatch ? bodyMatch.offset : matches[0].offset
   }
 
   public makeExcerpt(content: string, offset: number): string {

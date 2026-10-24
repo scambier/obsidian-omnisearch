@@ -17,3 +17,7 @@ export function parseFrontMatterAliases(
   }
   return undefined
 }
+
+export class MarkdownView {}
+export class TFile {}
+export class WorkspaceLeaf {}

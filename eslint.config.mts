@@ -6,11 +6,24 @@ import obsidianmd from 'eslint-plugin-obsidianmd'
 
 export default defineConfig([
   {
+    // Generated artifacts are not linted
+    ignores: ['dist/**', 'coverage/**'],
+  },
+  {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts}'],
     plugins: { js },
     extends: ['js/recommended'],
     languageOptions: { globals: globals.browser },
-    ignores: ['dist/**'],
+  },
+  {
+    // Config files are executed by Node, not by Obsidian
+    files: [
+      '.prettierrc.js',
+      'version-bump.mjs',
+      'esbuild.config.mjs',
+      'vitest.config.ts',
+    ],
+    languageOptions: { globals: globals.node },
   },
   {
     files: ['**/*.{ts,mts,cts}'],

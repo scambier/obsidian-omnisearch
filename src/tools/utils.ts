@@ -72,7 +72,10 @@ export async function filterAsync<T>(
  * @returns
  */
 export function stripMarkdownCharacters(text: string): string {
-  return text.replace(/(\*|_)+(.+?)(\*|_)+/g, (_match, _p1, p2) => p2)
+  return text.replace(
+    /(\*|_)+(.+?)(\*|_)+/g,
+    (_match: string, _p1: string, p2: string) => p2
+  )
 }
 
 /**
@@ -85,6 +88,18 @@ export function stripMarkdownCharacters(text: string): string {
  */
 export function removeBase64Images(text: string): string {
   return text.replace(/data:[^;)]*;base64,[A-Za-z0-9+/=_-]*/g, '')
+}
+
+/**
+ * Returns the offset of the first character after the YAML frontmatter block,
+ * or 0 if the content has no frontmatter. Works on raw content so it can be
+ * used where no CachedMetadata is available (API, cached documents).
+ * Like Obsidian's own parser, the first line that is exactly `---` closes the
+ * block; an empty block (`---\n---`) counts as frontmatter.
+ */
+export function getFrontmatterEndOffset(content: string): number {
+  const match = /^---[ \t]*\r?\n(?:[\s\S]*?\r?\n)?---[ \t]*(?:\r?\n|$)/.exec(content)
+  return match ? match[0].length : 0
 }
 
 export function normalizeExactMatchContent(text: string): string {
@@ -182,7 +197,8 @@ export function isFileImage(path: string): boolean {
     ext === 'jpg' ||
     ext === 'jpeg' ||
     ext === 'webp' ||
-    ext === 'gif'
+    ext === 'gif' ||
+    ext === 'bmp'
   )
 }
 
@@ -192,28 +208,28 @@ export function isFilePDF(path: string): boolean {
 
 export function isFileOffice(path: string): boolean {
   const ext = getExtension(path)
-  return ext === 'docx' || ext === 'xlsx'
+  return ext === 'docx' || ext === 'pptx' || ext === 'xlsx'
 }
 
 export function isFileCanvas(path: string): boolean {
-  return path.endsWith('.canvas')
+  return getExtension(path) === 'canvas'
 }
 
 export function isFileBase(path: string): boolean {
-  return path.endsWith('.base')
+  return getExtension(path) === 'base'
 }
 
 export function isFileExcalidraw(path: string): boolean {
-  return path.endsWith('.excalidraw')
+  return getExtension(path) === 'excalidraw'
 }
 
 export function isFileFromDataloom(path: string): boolean {
-  return path.endsWith('.loom')
+  return getExtension(path) === 'loom'
 }
 
 export function getExtension(path: string): string {
   const split = path.split('.')
-  return split[split.length - 1] ?? ''
+  return split[split.length - 1]?.toLowerCase() ?? ''
 }
 
 export function chunkArray<T>(arr: T[], len: number): T[][] {
@@ -257,11 +273,11 @@ export function splitHyphens(text: string): string[] {
   return text.split('-').filter(t => t)
 }
 
-export function logVerbose(...args: any[]): void {
+export function logVerbose(...args: unknown[]): void {
   printVerbose(console.debug, ...args)
 }
 
-export function warnVerbose(...args: any[]): void {
+export function warnVerbose(...args: unknown[]): void {
   printVerbose(console.warn, ...args)
 }
 
@@ -270,7 +286,10 @@ export function enableVerboseLogging(enable: boolean): void {
   verboseLoggingEnabled = enable
 }
 
-function printVerbose(fn: (...args: any[]) => any, ...args: any[]): void {
+function printVerbose(
+  fn: (...args: unknown[]) => void,
+  ...args: unknown[]
+): void {
   if (verboseLoggingEnabled) {
     fn(...args)
   }
