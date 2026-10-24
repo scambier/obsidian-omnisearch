@@ -1,13 +1,13 @@
 import { MarkdownView, Modal, TFile } from 'obsidian'
-import type { Modifier } from 'obsidian'
 import ModalVault from './ModalVault.svelte'
 import ModalInFile from './ModalInFile.svelte'
-import { Action, eventBus, EventNames, isInputComposition } from '../globals'
+import { eventBus, isInputComposition } from '../globals'
+import { getShortcutHotkeys, shortcuts } from '../shortcuts'
 import type OmnisearchPlugin from '../main'
 import { mount, unmount } from 'svelte'
 
 abstract class OmnisearchModal extends Modal {
-  protected constructor(plugin: OmnisearchPlugin) {
+  protected constructor(plugin: OmnisearchPlugin, type: 'vault' | 'infile') {
     super(plugin.app)
     const settings = plugin.settings
 
@@ -20,122 +20,18 @@ abstract class OmnisearchModal extends Modal {
     this.modalEl.removeClass('modal')
     this.modalEl.tabIndex = -1
 
-    // Setup events that can be listened through the event bus
-
-    // #region Up/Down navigation
-
-    this.scope.register([], 'ArrowDown', e => {
-      e.preventDefault()
-      eventBus.emit(Action.ArrowDown)
-    })
-    this.scope.register([], 'ArrowUp', e => {
-      e.preventDefault()
-      eventBus.emit(Action.ArrowUp)
-    })
-
-    // Ctrl+j/k
-    for (const key of [
-      { k: 'J', dir: 'down' },
-      { k: 'K', dir: 'up' },
-    ] as const) {
-      for (const modifier of ['Ctrl', 'Mod'] as const) {
-        this.scope.register([modifier], key.k, _e => {
-          if (settings.vimLikeNavigationShortcut) {
-            // e.preventDefault()
-            eventBus.emit('arrow-' + key.dir)
-          }
+    for (const shortcut of shortcuts) {
+      if (shortcut.appliesTo !== 'both' && shortcut.appliesTo !== type) continue
+      if (shortcut.vimOnly && !settings.vimLikeNavigationShortcut) continue
+      const hotkeys = getShortcutHotkeys(settings.shortcuts, shortcut)
+      for (const hotkey of hotkeys) {
+        this.scope.register(hotkey.modifiers, hotkey.key, e => {
+          if (shortcut.checkComposition && isInputComposition()) return
+          e.preventDefault()
+          eventBus.emit(shortcut.event, shortcut.data)
         })
       }
     }
-
-    // Ctrl+n/p
-    for (const key of [
-      { k: 'N', dir: 'down' },
-      { k: 'P', dir: 'up' },
-    ] as const) {
-      for (const modifier of ['Ctrl', 'Mod'] as const) {
-        this.scope.register([modifier], key.k, _e => {
-          if (settings.vimLikeNavigationShortcut) {
-            // e.preventDefault()
-            eventBus.emit('arrow-' + key.dir)
-          }
-        })
-      }
-    }
-
-    // #endregion Up/Down navigation
-
-    const openInCurrentPaneKey: Modifier[] = []
-    const openInNewPaneKey: Modifier[] = ['Mod']
-    const createInCurrentPaneKey: Modifier[] = ['Shift']
-    const createInNewPaneKey: Modifier[] = ['Mod', 'Shift']
-    const openInNewLeafKey: Modifier[] = ['Mod', 'Alt']
-
-    // Open in new pane
-    this.scope.register(openInNewPaneKey, 'Enter', e => {
-      e.preventDefault()
-      eventBus.emit(Action.OpenInNewPane)
-    })
-
-    // Open in a new leaf
-    this.scope.register(openInNewLeafKey, 'Enter', e => {
-      e.preventDefault()
-      eventBus.emit(Action.OpenInNewLeaf)
-    })
-
-    // Insert link
-    this.scope.register(['Alt'], 'Enter', e => {
-      e.preventDefault()
-      eventBus.emit(Action.InsertLink)
-    })
-
-    // Create a new note
-    this.scope.register(createInCurrentPaneKey, 'Enter', e => {
-      e.preventDefault()
-      eventBus.emit(Action.CreateNote)
-    })
-    this.scope.register(createInNewPaneKey, 'Enter', e => {
-      e.preventDefault()
-      eventBus.emit(Action.CreateNote, { newLeaf: true })
-    })
-
-    // Open in current pane
-    this.scope.register(openInCurrentPaneKey, 'Enter', e => {
-      if (!isInputComposition()) {
-        // Check if the user is still typing
-        e.preventDefault()
-        eventBus.emit(Action.Enter)
-      }
-    })
-
-    // Open in background
-    this.scope.register(['Mod'], 'O', e => {
-      if (!isInputComposition()) {
-        // Check if the user is still typing
-        e.preventDefault()
-        eventBus.emit(Action.OpenInBackground)
-      }
-    })
-
-    this.scope.register([], 'Tab', e => {
-      e.preventDefault()
-      eventBus.emit(Action.Tab) // Switch context
-    })
-
-    // Search history
-    this.scope.register(['Alt'], 'ArrowDown', e => {
-      e.preventDefault()
-      eventBus.emit(Action.NextSearchHistory)
-    })
-    this.scope.register(['Alt'], 'ArrowUp', e => {
-      e.preventDefault()
-      eventBus.emit(Action.PrevSearchHistory)
-    })
-
-    // Context
-    this.scope.register(['Mod'], 'G', _e => {
-      eventBus.emit(EventNames.ToggleExcerpts)
-    })
   }
 }
 
@@ -146,7 +42,7 @@ export class OmnisearchVaultModal extends OmnisearchModal {
    * @param query The query to pre-fill the search field with
    */
   constructor(plugin: OmnisearchPlugin, query?: string) {
-    super(plugin)
+    super(plugin, 'vault')
 
     // Selected text in the editor
     const selectedText = plugin.app.workspace
@@ -187,7 +83,7 @@ export class OmnisearchInFileModal extends OmnisearchModal {
     searchQuery: string = '',
     parent?: OmnisearchModal
   ) {
-    super(plugin)
+    super(plugin, 'infile')
 
     const cmp = mount(ModalInFile, {
       target: this.modalEl,

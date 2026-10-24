@@ -133,6 +133,18 @@
   flex-grow: 1;
 }
 
+.omnisearch-hotkey-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.setting-hotkey.is-recording {
+  color: var(--text-accent);
+  border-color: var(--text-accent);
+}
+
 .omnisearch-result-highlight .cm-content ::selection,
 .omnisearch-result-highlight .cm-line::selection {
   background-color: var(

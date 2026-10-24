@@ -1,3 +1,4 @@
+<!-- svelte-ignore state_referenced_locally -->
 <script lang="ts">
   import { MarkdownView, Notice, Platform, TFile, debounce } from 'obsidian'
   import { onDestroy, onMount, tick } from 'svelte'
@@ -343,7 +344,11 @@
           openNoteInNewPane()
         }}
         on:auxclick={evt => {
-          if (evt.button == 1) openNoteInNewPane()
+          if (evt.button == 1) {
+            evt.preventDefault()
+            evt.stopPropagation()
+            openNoteInBackground()
+          }
         }} />
     </LazyLoader>
   {/each}
