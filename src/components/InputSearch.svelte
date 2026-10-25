@@ -45,7 +45,7 @@
     // the next time we open the modal, the search field will be empty
     plugin.searchHistory.addToHistory('')
     dispatch('input', value)
-  }, 300)
+  }, plugin.settings.searchDelay)
 </script>
 
 <div class="omnisearch-input-container">

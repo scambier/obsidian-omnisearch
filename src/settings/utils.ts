@@ -106,6 +106,8 @@ export interface OmnisearchSettings extends WeightingSettings {
   verboseLogging: boolean
   vimLikeNavigationShortcut: boolean
   fuzziness: '0' | '1' | '2'
+  /** Milliseconds to wait after the last keystroke before searching */
+  searchDelay: number
   httpApiEnabled: boolean
   httpApiPort: string
   httpApiNotice: boolean

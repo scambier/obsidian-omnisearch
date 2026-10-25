@@ -164,4 +164,23 @@ export function injectSettingsBehavior(
           await saveSettings(plugin)
         })
     )
+
+  // Search delay
+  // Typing waits this long before searching, so fast typists don't trigger a search per key.
+  // Large vaults or slow devices may want more; fast machines can go much lower.
+  new Setting(containerEl)
+    .setName('Search delay')
+    .setDesc(
+      'Milliseconds to wait after your last keystroke before searching. Lower feels snappier, higher does less work while typing. Applies the next time the search modal opens.'
+    )
+    .addSlider(slider =>
+      slider
+        .setLimits(0, 1000, 25)
+        .setValue(settings.searchDelay)
+        .setDynamicTooltip()
+        .onChange(async v => {
+          settings.searchDelay = v
+          await saveSettings(plugin)
+        })
+    )
 }

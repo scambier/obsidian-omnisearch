@@ -146,6 +146,7 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
     simpleSearch: false,
     tokenizeUrls: false,
     fuzziness: '1',
+    searchDelay: 300,
 
     weightBasename: 10,
     weightDirectory: 7,
