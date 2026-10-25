@@ -148,10 +148,14 @@ export class OmnisearchVaultModal extends OmnisearchModal {
   constructor(plugin: OmnisearchPlugin, query?: string) {
     super(plugin)
 
-    // Selected text in the editor
-    const selectedText = plugin.app.workspace
+    // Selected text in the editor, only if it's short enough to be a query.
+    // A long selection (e.g. select-all before copying) would fill the
+    // search box with a whole note.
+    const selection = plugin.app.workspace
       .getActiveViewOfType(MarkdownView)
       ?.editor.getSelection()
+    const selectedText =
+      selection && selection.length <= 100 ? selection : undefined
 
     plugin.searchHistory.getHistory().then(history => {
       // Previously searched query (if enabled in settings)
