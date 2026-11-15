@@ -141,8 +141,10 @@ export function injectSettingsIndexing(
   new Setting(containerEl)
     .setName(t('Set frontmatter property key as title'))
     .setDesc(
-      htmlDescription(`If you have a custom property in your notes that you want to use as the title in search results. If you set this to '#heading', then use the first heading from a file as the title.<br>
+      htmlDescription(
+        t(`If you have a custom property in your notes that you want to use as the title in search results. If you set this to '#heading', then use the first heading from a file as the title.<br>
           Leave empty to disable.`)
+      )
     )
     .addText(component => {
       component.setValue(settings.displayTitle).onChange(async v => {
@@ -156,10 +158,12 @@ export function injectSettingsIndexing(
   new Setting(containerEl)
     .setName(t('Additional TEXT files to index'))
     .setDesc(
-      htmlDescription(`In addition to standard <code>md</code> files, Omnisearch can also index other <strong style="color: var(--text-accent)">PLAINTEXT</strong> files.<br/>
+      htmlDescription(
+        t(`In addition to standard <code>md</code> files, Omnisearch can also index other <strong style="color: var(--text-accent)">PLAINTEXT</strong> files.<br/>
       Add extensions separated by a space, without the dot. Example: "<code>txt org csv</code>".<br />
       ⚠️ <span style="color: var(--text-accent)">Using extensions of non-plaintext files (like .pptx) WILL cause crashes,
       because Omnisearch will try to index their content.</span>`)
+      )
     )
     .addText(component => {
       component
@@ -176,8 +180,10 @@ export function injectSettingsIndexing(
   new Setting(containerEl)
     .setName(t('Index files without extension'))
     .setDesc(
-      htmlDescription(`Enable this to also index files that have <strong style="color: var(--text-accent)">no file extension</strong>.<br/>
+      htmlDescription(
+        t(`Enable this to also index files that have <strong style="color: var(--text-accent)">no file extension</strong>.<br/>
       These files will be indexed as plaintext files.`)
+      )
     )
     .addToggle(toggle => {
       toggle.setValue(settings.indexFilesWithoutExtension).onChange(async v => {

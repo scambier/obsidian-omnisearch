@@ -322,7 +322,7 @@
 
 {#if indexingStepDesc}
   <div style="text-align: center; color: var(--text-accent); margin-top: 10px">
-    ⏳ Work in progress: {indexingStepDesc}
+    ⏳ {t('Work in progress:')} {indexingStepDesc}
   </div>
 {/if}
 

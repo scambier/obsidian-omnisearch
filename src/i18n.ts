@@ -169,6 +169,11 @@ const data = {
   'Disabled. Please restart Obsidian.': '已禁用，请重启 Obsidian。',
   'Enabled. Please restart Obsidian.': '已启用，请重启 Obsidian。',
   'Started HTTP server on port': 'HTTP 服务器已启动，端口',
+  'Work in progress:': '正在处理：',
+  'Started non-localhost HTTP server at {host}:{port}':
+    '已在 {host}:{port} 启动非 localhost HTTP 服务器',
+  'Cannot start HTTP server on {port}. See console for more details.':
+    '无法在端口 {port} 启动 HTTP 服务器。详情请查看控制台。',
   'terminated HTTP server': 'HTTP 服务器已关闭',
   'No active editor': '没有活动编辑器',
   'Cache missing or invalid. Some freezes may occur while Omnisearch indexes your vault.':
@@ -235,6 +240,12 @@ const data = {
   'no file extension': '无扩展名',
   'This can be useful for e.g. files without extensions, or for files with an extension that is not in the list above.':
     '这对于没有扩展名的文件，或扩展名不在上述列表中的文件很有用。',
+  "If you have a custom property in your notes that you want to use as the title in search results. If you set this to '#heading', then use the first heading from a file as the title.<br>\n          Leave empty to disable.":
+    "可将笔记中的自定义属性用作搜索结果标题。设为 '#heading' 时，将使用文件中的第一个标题。<br>留空则禁用。",
+  'In addition to standard <code>md</code> files, Omnisearch can also index other <strong style="color: var(--text-accent)">PLAINTEXT</strong> files.<br/>\n      Add extensions separated by a space, without the dot. Example: "<code>txt org csv</code>".<br />\n      ⚠️ <span style="color: var(--text-accent)">Using extensions of non-plaintext files (like .pptx) WILL cause crashes,\n      because Omnisearch will try to index their content.</span>':
+    '除标准 <code>md</code> 文件外，Omnisearch 还可索引其他<strong style="color: var(--text-accent)">纯文本</strong>文件。<br/>以空格分隔添加扩展名，不要加点号。示例："<code>txt org csv</code>"。<br />⚠️ <span style="color: var(--text-accent)">添加非纯文本文件的扩展名（如 .pptx）会导致崩溃，因为 Omnisearch 会尝试索引其内容。</span>',
+  'Enable this to also index files that have <strong style="color: var(--text-accent)">no file extension</strong>.<br/>\n      These files will be indexed as plaintext files.':
+    '启用后也会索引<strong style="color: var(--text-accent)">没有扩展名</strong>的文件。<br/>这些文件将按纯文本文件建立索引。',
 }
 
 export type TranslationKey = keyof typeof data
@@ -247,6 +258,12 @@ export function translate(language: string, key: string): string {
   return key
 }
 
-export function t(key: TranslationKey): string {
-  return translate(getLanguage(), key)
+export function t(
+  key: TranslationKey,
+  values: Record<string, string> = {}
+): string {
+  return translate(getLanguage(), key).replace(
+    /\{(\w+)\}/g,
+    (placeholder, name: string) => values[name] ?? placeholder
+  )
 }

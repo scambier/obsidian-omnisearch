@@ -2,6 +2,7 @@
   // https://github.com/leafOfTree/svelte-lazy
   import { fade } from 'svelte/transition'
   import Placeholder from './Placeholder.svelte'
+  import { t } from '../../i18n'
   export let keep = false
   export let height = 0
   export let offset = 150
