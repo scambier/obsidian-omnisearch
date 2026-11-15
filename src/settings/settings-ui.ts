@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { Setting } from 'obsidian'
 import { showExcerpt } from '.'
 import type OmnisearchPlugin from '../main'
@@ -9,12 +10,12 @@ export function injectSettingsUserInterface(
   settings: OmnisearchSettings,
   containerEl: HTMLElement
 ) {
-  new Setting(containerEl).setName('User Interface').setHeading()
+  new Setting(containerEl).setName(t('User Interface')).setHeading()
 
   // Show Ribbon Icon
   new Setting(containerEl)
-    .setName('Show ribbon button')
-    .setDesc('Add a button on the sidebar to open the Vault search modal.')
+    .setName(t('Show ribbon button'))
+    .setDesc(t('Add a button on the sidebar to open the Vault search modal.'))
     .addToggle(toggle =>
       toggle.setValue(settings.ribbonIcon).onChange(async v => {
         settings.ribbonIcon = v
@@ -29,9 +30,11 @@ export function injectSettingsUserInterface(
 
   // Show context excerpt
   new Setting(containerEl)
-    .setName('Show excerpts')
+    .setName(t('Show excerpts'))
     .setDesc(
-      'Shows the contextual part of the note that matches the search. Disable this to only show filenames in results.'
+      t(
+        'Shows the contextual part of the note that matches the search. Disable this to only show filenames in results.'
+      )
     )
     .addToggle(toggle =>
       toggle.setValue(settings.showExcerpt).onChange(async v => {
@@ -41,9 +44,11 @@ export function injectSettingsUserInterface(
 
   // Skip frontmatter in excerpts
   new Setting(containerEl)
-    .setName('Prefer body matches in excerpts')
+    .setName(t('Prefer body matches in excerpts'))
     .setDesc(
-      'When a note matches both in its properties (frontmatter) and in its body, center the excerpt on the first body match. Notes that only match in their properties still show the properties. Disable to always use the first match in the file.'
+      t(
+        'When a note matches both in its properties (frontmatter) and in its body, center the excerpt on the first body match. Notes that only match in their properties still show the properties. Disable to always use the first match in the file.'
+      )
     )
     .addToggle(toggle =>
       toggle.setValue(settings.excerptSkipFrontmatter).onChange(async v => {
@@ -54,11 +59,11 @@ export function injectSettingsUserInterface(
 
   // Show embeds
   new Setting(containerEl)
-    .setName('Show embed references')
+    .setName(t('Show embed references'))
     .setDesc(
-      htmlDescription(`Some results are <a href="https://help.obsidian.md/Linking+notes+and+files/Embed+files">embedded</a> in other notes.<br>
-            This setting controls the maximum number of embeds to show in the search results. Set to 0 to disable.<br>
-            Also works with Text Extractor for embedded images and documents.`)
+      htmlDescription(`${t('Some results are')} <a href="https://help.obsidian.md/Linking+notes+and+files/Embed+files">${t('embedded')}</a> ${t('in other notes.')}<br>
+            ${t('This setting controls the maximum number of embeds to show in the search results. Set to 0 to disable.')}<br>
+            ${t('Also works with Text Extractor for embedded images and documents.')}`)
     )
     .addSlider(cb => {
       cb.setLimits(0, 10, 1)
@@ -72,8 +77,10 @@ export function injectSettingsUserInterface(
 
   // Keep line returns in excerpts
   new Setting(containerEl)
-    .setName('Render line return in excerpts')
-    .setDesc('Activate this option to render line returns in result excerpts.')
+    .setName(t('Render line return in excerpts'))
+    .setDesc(
+      t('Activate this option to render line returns in result excerpts.')
+    )
     .addToggle(toggle =>
       toggle.setValue(settings.renderLineReturnInExcerpts).onChange(async v => {
         settings.renderLineReturnInExcerpts = v
@@ -83,10 +90,10 @@ export function injectSettingsUserInterface(
 
   // Show "Create note" button
   new Setting(containerEl)
-    .setName('Show "Create note" button')
+    .setName(t('Show "Create note" button'))
     .setDesc(
-      htmlDescription(`Shows a button next to the search input, to create a note.
-          Acts the same as the <code>shift ↵</code> shortcut, can be useful for mobile device users.`)
+      htmlDescription(`${t('Shows a button next to the search input, to create a note.')}
+          ${t('Acts the same as the')} <code>shift ↵</code> ${t('shortcut, can be useful for mobile device users.')}`)
     )
     .addToggle(toggle =>
       toggle.setValue(settings.showCreateButton).onChange(async v => {
@@ -97,9 +104,11 @@ export function injectSettingsUserInterface(
 
   // Highlight results
   new Setting(containerEl)
-    .setName('Highlight matching words in results')
+    .setName(t('Highlight matching words in results'))
     .setDesc(
-      'Will highlight matching results when enabled. See README for more customization options.'
+      t(
+        'Will highlight matching results when enabled. See README for more customization options.'
+      )
     )
     .addToggle(toggle =>
       toggle.setValue(settings.highlight).onChange(async v => {

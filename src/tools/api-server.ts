@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import * as http from 'http'
 import * as url from 'url'
 import { Notice } from 'obsidian'
@@ -67,7 +68,9 @@ export function getServer(plugin: OmnisearchPlugin) {
               120_000
             )
           } else if (plugin.settings.httpApiNotice) {
-            new Notice(`Omnisearch - Started HTTP server on port ${port}`)
+            new Notice(
+              `Omnisearch - ${t('Started HTTP server on port')} ${port}`
+            )
           }
         }
       )
@@ -83,7 +86,7 @@ export function getServer(plugin: OmnisearchPlugin) {
       server.close()
       logVerbose('Omnisearch - Terminated HTTP server')
       if (plugin.settings.httpApiEnabled && plugin.settings.httpApiNotice) {
-        new Notice('Omnisearch - terminated HTTP server')
+        new Notice(`Omnisearch - ${t('terminated HTTP server')}`)
       }
     },
   }

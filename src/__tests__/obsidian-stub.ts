@@ -21,3 +21,11 @@ export function parseFrontMatterAliases(
 export class MarkdownView {}
 export class TFile {}
 export class WorkspaceLeaf {}
+
+export let language = 'en'
+export function setLanguage(value: string): void {
+  language = value
+}
+export function getLanguage(): string {
+  return language
+}

@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { Setting, debounce } from 'obsidian'
 import type OmnisearchPlugin from '../main'
 import type { OmnisearchSettings } from './utils'
@@ -17,29 +18,33 @@ export function injectSettingsIndexing(
   }, 1000)
 
   new Setting(containerEl)
-    .setName('Indexing')
+    .setName(t('Indexing'))
     .setHeading()
     .setDesc(
-      htmlDescription(`<div style="margin-top: 1em; color: var(--text-accent)">⚠️ Changing indexing settings will clear the cache, and requires a restart of Obsidian.</div><br/>
+      htmlDescription(`<div style="margin-top: 1em; color: var(--text-accent)">${t('⚠️ Changing indexing settings will clear the cache, and requires a restart of Obsidian.')}</div><br/>
         ${
           textExtractor
-            ? `👍 You have installed <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a>, Omnisearch can use it to index PDFs and images contents.
-            <br />Text extraction only works on desktop, but the cache can be synchronized with your mobile device.`
-            : `⚠️ Omnisearch requires <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a> to index PDFs and images.`
+            ? `👍 ${t('You have installed')} <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a>, ${t('Omnisearch can use it to index PDFs and images contents.')}
+            <br />${t('Text extraction only works on desktop, but the cache can be synchronized with your mobile device.')}`
+            : `⚠️ ${t('Omnisearch requires')} <a href="https://github.com/scambier/obsidian-text-extractor">Text Extractor</a> ${t('to index PDFs and images.')}`
         }
         ${
           aiImageAnalyzer
-            ? `<br/>👍 You have installed <a href="https://github.com/Swaggeroo/obsidian-ai-image-analyzer">AI Image Analyzer</a>, Omnisearch can use it to index images contents with AI.`
-            : `<br/>⚠️ Omnisearch requires <a href="https://github.com/Swaggeroo/obsidian-ai-image-analyzer">AI Image Analyzer</a> to index images with AI.`
+            ? `<br/>👍 ${t('You have installed')} <a href="https://github.com/Swaggeroo/obsidian-ai-image-analyzer">AI Image Analyzer</a>, ${t('Omnisearch can use it to index images contents with AI.')}`
+            : `<br/>⚠️ ${t('Omnisearch requires')} <a href="https://github.com/Swaggeroo/obsidian-ai-image-analyzer">AI Image Analyzer</a> ${t('to index images with AI.')}`
         }`)
     )
 
   // PDF Indexing
   new Setting(containerEl)
-    .setName(`PDFs content indexing ${textExtractor ? '' : '⚠️ Disabled'}`)
+    .setName(
+      `${t('PDFs content indexing')} ${textExtractor ? '' : t('⚠️ Disabled')}`
+    )
     .setDesc(
       htmlDescription(
-        `Omnisearch will use Text Extractor to index the content of your PDFs.`
+        t(
+          'Omnisearch will use Text Extractor to index the content of your PDFs.'
+        )
       )
     )
     .addToggle(toggle =>
@@ -53,10 +58,14 @@ export function injectSettingsIndexing(
 
   // Images Indexing
   new Setting(containerEl)
-    .setName(`Images OCR indexing ${textExtractor ? '' : '⚠️ Disabled'}`)
+    .setName(
+      `${t('Images OCR indexing')} ${textExtractor ? '' : t('⚠️ Disabled')}`
+    )
     .setDesc(
       htmlDescription(
-        `Omnisearch will use Text Extractor to OCR your images and index their content.`
+        t(
+          'Omnisearch will use Text Extractor to OCR your images and index their content.'
+        )
       )
     )
     .addToggle(toggle =>
@@ -70,10 +79,12 @@ export function injectSettingsIndexing(
 
   // Office Documents Indexing
   const indexOfficesDesc = htmlDescription(
-    `Omnisearch will use Text Extractor to index the content of your office documents (currently <pre style="display:inline">.docx</pre> and <pre style="display:inline">.xlsx</pre>).`
+    `${t('Omnisearch will use Text Extractor to index the content of your office documents (currently')} <pre style="display:inline">.docx</pre> ${t('and')} <pre style="display:inline">.xlsx</pre>).`
   )
   new Setting(containerEl)
-    .setName(`Documents content indexing ${textExtractor ? '' : '⚠️ Disabled'}`)
+    .setName(
+      `${t('Documents content indexing')} ${textExtractor ? '' : t('⚠️ Disabled')}`
+    )
     .setDesc(indexOfficesDesc)
     .addToggle(toggle =>
       toggle.setValue(settings.officeIndexing).onChange(async v => {
@@ -86,10 +97,12 @@ export function injectSettingsIndexing(
 
   // AI Images Indexing
   const aiIndexImagesDesc =
-    htmlDescription(`Omnisearch will use AI Image Analyzer to index the content of your images with AI.<br/>
-    ⚠️ <span style="color: var(--text-accent)">If both AI Image Analyzer and Text Extractor are enabled, Text Extractor will only be used as a fallback.</span>`)
+    htmlDescription(`${t('Omnisearch will use AI Image Analyzer to index the content of your images with AI.')}<br/>
+    ⚠️ <span style="color: var(--text-accent)">${t('If both AI Image Analyzer and Text Extractor are enabled, Text Extractor will only be used as a fallback.')}</span>`)
   new Setting(containerEl)
-    .setName(`Images AI indexing ${aiImageAnalyzer ? '' : '⚠️ Disabled'}`)
+    .setName(
+      `${t('Images AI indexing')} ${aiImageAnalyzer ? '' : t('⚠️ Disabled')}`
+    )
     .setDesc(aiIndexImagesDesc)
     .addToggle(toggle =>
       toggle.setValue(settings.aiImageIndexing).onChange(async v => {
@@ -102,16 +115,19 @@ export function injectSettingsIndexing(
 
   // Index filenames of unsupported files
   new Setting(containerEl)
-    .setName('Index paths of unsupported files')
+    .setName(t('Index paths of unsupported files'))
     .setDesc(
       htmlDescription(`
-      Omnisearch can index file<strong>names</strong> of "unsupported" files, such as e.g. <pre style="display:inline">.mp4</pre>
-      or non-extracted PDFs & images.<br/>
-      "Obsidian setting" will respect the value of "Files & Links > Detect all file extensions".`)
+      ${t('Omnisearch can index file names of unsupported files, such as .mp4 or non-extracted PDFs and images.')}<br/>
+      ${t('"Obsidian setting" will respect the value of "Files & Links > Detect all file extensions".')}`)
     )
     .addDropdown(dropdown => {
       dropdown
-        .addOptions({ yes: 'Yes', no: 'No', default: 'Obsidian setting' })
+        .addOptions({
+          yes: t('Yes'),
+          no: t('No'),
+          default: t('Obsidian setting'),
+        })
         .setValue(settings.unsupportedFilesIndexing)
         .onChange(async v => {
           clearCacheDebounced()
@@ -123,7 +139,7 @@ export function injectSettingsIndexing(
 
   // Custom display title
   new Setting(containerEl)
-    .setName('Set frontmatter property key as title')
+    .setName(t('Set frontmatter property key as title'))
     .setDesc(
       htmlDescription(`If you have a custom property in your notes that you want to use as the title in search results. If you set this to '#heading', then use the first heading from a file as the title.<br>
           Leave empty to disable.`)
@@ -138,7 +154,7 @@ export function injectSettingsIndexing(
 
   // Additional text files to index
   new Setting(containerEl)
-    .setName('Additional TEXT files to index')
+    .setName(t('Additional TEXT files to index'))
     .setDesc(
       htmlDescription(`In addition to standard <code>md</code> files, Omnisearch can also index other <strong style="color: var(--text-accent)">PLAINTEXT</strong> files.<br/>
       Add extensions separated by a space, without the dot. Example: "<code>txt org csv</code>".<br />
@@ -148,7 +164,7 @@ export function injectSettingsIndexing(
     .addText(component => {
       component
         .setValue(settings.indexedFileTypes.join(' '))
-        .setPlaceholder('Example: txt org csv')
+        .setPlaceholder(t('Example: txt org csv'))
         .onChange(async v => {
           await database.clearCache()
           settings.indexedFileTypes = v.split(' ')
@@ -158,7 +174,7 @@ export function injectSettingsIndexing(
 
   // Index files without extension
   new Setting(containerEl)
-    .setName('Index files without extension')
+    .setName(t('Index files without extension'))
     .setDesc(
       htmlDescription(`Enable this to also index files that have <strong style="color: var(--text-accent)">no file extension</strong>.<br/>
       These files will be indexed as plaintext files.`)

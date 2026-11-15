@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../i18n'
   import InputSearch from './InputSearch.svelte'
   import {
     Action,
@@ -155,7 +156,7 @@
   initialValue={previousQuery}>
   <div class="omnisearch-input-container__buttons">
     {#if Platform.isMobile}
-      <button on:click={switchToVaultModal}>Vault search</button>
+      <button on:click={switchToVaultModal}>{t('Vault search')}</button>
     {/if}
   </div>
 </InputSearch>
@@ -181,40 +182,41 @@
     {/each}
   {:else}
     <div style="text-align: center;">
-      We found 0 results for your search here.
+      {t('We found 0 results for your search here.')}
     </div>
   {/if}
 </ModalContainer>
 
 <div class="prompt-instructions">
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">↑↓</span><span>to navigate</span>
+    <span class="prompt-instruction-command">↑↓</span><span
+      >{t('to navigate')}</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">↵</span><span>to open</span>
+    <span class="prompt-instruction-command">↵</span><span>{t('to open')}</span>
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">tab</span>
-    <span>to switch to Vault Search</span>
+    <span>{t('to switch to Vault Search')}</span>
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">esc</span>
     {#if !!parent}
-      <span>to go back to Vault Search</span>
+      <span>{t('to go back to Vault Search')}</span>
     {:else}
-      <span>to close</span>
+      <span>{t('to close')}</span>
     {/if}
   </div>
 
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">{getCtrlKeyLabel()} ↵</span>
-    <span>to open in a new pane</span>
+    <span>{t('to open in a new pane')}</span>
   </div>
 
   {#if Platform.isMobile}
     <div class="prompt-instruction">
-      <span class="prompt-instruction-command">hold</span>
-      <span>to open in a new pane</span>
+      <span class="prompt-instruction-command">{t('hold')}</span>
+      <span>{t('to open in a new pane')}</span>
     </div>
   {/if}
 </div>

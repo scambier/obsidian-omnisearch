@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { Platform, Setting } from 'obsidian'
 import type OmnisearchPlugin from '../main'
 import type { OmnisearchSettings } from './utils'
@@ -10,16 +11,16 @@ export function injectSettingsHttp(
 ) {
   if (!Platform.isMobile) {
     new Setting(containerEl)
-      .setName('API Access Through HTTP')
+      .setName(t('API Access Through HTTP'))
       .setHeading()
       .setDesc(
         htmlDescription(
-          `Omnisearch can be used through a simple HTTP server (<a href="https://publish.obsidian.md/omnisearch/Public+API+%26+URL+Scheme#HTTP+Server">more information</a>).`
+          `${t('Omnisearch can be used through a simple HTTP server')} (<a href="https://publish.obsidian.md/omnisearch/Public+API+%26+URL+Scheme#HTTP+Server">${t('more information')}</a>).`
         )
       )
 
     new Setting(containerEl)
-      .setName('Enable the HTTP server')
+      .setName(t('Enable the HTTP server'))
       .addToggle(toggle =>
         toggle.setValue(settings.httpApiEnabled).onChange(async v => {
           settings.httpApiEnabled = v
@@ -32,7 +33,7 @@ export function injectSettingsHttp(
         })
       )
 
-    new Setting(containerEl).setName('HTTP Port').addText(component => {
+    new Setting(containerEl).setName(t('HTTP Port')).addText(component => {
       component
         .setValue(settings.httpApiPort)
         .setPlaceholder('51361')
@@ -51,9 +52,11 @@ export function injectSettingsHttp(
     })
 
     new Setting(containerEl)
-      .setName('Show a notification when the server starts')
+      .setName(t('Show a notification when the server starts'))
       .setDesc(
-        'Will display a notification if the server is enabled, at Obsidian startup.'
+        t(
+          'Will display a notification if the server is enabled, at Obsidian startup.'
+        )
       )
       .addToggle(toggle =>
         toggle.setValue(settings.httpApiNotice).onChange(async v => {
