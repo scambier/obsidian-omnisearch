@@ -1,6 +1,10 @@
-<script lang="ts"></script>
+<script lang="ts">
+  import { t } from '../i18n'
+</script>
 
-<span class="suggestion-flair" aria-label="Not created yet, select to create"
+<span
+  class="suggestion-flair"
+  aria-label={t('Not created yet, select to create')}
   ><svg viewBox="0 0 100 100" class="add-note-glyph" width="16" height="16"
     ><path
       fill="currentColor"

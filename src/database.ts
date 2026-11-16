@@ -1,3 +1,4 @@
+import { t } from './i18n'
 import Dexie from 'dexie'
 import type { AsPlainObject } from 'minisearch'
 import type { DocumentRef } from './globals'
@@ -42,7 +43,7 @@ export class Database extends Dexie {
       return cachedIndex
     } catch (e) {
       new Notice(
-        'Omnisearch - Cache missing or invalid. Some freezes may occur while Omnisearch indexes your vault.'
+        `Omnisearch - ${t('Cache missing or invalid. Some freezes may occur while Omnisearch indexes your vault.')}`
       )
       console.error('Omnisearch - Error while loading Minisearch cache')
       console.error(e)
@@ -86,6 +87,6 @@ export class Database extends Dexie {
   public async clearCache() {
     await this.minisearch.clear()
     await this.embeds.clear()
-    new Notice('Omnisearch - Cache cleared. Please restart Obsidian.')
+    new Notice(`Omnisearch - ${t('Cache cleared. Please restart Obsidian.')}`)
   }
 }

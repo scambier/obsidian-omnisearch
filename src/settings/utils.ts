@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { App, Platform, Plugin } from 'obsidian'
 import { settings } from '.'
 import { K_DISABLE_OMNISEARCH, RecencyCutoff } from '../globals'
@@ -8,7 +9,10 @@ export function htmlDescription(htmlContent: string): DocumentFragment {
 
   // Parse HTML string safely using DOMParser
   const parser = new DOMParser()
-  const parsed = parser.parseFromString(`<div>${htmlContent}</div>`, 'text/html')
+  const parsed = parser.parseFromString(
+    `<div>${htmlContent}</div>`,
+    'text/html'
+  )
 
   // Check for parse errors
   if (parsed.body.querySelector('parsererror')) {
@@ -28,7 +32,9 @@ export function htmlDescription(htmlContent: string): DocumentFragment {
   return desc
 }
 
-export const needsARestart = `<strong style="color: var(--text-accent)">Needs a restart to fully take effect.</strong>`
+export function needsARestart(): string {
+  return `<strong style="color: var(--text-accent)">${t('Needs a restart to fully take effect.')}</strong>`
+}
 
 export interface WeightingSettings {
   weightBasename: number

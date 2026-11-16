@@ -1,3 +1,4 @@
+import { t } from './i18n'
 import {
   App,
   Notice,
@@ -98,7 +99,7 @@ export default class OmnisearchPlugin extends Plugin {
     // Commands to display Omnisearch modals
     this.addCommand({
       id: 'show-modal',
-      name: 'Vault search',
+      name: t('Vault search'),
       callback: () => {
         new OmnisearchVaultModal(this).open()
       },
@@ -106,7 +107,7 @@ export default class OmnisearchPlugin extends Plugin {
 
     this.addCommand({
       id: 'show-modal-infile',
-      name: 'In-file search',
+      name: t('In-file search'),
       editorCallback: (_editor, view) => {
         if (view.file) {
           new OmnisearchInFileModal(this, view.file).open()
@@ -290,7 +291,10 @@ export default class OmnisearchPlugin extends Plugin {
 
     if (diff.toAdd.length >= 1000 && isCacheEnabled()) {
       new Notice(
-        `${diff.toAdd.length} files need to be indexed. Obsidian may experience stutters and freezes during the process`,
+        t(
+          '{count} files need to be indexed. Obsidian may experience stutters and freezes during the process',
+          { count: diff.toAdd.length }
+        ),
         10_000
       )
     }
@@ -322,7 +326,7 @@ export default class OmnisearchPlugin extends Plugin {
 
     console.timeEnd('Indexing total time')
     if (diff.toAdd.length >= 1000 && isCacheEnabled()) {
-      new Notice(`Your files have been indexed.`)
+      new Notice(t('Your files have been indexed.'))
     }
     indexingStep.set(IndexingStepType.Done)
     notifyOnIndexed()

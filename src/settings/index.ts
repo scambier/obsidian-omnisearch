@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 // noinspection CssUnresolvedCustomProperty
 import { App, Plugin, PluginSettingTab, Setting } from 'obsidian'
 import { writable } from 'svelte/store'
@@ -39,7 +40,7 @@ export class SettingsTab extends PluginSettingTab {
       const span = containerEl.createEl('span')
       const strong = document.createElement('strong')
       strong.style.color = 'var(--text-accent)'
-      strong.textContent = '⚠️ OMNISEARCH IS DISABLED ⚠️'
+      strong.textContent = t('⚠️ OMNISEARCH IS DISABLED ⚠️')
       span.appendChild(strong)
     }
 
@@ -55,7 +56,7 @@ export class SettingsTab extends PluginSettingTab {
     const iframe = document.createElement('iframe')
     iframe.setAttribute('sandbox', 'allow-top-navigation-by-user-activation')
     iframe.setAttribute('src', 'https://github.com/sponsors/scambier/button')
-    iframe.setAttribute('title', 'Sponsor scambier')
+    iframe.setAttribute('title', t('Sponsor scambier'))
     iframe.setAttribute('height', '35')
     iframe.setAttribute('width', '116')
     iframe.style.border = '0'
@@ -68,7 +69,7 @@ export class SettingsTab extends PluginSettingTab {
     const img = document.createElement('img')
     img.setAttribute('height', '36')
     img.src = 'https://cdn.ko-fi.com/cdn/kofi2.png?v=3'
-    img.alt = 'Buy Me a Coffee at ko-fi.com'
+    img.alt = t('Buy Me a Coffee at ko-fi.com')
     img.style.border = '0px'
     img.style.height = '36px'
     img.style.marginLeft = '1em'
@@ -92,12 +93,14 @@ export class SettingsTab extends PluginSettingTab {
 
     //#region Debugging
 
-    new Setting(containerEl).setName('Debugging').setHeading()
+    new Setting(containerEl).setName(t('Debugging')).setHeading()
 
     new Setting(containerEl)
-      .setName('Enable verbose logging')
+      .setName(t('Enable verbose logging'))
       .setDesc(
-        'Adds a LOT of logs for debugging purposes. You also need to enable "Verbose" logging in the console to see these logs.'
+        t(
+          'Adds a LOT of logs for debugging purposes. You also need to enable "Verbose" logging in the console to see these logs.'
+        )
       )
       .addToggle(toggle =>
         toggle.setValue(settings.verboseLogging).onChange(async v => {

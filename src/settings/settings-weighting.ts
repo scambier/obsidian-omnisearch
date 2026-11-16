@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { Setting, SliderComponent } from 'obsidian'
 import { RecencyCutoff } from '../globals'
 import type OmnisearchPlugin from '../main'
@@ -26,38 +27,50 @@ export function injectSettingsWeighting(
 
   const defaultSettings = getDefaultSettings(plugin.app)
 
-  new Setting(containerEl).setName('Results weighting').setHeading()
+  new Setting(containerEl).setName(t('Results weighting')).setHeading()
 
   new Setting(containerEl)
     .setName(
-      `File name & declared aliases (default: ${defaultSettings.weightBasename})`
+      `${t('File name & declared aliases')} (${t('default')}: ${defaultSettings.weightBasename})`
     )
     .addSlider(cb => weightSlider(cb, 'weightBasename'))
 
   new Setting(containerEl)
-    .setName(`File directory (default: ${defaultSettings.weightDirectory})`)
+    .setName(
+      `${t('File directory')} (${t('default')}: ${defaultSettings.weightDirectory})`
+    )
     .addSlider(cb => weightSlider(cb, 'weightDirectory'))
 
   new Setting(containerEl)
-    .setName(`Headings level 1 (default: ${defaultSettings.weightH1})`)
+    .setName(
+      `${t('Headings level 1')} (${t('default')}: ${defaultSettings.weightH1})`
+    )
     .addSlider(cb => weightSlider(cb, 'weightH1'))
 
   new Setting(containerEl)
-    .setName(`Headings level 2 (default: ${defaultSettings.weightH2})`)
+    .setName(
+      `${t('Headings level 2')} (${t('default')}: ${defaultSettings.weightH2})`
+    )
     .addSlider(cb => weightSlider(cb, 'weightH2'))
 
   new Setting(containerEl)
-    .setName(`Headings level 3 (default: ${defaultSettings.weightH3})`)
+    .setName(
+      `${t('Headings level 3')} (${t('default')}: ${defaultSettings.weightH3})`
+    )
     .addSlider(cb => weightSlider(cb, 'weightH3'))
 
   new Setting(containerEl)
-    .setName(`Tags (default: ${defaultSettings.weightUnmarkedTags})`)
+    .setName(
+      `${t('Tags')} (${t('default')}: ${defaultSettings.weightUnmarkedTags})`
+    )
     .addSlider(cb => weightSlider(cb, 'weightUnmarkedTags'))
 
   new Setting(containerEl)
-    .setName('Header properties fields')
+    .setName(t('Header properties fields'))
     .setDesc(
-      'You can set custom weights for values of header properties (e.g. "keywords"). Weights under 1.0 will downrank the results.'
+      t(
+        'You can set custom weights for values of header properties (e.g. "keywords"). Weights under 1.0 will downrank the results.'
+      )
     )
 
   for (let i = 0; i < settings.weightCustomProperties.length; i++) {
@@ -68,7 +81,7 @@ export function injectSettingsWeighting(
     // TODO: add autocompletion from app.metadataCache.getAllPropertyInfos()
     el.addText(text => {
       text
-        .setPlaceholder('Property name')
+        .setPlaceholder(t('Property name'))
         .setValue(item.name)
         .onChange(async v => {
           item.name = v
@@ -86,7 +99,7 @@ export function injectSettingsWeighting(
       })
       // Remove the tag
       .addButton(btn => {
-        btn.setButtonText('Remove')
+        btn.setButtonText(t('Remove'))
         btn.onClick(async () => {
           settings.weightCustomProperties.splice(i, 1)
           await saveSettings(plugin)
@@ -97,7 +110,7 @@ export function injectSettingsWeighting(
 
   // Add a new custom tag
   new Setting(containerEl).addButton(btn => {
-    btn.setButtonText('Add a new property')
+    btn.setButtonText(t('Add a new property'))
     btn.onClick(_cb => {
       settings.weightCustomProperties.push({ name: '', weight: 1 })
       refreshDisplay()
@@ -105,17 +118,19 @@ export function injectSettingsWeighting(
   })
 
   new Setting(containerEl)
-    .setName('Recency boost (experimental)')
+    .setName(t('Recency boost (experimental)'))
     .setDesc(
-      'Files that have been modified more recently than [selected cutoff] are given a higher rank.'
+      t(
+        'Files that have been modified more recently than [selected cutoff] are given a higher rank.'
+      )
     )
     .addDropdown(dropdown =>
       dropdown
         .addOptions({
-          [RecencyCutoff.Disabled]: 'Disabled',
-          [RecencyCutoff.Day]: '24 hours',
-          [RecencyCutoff.Week]: '7 days',
-          [RecencyCutoff.Month]: '30 days',
+          [RecencyCutoff.Disabled]: t('Disabled'),
+          [RecencyCutoff.Day]: t('24 hours'),
+          [RecencyCutoff.Week]: t('7 days'),
+          [RecencyCutoff.Month]: t('30 days'),
         })
         .setValue(settings.recencyBoost)
         .onChange(async v => {

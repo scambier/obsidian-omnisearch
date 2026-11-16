@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { getLinkpath, Notice } from 'obsidian'
 import type OmnisearchPlugin from '../main'
 import { logVerbose } from '../tools/utils'
@@ -84,7 +85,9 @@ export class EmbedsRepository {
     } catch {
       await this.plugin.database.clearCache()
       console.error('Omnisearch - Error while loading embeds cache')
-      new Notice('Omnisearch - There was an error while loading the cache. Please restart Obsidian.')
+      new Notice(
+        `Omnisearch - ${t('There was an error while loading the cache. Please restart Obsidian.')}`
+      )
     }
   }
 

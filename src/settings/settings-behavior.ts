@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { Platform, Setting } from 'obsidian'
 import type OmnisearchPlugin from '../main'
 import { getCtrlKeyLabel } from '../tools/utils'
@@ -11,13 +12,15 @@ export function injectSettingsBehavior(
 ) {
   const database = plugin.database
 
-  new Setting(containerEl).setName('Behavior').setHeading()
+  new Setting(containerEl).setName(t('Behavior')).setHeading()
 
   // Caching
   new Setting(containerEl)
-    .setName('Save index to cache')
+    .setName(t('Save index to cache'))
     .setDesc(
-      'Enable caching to speed up indexing time. In rare cases, the cache write may cause a crash in Obsidian. This option will disable itself if it happens.'
+      t(
+        'Enable caching to speed up indexing time. In rare cases, the cache write may cause a crash in Obsidian. This option will disable itself if it happens.'
+      )
     )
     .addToggle(toggle =>
       toggle.setValue(settings.useCache).onChange(async v => {
@@ -28,8 +31,8 @@ export function injectSettingsBehavior(
 
   // Show previous query results
   new Setting(containerEl)
-    .setName('Show previous query results')
-    .setDesc('Re-executes the previous query when opening Omnisearch.')
+    .setName(t('Show previous query results'))
+    .setDesc(t('Re-executes the previous query when opening Omnisearch.'))
     .addToggle(toggle =>
       toggle.setValue(settings.showPreviousQueryResults).onChange(async v => {
         settings.showPreviousQueryResults = v
@@ -39,9 +42,11 @@ export function injectSettingsBehavior(
 
   // Scroll to the matched text
   new Setting(containerEl)
-    .setName('Scroll to the matched text when opening a note')
+    .setName(t('Scroll to the matched text when opening a note'))
     .setDesc(
-      'When a note is opened from the vault search, place the cursor on the first match. Disable this to open the note without moving the cursor.'
+      t(
+        'When a note is opened from the vault search, place the cursor on the first match. Disable this to open the note without moving the cursor.'
+      )
     )
     .addToggle(toggle =>
       toggle.setValue(settings.scrollToMatch).onChange(async v => {
@@ -52,10 +57,11 @@ export function injectSettingsBehavior(
 
   // Respect excluded files
   new Setting(containerEl)
-    .setName('Respect Obsidian\'s "Excluded Files"')
+    .setName(t('Respect Obsidian\'s "Excluded Files"'))
     .setDesc(
-      `By default, files that are in Obsidian's "Options > Files & Links > Excluded Files" list are downranked in results.
-        Enable this option to completely hide them.`
+      t(
+        'By default, files that are in Obsidian\'s "Options > Files & Links > Excluded Files" list are downranked in results.\n        Enable this option to completely hide them.'
+      )
     )
     .addToggle(toggle =>
       toggle.setValue(settings.hideExcluded).onChange(async v => {
@@ -66,14 +72,16 @@ export function injectSettingsBehavior(
 
   // Downranked files
   new Setting(containerEl)
-    .setName('Folders to downrank in search results')
+    .setName(t('Folders to downrank in search results'))
     .setDesc(
-      `Folders to downrank in search results. Files in these folders will be downranked in results.  They will still be indexed for tags, unlike excluded files.  Folders should be comma delimited.`
+      t(
+        'Folders to downrank in search results. Files in these folders will be downranked in results.  They will still be indexed for tags, unlike excluded files.  Folders should be comma delimited.'
+      )
     )
     .addText(component => {
       component
         .setValue(settings.downrankedFoldersFilters.join(','))
-        .setPlaceholder('Example: src,p2/dir')
+        .setPlaceholder(t('Example: src,p2/dir'))
         .onChange(async v => {
           let folders = v.split(',')
           folders = folders.map(f => f.trim())
@@ -84,11 +92,11 @@ export function injectSettingsBehavior(
 
   // Split CamelCaseWords
   new Setting(containerEl)
-    .setName('Split CamelCaseWords')
+    .setName(t('Split CamelCaseWords'))
     .setDesc(
-      htmlDescription(`Enable this if you want to be able to search for CamelCaseWords as separate words.<br/>        
-        ⚠️ <span style="color: var(--text-accent)">Changing this setting will clear the cache.</span><br>
-        ${needsARestart}`)
+      htmlDescription(`${t('Enable this if you want to be able to search for CamelCaseWords as separate words.')}<br/>
+        ⚠️ <span style="color: var(--text-accent)">${t('Changing this setting will clear the cache.')}</span><br>
+        ${needsARestart()}`)
     )
     .addToggle(toggle =>
       toggle.setValue(settings.splitCamelCase).onChange(async v => {
@@ -100,10 +108,11 @@ export function injectSettingsBehavior(
 
   // Simpler search
   new Setting(containerEl)
-    .setName('Simpler search')
+    .setName(t('Simpler search'))
     .setDesc(
-      `Enable this if Obsidian often freezes while making searches.
-        Words shorter than 3 characters won't be used as prefixes; this can reduce search delay but will return fewer results.`
+      t(
+        "Enable this if Obsidian often freezes while making searches.\n        Words shorter than 3 characters won't be used as prefixes; this can reduce search delay but will return fewer results."
+      )
     )
     .addToggle(toggle =>
       toggle.setValue(settings.simpleSearch).onChange(async v => {
@@ -116,10 +125,11 @@ export function injectSettingsBehavior(
   // Crashes on iOS
   if (!Platform.isIosApp) {
     new Setting(containerEl)
-      .setName('Tokenize URLs')
+      .setName(t('Tokenize URLs'))
       .setDesc(
-        `Enable this if you want to be able to search for URLs as separate words.
-        This setting has a strong impact on indexing performance, and can crash Obsidian under certain conditions.`
+        t(
+          'Enable this if you want to be able to search for URLs as separate words.\n        This setting has a strong impact on indexing performance, and can crash Obsidian under certain conditions.'
+        )
       )
       .addToggle(toggle =>
         toggle.setValue(settings.tokenizeUrls).onChange(async v => {
@@ -131,9 +141,9 @@ export function injectSettingsBehavior(
 
   // Set Vim like navigation keys
   new Setting(containerEl)
-    .setName('Set Vim like navigation keys')
+    .setName(t('Set Vim like navigation keys'))
     .setDesc(
-      `Navigate down the results with ${getCtrlKeyLabel()} + J/N, or navigate up with ${getCtrlKeyLabel()} + K/P.`
+      `${t('Navigate down the results with')} ${getCtrlKeyLabel()} + J/N, ${t('or navigate up with')} ${getCtrlKeyLabel()} + K/P.`
     )
     .addToggle(toggle =>
       toggle.setValue(settings.vimLikeNavigationShortcut).onChange(async v => {
@@ -144,16 +154,18 @@ export function injectSettingsBehavior(
 
   // Fuzziness
   new Setting(containerEl)
-    .setName('Fuzziness')
+    .setName(t('Fuzziness'))
     .setDesc(
-      "Define the level of fuzziness for the search. The higher the fuzziness, the more results you'll get."
+      t(
+        "Define the level of fuzziness for the search. The higher the fuzziness, the more results you'll get."
+      )
     )
     .addDropdown(dropdown =>
       dropdown
         .addOptions({
-          0: 'Exact match',
-          1: 'Not too fuzzy',
-          2: 'Fuzzy enough',
+          0: t('Exact match'),
+          1: t('Not too fuzzy'),
+          2: t('Fuzzy enough'),
         })
         .setValue(settings.fuzziness)
         .onChange(async v => {

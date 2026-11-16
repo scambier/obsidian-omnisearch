@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import {
   type CachedMetadata,
   getAllTags,
@@ -308,7 +309,7 @@ export const countError = (() => {
     if ((++counter >= 5 || immediate) && !alreadyWarned) {
       alreadyWarned = true
       new Notice(
-        'Omnisearch ⚠️ There might be an issue with your cache. You should clean it in Omnisearch settings and restart Obsidian.',
+        `Omnisearch ⚠️ ${t('There might be an issue with your cache. You should clean it in Omnisearch settings and restart Obsidian.')}`,
         5000
       )
     }

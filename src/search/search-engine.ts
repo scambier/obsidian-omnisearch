@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import MiniSearch, { type AsPlainObject, type Options } from 'minisearch'
 import {
   RecencyCutoff,
@@ -609,7 +610,7 @@ export class SearchEngine {
       logger(_level, _message, code) {
         if (code === 'version_conflict') {
           new Notice(
-            'Omnisearch - Your index cache may be incorrect or corrupted. If this message keeps appearing, go to Settings to clear the cache.',
+            `Omnisearch - ${t('Your index cache may be incorrect or corrupted. If this message keeps appearing, go to Settings to clear the cache.')}`,
             5000
           )
         }

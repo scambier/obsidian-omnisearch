@@ -1,8 +1,15 @@
+import { t } from '../i18n'
 import { Notice, Setting } from 'obsidian'
 import { K_DISABLE_OMNISEARCH } from '../globals'
 import type OmnisearchPlugin from '../main'
 import type { OmnisearchSettings } from './utils'
-import { htmlDescription, isCacheEnabled, isPluginDisabled, needsARestart, saveSettings } from './utils'
+import {
+  htmlDescription,
+  isCacheEnabled,
+  isPluginDisabled,
+  needsARestart,
+  saveSettings,
+} from './utils'
 
 export function injectSettingsDanger(
   plugin: OmnisearchPlugin,
@@ -11,16 +18,16 @@ export function injectSettingsDanger(
 ) {
   const database = plugin.database
 
-  new Setting(containerEl).setName('Danger Zone').setHeading()
+  new Setting(containerEl).setName(t('Danger Zone')).setHeading()
 
   // Ignore diacritics
   new Setting(containerEl)
-    .setName('Ignore diacritics')
+    .setName(t('Ignore diacritics'))
     .setDesc(
-      htmlDescription(`Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky".<br/>
-      ⚠️ <span style="color: var(--text-accent)">You probably should <strong>NOT</strong> disable this.</span><br>
-      ⚠️ <span style="color: var(--text-accent)">Changing this setting will clear the cache.</span><br>
-      ${needsARestart}`)
+      htmlDescription(`${t('Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky".')}<br/>
+      ⚠️ <span style="color: var(--text-accent)">${t('You probably should NOT disable this.')}</span><br>
+      ⚠️ <span style="color: var(--text-accent)">${t('Changing this setting will clear the cache.')}</span><br>
+      ${needsARestart()}`)
     )
     .addToggle(toggle =>
       toggle.setValue(settings.ignoreDiacritics).onChange(async v => {
@@ -31,7 +38,7 @@ export function injectSettingsDanger(
     )
 
   new Setting(containerEl)
-    .setName('Ignore Arabic diacritics (beta)')
+    .setName(t('Ignore Arabic diacritics (beta)'))
     .addToggle(toggle =>
       toggle.setValue(settings.ignoreArabicDiacritics).onChange(async v => {
         await database.clearCache()
@@ -41,30 +48,31 @@ export function injectSettingsDanger(
     )
 
   // Disable Omnisearch
-  const disableDesc = htmlDescription(`Disable Omnisearch on this device only.<br>
-      ${needsARestart}`)
+  const disableDesc =
+    htmlDescription(`${t('Disable Omnisearch on this device only.')}<br>
+      ${needsARestart()}`)
   new Setting(containerEl)
-    .setName('Disable on this device')
+    .setName(t('Disable on this device'))
     .setDesc(disableDesc)
     .addToggle(toggle =>
       toggle.setValue(isPluginDisabled(plugin.app)).onChange(async v => {
         if (v) {
           plugin.app.saveLocalStorage(K_DISABLE_OMNISEARCH, '1')
-          new Notice('Omnisearch - Disabled. Please restart Obsidian.')
+          new Notice(`Omnisearch - ${t('Disabled. Please restart Obsidian.')}`)
         } else {
           plugin.app.saveLocalStorage(K_DISABLE_OMNISEARCH) // No value = unset
-          new Notice('Omnisearch - Enabled. Please restart Obsidian.')
+          new Notice(`Omnisearch - ${t('Enabled. Please restart Obsidian.')}`)
         }
       })
     )
 
   // Force save cache
   new Setting(containerEl)
-    .setName('Force save the cache')
+    .setName(t('Force save the cache'))
     .setDesc(
-      htmlDescription(`Omnisearch has a security feature that automatically disables cache writing if it cannot fully perform the operation.<br>
-      Use this option to force the cache to be saved, even if it causes a crash.<br>
-      ⚠️ <span style="color: var(--text-accent)">Enabling this setting could lead to crash loops</span>`)
+      htmlDescription(`${t('Omnisearch has a security feature that automatically disables cache writing if it cannot fully perform the operation.')}<br>
+      ${t('Use this option to force the cache to be saved, even if it causes a crash.')}<br>
+      ⚠️ <span style="color: var(--text-accent)">${t('Enabling this setting could lead to crash loops')}</span>`)
     )
     .addToggle(toggle =>
       toggle.setValue(settings.DANGER_forceSaveCache).onChange(async v => {
@@ -76,14 +84,14 @@ export function injectSettingsDanger(
   // Clear cache data
   if (isCacheEnabled()) {
     new Setting(containerEl)
-      .setName('Clear cache data')
+      .setName(t('Clear cache data'))
       .setDesc(
-        htmlDescription(`Erase all Omnisearch cache data.
-        Use this if Omnisearch results are inconsistent, missing, or appear outdated.<br>
-        ${needsARestart}`)
+        htmlDescription(`${t('Erase all Omnisearch cache data.')}
+        ${t('Use this if Omnisearch results are inconsistent, missing, or appear outdated.')}<br>
+        ${needsARestart()}`)
       )
       .addButton(btn => {
-        btn.setButtonText('Clear cache')
+        btn.setButtonText(t('Clear cache'))
         btn.onClick(async () => {
           await database.clearCache()
         })

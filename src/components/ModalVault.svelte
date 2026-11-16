@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../i18n'
   import { MarkdownView, Notice, Platform, TFile, debounce } from 'obsidian'
   import { onDestroy, onMount, tick } from 'svelte'
   import InputSearch from './InputSearch.svelte'
@@ -66,17 +67,17 @@
   $effect(() => {
     switch ($indexingStep) {
       case IndexingStepType.LoadingCache:
-        indexingStepDesc = 'Loading cache...'
+        indexingStepDesc = t('Loading cache...')
         break
       case IndexingStepType.ReadingFiles:
-        indexingStepDesc = 'Reading files...'
+        indexingStepDesc = t('Reading files...')
         break
       case IndexingStepType.IndexingFiles:
-        indexingStepDesc = 'Indexing files...'
+        indexingStepDesc = t('Indexing files...')
         break
       case IndexingStepType.WritingCache:
         updateResultsDebounced()
-        indexingStepDesc = 'Updating cache...'
+        indexingStepDesc = t('Updating cache...')
         break
       default:
         updateResultsDebounced()
@@ -228,7 +229,7 @@
     const active = plugin.app.workspace.getActiveFile()
     const view = plugin.app.workspace.getActiveViewOfType(MarkdownView)
     if (!view?.editor) {
-      new Notice('Omnisearch - Error - No active editor', 3000)
+      new Notice(`Omnisearch - ${t('Error')} - ${t('No active editor')}`, 3000)
       return
     }
 
@@ -308,20 +309,21 @@
   {plugin}
   initialValue={searchQuery}
   on:input={e => (searchQuery = e.detail)}
-  placeholder="Omnisearch - Vault">
+  placeholder={t('Omnisearch - Vault')}>
   <div class="omnisearch-input-container__buttons">
     {#if plugin.settings.showCreateButton}
-      <button onclick={onClickCreateNote}>Create note</button>
+      <button onclick={onClickCreateNote}>{t('Create note')}</button>
     {/if}
     {#if Platform.isMobile}
-      <button onclick={switchToInFileModal}>In-File search</button>
+      <button onclick={switchToInFileModal}>{t('In-File search')}</button>
     {/if}
   </div>
 </InputSearch>
 
 {#if indexingStepDesc}
   <div style="text-align: center; color: var(--text-accent); margin-top: 10px">
-    ⏳ Work in progress: {indexingStepDesc}
+    ⏳ {t('Work in progress:')}
+    {indexingStepDesc}
   </div>
 {/if}
 
@@ -367,61 +369,63 @@
 
 <div class="prompt-instructions">
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">↑↓</span><span>to navigate</span>
+    <span class="prompt-instruction-command">↑↓</span><span
+      >{t('to navigate')}</span>
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">{getAltKeyLabel()} ↑↓</span>
-    <span>to cycle history</span>
+    <span>{t('to cycle history')}</span>
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">{openInCurrentPaneKey}</span>
-    <span>to open</span>
+    <span>{t('to open')}</span>
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">Tab</span>
-    <span>to switch to In-File Search</span>
+    <span>{t('to switch to In-File Search')}</span>
   </div>
 
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">{openInNewPaneKey}</span>
-    <span>to open in a new pane</span>
+    <span>{t('to open in a new pane')}</span>
   </div>
 
   {#if Platform.isMobile}
     <div class="prompt-instruction">
-      <span class="prompt-instruction-command">hold</span>
-      <span>to open in a new pane</span>
+      <span class="prompt-instruction-command">{t('hold')}</span>
+      <span>{t('to open in a new pane')}</span>
     </div>
   {/if}
 
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">{openInNewLeafKey}</span>
-    <span>to open in a new split</span>
+    <span>{t('to open in a new split')}</span>
   </div>
 
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">{getCtrlKeyLabel()} o</span>
-    <span>to open in the background</span>
+    <span>{t('to open in the background')}</span>
   </div>
 
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">{createInCurrentPaneKey}</span>
-    <span>to create</span>
+    <span>{t('to create')}</span>
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">{createInNewPaneKey}</span>
-    <span>to create in a new pane</span>
+    <span>{t('to create in a new pane')}</span>
   </div>
 
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">{getAltKeyLabel()} ↵</span>
-    <span>to insert a link</span>
+    <span>{t('to insert a link')}</span>
   </div>
   <div class="prompt-instruction">
     <span class="prompt-instruction-command">{getCtrlKeyLabel()} g</span>
-    <span>to toggle excerpts</span>
+    <span>{t('to toggle excerpts')}</span>
   </div>
   <div class="prompt-instruction">
-    <span class="prompt-instruction-command">Esc</span><span>to close</span>
+    <span class="prompt-instruction-command">Esc</span><span
+      >{t('to close')}</span>
   </div>
 </div>
