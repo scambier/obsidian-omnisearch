@@ -229,7 +229,7 @@
     const active = plugin.app.workspace.getActiveFile()
     const view = plugin.app.workspace.getActiveViewOfType(MarkdownView)
     if (!view?.editor) {
-      new Notice(`Omnisearch - Error - ${t('No active editor')}`, 3000)
+      new Notice(`Omnisearch - ${t('Error')} - ${t('No active editor')}`, 3000)
       return
     }
 
@@ -309,7 +309,7 @@
   {plugin}
   initialValue={searchQuery}
   on:input={e => (searchQuery = e.detail)}
-  placeholder="Omnisearch - Vault">
+  placeholder={t('Omnisearch - Vault')}>
   <div class="omnisearch-input-container__buttons">
     {#if plugin.settings.showCreateButton}
       <button onclick={onClickCreateNote}>{t('Create note')}</button>
@@ -322,7 +322,8 @@
 
 {#if indexingStepDesc}
   <div style="text-align: center; color: var(--text-accent); margin-top: 10px">
-    ⏳ {t('Work in progress:')} {indexingStepDesc}
+    ⏳ {t('Work in progress:')}
+    {indexingStepDesc}
   </div>
 {/if}
 

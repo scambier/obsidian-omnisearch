@@ -152,7 +152,7 @@
 <InputSearch
   {plugin}
   on:input={e => (searchQuery = e.detail)}
-  placeholder="Omnisearch - File"
+  placeholder={t('Omnisearch - File')}
   initialValue={previousQuery}>
   <div class="omnisearch-input-container__buttons">
     {#if Platform.isMobile}

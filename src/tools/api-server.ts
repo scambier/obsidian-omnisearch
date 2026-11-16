@@ -64,10 +64,13 @@ export function getServer(plugin: OmnisearchPlugin) {
             plugin.settings.DANGER_httpHost !== 'localhost'
           ) {
             new Notice(
-              `Omnisearch - ${t('Started non-localhost HTTP server at {host}:{port}', {
-                host: plugin.settings.DANGER_httpHost,
-                port,
-              })}`,
+              `Omnisearch - ${t(
+                'Started non-localhost HTTP server at {host}:{port}',
+                {
+                  host: plugin.settings.DANGER_httpHost,
+                  port,
+                }
+              )}`,
               120_000
             )
           } else if (plugin.settings.httpApiNotice) {

@@ -32,7 +32,9 @@ export function htmlDescription(htmlContent: string): DocumentFragment {
   return desc
 }
 
-export const needsARestart = `<strong style="color: var(--text-accent)">${t('Needs a restart to fully take effect.')}</strong>`
+export function needsARestart(): string {
+  return `<strong style="color: var(--text-accent)">${t('Needs a restart to fully take effect.')}</strong>`
+}
 
 export interface WeightingSettings {
   weightBasename: number

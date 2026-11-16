@@ -96,7 +96,7 @@ export function injectSettingsBehavior(
     .setDesc(
       htmlDescription(`${t('Enable this if you want to be able to search for CamelCaseWords as separate words.')}<br/>
         ⚠️ <span style="color: var(--text-accent)">${t('Changing this setting will clear the cache.')}</span><br>
-        ${needsARestart}`)
+        ${needsARestart()}`)
     )
     .addToggle(toggle =>
       toggle.setValue(settings.splitCamelCase).onChange(async v => {

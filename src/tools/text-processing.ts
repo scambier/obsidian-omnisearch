@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { excerptAfter, excerptBefore, type SearchMatch } from '../globals'
 import { getFrontmatterEndOffset, removeDiacritics, warnVerbose } from './utils'
 import type { Query } from '../search/query'
@@ -204,7 +205,7 @@ export class TextProcessor {
       return content
     } catch (e) {
       new Notice(
-        'Omnisearch - Error while creating excerpt, see developer console'
+        `Omnisearch - ${t('Error while creating excerpt, see developer console')}`
       )
       console.error(`Omnisearch - Error while creating excerpt`)
       console.error(e)

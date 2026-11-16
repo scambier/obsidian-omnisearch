@@ -25,6 +25,12 @@ describe('i18n', () => {
     expect(t('Create note')).toBe('Create note')
     setLanguage('zh-CN')
     expect(t('Create note')).toBe('创建笔记')
+    expect(
+      t(
+        '{count} files need to be indexed. Obsidian may experience stutters and freezes during the process',
+        { count: 1200 }
+      )
+    ).toBe('1200 个文件需要建立索引。在此过程中 Obsidian 可能会出现卡顿')
     setLanguage('en')
   })
 })

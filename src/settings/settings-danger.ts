@@ -27,7 +27,7 @@ export function injectSettingsDanger(
       htmlDescription(`${t('Normalize diacritics in search terms. Words like "brûlée" or "žluťoučký" will be indexed as "brulee" and "zlutoucky".')}<br/>
       ⚠️ <span style="color: var(--text-accent)">${t('You probably should NOT disable this.')}</span><br>
       ⚠️ <span style="color: var(--text-accent)">${t('Changing this setting will clear the cache.')}</span><br>
-      ${needsARestart}`)
+      ${needsARestart()}`)
     )
     .addToggle(toggle =>
       toggle.setValue(settings.ignoreDiacritics).onChange(async v => {
@@ -50,7 +50,7 @@ export function injectSettingsDanger(
   // Disable Omnisearch
   const disableDesc =
     htmlDescription(`${t('Disable Omnisearch on this device only.')}<br>
-      ${needsARestart}`)
+      ${needsARestart()}`)
   new Setting(containerEl)
     .setName(t('Disable on this device'))
     .setDesc(disableDesc)
@@ -88,7 +88,7 @@ export function injectSettingsDanger(
       .setDesc(
         htmlDescription(`${t('Erase all Omnisearch cache data.')}
         ${t('Use this if Omnisearch results are inconsistent, missing, or appear outdated.')}<br>
-        ${needsARestart}`)
+        ${needsARestart()}`)
       )
       .addButton(btn => {
         btn.setButtonText(t('Clear cache'))

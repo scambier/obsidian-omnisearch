@@ -7,19 +7,18 @@ const data = {
     'Omnisearch 可用它索引 PDF 和图像内容。',
   'Text extraction only works on desktop, but the cache can be synchronized with your mobile device.':
     '文本提取仅在桌面端可用，但缓存可以同步到移动设备。',
-  "requires": '需要',
   'to index PDFs and images.': '才能索引 PDF 和图像。',
   'Omnisearch can use it to index images contents with AI.':
     'Omnisearch 可用它通过 AI 索引图像内容。',
   'to index images with AI.': '才能使用 AI 索引图像。',
   'Sponsor scambier': '赞助 scambier',
   'Buy Me a Coffee at ko-fi.com': '在 ko-fi.com 请我喝咖啡',
-  "Debugging": '调试',
+  Debugging: '调试',
   'Enable verbose logging': '启用详细日志',
   'Adds a LOT of logs for debugging purposes. You also need to enable "Verbose" logging in the console to see these logs.':
     '为调试记录大量日志。还需要在控制台中启用“Verbose”日志级别才能看到这些日志。',
 
-  "Indexing": '索引',
+  Indexing: '索引',
   'PDFs content indexing': 'PDF 内容索引',
   'Images OCR indexing': '图像 OCR 索引',
   'Documents content indexing': '文档内容索引',
@@ -30,9 +29,9 @@ const data = {
   'Additional TEXT files to index': '其他要索引的 TEXT 文件',
   'Example: txt org csv': '示例：txt org csv',
   'Index files without extension': '索引没有扩展名的文件',
-  "default": '默认',
-  "Yes": '是',
-  "No": '否',
+  default: '默认',
+  Yes: '是',
+  No: '否',
   'Obsidian setting': 'Obsidian 设置',
 
   'Omnisearch will use Text Extractor to index the content of your PDFs.':
@@ -48,7 +47,7 @@ const data = {
   'Files that have been modified more recently than [selected cutoff] are given a higher rank.':
     '修改时间比所选时限更近的文件会获得更高排名。',
 
-  "Behavior": '行为',
+  Behavior: '行为',
   'Save index to cache': '将索引保存到缓存',
   'Enable caching to speed up indexing time. In rare cases, the cache write may cause a crash in Obsidian. This option will disable itself if it happens.':
     '启用缓存以加快索引速度。极少数情况下，写入缓存可能导致 Obsidian 崩溃；如发生此情况，此选项会自动关闭。',
@@ -68,7 +67,6 @@ const data = {
   'Split CamelCaseWords': '拆分 CamelCaseWords',
   'Enable this if you want to be able to search for CamelCaseWords as separate words.':
     '启用后可将 CamelCaseWords 作为独立单词搜索。',
-  '⚠️ Changing this setting will clear the cache.': '⚠️ 更改此设置会清空缓存。',
   'Simpler search': '简化搜索',
   "Enable this if Obsidian often freezes while making searches.\n        Words shorter than 3 characters won't be used as prefixes; this can reduce search delay but will return fewer results.":
     '如果搜索时 Obsidian 经常卡死，可启用此项。长度不足 3 个字符的单词不会作为前缀；这可缩短搜索延迟，但结果会更少。',
@@ -76,7 +74,7 @@ const data = {
   'Enable this if you want to be able to search for URLs as separate words.\n        This setting has a strong impact on indexing performance, and can crash Obsidian under certain conditions.':
     '启用后可将 URL 作为独立单词搜索。此设置会严重影响索引性能，并可能在某些情况下导致 Obsidian 崩溃。',
   'Set Vim like navigation keys': '设置类 Vim 导航键',
-  "Fuzziness": '模糊度',
+  Fuzziness: '模糊度',
   "Define the level of fuzziness for the search. The higher the fuzziness, the more results you'll get.":
     '设置搜索的模糊程度。模糊度越高，得到的结果越多。',
   'Exact match': '精确匹配',
@@ -108,13 +106,13 @@ const data = {
   'Headings level 1': '一级标题',
   'Headings level 2': '二级标题',
   'Headings level 3': '三级标题',
-  "Tags": '标签',
+  Tags: '标签',
   'Header properties fields': '标题属性字段',
   'Property name': '属性名称',
-  "Remove": '移除',
+  Remove: '移除',
   'Add a new property': '添加新属性',
   'Recency boost (experimental)': '新近度加权（实验性）',
-  "Disabled": '禁用',
+  Disabled: '禁用',
   '24 hours': '24 小时',
   '7 days': '7 天',
   '30 days': '30 天',
@@ -141,7 +139,11 @@ const data = {
 
   'Create note': '创建笔记',
   'In-File search': '文件内搜索',
+  'In-file search': '文件内搜索',
   'Vault search': '库搜索',
+  'Omnisearch - Vault': 'Omnisearch - 库搜索',
+  'Omnisearch - File': 'Omnisearch - 文件内搜索',
+  Error: '错误',
   'to navigate': '导航',
   'to open': '打开',
   'to switch to Vault Search': '切换到库搜索',
@@ -156,7 +158,7 @@ const data = {
   'to create in a new pane': '在新窗格中创建',
   'to insert a link': '插入链接',
   'to toggle excerpts': '切换摘要',
-  "hold": '按住',
+  hold: '按住',
   'Lazy load content': '延迟加载内容',
   'Not created yet, select to create': '尚未创建，选择即可创建',
   'The document above is embedded in this note': '上方文档嵌入在此笔记中',
@@ -185,7 +187,7 @@ const data = {
   '"Obsidian setting" will respect the value of "Files & Links > Detect all file extensions".':
     '“Obsidian 设置”将遵循“文件与链接 > 检测所有文件扩展名”的值。',
   'Some results are': '部分结果是',
-  "embedded": '嵌入',
+  embedded: '嵌入',
   'in other notes.': '在其他笔记中。',
   'This setting controls the maximum number of embeds to show in the search results. Set to 0 to disable.':
     '此设置控制搜索结果中最多显示的嵌入数量，设为 0 可禁用。',
@@ -215,31 +217,17 @@ const data = {
   'Omnisearch requires': 'Omnisearch 需要',
   'If both AI Image Analyzer and Text Extractor are enabled, Text Extractor will only be used as a fallback.':
     '如果同时启用 AI Image Analyzer 和 Text Extractor，Text Extractor 仅作为后备。',
-  'Omnisearch will use Text Extractor to index the content of your office documents (currently .docx and .xlsx).':
-    'Omnisearch 将使用 Text Extractor 索引办公文档内容（目前支持 .docx 和 .xlsx）。',
-  'Omnisearch can index file<strong>names</strong> of "unsupported" files, such as e.g. .mp4 or non-extracted PDFs & images.':
-    'Omnisearch 可索引“不受支持”文件的<strong>名称</strong>，例如 .mp4 或未提取内容的 PDF 和图像。',
-  'In addition to standard md files, Omnisearch can also index other PLAINTEXT files.':
-    '除标准 md 文件外，Omnisearch 还可索引其他纯文本文件。',
-  'Add extensions separated by a space, without the dot. Example: "txt org csv".':
-    '以空格分隔添加扩展名，不要加点号。示例：“txt org csv”。',
-  'Enable this to also index files that have no file extension.':
-    '启用后也会索引没有扩展名的文件。',
+  '{count} files need to be indexed. Obsidian may experience stutters and freezes during the process':
+    '{count} 个文件需要建立索引。在此过程中 Obsidian 可能会出现卡顿',
+  'Your index cache may be incorrect or corrupted. If this message keeps appearing, go to Settings to clear the cache.':
+    '索引缓存可能有误或已损坏。如果此提示反复出现，请前往设置清空缓存。',
+  'Error while creating excerpt, see developer console':
+    '生成摘要时出错，请查看开发者控制台',
+  'There might be an issue with your cache. You should clean it in Omnisearch settings and restart Obsidian.':
+    '缓存可能存在问题。建议在 Omnisearch 设置中清理缓存并重启 Obsidian。',
   'Omnisearch will use Text Extractor to index the content of your office documents (currently':
     'Omnisearch 将使用 Text Extractor 索引办公文档内容（目前支持',
-  "and": '和',
-  'In addition to standard': '除标准',
-  'files, Omnisearch can also index other': '文件外，Omnisearch 还可索引其他',
-  "PLAINTEXT": '纯文本',
-  'files.': '文件。',
-  'Add extensions separated by a space, without the dot. Example:':
-    '以空格分隔添加扩展名，不要加点号。示例：',
-  'Files that are not detected as': '未被检测为',
-  'files will be ignored.': '的文件将被忽略。',
-  'Enable this to also index files that have': '启用后也会索引具有',
-  'no file extension': '无扩展名',
-  'This can be useful for e.g. files without extensions, or for files with an extension that is not in the list above.':
-    '这对于没有扩展名的文件，或扩展名不在上述列表中的文件很有用。',
+  and: '和',
   "If you have a custom property in your notes that you want to use as the title in search results. If you set this to '#heading', then use the first heading from a file as the title.<br>\n          Leave empty to disable.":
     "可将笔记中的自定义属性用作搜索结果标题。设为 '#heading' 时，将使用文件中的第一个标题。<br>留空则禁用。",
   'In addition to standard <code>md</code> files, Omnisearch can also index other <strong style="color: var(--text-accent)">PLAINTEXT</strong> files.<br/>\n      Add extensions separated by a space, without the dot. Example: "<code>txt org csv</code>".<br />\n      ⚠️ <span style="color: var(--text-accent)">Using extensions of non-plaintext files (like .pptx) WILL cause crashes,\n      because Omnisearch will try to index their content.</span>':
@@ -260,10 +248,10 @@ export function translate(language: string, key: string): string {
 
 export function t(
   key: TranslationKey,
-  values: Record<string, string> = {}
+  values: Record<string, string | number> = {}
 ): string {
   return translate(getLanguage(), key).replace(
     /\{(\w+)\}/g,
-    (placeholder, name: string) => values[name] ?? placeholder
+    (placeholder, name: string) => String(values[name] ?? placeholder)
   )
 }
