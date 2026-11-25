@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { CachedMetadata } from 'obsidian'
 import {
   getAliasesFromMetadata,
+  getTagsFromMetadata,
   getExtension,
   getFrontmatterEndOffset,
   isFileBase,
@@ -58,6 +59,90 @@ describe('Utils', () => {
       const actual = getAliasesFromMetadata(metadata)
       // Assert
       expect(actual).toEqual([])
+    })
+  })
+
+  describe('getTagsFromMetadata', () => {
+    it('should return an empty array if no metadata is provided', () => {
+      // Act
+      const actual = getTagsFromMetadata(null)
+
+      // Assert
+      expect(actual).toEqual([])
+    })
+
+    it('should return frontmatter tags from a scalar string', () => {
+      // Arrange
+      const metadata = {
+        frontmatter: { tags: 'javascript' },
+      } as unknown as CachedMetadata
+
+      // Act
+      const actual = getTagsFromMetadata(metadata, 'frontmatter')
+
+      // Assert
+      expect(actual).toEqual(['#javascript'])
+    })
+
+    it('should return frontmatter tags from an array', () => {
+      // Arrange
+      const metadata = {
+        frontmatter: { tags: ['javascript', 'obsidian'] },
+      } as unknown as CachedMetadata
+
+      // Act
+      const actual = getTagsFromMetadata(metadata, 'frontmatter')
+
+      // Assert
+      expect(actual).toEqual(['#javascript', '#obsidian'])
+    })
+
+    it('should return tags from note content', () => {
+      // Arrange
+      const metadata = {
+        tags: [{ tag: '#javascript' }, { tag: '#obsidian' }],
+      } as unknown as CachedMetadata
+
+      // Act
+      const actual = getTagsFromMetadata(metadata, 'content')
+
+      // Assert
+      expect(actual).toEqual(['#javascript', '#obsidian'])
+    })
+
+    it('should combine frontmatter and content tags by default', () => {
+      // Arrange
+      const metadata = {
+        frontmatter: { tags: ['javascript', 'obsidian'] },
+        tags: [{ tag: '#javascript' }, { tag: '#testing' }],
+      } as unknown as CachedMetadata
+
+      // Act
+      const actual = getTagsFromMetadata(metadata)
+
+      // Assert
+      expect(actual).toEqual(['#javascript', '#obsidian', '#testing'])
+    })
+
+    it('should expand nested tags and remove duplicates', () => {
+      // Arrange
+      const metadata = {
+        frontmatter: { tags: ['programming/javascript', 'obsidian'] },
+        tags: [{ tag: '#programming/typescript' }, { tag: '#obsidian' }],
+      } as unknown as CachedMetadata
+
+      // Act
+      const actual = getTagsFromMetadata(metadata)
+
+      // Assert
+      expect(actual).toEqual([
+        '#programming',
+        '#javascript',
+        '#programming/javascript',
+        '#obsidian',
+        '#typescript',
+        '#programming/typescript',
+      ])
     })
   })
 

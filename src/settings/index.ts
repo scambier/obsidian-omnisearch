@@ -36,8 +36,8 @@ export class SettingsTab extends PluginSettingTab {
     containerEl.empty()
 
     if (this.app.loadLocalStorage(K_DISABLE_OMNISEARCH) == '1') {
-      const span = containerEl.createEl('span')
-      const strong = document.createElement('strong')
+      const span = containerEl.createSpan()
+      const strong = createEl('strong')
       strong.style.color = 'var(--text-accent)'
       strong.textContent = '⚠️ OMNISEARCH IS DISABLED ⚠️'
       span.appendChild(strong)
@@ -52,7 +52,7 @@ export class SettingsTab extends PluginSettingTab {
 
     // Github
     const divSponsor = containerEl.createDiv()
-    const iframe = document.createElement('iframe')
+    const iframe = createEl('iframe')
     iframe.setAttribute('sandbox', 'allow-top-navigation-by-user-activation')
     iframe.setAttribute('src', 'https://github.com/sponsors/scambier/button')
     iframe.setAttribute('title', 'Sponsor scambier')
@@ -62,10 +62,10 @@ export class SettingsTab extends PluginSettingTab {
     divSponsor.appendChild(iframe)
 
     // Ko-fi
-    const a = document.createElement('a')
+    const a = createEl('a')
     a.href = 'https://ko-fi.com/B0B6LQ2C'
     a.target = '_blank'
-    const img = document.createElement('img')
+    const img = createEl('img')
     img.setAttribute('height', '36')
     img.src = 'https://cdn.ko-fi.com/cdn/kofi2.png?v=3'
     img.alt = 'Buy Me a Coffee at ko-fi.com'
@@ -136,6 +136,9 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
 
     ribbonIcon: true,
     showExcerpt: true,
+    showFilePath: true,
+    showTags: false,
+    tagSource: 'both',
     maxEmbeds: 5,
     renderLineReturnInExcerpts: true,
     excerptSkipFrontmatter: true,

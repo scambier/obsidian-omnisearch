@@ -2,6 +2,7 @@ import { Setting, debounce } from 'obsidian'
 import type OmnisearchPlugin from '../main'
 import type { OmnisearchSettings } from './utils'
 import { htmlDescription, saveSettings } from './utils'
+import type { TagSource } from '../tools/utils'
 
 export function injectSettingsIndexing(
   plugin: OmnisearchPlugin,
@@ -170,4 +171,21 @@ export function injectSettingsIndexing(
         await saveSettings(plugin)
       })
     })
+
+  // Tag source
+  new Setting(containerEl)
+    .setName('Tag source')
+    .setDesc('Choose which tags to include when indexing notes.')
+    .addDropdown(dropdown =>
+      dropdown
+        .addOption('both', 'Frontmatter and note content')
+        .addOption('frontmatter', 'Frontmatter only')
+        .addOption('content', 'Note content only')
+        .setValue(settings.tagSource)
+        .onChange(async v => {
+          await database.clearCache()
+          settings.tagSource = v as TagSource
+          await saveSettings(plugin)
+        })
+    )
 }
