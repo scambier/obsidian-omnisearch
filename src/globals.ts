@@ -87,6 +87,7 @@ export type ResultNote = {
   content: string
   foundWords: string[]
   matches: SearchMatch[]
+  tags: string[]
   isEmbed: boolean
 }
 

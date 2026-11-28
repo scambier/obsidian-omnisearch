@@ -37,6 +37,28 @@ export function injectSettingsUserInterface(
       toggle.setValue(settings.showExcerpt).onChange(async v => {
         showExcerpt.set(v)
       })
+  )
+
+  // Show file paths
+  new Setting(containerEl)
+    .setName('Show file paths')
+    .setDesc('Shows the folder path of each file in search results.')
+    .addToggle(toggle =>
+      toggle.setValue(settings.showFilePath).onChange(async v => {
+        settings.showFilePath = v
+        await saveSettings(plugin)
+      })
+    )
+
+  // Show tags
+  new Setting(containerEl)
+    .setName('Show tags')
+    .setDesc('Shows the tags associated with each file in search results.')
+    .addToggle(toggle =>
+      toggle.setValue(settings.showTags).onChange(async v => {
+        settings.showTags = v
+        await saveSettings(plugin)
+      })
     )
 
   // Skip frontmatter in excerpts

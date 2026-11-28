@@ -4,7 +4,7 @@ import { K_DISABLE_OMNISEARCH, RecencyCutoff } from '../globals'
 
 export function htmlDescription(htmlContent: string): DocumentFragment {
   const desc = new DocumentFragment()
-  const span = desc.appendChild(document.createElement('span'))
+  const span = desc.appendChild(createSpan())
 
   // Parse HTML string safely using DOMParser
   const parser = new DOMParser()
@@ -84,6 +84,10 @@ export interface OmnisearchSettings extends WeightingSettings {
   ribbonIcon: boolean
   /** Display the small contextual excerpt in search results */
   showExcerpt: boolean
+  /** Display the file path in search results */
+  showFilePath: boolean
+  /** Show tags associated with each file in search results */
+  showTags: boolean
   /** Number of embeds references to display in search results */
   maxEmbeds: number
   /** Render line returns with <br> in excerpts */

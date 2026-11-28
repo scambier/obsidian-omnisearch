@@ -234,7 +234,7 @@
     </div>
 
     <!-- Folder path -->
-    {#if notePath}
+    {#if plugin.settings.showFilePath && notePath}
       <div class="omnisearch-result__folder-path">
         <!-- Folder Icon -->
         {#if folderIconSVG}
@@ -243,6 +243,15 @@
         <span>
           {@html plugin.textProcessor.highlightText(notePath, matchesNotePath)}
         </span>
+      </div>
+    {/if}
+
+    <!-- Tags -->
+    {#if plugin.settings.showTags && note.tags?.length}
+      <div class="omnisearch-result__tags">
+        {#each note.tags as tag}
+          <span class="omnisearch-result__tag">{tag}</span>
+        {/each}
       </div>
     {/if}
 

@@ -35,6 +35,21 @@
   color: var(--text-muted);
 }
 
+.omnisearch-result__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.omnisearch-result__tag {
+  font-size: var(--font-smaller);
+  color: var(--tag-color);
+  background-color: var(--tag-background);
+  border-radius: var(--tag-radius);
+  padding: 1px 6px;
+}
+
 .omnisearch-result__extension {
   font-size: 0.7rem;
   color: var(--text-muted);

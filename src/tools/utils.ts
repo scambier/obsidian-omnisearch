@@ -15,7 +15,7 @@ export function pathWithoutFilename(path: string): string {
 
 export function wait(ms: number): Promise<void> {
   return new Promise(resolve => {
-    setTimeout(resolve, ms)
+    window.setTimeout(resolve, ms)
   })
 }
 
@@ -116,6 +116,7 @@ export function getAliasesFromMetadata(
 
 export function getTagsFromMetadata(metadata: CachedMetadata | null): string[] {
   let tags = metadata ? getAllTags(metadata) ?? [] : []
+
   // This will "un-nest" tags that are in the form of "#tag/subtag"
   // A tag like "#tag/subtag" will be split into 3 tags: '#tag/subtag", "#tag" and "#subtag"
   // https://github.com/scambier/obsidian-omnisearch/issues/146
@@ -298,7 +299,7 @@ function printVerbose(
 export const countError = (() => {
   let counter = 0
   let alreadyWarned = false
-  setTimeout(() => {
+  window.setTimeout(() => {
     if (counter > 0) {
       --counter
     }
