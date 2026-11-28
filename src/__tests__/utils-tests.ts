@@ -71,46 +71,7 @@ describe('Utils', () => {
       expect(actual).toEqual([])
     })
 
-    it('should return frontmatter tags from a scalar string', () => {
-      // Arrange
-      const metadata = {
-        frontmatter: { tags: 'javascript' },
-      } as unknown as CachedMetadata
-
-      // Act
-      const actual = getTagsFromMetadata(metadata, 'frontmatter')
-
-      // Assert
-      expect(actual).toEqual(['#javascript'])
-    })
-
-    it('should return frontmatter tags from an array', () => {
-      // Arrange
-      const metadata = {
-        frontmatter: { tags: ['javascript', 'obsidian'] },
-      } as unknown as CachedMetadata
-
-      // Act
-      const actual = getTagsFromMetadata(metadata, 'frontmatter')
-
-      // Assert
-      expect(actual).toEqual(['#javascript', '#obsidian'])
-    })
-
-    it('should return tags from note content', () => {
-      // Arrange
-      const metadata = {
-        tags: [{ tag: '#javascript' }, { tag: '#obsidian' }],
-      } as unknown as CachedMetadata
-
-      // Act
-      const actual = getTagsFromMetadata(metadata, 'content')
-
-      // Assert
-      expect(actual).toEqual(['#javascript', '#obsidian'])
-    })
-
-    it('should combine frontmatter and content tags by default', () => {
+    it('should combine frontmatter and content tags', () => {
       // Arrange
       const metadata = {
         frontmatter: { tags: ['javascript', 'obsidian'] },

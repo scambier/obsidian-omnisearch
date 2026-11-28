@@ -114,33 +114,8 @@ export function getAliasesFromMetadata(
     : []
 }
 
-export type TagSource = 'both' | 'frontmatter' | 'content'
-
-export function getTagsFromMetadata(
-  metadata: CachedMetadata | null,
-  source: TagSource = 'both'
-): string[] {
-  let tags: string[] = []
-
-  if (metadata) {
-    switch (source) {
-      case 'both':
-        tags = getAllTags(metadata) ?? []
-        break
-
-      case 'frontmatter':
-        tags = Array.isArray(metadata.frontmatter?.tags)
-          ? metadata.frontmatter.tags.map(tag => `#${tag}`)
-          : typeof metadata.frontmatter?.tags === 'string'
-            ? [`#${metadata.frontmatter.tags}`]
-            : []
-        break
-
-      case 'content':
-        tags = metadata.tags?.map(tag => tag.tag) ?? []
-        break
-    }
-  }
+export function getTagsFromMetadata(metadata: CachedMetadata | null): string[] {
+  let tags = metadata ? getAllTags(metadata) ?? [] : []
 
   // This will "un-nest" tags that are in the form of "#tag/subtag"
   // A tag like "#tag/subtag" will be split into 3 tags: '#tag/subtag", "#tag" and "#subtag"

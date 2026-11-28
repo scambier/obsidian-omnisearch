@@ -235,7 +235,7 @@ export class DocumentsRepository {
         (metadata?.frontmatter?.[this.plugin.settings.displayTitle] as
           string | undefined) ?? ''
     }
-    const tags = getTagsFromMetadata(metadata, this.plugin.settings.tagSource)
+    const tags = getTagsFromMetadata(metadata)
     return {
       basename: file.basename,
       displayTitle,

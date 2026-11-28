@@ -1,7 +1,6 @@
 import { App, Platform, Plugin } from 'obsidian'
 import { settings } from '.'
 import { K_DISABLE_OMNISEARCH, RecencyCutoff } from '../globals'
-import type { TagSource } from '../tools/utils'
 
 export function htmlDescription(htmlContent: string): DocumentFragment {
   const desc = new DocumentFragment()
@@ -78,8 +77,6 @@ export interface OmnisearchSettings extends WeightingSettings {
   officeIndexing: boolean
   /** Enable image ai indexing */
   aiImageIndexing: boolean
-  /** Which tags to display: frontmatter, note content, or both. */
-  tagSource: TagSource
 
   /** Enable indexing of unknown files */
   unsupportedFilesIndexing: 'yes' | 'no' | 'default'

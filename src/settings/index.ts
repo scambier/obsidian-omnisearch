@@ -138,7 +138,6 @@ export function getDefaultSettings(app: App): OmnisearchSettings {
     showExcerpt: true,
     showFilePath: true,
     showTags: false,
-    tagSource: 'both',
     maxEmbeds: 5,
     renderLineReturnInExcerpts: true,
     excerptSkipFrontmatter: true,
